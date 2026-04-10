@@ -4,7 +4,7 @@ use crate::ast::{
     is_same_node,
 };
 use crate::builtins::shared::builtin_exists;
-use crate::common::{escape_string, unescape_string, valid_var_name, valid_var_name_char};
+use crate::common::{unescape_string, valid_var_name, valid_var_name_char};
 use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, ExpandFlags, ExpandResultCode, INTERNAL_SEPARATOR,
     VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, expand_one,
@@ -25,9 +25,7 @@ use crate::tokenizer::{
     is_token_delimiter, quote_end,
 };
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use fish_common::{
-    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, help_section,
-};
+use fish_common::{UnescapeFlags, UnescapeStringStyle, help_section};
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{count_newlines, truncate};
 use std::ops::Range;
@@ -691,64 +689,6 @@ fn error_for_character(c: char) -> WString {
         }
         _ => wgettext_fmt!(ERROR_BAD_VAR_CHAR1, c),
     }
-}
-
-/// Attempts to escape the string 'cmd' using the given quote type, as determined by the quote
-/// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and
-/// thus escaping should be with backslashes). Optionally do not escape tildes.
-pub fn escape_string_with_quote(
-    cmd: &wstr,
-    quote: Option<char>,
-    escape_flags: EscapeFlags,
-) -> WString {
-    let Some(quote) = quote else {
-        return escape_string(cmd, EscapeStringStyle::Script(escape_flags));
-    };
-    // Here we are going to escape a string with quotes.
-    // A few characters cannot be represented inside quotes, e.g. newlines. In that case,
-    // terminate the quote and then re-enter it.
-    let mut result = WString::new();
-    result.reserve(cmd.len());
-    for c in cmd.chars() {
-        match c {
-            '\n' => {
-                for c in [quote, '\\', 'n', quote] {
-                    result.push(c);
-                }
-            }
-            '\t' => {
-                for c in [quote, '\\', 't', quote] {
-                    result.push(c);
-                }
-            }
-            '\x08' => {
-                for c in [quote, '\\', 'b', quote] {
-                    result.push(c);
-                }
-            }
-            '\r' => {
-                for c in [quote, '\\', 'r', quote] {
-                    result.push(c);
-                }
-            }
-            '\\' => {
-                result.push_str("\\\\");
-            }
-            '$' => {
-                if quote == '"' {
-                    result.push('\\');
-                }
-                result.push('$');
-            }
-            _ => {
-                if c == quote {
-                    result.push('\\');
-                }
-                result.push(c);
-            }
-        }
-    }
-    result
 }
 
 /// Given a string, parse it as fish code and then return the indents. The return value has the same
@@ -1964,8 +1904,8 @@ const VAR_ERR_LEN: usize = 16;
 #[cfg(test)]
 mod tests {
     use super::{
-        BOOL_AFTER_BACKGROUND_ERROR_MSG, compute_indents, detect_parse_errors,
-        escape_string_with_quote, get_cmdsubst_extent, get_process_extent, slice_length,
+        BOOL_AFTER_BACKGROUND_ERROR_MSG, compute_indents, detect_parse_errors, get_cmdsubst_extent,
+        get_process_extent, slice_length,
     };
     use crate::parse_constants::{
         ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
@@ -1974,7 +1914,6 @@ mod tests {
     };
     use crate::prelude::*;
     use crate::tests::prelude::*;
-    use fish_common::EscapeFlags;
     use pcre2::utf32::Regex;
 
     #[test]
@@ -2093,79 +2032,6 @@ mod tests {
         assert_eq!(slice_length(L!("[12]")), Some(4));
         assert_eq!(slice_length(L!("[\"foo\"]")), Some(7));
         assert_eq!(slice_length(L!("[\"foo\"")), None);
-    }
-
-    #[test]
-    #[serial]
-    fn test_escape_quotes() {
-        let _cleanup = test_init();
-        macro_rules! validate {
-            ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
-                assert_eq!(
-                    escape_string_with_quote(
-                        L!($cmd),
-                        $quote,
-                        if $no_tilde {
-                            EscapeFlags::NO_TILDE
-                        } else {
-                            EscapeFlags::empty()
-                        }
-                    ),
-                    L!($expected)
-                );
-            };
-        }
-        macro_rules! validate_no_quoted {
-            ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
-                assert_eq!(
-                    escape_string_with_quote(
-                        L!($cmd),
-                        $quote,
-                        EscapeFlags::NO_QUOTED
-                            | if $no_tilde {
-                                EscapeFlags::NO_TILDE
-                            } else {
-                                EscapeFlags::empty()
-                            }
-                    ),
-                    L!($expected)
-                );
-            };
-        }
-
-        validate!("abc~def", None, false, "'abc~def'");
-        validate!("abc~def", None, true, "abc~def");
-        validate!("~abc", None, false, "'~abc'");
-        validate!("~abc", None, true, "~abc");
-
-        // These are "raw string literals"
-        validate_no_quoted!("abc", None, false, "abc");
-        validate_no_quoted!("abc~def", None, false, "abc\\~def");
-        validate_no_quoted!("abc~def", None, true, "abc~def");
-        validate_no_quoted!("abc\\~def", None, false, "abc\\\\\\~def");
-        validate_no_quoted!("abc\\~def", None, true, "abc\\\\~def");
-        validate_no_quoted!("~abc", None, false, "\\~abc");
-        validate_no_quoted!("~abc", None, true, "~abc");
-        validate_no_quoted!("~abc|def", None, false, "\\~abc\\|def");
-        validate_no_quoted!("|abc~def", None, false, "\\|abc\\~def");
-        validate_no_quoted!("|abc~def", None, true, "\\|abc~def");
-        validate_no_quoted!("foo\nbar", None, false, "foo\\nbar");
-
-        // Note tildes are not expanded inside quotes, so no_tilde is ignored with a quote.
-        validate_no_quoted!("abc", Some('\''), false, "abc");
-        validate_no_quoted!("abc\\def", Some('\''), false, "abc\\\\def");
-        validate_no_quoted!("abc'def", Some('\''), false, "abc\\'def");
-        validate_no_quoted!("~abc'def", Some('\''), false, "~abc\\'def");
-        validate_no_quoted!("~abc'def", Some('\''), true, "~abc\\'def");
-        validate_no_quoted!("foo\nba'r", Some('\''), false, "foo'\\n'ba\\'r");
-        validate_no_quoted!("foo\\\\bar", Some('\''), false, "foo\\\\\\\\bar");
-
-        validate_no_quoted!("abc", Some('"'), false, "abc");
-        validate_no_quoted!("abc\\def", Some('"'), false, "abc\\\\def");
-        validate_no_quoted!("~abc'def", Some('"'), false, "~abc'def");
-        validate_no_quoted!("~abc'def", Some('"'), true, "~abc'def");
-        validate_no_quoted!("foo\nba'r", Some('"'), false, "foo\"\\n\"ba'r");
-        validate_no_quoted!("foo\\\\bar", Some('"'), false, "foo\\\\\\\\bar");
     }
 
     #[test]

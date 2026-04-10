@@ -2,8 +2,7 @@ use super::wopendir;
 use crate::common::bytes2wcstring;
 use crate::wutil::DevInode;
 use cfg_if::cfg_if;
-use fish_wcstringutil::wcs2zstring;
-use fish_widestring::{WString, wstr};
+use fish_widestring::{WString, wcs2zstring, wstr};
 use libc::{
     EACCES, EIO, ELOOP, ENAMETOOLONG, ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO,
     S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK,

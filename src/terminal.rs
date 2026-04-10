@@ -8,7 +8,7 @@ use bitflags::bitflags;
 use fish_color::{Color, Color24};
 use fish_common::{EscapeStringStyle, write_loop};
 use fish_feature_flags::FeatureFlag;
-use fish_wcstringutil::{wcs2bytes, wcs2bytes_appending};
+use fish_widestring::{wcs2bytes, wcs2bytes_appending};
 use std::cell::{RefCell, RefMut};
 use std::ops::{Deref, DerefMut};
 use std::os::fd::RawFd;

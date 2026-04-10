@@ -1,20 +1,20 @@
-use crate::flog::flog;
-use crate::prelude::*;
-use crate::signal::signal_check_cancel;
-use crate::wutil::perror_nix;
+use crate::{flog::flog, prelude::*, signal::signal_check_cancel, wutil::perror_nix};
 use cfg_if::cfg_if;
 use fish_util::perror;
-use fish_wcstringutil::wcs2zstring;
+use fish_widestring::wcs2zstring;
 use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
-use nix::fcntl::FcntlArg;
-use nix::fcntl::OFlag;
-use std::ffi::CStr;
-use std::fs::File;
-use std::io;
-use std::mem::ManuallyDrop;
-use std::ops::{Deref, DerefMut};
-use std::os::fd::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd};
-use std::os::unix::prelude::*;
+use nix::fcntl::{FcntlArg, OFlag};
+use std::{
+    ffi::CStr,
+    fs::File,
+    io,
+    mem::ManuallyDrop,
+    ops::{Deref, DerefMut},
+    os::{
+        fd::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd},
+        unix::prelude::*,
+    },
+};
 
 localizable_consts!(
     pub PIPE_ERROR

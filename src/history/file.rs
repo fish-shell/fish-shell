@@ -9,7 +9,7 @@ use crate::{
     path::{DirRemoteness, path_get_data_remoteness},
     wutil::FileId,
 };
-use fish_wcstringutil::wcs2bytes;
+use fish_widestring::wcs2bytes;
 use libc::{ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
 use std::{
     fs::File,

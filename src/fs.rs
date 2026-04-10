@@ -7,7 +7,7 @@ use crate::{
     wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, wdirname, wunlink},
 };
 use fish_tempfile::random_filename;
-use fish_wcstringutil::{wcs2bytes, wcs2osstring};
+use fish_widestring::{wcs2bytes, wcs2osstring};
 use libc::{LOCK_EX, LOCK_SH, c_int};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::{

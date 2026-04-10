@@ -2,7 +2,7 @@ use crate::env_universal_common::default_vars_path;
 use crate::prelude::*;
 use crate::universal_notifier::UniversalNotifier;
 use crate::wutil::{wbasename, wdirname};
-use fish_wcstringutil::wcs2osstring;
+use fish_widestring::wcs2osstring;
 use nix::sys::inotify::{AddWatchFlags, InitFlags, Inotify};
 use std::ffi::OsString;
 use std::os::fd::{AsFd as _, AsRawFd as _, RawFd};

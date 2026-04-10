@@ -1,7 +1,4 @@
-use crate::common::{
-    WSL, bytes2wcstring, fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked,
-    shell_modes,
-};
+use crate::common::{WSL, bytes2wcstring, is_windows_subsystem_for_linux, shell_modes};
 use crate::env::{EnvStack, Environment as _};
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::flog::{FloggableDebug, FloggableDisplay, flog};
@@ -17,6 +14,7 @@ use crate::tty_handoff::{
 };
 use crate::universal_notifier::default_notifier;
 use crate::wutil::{fish_is_pua, fish_wcstol};
+use fish_common::{fish_reserved_codepoint, read_blocked};
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_widestring::encode_byte_to_char;
 use nix::sys::{select::FdSet, signal::SigSet, time::TimeSpec};

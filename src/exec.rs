@@ -7,9 +7,7 @@ use crate::builtins::shared::{
     ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH,
     builtin_run,
 };
-use crate::common::{
-    ScopeGuard, bytes2wcstring, exit_without_destructors, truncate_at_nul, write_loop,
-};
+use crate::common::bytes2wcstring;
 use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment as _, READ_BYTE_LIMIT, Statuses};
 #[cfg(have_posix_spawn)]
 use crate::env_dispatch::use_posix_spawn;
@@ -46,6 +44,7 @@ use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
 use crate::wutil::{fish_wcstol, perror_io};
 use errno::{errno, set_errno};
+use fish_common::{ScopeGuard, exit_without_destructors, truncate_at_nul, write_loop};
 use fish_wcstringutil::{wcs2bytes, wcs2zstring};
 use fish_widestring::ToWString as _;
 use libc::{

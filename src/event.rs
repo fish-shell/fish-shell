@@ -7,7 +7,7 @@
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
-use crate::common::{ScopeGuard, escape, str2wcstring};
+use crate::common::{escape, str2wcstring};
 use crate::flog::flog;
 use crate::io::{IoChain, IoStreams};
 use crate::job_group::MaybeJobId;
@@ -16,6 +16,7 @@ use crate::prelude::*;
 use crate::proc::Pid;
 use crate::reader::reader_update_termsize;
 use crate::signal::{Signal, signal_check_cancel, signal_handle};
+use fish_common::ScopeGuard;
 
 pub enum EventType {
     Any,

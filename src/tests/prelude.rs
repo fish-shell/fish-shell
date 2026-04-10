@@ -1,4 +1,4 @@
-use crate::common::{BUILD_DIR, ScopeGuard, ScopeGuarding};
+use crate::common::BUILD_DIR;
 use crate::env::env_init;
 use crate::env::{EnvMode, EnvVar, EnvVarFlags, Environment};
 use crate::locale::set_libc_locales;
@@ -9,6 +9,7 @@ use crate::signal::signal_reset_handlers;
 use crate::topic_monitor::topic_monitor_init;
 use crate::wutil::wgetcwd;
 use crate::{env::EnvStack, proc::proc_init};
+use fish_common::{ScopeGuard, ScopeGuarding};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::env::set_current_dir;

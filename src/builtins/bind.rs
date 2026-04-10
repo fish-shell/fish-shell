@@ -1,19 +1,19 @@
 //! Implementation of the bind builtin.
 
 use super::prelude::*;
-use crate::builtins::error::Error;
-use crate::common::{
-    EscapeFlags, EscapeStringStyle, bytes2wcstring, escape, escape_string, valid_var_name,
+use crate::{
+    builtins::error::Error,
+    common::{bytes2wcstring, escape, escape_string, valid_var_name},
+    err_fmt, err_raw, err_str,
+    highlight::highlight_and_colorize,
+    input::{
+        InputMapping, InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings,
+    },
+    key::{
+        self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
+    },
 };
-use crate::highlight::highlight_and_colorize;
-use crate::input::{
-    InputMapping, InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings,
-};
-use crate::key::{
-    self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
-};
-use crate::{err_fmt, err_raw, err_str};
-use fish_common::help_section;
+use fish_common::{EscapeFlags, EscapeStringStyle, help_section};
 use std::sync::MutexGuard;
 
 const DEFAULT_BIND_MODE: &wstr = L!("default");

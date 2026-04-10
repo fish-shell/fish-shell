@@ -25,12 +25,7 @@ use crate::ast::{self, Kind, is_same_node};
 use crate::builtins::shared::ErrorCode;
 use crate::builtins::shared::STATUS_CMD_ERROR;
 use crate::builtins::shared::STATUS_CMD_OK;
-use crate::common::ScopeGuarding;
-use crate::common::{
-    EscapeFlags, EscapeStringStyle, ScopeGuard, bytes2wcstring, escape, escape_string,
-    exit_without_destructors, get_obfuscation_read_char, get_program_name,
-    restore_term_foreground_process_group_for_exit, shell_modes, write_loop,
-};
+use crate::common::{bytes2wcstring, escape, escape_string, get_program_name, shell_modes};
 use crate::complete::{
     CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete, complete_load,
     sort_and_prioritize,
@@ -117,7 +112,11 @@ use crate::wutil::{fstat, perror_nix, wstat};
 use crate::{abbrs, event, function};
 use assert_matches::assert_matches;
 use errno::{Errno, errno};
-use fish_common::{UTF8_BOM_WCHAR, help_section};
+use fish_common::{
+    EscapeFlags, EscapeStringStyle, ScopeGuard, ScopeGuarding, UTF8_BOM_WCHAR,
+    exit_without_destructors, get_obfuscation_read_char, help_section,
+    restore_term_foreground_process_group_for_exit, write_loop,
+};
 use fish_fallback::fish_wcwidth;
 use fish_fallback::lowercase;
 use fish_feature_flags::FeatureFlag;

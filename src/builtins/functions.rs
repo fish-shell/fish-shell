@@ -1,19 +1,16 @@
 use super::prelude::*;
-use crate::builtins::error::Error;
-use crate::common::bytes2wcstring;
-use crate::common::escape_string;
-use crate::common::reformat_for_screen;
-use crate::common::valid_func_name;
-use crate::common::{EscapeFlags, EscapeStringStyle};
-use crate::err_fmt;
-use crate::err_str;
-use crate::event::{self};
-use crate::function;
-use crate::highlight::highlight_and_colorize;
-use crate::parse_util::apply_indents;
-use crate::parse_util::compute_indents;
-use crate::parser_keywords::parser_keywords_is_reserved;
-use crate::termsize::termsize_last;
+use crate::{
+    builtins::error::Error,
+    common::{bytes2wcstring, escape_string, reformat_for_screen, valid_func_name},
+    err_fmt, err_str,
+    event::{self},
+    function,
+    highlight::highlight_and_colorize,
+    parse_util::{apply_indents, compute_indents},
+    parser_keywords::parser_keywords_is_reserved,
+    termsize::termsize_last,
+};
+use fish_common::{EscapeFlags, EscapeStringStyle};
 
 #[derive(Default)]
 struct FunctionsCmdOpts<'args> {

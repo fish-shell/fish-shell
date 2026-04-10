@@ -1312,13 +1312,13 @@ pub struct HighlightSpec {
 #[cfg(test)]
 mod tests {
     use super::{HighlightColorResolver, HighlightRole, HighlightSpec, highlight_shell};
-    use crate::common::ScopeGuard;
     use crate::env::{EnvMode, EnvSetMode, EnvVar, EnvVarFlags, Environment as _};
     use crate::highlight::parse_text_face_for_highlight;
     use crate::operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext};
     use crate::prelude::*;
     use crate::tests::prelude::*;
     use crate::text_face::{ResettableStyle, UnderlineStyle};
+    use fish_common::ScopeGuard;
     use fish_feature_flags::{FeatureFlag, with_overridden_feature};
     use libc::PATH_MAX;
 

@@ -1,17 +1,11 @@
-use std::os::fd::AsRawFd as _;
-
-use crate::{
-    builtins::error::Error,
-    common::{FilenameRef, escape},
-    err_fmt, err_raw, err_str,
-    fds::wopen_cloexec,
-    nix::isatty,
-    parser::Block,
-    reader::reader_read,
-};
-use nix::{fcntl::OFlag, sys::stat::Mode};
-
 use super::prelude::*;
+use crate::{
+    builtins::error::Error, common::escape, err_fmt, err_raw, err_str, fds::wopen_cloexec,
+    nix::isatty, parser::Block, reader::reader_read,
+};
+use fish_common::FilenameRef;
+use nix::{fcntl::OFlag, sys::stat::Mode};
+use std::os::fd::AsRawFd as _;
 
 /// The  source builtin, sometimes called `.`. Evaluates the contents of a file in the current
 /// context.

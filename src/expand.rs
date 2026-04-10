@@ -8,8 +8,8 @@ use crate::builtins::shared::{
     STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH, STATUS_UNMATCHED_WILDCARD,
 };
 use crate::common::{
-    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, escape, escape_string,
-    escape_string_for_double_quotes, osstr2wcstring, unescape_string, valid_var_name_char,
+    escape, escape_string, escape_string_for_double_quotes, osstr2wcstring, unescape_string,
+    valid_var_name_char,
 };
 use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
 use crate::env::{EnvVar, Environment};
@@ -24,7 +24,10 @@ use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, WildcardResult
 use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
 use crate::wutil::{Options, normalize_path, wcstoi_partial};
 use bitflags::bitflags;
-use fish_common::{EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
+use fish_common::{
+    EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, EscapeFlags, EscapeStringStyle, UnescapeFlags,
+    UnescapeStringStyle,
+};
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::{join_strings, trim};

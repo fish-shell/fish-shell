@@ -26,7 +26,6 @@ use fish::{
     },
     common::{
         PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, bytes2wcstring, escape, osstr2wcstring,
-        save_term_foreground_process_group,
     },
     env::{
         EnvMode, Statuses,
@@ -59,19 +58,22 @@ use fish::{
     topic_monitor,
     wutil::waccess,
 };
+use fish_common::save_term_foreground_process_group;
 use fish_wcstringutil::wcs2bytes;
 use libc::{STDERR_FILENO, STDIN_FILENO};
 use nix::{
     sys::resource::{UsageWho, getrusage},
     unistd::{AccessFlags, getpid},
 };
-use std::ffi::{OsStr, OsString};
-use std::fs::File;
-use std::os::unix::prelude::*;
-use std::path::Path;
-use std::sync::Arc;
-use std::sync::atomic::Ordering;
-use std::{env, ops::ControlFlow};
+use std::{
+    env,
+    ffi::{OsStr, OsString},
+    fs::File,
+    ops::ControlFlow,
+    os::unix::prelude::*,
+    path::Path,
+    sync::{Arc, atomic::Ordering},
+};
 
 /// container to hold the options specified within the command line
 #[derive(Default, Debug)]

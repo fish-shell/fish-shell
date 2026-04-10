@@ -1,33 +1,23 @@
 //! Implementation of the read builtin.
 
 use super::prelude::*;
-use crate::builtins::error::Error;
-use crate::common::UnescapeStringStyle;
-use crate::common::bytes2wcstring;
-use crate::common::escape;
-use crate::common::read_blocked;
-use crate::common::unescape_string;
-use crate::common::valid_var_name;
-use crate::env::EnvMode;
-use crate::env::Environment as _;
-use crate::env::READ_BYTE_LIMIT;
-use crate::env::{EnvVar, EnvVarFlags};
-use crate::err_fmt;
-use crate::err_str;
-use crate::input_common::DecodeState;
-use crate::input_common::InvalidPolicy;
-use crate::input_common::decode_utf8;
-use crate::nix::isatty;
-use crate::parse_execution::varname_error;
-use crate::parser::ParserEnvSetMode;
-use crate::reader::ReaderConfig;
-use crate::reader::commandline_set_buffer;
-use crate::reader::{reader_pop, reader_push, reader_readline, set_shell_modes_temporarily};
-use crate::tokenizer::TOK_ACCEPT_UNFINISHED;
-use crate::tokenizer::TOK_ARGUMENT_LIST;
-use crate::tokenizer::Tok;
-use crate::tokenizer::Tokenizer;
-use crate::wutil;
+use crate::{
+    builtins::error::Error,
+    common::{bytes2wcstring, escape, unescape_string, valid_var_name},
+    env::{EnvMode, EnvVar, EnvVarFlags, Environment as _, READ_BYTE_LIMIT},
+    err_fmt, err_str,
+    input_common::{DecodeState, InvalidPolicy, decode_utf8},
+    nix::isatty,
+    parse_execution::varname_error,
+    parser::ParserEnvSetMode,
+    reader::{
+        ReaderConfig, commandline_set_buffer, reader_pop, reader_push, reader_readline,
+        set_shell_modes_temporarily,
+    },
+    tokenizer::{TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, Tok, Tokenizer},
+    wutil,
+};
+use fish_common::{UnescapeStringStyle, read_blocked};
 use fish_util::perror;
 use fish_wcstringutil::{split_about, split_string_tok};
 use libc::SEEK_CUR;

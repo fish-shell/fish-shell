@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 
-use crate::common::{EscapeFlags, EscapeStringStyle, escape_string};
+use crate::common::escape_string;
 use crate::complete::{CompleteFlags, Completion};
 use crate::editable_line::EditableLine;
 use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
@@ -12,6 +12,7 @@ use crate::operation_context::OperationContext;
 use crate::prelude::*;
 use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
 use crate::termsize::Termsize;
+use fish_common::{EscapeFlags, EscapeStringStyle};
 use fish_wcstringutil::string_fuzzy_match_string;
 use fish_widestring::{ELLIPSIS_CHAR, decoded_width};
 

@@ -2,10 +2,7 @@
 
 use crate::ast::{self, Node};
 use crate::builtins::shared::STATUS_ILLEGAL_CMD;
-use crate::common::{
-    CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef, PROFILING_ACTIVE, ScopeGuarding,
-    ScopedCell, ScopedRefCell, escape_string,
-};
+use crate::common::{CancelChecker, PROFILING_ACTIVE, escape_string};
 use crate::complete::CompletionList;
 use crate::env::{
     EnvMode, EnvSetMode, EnvStack, EnvStackSetResult, Environment, FISH_TERMINAL_COLOR_THEME_VAR,
@@ -35,6 +32,9 @@ use crate::wait_handle::WaitHandleStore;
 use crate::wutil::perror_nix;
 use crate::{flog, flogf, function};
 use assert_matches::assert_matches;
+use fish_common::{
+    EscapeFlags, EscapeStringStyle, FilenameRef, ScopeGuarding, ScopedCell, ScopedRefCell,
+};
 use fish_util::get_time;
 use fish_wcstringutil::wcs2bytes;
 use fish_widestring::WExt as _;

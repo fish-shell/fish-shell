@@ -8,14 +8,13 @@ use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::os::unix::fs::MetadataExt as _;
 
-use crate::common::{
-    UnescapeFlags, UnescapeStringStyle, WSL, is_windows_subsystem_for_linux, unescape_string,
-};
+use crate::common::{WSL, is_windows_subsystem_for_linux, unescape_string};
 use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
 use crate::expand::ExpandFlags;
 use crate::prelude::*;
 use crate::wutil::dir_iter::DirEntryType;
 use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
+use fish_common::{UnescapeFlags, UnescapeStringStyle};
 use fish_fallback::wcscasecmp;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{

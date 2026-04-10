@@ -5,9 +5,7 @@ use super::environment_impl::{
 };
 use crate::abbrs::{Abbreviation, Position, abbrs_get_set};
 use crate::builtins::shared::{BuiltinResult, SUCCESS};
-use crate::common::{
-    UnescapeStringStyle, cstr2wcstring, osstr2wcstring, str2wcstring, unescape_string,
-};
+use crate::common::{cstr2wcstring, osstr2wcstring, str2wcstring, unescape_string};
 use crate::env::config_paths::{ConfigPaths, PREFIX};
 use crate::env::{EnvMode, EnvSetMode, EnvVar, Statuses};
 use crate::env_dispatch::{VarChangeMilieu, env_dispatch_init, env_dispatch_var_change};
@@ -26,6 +24,7 @@ use crate::proc::is_interactive_session;
 use crate::termsize;
 use crate::universal_notifier::default_notifier;
 use crate::wutil::{fish_wcstol, wgetcwd};
+use fish_common::UnescapeStringStyle;
 use fish_wcstringutil::join_strings;
 use libc::c_int;
 use nix::{

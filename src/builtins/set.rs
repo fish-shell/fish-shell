@@ -1,28 +1,17 @@
 use super::prelude::*;
-use crate::builtins::error::Error;
-use crate::common::EscapeFlags;
-use crate::common::EscapeStringStyle;
-use crate::common::escape;
-use crate::common::escape_string;
-use crate::common::valid_var_name;
-use crate::env::EnvStackSetResult;
-use crate::env::EnvVarFlags;
-use crate::env::INHERITED_VARS;
-use crate::err_fmt;
-use crate::err_str;
-use crate::event;
-use crate::event::Event;
-use crate::expand::expand_escape_string;
-use crate::expand::expand_escape_variable;
-use crate::history::History;
-use crate::history::history_session_id;
-use crate::parse_execution::varname_error;
-use crate::parser::ParserEnvSetMode;
 use crate::{
-    env::{EnvMode, EnvVar, Environment},
+    builtins::error::Error,
+    common::{escape, escape_string, valid_var_name},
+    env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, INHERITED_VARS},
+    err_fmt, err_str,
+    event::{self, Event},
+    expand::{expand_escape_string, expand_escape_variable},
+    history::{History, history_session_id},
+    parse_execution::varname_error,
+    parser::ParserEnvSetMode,
     wutil::wcstoi::wcstoi_partial,
 };
-use fish_common::help_section;
+use fish_common::{EscapeFlags, EscapeStringStyle, help_section};
 use fish_widestring::ELLIPSIS_CHAR;
 
 #[derive(Debug, Clone)]

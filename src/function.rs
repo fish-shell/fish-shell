@@ -4,7 +4,7 @@
 
 use crate::ast::{self, Node as _};
 use crate::autoload::{Autoload, AutoloadResult};
-use crate::common::{FilenameRef, assert_sync, escape, valid_func_name};
+use crate::common::{escape, valid_func_name};
 use crate::complete::complete_wrap_map;
 use crate::env::{EnvStack, Environment};
 use crate::event::{self, EventDescription};
@@ -15,6 +15,7 @@ use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::prelude::*;
 use crate::proc::Pid;
 use crate::wutil::dir_iter::DirIter;
+use fish_common::{FilenameRef, assert_sync};
 use fish_wcstringutil::wcs2bytes;
 use std::collections::{HashMap, HashSet};
 use std::num::NonZeroU32;

@@ -1,4 +1,4 @@
-use crate::common::{assert_send, assert_sync};
+use fish_common::{assert_send, assert_sync};
 use std::ffi::{CStr, CString, c_char};
 use std::marker::PhantomData;
 use std::pin::Pin;

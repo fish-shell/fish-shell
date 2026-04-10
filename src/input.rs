@@ -1,4 +1,4 @@
-use crate::common::{Named, escape, get_by_sorted_name};
+use crate::common::escape;
 use crate::env::Environment;
 use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
@@ -10,7 +10,7 @@ use crate::key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl};
 use crate::prelude::*;
 use crate::reader::{Reader, reader_reset_interrupted};
 use crate::threads::assert_is_main_thread;
-use fish_common::assert_sorted_by_name;
+use fish_common::{Named, assert_sorted_by_name, get_by_sorted_name};
 use std::mem;
 use std::sync::{
     Mutex, MutexGuard,

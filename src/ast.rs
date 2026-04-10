@@ -9,19 +9,22 @@
  *
  * Most clients will be interested in visiting the nodes of an ast.
  */
-use crate::common::{UnescapeStringStyle, unescape_string};
-use crate::flog::{flog, flogf};
-use crate::parse_constants::{
-    ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode,
-    ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags, SOURCE_OFFSET_INVALID,
-    SourceRange, StatementDecoration, token_type_user_presentable_description,
+use crate::{
+    common::unescape_string,
+    flog::{flog, flogf},
+    parse_constants::{
+        ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode,
+        ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags, SOURCE_OFFSET_INVALID,
+        SourceRange, StatementDecoration, token_type_user_presentable_description,
+    },
+    parse_tree::ParseToken,
+    prelude::*,
+    tokenizer::{
+        TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
+        TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos,
+    },
 };
-use crate::parse_tree::ParseToken;
-use crate::prelude::*;
-use crate::tokenizer::{
-    TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
-    TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos,
-};
+use fish_common::UnescapeStringStyle;
 use macro_rules_attribute::derive;
 use std::borrow::Cow;
 use std::convert::AsMut;

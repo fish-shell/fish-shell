@@ -1,42 +1,38 @@
 //! The fish_indent program.
 
-use std::ffi::OsStr;
-use std::fs;
-use std::io::{Read, Write as _};
-use std::os::unix::ffi::OsStrExt as _;
-
-use crate::builtins::error::Error;
-use crate::locale::set_libc_locales;
-use crate::panic::panic_handler;
-
 use super::prelude::*;
-use crate::ast::{
-    self, AsNode as _, Ast, Kind, Leaf as _, Node, NodeVisitor, SourceRangeList, Traversal,
+use crate::{
+    ast::{self, AsNode as _, Ast, Kind, Leaf as _, Node, NodeVisitor, SourceRangeList, Traversal},
+    builtins::error::Error,
+    common::{PROGRAM_NAME, bytes2wcstring, get_program_name, osstr2wcstring, unescape_string},
+    env::{EnvStack, env_init, environment::Environment as _},
+    err_fmt, err_str,
+    expand::INTERNAL_SEPARATOR,
+    global_safety::RelaxedAtomicBool,
+    highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell},
+    locale::set_libc_locales,
+    operation_context::OperationContext,
+    panic::panic_handler,
+    parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange},
+    parse_util::{SPACES_PER_INDENT, apply_indents, compute_indents},
+    prelude::*,
+    print_help::print_help,
+    threads,
+    tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer},
+    topic_monitor::topic_monitor_init,
+    wutil::fish_iswalnum,
 };
-use crate::common::{
-    PROGRAM_NAME, ReadExt as _, UnescapeFlags, UnescapeStringStyle, bytes2wcstring,
-    get_program_name, osstr2wcstring, unescape_string,
-};
-use crate::env::EnvStack;
-use crate::env::env_init;
-use crate::env::environment::Environment as _;
-use crate::err_fmt;
-use crate::expand::INTERNAL_SEPARATOR;
-use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
-use crate::parse_util::{SPACES_PER_INDENT, apply_indents, compute_indents};
-use crate::print_help::print_help;
-use crate::threads;
-use crate::tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer};
-use crate::topic_monitor::topic_monitor_init;
-use crate::wutil::fish_iswalnum;
-use crate::{err_str, prelude::*};
 use assert_matches::assert_matches;
+use fish_common::{ReadExt as _, UnescapeFlags, UnescapeStringStyle};
 use fish_wcstringutil::{count_preceding_backslashes, wcs2bytes};
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
-use std::fmt::Write as _;
+use std::{
+    ffi::OsStr,
+    fmt::Write as _,
+    fs,
+    io::{Read, Write as _},
+    os::unix::ffi::OsStrExt as _,
+};
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no
 /// longer encodes detailed lexical information (e.g. every newline). This feels more complex

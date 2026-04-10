@@ -3,35 +3,37 @@
 //! from using a more clever memory allocation scheme, perhaps an evil combination of talloc,
 //! string buffers and reference counting.
 
-use crate::builtins::shared::{
-    STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD,
-    STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH, STATUS_UNMATCHED_WILDCARD,
+use crate::{
+    builtins::shared::{
+        STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD,
+        STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH,
+        STATUS_UNMATCHED_WILDCARD,
+    },
+    common::{
+        escape, escape_string, escape_string_for_double_quotes, osstr2wcstring, unescape_string,
+        valid_var_name_char,
+    },
+    complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver},
+    env::{EnvVar, Environment},
+    exec::exec_subshell_for_expand,
+    history::{History, history_session_id},
+    operation_context::OperationContext,
+    parse_constants::{ParseError, ParseErrorCode, ParseErrorList, SOURCE_LOCATION_UNKNOWN},
+    parse_util::{MaybeParentheses, expand_variable_error, locate_cmdsubst_range},
+    path::path_apply_working_directory,
+    prelude::*,
+    wildcard::{WildcardResult, wildcard_expand_string, wildcard_has_internal},
+    wutil::{Options, normalize_path, wcstoi_partial},
 };
-use crate::common::{
-    escape, escape_string, escape_string_for_double_quotes, osstr2wcstring, unescape_string,
-    valid_var_name_char,
-};
-use crate::complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver};
-use crate::env::{EnvVar, Environment};
-use crate::exec::exec_subshell_for_expand;
-use crate::history::{History, history_session_id};
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{ParseError, ParseErrorCode, ParseErrorList, SOURCE_LOCATION_UNKNOWN};
-use crate::parse_util::{MaybeParentheses, expand_variable_error, locate_cmdsubst_range};
-use crate::path::path_apply_working_directory;
-use crate::prelude::*;
-use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, WildcardResult};
-use crate::wildcard::{wildcard_expand_string, wildcard_has_internal};
-use crate::wutil::{Options, normalize_path, wcstoi_partial};
 use bitflags::bitflags;
-use fish_common::{
-    EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, EscapeFlags, EscapeStringStyle, UnescapeFlags,
-    UnescapeStringStyle,
-};
+use fish_common::{EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle};
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::{join_strings, trim};
-use fish_widestring::char_offset;
+use fish_widestring::{
+    ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
+    char_offset,
+};
 use nix::unistd::{User, getpid};
 
 bitflags! {
@@ -1576,25 +1578,20 @@ pub struct ExpandResult {
 
 #[cfg(test)]
 mod tests {
-    use crate::abbrs::Abbreviation;
-    use crate::abbrs::{self};
-    use crate::abbrs::{with_abbrs, with_abbrs_mut};
-    use crate::common::str2wcstring;
-    use crate::complete::{CompletionList, CompletionReceiver};
-    use crate::env::{EnvMode, EnvStackSetResult};
-    use crate::expand::{ExpandResultCode, expand_to_receiver};
-    use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, no_cancel};
-    use crate::parse_constants::ParseErrorList;
-    use crate::parser::ParserEnvSetMode;
-    use crate::tests::prelude::*;
-    use crate::wildcard::ANY_STRING;
     use crate::{
-        expand::{ExpandFlags, expand_string},
-        operation_context::OperationContext,
+        abbrs::{self, Abbreviation, with_abbrs, with_abbrs_mut},
+        common::str2wcstring,
+        complete::{CompletionList, CompletionReceiver},
+        env::{EnvMode, EnvStackSetResult},
+        expand::{ExpandFlags, ExpandResultCode, expand_string, expand_to_receiver},
+        operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext, no_cancel},
+        parse_constants::ParseErrorList,
+        parser::ParserEnvSetMode,
         prelude::*,
+        tests::prelude::*,
     };
-    use std::collections::HashSet;
-    use std::collections::hash_map::RandomState;
+    use fish_widestring::ANY_STRING;
+    use std::collections::{HashSet, hash_map::RandomState};
 
     fn expand_test_impl(
         input: &wstr,

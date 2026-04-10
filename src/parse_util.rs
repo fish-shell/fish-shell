@@ -1,33 +1,35 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{
-    self, Ast, Keyword as _, Kind, Leaf as _, Node, NodeVisitor, Token as _, Traversal,
-    is_same_node,
+use crate::{
+    ast::{
+        self, Ast, Keyword as _, Kind, Leaf as _, Node, NodeVisitor, Token as _, Traversal,
+        is_same_node,
+    },
+    builtins::shared::builtin_exists,
+    common::{unescape_string, valid_var_name, valid_var_name_char},
+    expand::{
+        BRACE_BEGIN, BRACE_END, BRACE_SEP, ExpandFlags, ExpandResultCode, INTERNAL_SEPARATOR,
+        VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, expand_one,
+        expand_to_command_and_args,
+    },
+    operation_context::OperationContext,
+    parse_constants::{
+        ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
+        ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
+        ERROR_NOT_PID, ERROR_NOT_STATUS, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
+        INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode, ParseErrorList, ParseIssue,
+        ParseKeyword, ParseTokenType, ParseTreeFlags, PipelinePosition, SourceRange,
+        StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
+    },
+    prelude::*,
+    tokenizer::{
+        TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
+        is_token_delimiter, quote_end,
+    },
 };
-use crate::builtins::shared::builtin_exists;
-use crate::common::{unescape_string, valid_var_name, valid_var_name_char};
-use crate::expand::{
-    BRACE_BEGIN, BRACE_END, BRACE_SEP, ExpandFlags, ExpandResultCode, INTERNAL_SEPARATOR,
-    VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, expand_one,
-    expand_to_command_and_args,
-};
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{
-    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
-    ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID,
-    ERROR_NOT_STATUS, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
-    INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode, ParseErrorList, ParseIssue,
-    ParseKeyword, ParseTokenType, ParseTreeFlags, PipelinePosition, SourceRange,
-    StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
-};
-use crate::prelude::*;
-use crate::tokenizer::{
-    TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
-    is_token_delimiter, quote_end,
-};
-use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use fish_common::{UnescapeFlags, UnescapeStringStyle, help_section};
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{count_newlines, truncate};
+use fish_widestring::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use std::ops::Range;
 use std::{iter, ops};
 

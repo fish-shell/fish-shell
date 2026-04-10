@@ -18,6 +18,18 @@ pub mod prelude {
     pub use crate::{IntoCharIter, L, ToWString, WExt, WString, wstr};
 }
 
+// Highest legal ASCII value.
+pub const ASCII_MAX: char = 127 as char;
+
+// Highest legal 16-bit Unicode value.
+pub const UCS2_MAX: char = '\u{FFFF}';
+
+// Highest legal byte value.
+pub const BYTE_MAX: char = 0xFF as char;
+
+// Unicode BOM value.
+pub const UTF8_BOM_WCHAR: char = '\u{FEFF}';
+
 /// The character to use where the text has been truncated.
 pub const ELLIPSIS_CHAR: char = '\u{2026}'; // ('…')
 
@@ -36,6 +48,46 @@ pub const SPECIAL_KEY_ENCODE_BASE: char = '\u{F500}';
 // on Mac OS X. See http://www.unicode.org/faq/private_use.html.
 pub const ENCODE_DIRECT_BASE: char = char_offset(SPECIAL_KEY_ENCODE_BASE, 256);
 pub const ENCODE_DIRECT_END: char = char_offset(ENCODE_DIRECT_BASE, 256);
+
+// Use Unicode "non-characters" for internal characters as much as we can. This
+// gives us 32 "characters" for internal use that we can guarantee should not
+// appear in our input stream. See http://www.unicode.org/faq/private_use.html.
+pub const RESERVED_CHAR_BASE: char = '\u{FDD0}';
+pub const RESERVED_CHAR_END: char = '\u{FDF0}';
+// Split the available non-character values into two ranges to ensure there are
+// no conflicts among the places we use these special characters.
+pub const EXPAND_RESERVED_BASE: char = RESERVED_CHAR_BASE;
+pub const EXPAND_RESERVED_END: char = char_offset(EXPAND_RESERVED_BASE, 16);
+pub const WILDCARD_RESERVED_BASE: char = EXPAND_RESERVED_END;
+pub const WILDCARD_RESERVED_END: char = char_offset(WILDCARD_RESERVED_BASE, 16);
+// Make sure the ranges defined above don't exceed the range for non-characters.
+// This is to make sure we didn't do something stupid in subdividing the
+// Unicode range for our needs.
+const _: () = assert!(WILDCARD_RESERVED_END <= RESERVED_CHAR_END);
+
+/// Character representing any character except '/' (slash).
+pub const ANY_CHAR: char = char_offset(WILDCARD_RESERVED_BASE, 0);
+/// Character representing any character string not containing '/' (slash).
+pub const ANY_STRING: char = char_offset(WILDCARD_RESERVED_BASE, 1);
+/// Character representing any character string.
+pub const ANY_STRING_RECURSIVE: char = char_offset(WILDCARD_RESERVED_BASE, 2);
+/// This is a special pseudo-char that is not used other than to mark the
+/// end of the special characters so we can sanity check the enum range.
+#[allow(dead_code)]
+pub const ANY_SENTINEL: char = char_offset(WILDCARD_RESERVED_BASE, 3);
+
+/// Return true if the character is in a range reserved for fish's private use.
+///
+/// NOTE: This is used when tokenizing the input. It is also used when reading input, before
+/// tokenization, to replace such chars with REPLACEMENT_WCHAR if they're not part of a quoted
+/// string. We don't want external input to be able to feed reserved characters into our
+/// lexer/parser or code evaluator.
+//
+// TODO: Actually implement the replacement as documented above.
+pub fn fish_reserved_codepoint(c: char) -> bool {
+    (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END)
+        || (c >= SPECIAL_KEY_ENCODE_BASE && c < ENCODE_DIRECT_END)
+}
 
 /// Encode a literal byte in a UTF-32 character. This is required for e.g. the echo builtin, whose
 /// escape sequences can be used to construct raw byte sequences which are then interpreted as e.g.

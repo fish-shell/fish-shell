@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use fish_widestring::{ENCODE_DIRECT_END, L, SPECIAL_KEY_ENCODE_BASE, WString, char_offset, wstr};
+use fish_widestring::{L, WString, wstr};
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use std::cell::{Cell, RefCell};
 use std::io::Read;
@@ -11,34 +11,6 @@ use std::sync::{Arc, OnceLock};
 use std::{env, mem, time};
 
 pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
-
-// Highest legal ASCII value.
-pub const ASCII_MAX: char = 127 as char;
-
-// Highest legal 16-bit Unicode value.
-pub const UCS2_MAX: char = '\u{FFFF}';
-
-// Highest legal byte value.
-pub const BYTE_MAX: char = 0xFF as char;
-
-// Unicode BOM value.
-pub const UTF8_BOM_WCHAR: char = '\u{FEFF}';
-
-// Use Unicode "non-characters" for internal characters as much as we can. This
-// gives us 32 "characters" for internal use that we can guarantee should not
-// appear in our input stream. See http://www.unicode.org/faq/private_use.html.
-pub const RESERVED_CHAR_BASE: char = '\u{FDD0}';
-pub const RESERVED_CHAR_END: char = '\u{FDF0}';
-// Split the available non-character values into two ranges to ensure there are
-// no conflicts among the places we use these special characters.
-pub const EXPAND_RESERVED_BASE: char = RESERVED_CHAR_BASE;
-pub const EXPAND_RESERVED_END: char = char_offset(EXPAND_RESERVED_BASE, 16);
-pub const WILDCARD_RESERVED_BASE: char = EXPAND_RESERVED_END;
-pub const WILDCARD_RESERVED_END: char = char_offset(WILDCARD_RESERVED_BASE, 16);
-// Make sure the ranges defined above don't exceed the range for non-characters.
-// This is to make sure we didn't do something stupid in subdividing the
-// Unicode range for our needs.
-const _: () = assert!(WILDCARD_RESERVED_END <= RESERVED_CHAR_END);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EscapeStringStyle {
@@ -125,19 +97,6 @@ bitflags! {
         /// don't handle backslash escapes
         const NO_BACKSLASHES = 1 << 2;
     }
-}
-
-/// Return true if the character is in a range reserved for fish's private use.
-///
-/// NOTE: This is used when tokenizing the input. It is also used when reading input, before
-/// tokenization, to replace such chars with REPLACEMENT_WCHAR if they're not part of a quoted
-/// string. We don't want external input to be able to feed reserved characters into our
-/// lexer/parser or code evaluator.
-//
-// TODO: Actually implement the replacement as documented above.
-pub fn fish_reserved_codepoint(c: char) -> bool {
-    (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END)
-        || (c >= SPECIAL_KEY_ENCODE_BASE && c < ENCODE_DIRECT_END)
 }
 
 /// This function attempts to distinguish between a console session (at the actual login vty) and a

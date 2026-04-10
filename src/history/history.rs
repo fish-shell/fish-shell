@@ -36,13 +36,13 @@ use crate::{
     path::{path_get_config, path_get_data, path_is_valid},
     prelude::*,
     threads::{ThreadPool, assert_is_background_thread},
-    wildcard::{ANY_STRING, wildcard_match},
+    wildcard::wildcard_match,
     wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
 use bitflags::bitflags;
 use fish_common::UnescapeStringStyle;
 use fish_wcstringutil::{subsequence_in_string, trim};
-use fish_widestring::subslice_position;
+use fish_widestring::{ANY_STRING, subslice_position};
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng as _;

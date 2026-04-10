@@ -9,12 +9,15 @@ use crate::{
     prelude::*,
     terminal::Outputter,
     termsize::Termsize,
-    wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE},
     wutil::fish_iswalnum,
 };
 use fish_fallback::fish_wcwidth;
 use fish_feature_flags::{FeatureFlag, feature_test};
-use fish_widestring::{decode_byte_from_char, encode_byte_to_char, subslice_position, wcs2bytes};
+use fish_widestring::{
+    ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, ASCII_MAX, BYTE_MAX, UCS2_MAX,
+    decode_byte_from_char, encode_byte_to_char, fish_reserved_codepoint, subslice_position,
+    wcs2bytes,
+};
 use nix::sys::termios::Termios;
 use std::{
     env,

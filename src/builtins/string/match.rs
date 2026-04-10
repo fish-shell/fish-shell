@@ -8,7 +8,8 @@ use crate::env::{EnvVar, EnvVarFlags};
 use crate::flog::flog;
 use crate::parse_util::unescape_wildcards;
 use crate::parser::ParserEnvSetMode;
-use crate::wildcard::{ANY_STRING, wildcard_match};
+use crate::wildcard::wildcard_match;
+use fish_widestring::ANY_STRING;
 
 #[derive(Default)]
 pub struct Match<'args> {

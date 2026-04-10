@@ -15,11 +15,11 @@ use crate::{
     topic_monitor::Topic,
 };
 use errno::{Errno, set_errno};
-use fish_common::fish_reserved_codepoint;
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::join_strings;
 use fish_widestring::{
-    IntoCharIter, L, WExt as _, WString, str2bytes_callback, wcs2osstring, wcs2zstring, wstr,
+    IntoCharIter, L, WExt as _, WString, fish_reserved_codepoint, str2bytes_callback, wcs2osstring,
+    wcs2zstring, wstr,
 };
 use nix::unistd::AccessFlags;
 use std::{

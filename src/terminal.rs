@@ -1,11 +1,12 @@
 // Generic output functions.
-use crate::common::{self, EscapeStringStyle, escape_string};
+use crate::common::escape_string;
 use crate::prelude::*;
 use crate::screen::{is_dumb, only_grayscale};
 use crate::text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle};
 use crate::threads::MainThread;
 use bitflags::bitflags;
 use fish_color::{Color, Color24};
+use fish_common::{EscapeStringStyle, write_loop};
 use fish_feature_flags::FeatureFlag;
 use fish_wcstringutil::{wcs2bytes, wcs2bytes_appending};
 use std::cell::{RefCell, RefMut};
@@ -545,7 +546,7 @@ impl Outputter {
     /// Output any buffered data to the given `fd`.
     fn flush_to(&mut self, fd: RawFd) {
         if fd >= 0 && !self.contents.is_empty() {
-            let _ = common::write_loop(&fd, &self.contents);
+            let _ = write_loop(&fd, &self.contents);
             self.contents.clear();
         }
     }

@@ -1,7 +1,6 @@
 //! Utility for transferring the tty to a child process in a scoped way,
 //! and reclaiming it after.
 
-use crate::common::{self, safe_write_loop};
 use crate::env::Environment;
 use crate::env_dispatch::MIDNIGHT_COMMANDER_SID;
 use crate::flog::{flog, flogf};
@@ -18,6 +17,7 @@ use crate::terminal::TerminalCommand::{
 };
 use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror_nix, wcstoi};
+use fish_common::{safe_write_loop, write_loop};
 use fish_util::perror;
 use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
 use nix::sys::termios::tcgetattr;
@@ -295,7 +295,7 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) {
 
     // Write the commands to the tty, ignoring errors.
     let commands = protocols.safe_get_commands(enable);
-    let _ = common::write_loop(&libc::STDOUT_FILENO, commands);
+    let _ = write_loop(&libc::STDOUT_FILENO, commands);
     if !enable {
         TTY_PROTOCOLS_ACTIVE.store(false, Ordering::Relaxed);
     }

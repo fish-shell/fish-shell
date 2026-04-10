@@ -4,10 +4,7 @@ use crate::ast::{
     is_same_node,
 };
 use crate::builtins::shared::builtin_exists;
-use crate::common::{
-    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, escape_string,
-    unescape_string, valid_var_name, valid_var_name_char,
-};
+use crate::common::{escape_string, unescape_string, valid_var_name, valid_var_name_char};
 use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, ExpandFlags, ExpandResultCode, INTERNAL_SEPARATOR,
     VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, expand_one,
@@ -28,7 +25,9 @@ use crate::tokenizer::{
     is_token_delimiter, quote_end,
 };
 use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use fish_common::help_section;
+use fish_common::{
+    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, help_section,
+};
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{count_newlines, truncate};
 use std::ops::Range;
@@ -1968,7 +1967,6 @@ mod tests {
         BOOL_AFTER_BACKGROUND_ERROR_MSG, compute_indents, detect_parse_errors,
         escape_string_with_quote, get_cmdsubst_extent, get_process_extent, slice_length,
     };
-    use crate::common::EscapeFlags;
     use crate::parse_constants::{
         ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
         ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
@@ -1976,6 +1974,7 @@ mod tests {
     };
     use crate::prelude::*;
     use crate::tests::prelude::*;
+    use fish_common::EscapeFlags;
     use pcre2::utf32::Regex;
 
     #[test]

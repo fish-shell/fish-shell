@@ -1,3 +1,6 @@
+use crate::{common::get_program_name, nix::isatty, threads::is_main_thread};
+use fish_common::read_blocked;
+use libc::STDIN_FILENO;
 use std::{
     panic::{UnwindSafe, set_hook, take_hook},
     sync::{
@@ -5,14 +8,6 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
     time::Duration,
-};
-
-use libc::STDIN_FILENO;
-
-use crate::{
-    common::{get_program_name, read_blocked},
-    nix::isatty,
-    threads::is_main_thread,
 };
 
 pub static AT_EXIT: OnceLock<Box<dyn Fn() + Send + Sync>> = OnceLock::new();

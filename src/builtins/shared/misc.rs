@@ -1,13 +1,17 @@
-use crate::common::{Named, bytes2wcstring, escape, get_by_sorted_name, str2wcstring};
-use crate::fds::BorrowedFdFile;
-use crate::io::OutputStream;
-use crate::parse_constants::UNKNOWN_BUILTIN_ERR_MSG;
-use crate::parse_util::argument_is_help;
-use crate::parser::{BlockType, LoopStatus};
-use crate::proc::{Pid, ProcStatus, no_exec};
-use crate::{builtins::prelude::*, builtins::*, err_fmt, wutil};
+use crate::{
+    builtins::{prelude::*, *},
+    common::{bytes2wcstring, escape, str2wcstring},
+    err_fmt,
+    fds::BorrowedFdFile,
+    io::OutputStream,
+    parse_constants::UNKNOWN_BUILTIN_ERR_MSG,
+    parse_util::argument_is_help,
+    parser::{BlockType, LoopStatus},
+    proc::{Pid, ProcStatus, no_exec},
+    wutil,
+};
 use errno::errno;
-use fish_common::assert_sorted_by_name;
+use fish_common::{Named, assert_sorted_by_name, get_by_sorted_name};
 use fish_widestring::L;
 use std::io::{BufRead as _, BufReader, Read as _};
 

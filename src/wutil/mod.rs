@@ -7,12 +7,15 @@ pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
 
-use crate::common::{bytes2wcstring, fish_reserved_codepoint, osstr2wcstring};
-use crate::fds::BorrowedFdFile;
-use crate::flog;
-use crate::signal::SigChecker;
-use crate::topic_monitor::Topic;
+use crate::{
+    common::{bytes2wcstring, osstr2wcstring},
+    fds::BorrowedFdFile,
+    flog,
+    signal::SigChecker,
+    topic_monitor::Topic,
+};
 use errno::{Errno, set_errno};
+use fish_common::fish_reserved_codepoint;
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2osstring, wcs2zstring};
 use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};

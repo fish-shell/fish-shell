@@ -7,7 +7,7 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
-use crate::common::{get_omitted_newline_str, has_working_tty_timestamps, shell_modes, write_loop};
+use crate::common::{get_omitted_newline_str, has_working_tty_timestamps, shell_modes};
 use crate::editable_line::line_at_cursor;
 use crate::env::Environment;
 use crate::flog::{flog, flogf};
@@ -24,6 +24,7 @@ use crate::terminal::TerminalCommand::{
 use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
 use crate::termsize::Termsize;
 use crate::wutil::fstat;
+use fish_common::write_loop;
 use fish_fallback::{fish_wcswidth_canonicalizing, fish_wcwidth};
 use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string, wcs2bytes};
 use fish_widestring::ELLIPSIS_CHAR;

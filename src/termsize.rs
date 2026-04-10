@@ -1,10 +1,10 @@
 // Support for exposing the terminal size.
-use crate::common::assert_sync;
 use crate::env::{EnvMode, EnvVar, Environment};
 use crate::flog::flog;
 use crate::parser::{Parser, ParserEnvSetMode};
 use crate::prelude::*;
 use crate::wutil::fish_wcstoi;
+use fish_common::assert_sync;
 use std::mem::MaybeUninit;
 use std::num::NonZeroU16;
 use std::sync::Mutex;

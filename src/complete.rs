@@ -1,3 +1,41 @@
+use crate::{
+    abbrs::with_abbrs,
+    ast::unescape_keyword,
+    autoload::{Autoload, AutoloadResult},
+    builtins::shared::{builtin_exists, builtin_get_desc, builtin_get_names},
+    common::{charptr2wcstring, escape, unescape_string, valid_var_name_char},
+    env::{EnvMode, EnvStack, Environment},
+    exec::exec_subshell,
+    expand::{
+        ExpandFlags, ExpandResultCode, expand_escape_string, expand_escape_variable, expand_one,
+        expand_string, expand_to_receiver,
+    },
+    flog::{flog, flogf},
+    function,
+    history::{History, history_session_id},
+    localization::{LocalizableString, localizable_string},
+    operation_context::OperationContext,
+    parse_constants::SourceRange,
+    parse_util::{get_cmdsubst_extent, get_process_extent, unescape_wildcards},
+    parser::{Block, Parser, ParserEnvSetMode},
+    parser_keywords::parser_keywords_is_subcommand,
+    path::{path_get_path, path_try_get_path},
+    prelude::*,
+    reader::{get_quote, is_backslashed},
+    tokenizer::{Tok, TokFlags, TokenType, Tokenizer, variable_assignment_equals_pos},
+    wildcard::{wildcard_complete, wildcard_has, wildcard_match},
+    wutil::wrealpath,
+};
+use assert_matches::assert_matches;
+use bitflags::bitflags;
+use fish_common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle};
+use fish_util::wcsfilecmp;
+use fish_wcstringutil::{
+    StringFuzzyMatch, string_fuzzy_match_string, string_prefixes_string,
+    string_prefixes_string_case_insensitive, string_suffixes_string_case_insensitive,
+    strip_executable_suffix,
+};
+use fish_widestring::WExt as _;
 use std::{
     cmp::Ordering,
     collections::{BTreeMap, BTreeSet, HashMap, HashSet},
@@ -9,51 +47,6 @@ use std::{
     },
     time::{Duration, Instant},
 };
-
-use crate::{
-    abbrs::with_abbrs,
-    autoload::Autoload,
-    builtins::shared::{builtin_exists, builtin_get_desc, builtin_get_names},
-    common::{
-        ScopeGuard, UnescapeFlags, UnescapeStringStyle, escape, unescape_string,
-        valid_var_name_char,
-    },
-    env::{EnvMode, EnvStack, Environment},
-    exec::exec_subshell,
-    expand::{
-        ExpandFlags, ExpandResultCode, expand_escape_string, expand_escape_variable, expand_one,
-        expand_string, expand_to_receiver,
-    },
-    flog::{flog, flogf},
-    function,
-    history::{History, history_session_id},
-    operation_context::OperationContext,
-    parse_constants::SourceRange,
-    parse_util::{get_cmdsubst_extent, get_process_extent, unescape_wildcards},
-    parser::{Block, Parser, ParserEnvSetMode},
-    parser_keywords::parser_keywords_is_subcommand,
-    path::{path_get_path, path_try_get_path},
-    prelude::*,
-    tokenizer::{Tok, TokFlags, TokenType, Tokenizer, variable_assignment_equals_pos},
-    wildcard::{wildcard_complete, wildcard_has, wildcard_match},
-    wutil::wrealpath,
-};
-use crate::{
-    ast::unescape_keyword,
-    autoload::AutoloadResult,
-    common::charptr2wcstring,
-    localization::{LocalizableString, localizable_string},
-    reader::{get_quote, is_backslashed},
-};
-use assert_matches::assert_matches;
-use bitflags::bitflags;
-use fish_util::wcsfilecmp;
-use fish_wcstringutil::{
-    StringFuzzyMatch, string_fuzzy_match_string, string_prefixes_string,
-    string_prefixes_string_case_insensitive, string_suffixes_string_case_insensitive,
-    strip_executable_suffix,
-};
-use fish_widestring::WExt as _;
 
 // Completion description strings, mostly for different types of files, such as sockets, block
 // devices, etc.

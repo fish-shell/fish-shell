@@ -3,7 +3,7 @@
 //! the exec library will call proc to create representations of the running jobs as needed.
 
 use crate::ast;
-use crate::common::{Timepoint, WSL, escape, is_windows_subsystem_for_linux, timef};
+use crate::common::{WSL, escape, is_windows_subsystem_for_linux};
 use crate::env::Statuses;
 use crate::event::{self, Event};
 use crate::flog::{flog, flogf};
@@ -21,6 +21,7 @@ use crate::topic_monitor::{GenerationsList, Topic, topic_monitor_principal};
 use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
 use crate::wutil::{perror_nix, wbasename};
 use cfg_if::cfg_if;
+use fish_common::{Timepoint, timef};
 use fish_widestring::ToWString;
 use libc::{
     _SC_CLK_TCK, EXIT_SUCCESS, SIG_IGN, SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGINT, SIGPIPE, SIGQUIT,

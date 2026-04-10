@@ -2,7 +2,7 @@
 // to support highlighting.
 // Because this may perform blocking I/O, we compute results in a separate thread,
 // and provide them optimistically.
-use crate::common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
+use crate::common::unescape_string;
 use crate::expand::{
     BRACE_BEGIN, BRACE_END, BRACE_SEP, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, VARIABLE_EXPAND,
     VARIABLE_EXPAND_SINGLE, expand_one,
@@ -16,6 +16,7 @@ use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use crate::wutil::{
     dir_iter::DirIter, fish_wcstoi, normalize_path, waccess, wbasename, wdirname, wstat,
 };
+use fish_common::{UnescapeFlags, UnescapeStringStyle};
 use fish_wcstringutil::{
     string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,
 };

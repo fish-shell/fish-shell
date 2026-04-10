@@ -1,11 +1,14 @@
 //! The classes responsible for autoloading functions and completions.
 
-use crate::common::{ScopeGuard, escape};
-use crate::env::Environment;
-use crate::flogf;
-use crate::io::IoChain;
-use crate::parser::Parser;
-use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_path};
+use crate::{
+    common::escape,
+    env::Environment,
+    flogf,
+    io::IoChain,
+    parser::Parser,
+    wutil::{FileId, INVALID_FILE_ID, file_id_for_path},
+};
+use fish_common::ScopeGuard;
 use fish_wcstringutil::wcs2bytes;
 use fish_widestring::{L, WExt as _, WString, wstr};
 use lru::LruCache;

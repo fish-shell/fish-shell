@@ -1,14 +1,17 @@
 // Functions for executing the jobs builtin.
 
 use super::prelude::*;
-use crate::common::{EscapeFlags, EscapeStringStyle, escape_string, timef};
-use crate::err_fmt;
-use crate::io::IoStreams;
-use crate::job_group::{JobId, MaybeJobId};
-use crate::localization::{wgettext, wgettext_fmt};
-use crate::parser::Parser;
-use crate::proc::{HAVE_PROC_STAT, Job, clock_ticks_to_seconds, proc_get_jiffies};
-use crate::wutil::fish_wcstoi;
+use crate::{
+    common::escape_string,
+    err_fmt,
+    io::IoStreams,
+    job_group::{JobId, MaybeJobId},
+    localization::{wgettext, wgettext_fmt},
+    parser::Parser,
+    proc::{HAVE_PROC_STAT, Job, clock_ticks_to_seconds, proc_get_jiffies},
+    wutil::fish_wcstoi,
+};
+use fish_common::{EscapeFlags, EscapeStringStyle, timef};
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 use fish_widestring::{L, WExt as _, WString, wstr};
 use std::num::NonZeroU32;

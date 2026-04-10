@@ -1,4 +1,3 @@
-use crate::common::exit_without_destructors;
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::prelude::*;
 use crate::reader::{reader_handle_sigint, reader_sighup, safe_restore_term_mode};
@@ -7,6 +6,7 @@ use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_pri
 use crate::tty_handoff::{safe_deactivate_tty_protocols, safe_mark_tty_invalid};
 use crate::wutil::fish_wcstoi;
 use errno::{errno, set_errno};
+use fish_common::exit_without_destructors;
 use fish_util::perror;
 use nix::sys::signal::kill;
 use nix::{

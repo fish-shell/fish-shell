@@ -1,26 +1,30 @@
 use super::prelude::*;
 use super::read::TokenOutputMode;
-use crate::ast::{self, Kind, Leaf as _};
-use crate::builtins::error::Error;
-use crate::common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
-use crate::complete::Completion;
-use crate::expand::{ExpandFlags, ExpandResultCode, expand_string};
-use crate::input::input_function_get_code;
-use crate::input_common::{CharEvent, ReadlineCmd};
-use crate::operation_context::{OperationContext, no_cancel};
-use crate::parse_constants::ParseTreeFlags;
-use crate::parse_util::{
-    detect_parse_errors, get_job_extent, get_offset_from_line, get_process_extent,
-    get_token_extent, lineno,
+use crate::{
+    ast::{self, Kind, Leaf as _},
+    builtins::error::Error,
+    common::unescape_string,
+    complete::Completion,
+    err_fmt, err_str,
+    expand::{ExpandFlags, ExpandResultCode, expand_string},
+    input::input_function_get_code,
+    input_common::{CharEvent, ReadlineCmd},
+    operation_context::{OperationContext, no_cancel},
+    parse_constants::ParseTreeFlags,
+    parse_util::{
+        detect_parse_errors, get_job_extent, get_offset_from_line, get_process_extent,
+        get_token_extent, lineno,
+    },
+    prelude::*,
+    proc::is_interactive_session,
+    reader::{
+        JumpDirection, JumpPrecision, commandline_get_state, commandline_set_buffer,
+        commandline_set_search_field, reader_execute_readline_cmd, reader_jump,
+        reader_showing_suggestion,
+    },
+    tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer},
 };
-use crate::proc::is_interactive_session;
-use crate::reader::{
-    JumpDirection, JumpPrecision, commandline_get_state, commandline_set_buffer,
-    commandline_set_search_field, reader_execute_readline_cmd, reader_jump,
-    reader_showing_suggestion,
-};
-use crate::tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer};
-use crate::{err_fmt, err_str, prelude::*};
+use fish_common::{UnescapeFlags, UnescapeStringStyle};
 use fish_wcstringutil::join_strings;
 use std::ops::Range;
 

@@ -15,16 +15,37 @@
 //!    fallback solution attempts to detect races and retries if a race is detected.
 
 use crate::{
-    common::cstr2wcstring,
-    env::{EnvSetMode, EnvVar},
+    ast::{self, Kind, Node as _},
+    common::{CancelChecker, bytes2wcstring, cstr2wcstring, unescape_string, valid_var_name},
+    env::{EnvMode, EnvSetMode, EnvStack, EnvVar, Environment},
+    expand::{ExpandFlags, expand_one},
+    fds::wopen_cloexec,
+    flog::{flog, flogf},
     fs::{
-        LOCKED_FILE_MODE, LockedFile, LockingMode, PotentialUpdate, WriteMethod, lock_and_load,
-        rewrite_via_temporary_file,
+        LOCKED_FILE_MODE, LockedFile, LockingMode, PotentialUpdate, WriteMethod, fsync,
+        lock_and_load, rewrite_via_temporary_file,
     },
-    threads::ThreadPool,
+    highlight::highlight_and_colorize,
+    history::file::{HistoryFile, RawHistoryFile},
+    io::IoStreams,
+    localization::wgettext_fmt,
+    operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
+    parse_constants::{ParseTreeFlags, StatementDecoration},
+    parse_util::{detect_parse_errors, unescape_wildcards},
+    parser::Parser,
+    path::{path_get_config, path_get_data, path_is_valid},
+    prelude::*,
+    threads::{ThreadPool, assert_is_background_thread},
+    wildcard::{ANY_STRING, wildcard_match},
+    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
+use bitflags::bitflags;
+use fish_common::UnescapeStringStyle;
 use fish_wcstringutil::{subsequence_in_string, trim};
 use fish_widestring::subslice_position;
+use lru::LruCache;
+use nix::{fcntl::OFlag, sys::stat::Mode};
+use rand::Rng as _;
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
@@ -36,34 +57,6 @@ use std::{
     ops::ControlFlow,
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
-};
-
-use bitflags::bitflags;
-use lru::LruCache;
-use nix::{fcntl::OFlag, sys::stat::Mode};
-use rand::Rng as _;
-
-use crate::{
-    ast::{self, Kind, Node as _},
-    common::{CancelChecker, UnescapeStringStyle, bytes2wcstring, unescape_string, valid_var_name},
-    env::{EnvMode, EnvStack, Environment},
-    expand::{ExpandFlags, expand_one},
-    fds::wopen_cloexec,
-    flog::{flog, flogf},
-    fs::fsync,
-    highlight::highlight_and_colorize,
-    history::file::{HistoryFile, RawHistoryFile},
-    io::IoStreams,
-    localization::wgettext_fmt,
-    operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
-    parse_constants::{ParseTreeFlags, StatementDecoration},
-    parse_util::{detect_parse_errors, unescape_wildcards},
-    parser::Parser,
-    path::{path_get_config, path_get_data, path_is_valid},
-    prelude::*,
-    threads::assert_is_background_thread,
-    wildcard::{ANY_STRING, wildcard_match},
-    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

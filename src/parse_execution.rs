@@ -9,9 +9,7 @@ use crate::builtins::shared::{
     STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD,
     STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_UNMATCHED_WILDCARD, builtin_exists,
 };
-use crate::common::{
-    ScopeGuard, ScopeGuarding, ScopedRefCell, escape, truncate_at_nul, valid_var_name,
-};
+use crate::common::{escape, valid_var_name};
 use crate::complete::CompletionList;
 use crate::env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment as _, Statuses};
 use crate::event::{self, Event};
@@ -52,7 +50,7 @@ use crate::tokenizer::{PipeOrRedir, TokenType, variable_assignment_equals_pos};
 use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
 use crate::wildcard::wildcard_match;
 use crate::{builtins, err_fmt};
-use fish_common::help_section;
+use fish_common::{ScopeGuard, ScopeGuarding, ScopedRefCell, help_section, truncate_at_nul};
 use fish_widestring::WExt as _;
 use libc::{ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};
 use std::io::ErrorKind;

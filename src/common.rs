@@ -23,7 +23,7 @@ use std::os::unix::prelude::*;
 use std::sync::atomic::Ordering;
 use std::sync::{MutexGuard, OnceLock};
 
-pub use fish_common::*;
+use fish_common::*;
 
 pub const BUILD_DIR: &str = env!("FISH_RESOLVED_BUILD_DIR");
 

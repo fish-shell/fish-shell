@@ -1,28 +1,32 @@
-use crate::common::{WSL, bytes2wcstring, is_windows_subsystem_for_linux, shell_modes};
-use crate::env::{EnvStack, Environment as _};
-use crate::fd_readable_set::{FdReadableSet, Timeout};
-use crate::flog::{FloggableDebug, FloggableDisplay, flog};
-use crate::key::{
-    self, Key, Modifiers, ViewportPosition, alt, canonicalize_control_char,
-    canonicalize_keyed_control_char, char_to_symbol, function_key, shift,
+use crate::{
+    common::{WSL, is_windows_subsystem_for_linux, shell_modes},
+    env::{EnvStack, Environment as _},
+    fd_readable_set::{FdReadableSet, Timeout},
+    flog::{FloggableDebug, FloggableDisplay, flog},
+    key::{
+        self, Key, Modifiers, ViewportPosition, alt, canonicalize_control_char,
+        canonicalize_keyed_control_char, char_to_symbol, function_key, shift,
+    },
+    prelude::*,
+    reader::reader_test_and_clear_interrupted,
+    tty_handoff::{
+        SCROLL_CONTENT_UP_TERMINFO_CODE, TERMINAL_OS_NAME, XTGETTCAP_QUERY_OS_NAME, XTVERSION,
+        maybe_set_kitty_keyboard_capability, maybe_set_scroll_content_up_capability,
+    },
+    universal_notifier::default_notifier,
+    wutil::{fish_is_pua, fish_wcstol},
 };
-use crate::prelude::*;
-use crate::reader::reader_test_and_clear_interrupted;
-use crate::tty_handoff::{
-    SCROLL_CONTENT_UP_TERMINFO_CODE, TERMINAL_OS_NAME, XTGETTCAP_QUERY_OS_NAME, XTVERSION,
-    maybe_set_kitty_keyboard_capability, maybe_set_scroll_content_up_capability,
-};
-use crate::universal_notifier::default_notifier;
-use crate::wutil::{fish_is_pua, fish_wcstol};
 use fish_common::read_blocked;
 use fish_feature_flags::{FeatureFlag, feature_test};
-use fish_widestring::{encode_byte_to_char, fish_reserved_codepoint};
+use fish_widestring::{bytes2wcstring, encode_byte_to_char, fish_reserved_codepoint};
 use nix::sys::{select::FdSet, signal::SigSet, time::TimeSpec};
-use std::cell::{RefCell, RefMut};
-use std::collections::VecDeque;
-use std::os::fd::{BorrowedFd, RawFd};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::Duration;
+use std::{
+    cell::{RefCell, RefMut},
+    collections::VecDeque,
+    os::fd::{BorrowedFd, RawFd},
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Duration,
+};
 
 // The range of key codes for inputrc-style keyboard functions.
 pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;

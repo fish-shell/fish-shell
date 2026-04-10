@@ -3,7 +3,7 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::{bytes2wcstring, escape, unescape_string, valid_var_name},
+    common::{escape, unescape_string, valid_var_name},
     env::{EnvMode, EnvVar, EnvVarFlags, Environment as _, READ_BYTE_LIMIT},
     err_fmt, err_str,
     input_common::{DecodeState, InvalidPolicy, decode_utf8},
@@ -20,10 +20,9 @@ use crate::{
 use fish_common::{UnescapeStringStyle, read_blocked};
 use fish_util::perror;
 use fish_wcstringutil::{split_about, split_string_tok};
+use fish_widestring::bytes2wcstring;
 use libc::SEEK_CUR;
-use std::num::NonZeroUsize;
-use std::os::fd::RawFd;
-use std::sync::atomic::Ordering;
+use std::{num::NonZeroUsize, os::fd::RawFd, sync::atomic::Ordering};
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum TokenOutputMode {

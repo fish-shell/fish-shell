@@ -16,7 +16,7 @@
 
 use crate::{
     ast::{self, Kind, Node as _},
-    common::{CancelChecker, bytes2wcstring, cstr2wcstring, unescape_string, valid_var_name},
+    common::{CancelChecker, unescape_string, valid_var_name},
     env::{EnvMode, EnvSetMode, EnvStack, EnvVar, Environment},
     expand::{ExpandFlags, expand_one},
     fds::wopen_cloexec,
@@ -42,7 +42,7 @@ use crate::{
 use bitflags::bitflags;
 use fish_common::UnescapeStringStyle;
 use fish_wcstringutil::{subsequence_in_string, trim};
-use fish_widestring::{ANY_STRING, subslice_position};
+use fish_widestring::{ANY_STRING, bytes2wcstring, cstr2wcstring, subslice_position};
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::Rng as _;
@@ -1799,21 +1799,24 @@ mod tests {
         History, HistoryItem, HistorySearch, PathList, PersistenceMode, SearchDirection,
         SearchFlags, SearchType, VACUUM_FREQUENCY,
     };
-    use crate::common::{ESCAPE_TEST_CHAR, osstr2wcstring};
-    use crate::env::{EnvMode, EnvSetMode, EnvStack};
-    use crate::fs::{LockedFile, WriteMethod};
-    use crate::prelude::*;
-    use crate::tests::prelude::test_init;
+    use crate::{
+        common::ESCAPE_TEST_CHAR,
+        env::{EnvMode, EnvSetMode, EnvStack},
+        fs::{LockedFile, WriteMethod},
+        prelude::*,
+        tests::prelude::test_init,
+    };
     use fish_build_helper::workspace_root;
     use fish_wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
-    use fish_widestring::wcs2bytes;
-    use rand::Rng as _;
-    use rand::rngs::ThreadRng;
-    use std::collections::VecDeque;
-    use std::ffi::OsString;
-    use std::io::BufReader;
-    use std::sync::Arc;
-    use std::time::{Duration, SystemTime, UNIX_EPOCH};
+    use fish_widestring::{osstr2wcstring, wcs2bytes};
+    use rand::{Rng as _, rngs::ThreadRng};
+    use std::{
+        collections::VecDeque,
+        ffi::OsString,
+        io::BufReader,
+        sync::Arc,
+        time::{Duration, SystemTime, UNIX_EPOCH},
+    };
 
     fn history_contains(history: &History, txt: &wstr) -> bool {
         for i in 1.. {

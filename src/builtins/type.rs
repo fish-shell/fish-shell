@@ -1,10 +1,12 @@
 use super::prelude::*;
-use crate::builtins::error::Error;
-use crate::common::bytes2wcstring;
-use crate::highlight::highlight_and_colorize;
-use crate::parse_util::{apply_indents, compute_indents};
-use crate::path::{path_get_path, path_get_paths};
-use crate::{err_fmt, err_str, function};
+use crate::{
+    builtins::error::Error,
+    err_fmt, err_str, function,
+    highlight::highlight_and_colorize,
+    parse_util::{apply_indents, compute_indents},
+    path::{path_get_path, path_get_paths},
+};
+use fish_widestring::bytes2wcstring;
 
 #[derive(Default)]
 struct type_cmd_opts_t {

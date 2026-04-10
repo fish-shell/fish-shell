@@ -10,7 +10,7 @@ use crate::{
         STATUS_UNMATCHED_WILDCARD,
     },
     common::{
-        escape, escape_string, escape_string_for_double_quotes, osstr2wcstring, unescape_string,
+        escape, escape_string, escape_string_for_double_quotes, unescape_string,
         valid_var_name_char,
     },
     complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver},
@@ -32,7 +32,7 @@ use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::{join_strings, trim};
 use fish_widestring::{
     ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END,
-    char_offset,
+    char_offset, osstr2wcstring,
 };
 use nix::unistd::{User, getpid};
 
@@ -1580,7 +1580,6 @@ pub struct ExpandResult {
 mod tests {
     use crate::{
         abbrs::{self, Abbreviation, with_abbrs, with_abbrs_mut},
-        common::str2wcstring,
         complete::{CompletionList, CompletionReceiver},
         env::{EnvMode, EnvStackSetResult},
         expand::{ExpandFlags, ExpandResultCode, expand_string, expand_to_receiver},
@@ -1590,7 +1589,7 @@ mod tests {
         prelude::*,
         tests::prelude::*,
     };
-    use fish_widestring::ANY_STRING;
+    use fish_widestring::{ANY_STRING, str2wcstring};
     use std::collections::{HashSet, hash_map::RandomState};
 
     fn expand_test_impl(

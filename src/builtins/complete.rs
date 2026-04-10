@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::{bytes2wcstring, unescape_string},
+    common::unescape_string,
     complete::{
         CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, complete_add,
         complete_add_wrapper, complete_print, complete_remove, complete_remove_all,
@@ -17,6 +17,7 @@ use crate::{
 };
 use fish_common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle};
 use fish_wcstringutil::string_suffixes_string;
+use fish_widestring::bytes2wcstring;
 
 // builtin_complete_* are a set of rather silly looping functions that make sure that all the proper
 // combinations of complete_add or complete_remove get called. This is needed since complete allows

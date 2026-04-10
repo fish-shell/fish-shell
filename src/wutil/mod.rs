@@ -7,19 +7,13 @@ pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
 
-use crate::{
-    common::{bytes2wcstring, osstr2wcstring},
-    fds::BorrowedFdFile,
-    flog,
-    signal::SigChecker,
-    topic_monitor::Topic,
-};
+use crate::{fds::BorrowedFdFile, flog, signal::SigChecker, topic_monitor::Topic};
 use errno::{Errno, set_errno};
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::join_strings;
 use fish_widestring::{
-    IntoCharIter, L, WExt as _, WString, fish_reserved_codepoint, str2bytes_callback, wcs2osstring,
-    wcs2zstring, wstr,
+    IntoCharIter, L, WExt as _, WString, bytes2wcstring, fish_reserved_codepoint, osstr2wcstring,
+    str2bytes_callback, wcs2osstring, wcs2zstring, wstr,
 };
 use nix::unistd::AccessFlags;
 use std::{
@@ -465,9 +459,8 @@ mod tests {
     use super::{
         normalize_path, unescape_bytes_and_write_to_fd, wbasename, wdirname, wstr_offset_in,
     };
-    use crate::common::bytes2wcstring;
-    use crate::prelude::*;
-    use crate::tests::prelude::*;
+    use crate::{prelude::*, tests::prelude::*};
+    use fish_widestring::bytes2wcstring;
     use rand::Rng as _;
     use std::{
         fs::OpenOptions,

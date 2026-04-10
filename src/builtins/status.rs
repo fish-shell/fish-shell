@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::builtins::error;
-use crate::common::{bytes2wcstring, get_program_name, osstr2wcstring, str2wcstring};
+use crate::common::get_program_name;
 use crate::env::config_paths::get_fish_path;
 use crate::err_fmt;
 #[cfg(not(feature = "localize-messages"))]
@@ -14,7 +14,7 @@ use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
 use cfg_if::cfg_if;
 use fish_feature_flags::{self as features, feature_test};
 use fish_util::wcsfilecmp_glob;
-use fish_widestring::wcs2bytes;
+use fish_widestring::{bytes2wcstring, osstr2wcstring, str2wcstring, wcs2bytes};
 use nix::unistd::AccessFlags;
 use rust_embed::RustEmbed;
 

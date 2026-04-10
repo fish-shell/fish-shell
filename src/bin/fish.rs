@@ -24,9 +24,7 @@ use fish::{
         fish_indent, fish_key_reader,
         shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, VERSION_STRING_TEMPLATE},
     },
-    common::{
-        PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, bytes2wcstring, escape, osstr2wcstring,
-    },
+    common::{PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME, escape},
     env::{
         EnvMode, Statuses,
         config_paths::ConfigPaths,
@@ -59,7 +57,7 @@ use fish::{
     wutil::waccess,
 };
 use fish_common::save_term_foreground_process_group;
-use fish_widestring::wcs2bytes;
+use fish_widestring::{bytes2wcstring, osstr2wcstring, wcs2bytes};
 use libc::{STDERR_FILENO, STDIN_FILENO};
 use nix::{
     sys::resource::{UsageWho, getrusage},

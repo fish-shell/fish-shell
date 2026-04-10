@@ -1,6 +1,5 @@
 use crate::{
     builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH},
-    common::bytes2wcstring,
     fd_monitor::{Callback, FdMonitor, FdMonitorItemId},
     fds::{BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec},
     flog::{flog, flogf, should_flog},
@@ -13,7 +12,7 @@ use crate::{
 };
 use errno::Errno;
 use fish_util::perror;
-use fish_widestring::wcs2bytes;
+use fish_widestring::{bytes2wcstring, wcs2bytes};
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EWOULDBLOCK, STDOUT_FILENO};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::{

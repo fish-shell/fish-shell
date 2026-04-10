@@ -807,14 +807,15 @@ fn skip_spaces(mut s: &wstr) -> &wstr {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::osstr2wcstring;
-    use crate::env::{EnvVar, EnvVarFlags, VarTable};
-    use crate::env_universal_common::{EnvUniversal, UvarFormat};
-    use crate::prelude::*;
-    use crate::tests::prelude::*;
-    use crate::wutil::{INVALID_FILE_ID, file_id_for_path};
+    use crate::{
+        env::{EnvVar, EnvVarFlags, VarTable},
+        env_universal_common::{EnvUniversal, UvarFormat},
+        prelude::*,
+        tests::prelude::*,
+        wutil::{INVALID_FILE_ID, file_id_for_path},
+    };
     use fish_tempfile::TempDir;
-    use fish_widestring::{ENCODE_DIRECT_BASE, char_offset, wcs2osstring};
+    use fish_widestring::{ENCODE_DIRECT_BASE, char_offset, osstr2wcstring, wcs2osstring};
 
     const UVARS_PER_THREAD: usize = 8;
 

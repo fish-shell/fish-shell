@@ -426,16 +426,19 @@ pub fn fs_is_case_insensitive(
 #[cfg(test)]
 mod tests {
     use super::{FileTester, IsErr, IsFile, PathFlags, is_potential_path};
-    use crate::common::osstr2wcstring;
-    use crate::env::EnvStack;
-    use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext};
-    use crate::prelude::*;
-    use crate::tests::prelude::*;
-
-    use crate::redirection::RedirectionMode;
-    use std::fs::{self, File, Permissions, create_dir_all};
-    use std::os::unix::fs::PermissionsExt as _;
-    use std::path::PathBuf;
+    use crate::{
+        env::EnvStack,
+        operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext},
+        prelude::*,
+        redirection::RedirectionMode,
+        tests::prelude::*,
+    };
+    use fish_widestring::osstr2wcstring;
+    use std::{
+        fs::{self, File, Permissions, create_dir_all},
+        os::unix::fs::PermissionsExt as _,
+        path::PathBuf,
+    };
 
     struct TempDirWithCtx {
         tempdir: fish_tempfile::TempDir,

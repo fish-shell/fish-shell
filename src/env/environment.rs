@@ -5,7 +5,7 @@ use super::environment_impl::{
 };
 use crate::abbrs::{Abbreviation, Position, abbrs_get_set};
 use crate::builtins::shared::{BuiltinResult, SUCCESS};
-use crate::common::{cstr2wcstring, osstr2wcstring, str2wcstring, unescape_string};
+use crate::common::unescape_string;
 use crate::env::config_paths::{ConfigPaths, PREFIX};
 use crate::env::{EnvMode, EnvSetMode, EnvVar, Statuses};
 use crate::env_dispatch::{VarChangeMilieu, env_dispatch_init, env_dispatch_var_change};
@@ -26,6 +26,7 @@ use crate::universal_notifier::default_notifier;
 use crate::wutil::{fish_wcstol, wgetcwd};
 use fish_common::UnescapeStringStyle;
 use fish_wcstringutil::join_strings;
+use fish_widestring::{cstr2wcstring, osstr2wcstring, str2wcstring};
 use libc::c_int;
 use nix::{
     NixPath as _,

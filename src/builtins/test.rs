@@ -1084,10 +1084,12 @@ pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
 #[cfg(test)]
 mod tests {
     use super::test as builtin_test;
-    use crate::builtins::prelude::*;
-    use crate::common::str2wcstring;
-    use crate::io::{IoChain, OutputStream};
-    use crate::tests::prelude::*;
+    use crate::{
+        builtins::prelude::*,
+        io::{IoChain, OutputStream},
+        tests::prelude::*,
+    };
+    use fish_widestring::str2wcstring;
 
     fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> bool {
         let parser = TestParser::new();

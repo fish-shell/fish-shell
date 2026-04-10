@@ -7,9 +7,9 @@
 pub mod word_char;
 
 use std::{
-    ffi::{CStr, CString, OsString},
+    ffi::{CStr, CString, OsStr, OsString},
     iter,
-    os::unix::ffi::OsStringExt as _,
+    os::unix::ffi::{OsStrExt as _, OsStringExt as _},
     slice,
 };
 pub use widestring::{Utf32Str as wstr, Utf32String as WString, utf32str as L, utfstr::CharsUtf32};
@@ -471,6 +471,82 @@ pub const fn char_offset(base: char, offset: u32) -> char {
         Some(c) => c,
         None => panic!("not a valid char"),
     }
+}
+
+/// Encodes the bytes in `input` into a [`WString`], encoding non-UTF-8 bytes into private-use-area
+/// code-points. Bytes which would be parsed into our reserved PUA range are encoded individually,
+/// to allow for correct round-tripping.
+pub fn bytes2wcstring(mut input: &[u8]) -> WString {
+    if input.is_empty() {
+        return WString::new();
+    }
+
+    let mut result = WString::with_capacity(input.len());
+
+    fn append_escaped_str(output: &mut WString, input: &str) {
+        for (i, c) in input.char_indices() {
+            if fish_reserved_codepoint(c) {
+                for byte in &input.as_bytes()[i..i + c.len_utf8()] {
+                    output.push(encode_byte_to_char(*byte));
+                }
+            } else {
+                output.push(c);
+            }
+        }
+    }
+
+    while !input.is_empty() {
+        match std::str::from_utf8(input) {
+            Ok(parsed_str) => {
+                append_escaped_str(&mut result, parsed_str);
+                // The entire remaining input could be parsed, so we are done.
+                break;
+            }
+            Err(e) => {
+                let (valid, after_valid) = input.split_at(e.valid_up_to());
+                // SAFETY: The previous `str::from_utf8` call established that the prefix `valid`
+                // is valid UTF-8. This prefix may be empty.
+                let parsed_str = unsafe { std::str::from_utf8_unchecked(valid) };
+                append_escaped_str(&mut result, parsed_str);
+                // The length of the prefix of `after_valid` which is invalid UTF-8.
+                // The remaining bytes of `input` (if any) will be parsed in subsequent iterations
+                // of the loop, starting from the first byte that starts a valid UTF-8-encoded codepoint.
+                // `error_len` can return `None`, if it sees a byte sequence that could be the
+                // prefix of a valid code-point encoding at the end of the byte slice.
+                // This is useful when the input is chunked, but we don't do that, so in this case
+                // we use our custom encoding for all remaining bytes (at most 3).
+                let error_len = e.error_len().unwrap_or(after_valid.len());
+                for byte in &after_valid[..error_len] {
+                    result.push(encode_byte_to_char(*byte));
+                }
+                input = &after_valid[error_len..];
+            }
+        }
+    }
+    result
+}
+
+/// Use this rather than [`WString::from_str`] when the input could contain PUA bytes we use to
+/// encode non-UTF-8 bytes. Otherwise, when decoding the resulting [`WString`], the PUA bytes in
+/// the input would be converted to non-UTF-8 bytes.
+pub fn str2wcstring<S: AsRef<str>>(input: S) -> WString {
+    bytes2wcstring(input.as_ref().as_bytes())
+}
+
+pub fn cstr2wcstring<C: AsRef<CStr>>(input: C) -> WString {
+    bytes2wcstring(input.as_ref().to_bytes())
+}
+
+pub fn osstr2wcstring<O: AsRef<OsStr>>(input: O) -> WString {
+    bytes2wcstring(input.as_ref().as_bytes())
+}
+
+/// # SAFETY
+///
+/// `input` must point to a valid NUL-terminated string.
+pub unsafe fn charptr2wcstring(input: *const libc::c_char) -> WString {
+    let input: &[u8] = unsafe { CStr::from_ptr(input).to_bytes() };
+    bytes2wcstring(input)
 }
 
 /// Finds `needle` in a `haystack` and returns the index of the first matching element, if any.

@@ -13,7 +13,7 @@ use libc::{STDIN_FILENO, VEOF, VINTR};
 
 use crate::{
     builtins::error::Error,
-    common::{PROGRAM_NAME, get_program_name, osstr2wcstring, shell_modes},
+    common::{PROGRAM_NAME, get_program_name, shell_modes},
     env::{EnvStack, Environment as _, env_init},
     err_fmt, err_str,
     input_common::{
@@ -34,6 +34,7 @@ use crate::{
     tty_handoff::TtyHandoff,
 };
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
+use fish_widestring::osstr2wcstring;
 
 use super::prelude::*;
 

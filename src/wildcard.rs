@@ -1,19 +1,15 @@
 // Enumeration of all wildcard types.
 
-use fish_common::WILDCARD_RESERVED_BASE;
-use fish_widestring::char_offset;
-use nix::unistd::AccessFlags;
-use std::cell::LazyCell;
-use std::cmp::Ordering;
-use std::collections::HashSet;
-use std::os::unix::fs::MetadataExt as _;
-
-use crate::common::{WSL, is_windows_subsystem_for_linux, unescape_string};
-use crate::complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP};
-use crate::expand::ExpandFlags;
-use crate::prelude::*;
-use crate::wutil::dir_iter::DirEntryType;
-use crate::wutil::{dir_iter::DirEntry, lwstat, waccess};
+use crate::{
+    common::{WSL, is_windows_subsystem_for_linux, unescape_string},
+    complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP},
+    expand::ExpandFlags,
+    prelude::*,
+    wutil::{
+        dir_iter::{DirEntry, DirEntryType},
+        lwstat, waccess,
+    },
+};
 use fish_common::{UnescapeFlags, UnescapeStringStyle};
 use fish_fallback::wcscasecmp;
 use fish_feature_flags::{FeatureFlag, feature_test};
@@ -21,6 +17,9 @@ use fish_wcstringutil::{
     CaseSensitivity, string_fuzzy_match_string, string_suffixes_string_case_insensitive,
     strip_executable_suffix,
 };
+use fish_widestring::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
+use nix::unistd::AccessFlags;
+use std::{cell::LazyCell, cmp::Ordering, collections::HashSet, os::unix::fs::MetadataExt as _};
 
 localizable_consts!(
     COMPLETE_EXEC_DESC "command"
@@ -30,17 +29,6 @@ localizable_consts!(
     COMPLETE_DIRECTORY_SYMLINK_DESC "dir symlink"
     COMPLETE_DIRECTORY_DESC "directory"
 );
-
-/// Character representing any character except '/' (slash).
-pub const ANY_CHAR: char = char_offset(WILDCARD_RESERVED_BASE, 0);
-/// Character representing any character string not containing '/' (slash).
-pub const ANY_STRING: char = char_offset(WILDCARD_RESERVED_BASE, 1);
-/// Character representing any character string.
-pub const ANY_STRING_RECURSIVE: char = char_offset(WILDCARD_RESERVED_BASE, 2);
-/// This is a special pseudo-char that is not used other than to mark the
-/// end of the special characters so we can sanity check the enum range.
-#[allow(dead_code)]
-pub const ANY_SENTINEL: char = char_offset(WILDCARD_RESERVED_BASE, 3);
 
 #[derive(PartialEq)]
 pub enum WildcardResult {

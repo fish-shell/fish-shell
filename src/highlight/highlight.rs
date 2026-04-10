@@ -1,40 +1,41 @@
 //! Functions for syntax highlighting.
-use crate::abbrs::{self, with_abbrs};
-use crate::ast::{
-    self, Argument, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
-    Keyword, Kind, Node, NodeVisitor, Redirection, Token, VariableAssignment,
+use crate::{
+    abbrs::{self, with_abbrs},
+    ast::{
+        self, Argument, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
+        Keyword, Kind, Node, NodeVisitor, Redirection, Token, VariableAssignment,
+    },
+    builtins::shared::builtin_exists,
+    common::{valid_var_name, valid_var_name_char},
+    complete::complete_wrap_map,
+    env::{EnvVar, Environment},
+    expand::{
+        ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR, expand_one,
+        expand_to_command_and_args,
+    },
+    function,
+    highlight::file_tester::FileTester,
+    history::all_paths_are_valid,
+    operation_context::OperationContext,
+    parse_constants::{
+        ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
+    },
+    parse_util::{
+        MaybeParentheses, get_process_first_token_offset, locate_cmdsubst_range, slice_length,
+    },
+    path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file},
+    terminal::Outputter,
+    text_face::{ResettableStyle, SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face},
+    threads::assert_is_background_thread,
+    tokenizer::{PipeOrRedir, variable_assignment_equals_pos},
 };
-use crate::builtins::shared::builtin_exists;
-use crate::common::{valid_var_name, valid_var_name_char};
-use crate::complete::complete_wrap_map;
-use crate::env::{EnvVar, Environment};
-use crate::expand::{
-    ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR, expand_one, expand_to_command_and_args,
-};
-use crate::function;
-use crate::highlight::file_tester::FileTester;
-use crate::history::all_paths_are_valid;
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{
-    ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
-};
-use crate::parse_util::{
-    MaybeParentheses, get_process_first_token_offset, locate_cmdsubst_range, slice_length,
-};
-use crate::path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file};
-use crate::terminal::Outputter;
-use crate::text_face::{
-    ResettableStyle, SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face,
-};
-use crate::threads::assert_is_background_thread;
-use crate::tokenizer::{PipeOrRedir, variable_assignment_equals_pos};
 use fish_color::Color;
-use fish_common::{ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END};
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::string_prefixes_string;
-use fish_widestring::{L, WExt as _, WString, wstr};
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
+use fish_widestring::{
+    ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, L, WExt as _, WString, wstr,
+};
+use std::collections::{HashMap, hash_map::Entry};
 
 use super::file_tester::IsFile;
 

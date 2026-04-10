@@ -14,9 +14,9 @@ use crate::tty_handoff::{
 };
 use crate::universal_notifier::default_notifier;
 use crate::wutil::{fish_is_pua, fish_wcstol};
-use fish_common::{fish_reserved_codepoint, read_blocked};
+use fish_common::read_blocked;
 use fish_feature_flags::{FeatureFlag, feature_test};
-use fish_widestring::encode_byte_to_char;
+use fish_widestring::{encode_byte_to_char, fish_reserved_codepoint};
 use nix::sys::{select::FdSet, signal::SigSet, time::TimeSpec};
 use std::cell::{RefCell, RefMut};
 use std::collections::VecDeque;

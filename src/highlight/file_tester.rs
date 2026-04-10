@@ -3,24 +3,22 @@
 // Because this may perform blocking I/O, we compute results in a separate thread,
 // and provide them optimistically.
 use crate::common::unescape_string;
-use crate::expand::{
-    BRACE_BEGIN, BRACE_END, BRACE_SEP, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, VARIABLE_EXPAND,
-    VARIABLE_EXPAND_SINGLE, expand_one,
-};
-use crate::expand::{ExpandFlags, HOME_DIRECTORY, expand_tilde};
-use crate::operation_context::OperationContext;
-use crate::path::path_apply_working_directory;
-use crate::redirection::RedirectionMode;
-use crate::threads::assert_is_background_thread;
-use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use crate::wutil::{
-    dir_iter::DirIter, fish_wcstoi, normalize_path, waccess, wbasename, wdirname, wstat,
+use crate::{
+    expand::{
+        BRACE_BEGIN, BRACE_END, BRACE_SEP, ExpandFlags, HOME_DIRECTORY, INTERNAL_SEPARATOR,
+        PROCESS_EXPAND_SELF, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, expand_one, expand_tilde,
+    },
+    operation_context::OperationContext,
+    path::path_apply_working_directory,
+    redirection::RedirectionMode,
+    threads::assert_is_background_thread,
+    wutil::{dir_iter::DirIter, fish_wcstoi, normalize_path, waccess, wbasename, wdirname, wstat},
 };
 use fish_common::{UnescapeFlags, UnescapeStringStyle};
 use fish_wcstringutil::{
     string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,
 };
-use fish_widestring::{L, WExt as _, WString, wstr};
+use fish_widestring::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, L, WExt as _, WString, wstr};
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
 use std::collections::{HashMap, HashSet};

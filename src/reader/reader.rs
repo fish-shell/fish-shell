@@ -17,9 +17,11 @@
 //! control-C from generating SIGINT, so failing to disable these would prevent cancellation of wildcard
 //! expansion, etc.
 
-use super::history_search::{ReaderHistorySearch, SearchMode, smartcase_flags};
-use super::iothreads::{self, Debouncers};
-use super::word_motion::{MoveWordDir, MoveWordStateMachine, MoveWordStyle};
+use super::{
+    history_search::{ReaderHistorySearch, SearchMode, smartcase_flags},
+    iothreads::{self, Debouncers},
+    word_motion::{MoveWordDir, MoveWordStateMachine, MoveWordStyle},
+};
 use crate::{
     abbrs::{self, abbrs_match},
     ast::{self, Kind, is_same_node},
@@ -112,12 +114,11 @@ use crate::{
 use assert_matches::assert_matches;
 use errno::{Errno, errno};
 use fish_common::{
-    EscapeFlags, EscapeStringStyle, ScopeGuard, ScopeGuarding, UTF8_BOM_WCHAR,
-    exit_without_destructors, get_obfuscation_read_char, help_section,
-    restore_term_foreground_process_group_for_exit, write_loop,
+    EscapeFlags, EscapeStringStyle, ScopeGuard, ScopeGuarding, exit_without_destructors,
+    get_obfuscation_read_char, help_section, restore_term_foreground_process_group_for_exit,
+    write_loop,
 };
-use fish_fallback::fish_wcwidth;
-use fish_fallback::lowercase;
+use fish_fallback::{fish_wcwidth, lowercase};
 use fish_feature_flags::FeatureFlag;
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{
@@ -125,12 +126,11 @@ use fish_wcstringutil::{
     join_strings, string_prefixes_string, string_prefixes_string_case_insensitive,
     string_prefixes_string_maybe_case_insensitive,
 };
-use fish_widestring::ELLIPSIS_CHAR;
+use fish_widestring::{ELLIPSIS_CHAR, UTF8_BOM_WCHAR};
 use libc::{
     _POSIX_VDISABLE, EIO, EISDIR, ENOTTY, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
 };
-use nix::unistd::setpgid;
 use nix::{
     fcntl::OFlag,
     sys::{
@@ -138,7 +138,7 @@ use nix::{
         stat::Mode,
         termios::{self, SetArg, Termios, tcgetattr, tcsetattr},
     },
-    unistd::{getpgrp, getpid},
+    unistd::{getpgrp, getpid, setpgid},
 };
 use std::{
     borrow::Cow,

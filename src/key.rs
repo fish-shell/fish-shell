@@ -1,15 +1,13 @@
 use libc::VERASE;
 
 use crate::{
-    common::{EscapeFlags, EscapeStringStyle, escape_string},
-    flog::FloggableDebug,
-    prelude::*,
-    reader::safe_get_terminal_mode_on_startup,
-    wutil::fish_wcstoul,
+    common::escape_string, flog::FloggableDebug, localizable_string,
+    reader::safe_get_terminal_mode_on_startup, wgettext_fmt, wutil::fish_wcstoul,
 };
+use fish_common::{EscapeFlags, EscapeStringStyle};
 use fish_fallback::fish_wcwidth;
 use fish_feature_flags::{FeatureFlag, feature_test};
-use fish_widestring::decode_byte_from_char;
+use fish_widestring::{L, WExt as _, WString, decode_byte_from_char, wstr};
 
 pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
 pub(crate) const Delete: char = '\u{F501}';

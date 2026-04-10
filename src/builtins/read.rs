@@ -16,7 +16,7 @@ use crate::err_fmt;
 use crate::err_str;
 use crate::input_common::DecodeState;
 use crate::input_common::InvalidPolicy;
-use crate::input_common::decode_one_codepoint_utf8;
+use crate::input_common::decode_utf8;
 use crate::nix::isatty;
 use crate::parse_execution::varname_error;
 use crate::parser::ParserEnvSetMode;
@@ -396,7 +396,7 @@ fn read_one_char_at_a_time(
             }
             unconsumed.push(b[0]);
             nbytes += 1;
-            match decode_one_codepoint_utf8(buff, InvalidPolicy::Passthrough, &unconsumed) {
+            match decode_utf8(buff, InvalidPolicy::Passthrough, &unconsumed) {
                 DecodeState::Incomplete => continue,
                 DecodeState::Complete => {
                     unconsumed.clear();

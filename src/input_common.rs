@@ -823,7 +823,7 @@ pub trait InputEventQueuer {
                     // or, if they are not valid UTF-8, ignored. On incomplete sequences, another
                     // byte is read and decoding is tried again in the next iteration.
                     let ok = loop {
-                        match decode_one_codepoint_utf8(&mut seq, InvalidPolicy::Error, &buffer) {
+                        match decode_utf8(&mut seq, InvalidPolicy::Error, &buffer) {
                             DecodeState::Incomplete => {
                                 buffer.push(
                                     match next_input_event(
@@ -1663,7 +1663,20 @@ pub(crate) enum InvalidPolicy {
     Passthrough,
 }
 
-pub(crate) fn decode_one_codepoint_utf8(
+/// Decode the UTF-8-encoded `buffer`.
+/// On success, the result is appended to `out_seq` and [`DecodeState::Complete`] is returned.
+/// [`DecodeState::Incomplete`] is returned if the buffer contains valid UTF-8
+/// with the exception of the last bytes,
+/// where the last 1 to 3 bytes are a prefix of the encoding of a valid char,
+/// which can happen if input is read incrementally.
+/// In this case `out_seq` will not be modified.
+/// If other errors occur, the behavior depends on `invalid_policy`.
+/// For [`InvalidPolicy::Error`], [`DecodeState::Error`] will be returned, without modifying
+/// `out_seq`.
+/// For [`InvalidPolicy::Passthrough`], [`DecodeState::Complete`] will be returned
+/// and `out_seq` will have the individual bytes of `buffer` appended to it, each encoded using our
+/// PUA encoding scheme.
+pub(crate) fn decode_utf8(
     out_seq: &mut WString,
     invalid_policy: InvalidPolicy,
     buffer: &[u8],

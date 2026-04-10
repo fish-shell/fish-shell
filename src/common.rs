@@ -6,7 +6,6 @@ use crate::expand::{
 };
 use crate::global_safety::AtomicRef;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::key;
 use crate::parse_util::escape_string_with_quote;
 use crate::prelude::*;
 use crate::terminal::Outputter;
@@ -17,7 +16,8 @@ use fish_fallback::fish_wcwidth;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::wcs2bytes;
 use fish_widestring::{
-    ENCODE_DIRECT_END, decode_byte_from_char, encode_byte_to_char, subslice_position,
+    ENCODE_DIRECT_END, SPECIAL_KEY_ENCODE_BASE, decode_byte_from_char, encode_byte_to_char,
+    subslice_position,
 };
 use nix::sys::termios::Termios;
 use std::env;
@@ -1236,7 +1236,7 @@ pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
 // TODO: Actually implement the replacement as documented above.
 pub fn fish_reserved_codepoint(c: char) -> bool {
     (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END)
-        || (c >= key::Backspace && c < ENCODE_DIRECT_END)
+        || (c >= SPECIAL_KEY_ENCODE_BASE && c < ENCODE_DIRECT_END)
 }
 
 /// Test if the given char is valid in a variable name.

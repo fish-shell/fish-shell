@@ -1,5 +1,5 @@
 use bitflags::bitflags;
-use fish_widestring::{L, WString, char_offset, wstr};
+use fish_widestring::{ENCODE_DIRECT_END, L, SPECIAL_KEY_ENCODE_BASE, WString, char_offset, wstr};
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use std::cell::{Cell, RefCell};
 use std::io::Read;
@@ -125,6 +125,19 @@ bitflags! {
         /// don't handle backslash escapes
         const NO_BACKSLASHES = 1 << 2;
     }
+}
+
+/// Return true if the character is in a range reserved for fish's private use.
+///
+/// NOTE: This is used when tokenizing the input. It is also used when reading input, before
+/// tokenization, to replace such chars with REPLACEMENT_WCHAR if they're not part of a quoted
+/// string. We don't want external input to be able to feed reserved characters into our
+/// lexer/parser or code evaluator.
+//
+// TODO: Actually implement the replacement as documented above.
+pub fn fish_reserved_codepoint(c: char) -> bool {
+    (c >= RESERVED_CHAR_BASE && c < RESERVED_CHAR_END)
+        || (c >= SPECIAL_KEY_ENCODE_BASE && c < ENCODE_DIRECT_END)
 }
 
 /// This function attempts to distinguish between a console session (at the actual login vty) and a

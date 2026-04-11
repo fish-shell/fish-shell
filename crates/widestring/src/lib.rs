@@ -103,6 +103,9 @@ const _: () = assert!(
     "Characters used in expansions must stay within private use area"
 );
 
+/// The string represented by PROCESS_EXPAND_SELF
+pub const PROCESS_EXPAND_SELF_STR: &wstr = L!("%self");
+
 /// Return true if the character is in a range reserved for fish's private use.
 ///
 /// NOTE: This is used when tokenizing the input. It is also used when reading input, before

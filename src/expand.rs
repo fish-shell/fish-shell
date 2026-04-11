@@ -106,9 +106,6 @@ impl PartialEq<ExpandResultCode> for ExpandResult {
     }
 }
 
-/// The string represented by PROCESS_EXPAND_SELF
-pub const PROCESS_EXPAND_SELF_STR: &wstr = L!("%self");
-
 /// Perform various forms of expansion on in, such as tilde expansion (\~USER becomes the users home
 /// directory), variable expansion (\$VAR_NAME becomes the value of the environment variable
 /// VAR_NAME), cmdsubst expansion and wildcard expansion. The results are inserted into the list

@@ -9,10 +9,7 @@ use crate::{
     common::{valid_var_name, valid_var_name_char},
     complete::complete_wrap_map,
     env::{EnvVar, Environment},
-    expand::{
-        ExpandFlags, ExpandResultCode, PROCESS_EXPAND_SELF_STR, expand_one,
-        expand_to_command_and_args,
-    },
+    expand::{ExpandFlags, ExpandResultCode, expand_one, expand_to_command_and_args},
     function,
     highlight::file_tester::FileTester,
     history::all_paths_are_valid,
@@ -33,7 +30,8 @@ use fish_color::Color;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::string_prefixes_string;
 use fish_widestring::{
-    ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, L, WExt as _, WString, wstr,
+    ASCII_MAX, EXPAND_RESERVED_BASE, EXPAND_RESERVED_END, L, PROCESS_EXPAND_SELF_STR, WExt as _,
+    WString, wstr,
 };
 use std::collections::{HashMap, hash_map::Entry};
 

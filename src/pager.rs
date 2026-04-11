@@ -1,20 +1,21 @@
 //! Pager support.
 
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
-
-use crate::common::escape_string;
-use crate::complete::{CompleteFlags, Completion};
-use crate::editable_line::EditableLine;
-use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
-use crate::operation_context::OperationContext;
-use crate::prelude::*;
-use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
-use crate::termsize::Termsize;
-use fish_common::{EscapeFlags, EscapeStringStyle};
+use crate::{
+    complete::{CompleteFlags, Completion},
+    editable_line::EditableLine,
+    highlight::{HighlightRole, HighlightSpec, highlight_shell},
+    operation_context::OperationContext,
+    prelude::*,
+    screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered},
+    termsize::Termsize,
+};
+use fish_common::{EscapeFlags, EscapeStringStyle, escape_string};
 use fish_wcstringutil::string_fuzzy_match_string;
 use fish_widestring::{ELLIPSIS_CHAR, decoded_width};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, hash_map::Entry},
+};
 
 /// Represents rendering from the pager.
 #[derive(Default)]

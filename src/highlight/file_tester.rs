@@ -2,7 +2,6 @@
 // to support highlighting.
 // Because this may perform blocking I/O, we compute results in a separate thread,
 // and provide them optimistically.
-use crate::common::unescape_string;
 use crate::{
     expand::{ExpandFlags, expand_one, expand_tilde},
     operation_context::OperationContext,
@@ -11,7 +10,7 @@ use crate::{
     threads::assert_is_background_thread,
     wutil::{dir_iter::DirIter, fish_wcstoi, normalize_path, waccess, wbasename, wdirname, wstat},
 };
-use fish_common::{UnescapeFlags, UnescapeStringStyle};
+use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{
     string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,
 };
@@ -22,8 +21,10 @@ use fish_widestring::{
 };
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
-use std::collections::{HashMap, HashSet};
-use std::os::fd::RawFd;
+use std::{
+    collections::{HashMap, HashSet},
+    os::fd::RawFd,
+};
 
 // This is used only internally to this file, and is exposed only for testing.
 #[derive(Clone, Copy, Default)]

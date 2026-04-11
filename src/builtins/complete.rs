@@ -1,7 +1,6 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::unescape_string,
     complete::{
         CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, complete_add,
         complete_add_wrapper, complete_print, complete_remove, complete_remove_all,
@@ -15,7 +14,7 @@ use crate::{
     proc::is_interactive_session,
     reader::{commandline_get_state, completion_apply_to_command_line},
 };
-use fish_common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle};
+use fish_common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::string_suffixes_string;
 use fish_widestring::bytes2wcstring;
 

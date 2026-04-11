@@ -1,61 +1,67 @@
 //! Provides the "linkage" between an ast and actual execution structures (job_t, etc.).
 
-use crate::ast::{
-    self, BlockStatementHeader, Keyword as _, Leaf as _, Node, Statement, Token as _,
-    unescape_keyword,
+use crate::{
+    ast::{
+        self, BlockStatementHeader, Keyword as _, Leaf as _, Node, Statement, Token as _,
+        unescape_keyword,
+    },
+    builtins::{
+        self,
+        error::Error,
+        shared::{
+            STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR,
+            STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE,
+            STATUS_UNMATCHED_WILDCARD, builtin_exists,
+        },
+    },
+    common::valid_var_name,
+    complete::CompletionList,
+    env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment as _, Statuses},
+    err_fmt,
+    event::{self, Event},
+    exec::exec_job,
+    expand::{
+        ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_to_command_and_args,
+    },
+    flog::flog,
+    function,
+    io::{IoChain, IoStreams, OutputStream, StringOutputStream},
+    job_group::JobGroup,
+    operation_context::OperationContext,
+    parse_constants::{
+        CALL_STACK_LIMIT_EXCEEDED_ERR_MSG, ERROR_TIME_BACKGROUND,
+        FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, ILLEGAL_FD_ERR_MSG,
+        INFINITE_FUNC_RECURSION_ERR_MSG, ParseError, ParseErrorCode, ParseErrorList, ParseKeyword,
+        ParseTokenType, StatementDecoration, parse_error_offset_source_start,
+    },
+    parse_tree::{NodeRef, ParsedSourceRef},
+    parse_util::{
+        MaybeParentheses::CommandSubstitution, locate_cmdsubst_range, unescape_wildcards,
+    },
+    parser::{
+        Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ParserEnvSetMode, ProfileItem,
+    },
+    parser_keywords::parser_keywords_is_subcommand,
+    path::{path_as_implicit_cd, path_try_get_path},
+    prelude::*,
+    proc::{
+        ConcreteAssignment, Job, JobControl, JobProperties, JobRef, Process, ProcessType,
+        get_job_control_mode, job_reap, no_exec,
+    },
+    reader::fish_is_unwinding_for_exit,
+    redirection::{RedirectionMode, RedirectionSpec, RedirectionSpecList},
+    signal::Signal,
+    timer::push_timer,
+    tokenizer::{PipeOrRedir, TokenType, variable_assignment_equals_pos},
+    trace::{trace_if_enabled, trace_if_enabled_with_args},
+    wildcard::wildcard_match,
 };
-use crate::builtins::error::Error;
-use crate::builtins::shared::{
-    STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD,
-    STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_UNMATCHED_WILDCARD, builtin_exists,
+use fish_common::{
+    ScopeGuard, ScopeGuarding, ScopedRefCell, escape, help_section, truncate_at_nul,
 };
-use crate::common::{escape, valid_var_name};
-use crate::complete::CompletionList;
-use crate::env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment as _, Statuses};
-use crate::event::{self, Event};
-use crate::exec::exec_job;
-use crate::expand::{
-    ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_to_command_and_args,
-};
-use crate::flog::flog;
-use crate::function;
-use crate::io::{IoChain, IoStreams, OutputStream, StringOutputStream};
-use crate::job_group::JobGroup;
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{
-    CALL_STACK_LIMIT_EXCEEDED_ERR_MSG, ERROR_TIME_BACKGROUND,
-    FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG, ILLEGAL_FD_ERR_MSG, INFINITE_FUNC_RECURSION_ERR_MSG,
-    ParseError, ParseErrorCode, ParseErrorList, ParseKeyword, ParseTokenType, StatementDecoration,
-    parse_error_offset_source_start,
-};
-use crate::parse_tree::{NodeRef, ParsedSourceRef};
-use crate::parse_util::{
-    MaybeParentheses::CommandSubstitution, locate_cmdsubst_range, unescape_wildcards,
-};
-use crate::parser::{
-    Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ParserEnvSetMode, ProfileItem,
-};
-use crate::parser_keywords::parser_keywords_is_subcommand;
-use crate::path::{path_as_implicit_cd, path_try_get_path};
-use crate::prelude::*;
-use crate::proc::{
-    ConcreteAssignment, Job, JobControl, JobProperties, JobRef, Process, ProcessType,
-    get_job_control_mode, job_reap, no_exec,
-};
-use crate::reader::fish_is_unwinding_for_exit;
-use crate::redirection::{RedirectionMode, RedirectionSpec, RedirectionSpecList};
-use crate::signal::Signal;
-use crate::timer::push_timer;
-use crate::tokenizer::{PipeOrRedir, TokenType, variable_assignment_equals_pos};
-use crate::trace::{trace_if_enabled, trace_if_enabled_with_args};
-use crate::wildcard::wildcard_match;
-use crate::{builtins, err_fmt};
-use fish_common::{ScopeGuard, ScopeGuarding, ScopedRefCell, help_section, truncate_at_nul};
 use fish_widestring::WExt as _;
 use libc::{ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};
-use std::io::ErrorKind;
-use std::rc::Rc;
-use std::sync::Arc;
+use std::{io::ErrorKind, rc::Rc, sync::Arc};
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
 /// errors, or other expansion errors. It also tracks when evaluation was skipped due to signal

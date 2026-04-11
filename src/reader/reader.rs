@@ -26,7 +26,7 @@ use crate::{
     abbrs::{self, abbrs_match},
     ast::{self, Kind, is_same_node},
     builtins::shared::{ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_OK},
-    common::{escape, escape_string, escape_string_with_quote, get_program_name, shell_modes},
+    common::{get_program_name, shell_modes},
     complete::{
         CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete,
         complete_load, sort_and_prioritize,
@@ -111,9 +111,9 @@ use crate::{
 use assert_matches::assert_matches;
 use errno::{Errno, errno};
 use fish_common::{
-    EscapeFlags, EscapeStringStyle, ScopeGuard, ScopeGuarding, exit_without_destructors,
-    get_obfuscation_read_char, help_section, restore_term_foreground_process_group_for_exit,
-    write_loop,
+    EscapeFlags, EscapeStringStyle, ScopeGuard, ScopeGuarding, escape, escape_string,
+    escape_string_with_quote, exit_without_destructors, get_obfuscation_read_char, help_section,
+    restore_term_foreground_process_group_for_exit, write_loop,
 };
 use fish_fallback::{fish_wcwidth, lowercase};
 use fish_feature_flags::FeatureFlag;

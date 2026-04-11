@@ -5,7 +5,7 @@
 use crate::{
     ast::{self, Node as _},
     autoload::{Autoload, AutoloadResult},
-    common::{escape, valid_func_name},
+    common::valid_func_name,
     complete::complete_wrap_map,
     env::{EnvStack, Environment},
     event::{self, EventDescription},
@@ -17,7 +17,7 @@ use crate::{
     proc::Pid,
     wutil::dir_iter::DirIter,
 };
-use fish_common::{FilenameRef, assert_sync};
+use fish_common::{FilenameRef, assert_sync, escape};
 use fish_widestring::wcs2bytes;
 use std::{
     collections::{HashMap, HashSet},

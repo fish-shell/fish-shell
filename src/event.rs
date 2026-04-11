@@ -5,7 +5,6 @@
 //! may not be safely called by signal handlers.
 
 use crate::{
-    common::escape,
     flog::flog,
     io::{IoChain, IoStreams},
     job_group::MaybeJobId,
@@ -15,7 +14,7 @@ use crate::{
     reader::reader_update_termsize,
     signal::{Signal, signal_check_cancel, signal_handle},
 };
-use fish_common::ScopeGuard;
+use fish_common::{ScopeGuard, escape};
 use fish_widestring::str2wcstring;
 use std::sync::{
     Arc, Mutex,

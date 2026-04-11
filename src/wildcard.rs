@@ -1,7 +1,7 @@
 // Enumeration of all wildcard types.
 
 use crate::{
-    common::{WSL, is_windows_subsystem_for_linux, unescape_string},
+    common::{WSL, is_windows_subsystem_for_linux},
     complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP},
     expand::ExpandFlags,
     prelude::*,
@@ -10,7 +10,7 @@ use crate::{
         lwstat, waccess,
     },
 };
-use fish_common::{UnescapeFlags, UnescapeStringStyle};
+use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_fallback::wcscasecmp;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{

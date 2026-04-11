@@ -1,6 +1,5 @@
 use crate::{
     builtins::{prelude::*, *},
-    common::escape,
     err_fmt,
     fds::BorrowedFdFile,
     io::OutputStream,
@@ -11,7 +10,7 @@ use crate::{
     wutil,
 };
 use errno::errno;
-use fish_common::{Named, assert_sorted_by_name, get_by_sorted_name};
+use fish_common::{Named, assert_sorted_by_name, escape, get_by_sorted_name};
 use fish_widestring::{L, bytes2wcstring, str2wcstring};
 use std::io::{BufRead as _, BufReader, Read as _};
 

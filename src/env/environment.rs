@@ -1,30 +1,35 @@
-use super::ElectricVar;
-use super::environment_impl::{
-    EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult, UVAR_SCOPE_IS_GLOBAL,
-    colon_split, uvars,
+use super::{
+    ElectricVar,
+    environment_impl::{
+        EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult, UVAR_SCOPE_IS_GLOBAL,
+        colon_split, uvars,
+    },
 };
-use crate::abbrs::{Abbreviation, Position, abbrs_get_set};
-use crate::builtins::shared::{BuiltinResult, SUCCESS};
-use crate::common::unescape_string;
-use crate::env::config_paths::{ConfigPaths, PREFIX};
-use crate::env::{EnvMode, EnvSetMode, EnvVar, Statuses};
-use crate::env_dispatch::{VarChangeMilieu, env_dispatch_init, env_dispatch_var_change};
-use crate::event::Event;
-use crate::flog::flog;
-use crate::global_safety::RelaxedAtomicBool;
-use crate::input::{FISH_BIND_MODE_VAR, init_input};
-use crate::localization::wgettext;
-use crate::null_terminated_array::OwningNullTerminatedArray;
-use crate::path::{
-    path_emit_config_directory_messages, path_get_cache, path_get_config, path_get_data,
-    path_make_canonical, paths_are_same_file,
+use crate::{
+    abbrs::{Abbreviation, Position, abbrs_get_set},
+    builtins::shared::{BuiltinResult, SUCCESS},
+    env::{
+        EnvMode, EnvSetMode, EnvVar, Statuses,
+        config_paths::{ConfigPaths, PREFIX},
+    },
+    env_dispatch::{VarChangeMilieu, env_dispatch_init, env_dispatch_var_change},
+    event::Event,
+    flog::flog,
+    global_safety::RelaxedAtomicBool,
+    input::{FISH_BIND_MODE_VAR, init_input},
+    localization::wgettext,
+    null_terminated_array::OwningNullTerminatedArray,
+    path::{
+        path_emit_config_directory_messages, path_get_cache, path_get_config, path_get_data,
+        path_make_canonical, paths_are_same_file,
+    },
+    prelude::*,
+    proc::is_interactive_session,
+    termsize,
+    universal_notifier::default_notifier,
+    wutil::{fish_wcstol, wgetcwd},
 };
-use crate::prelude::*;
-use crate::proc::is_interactive_session;
-use crate::termsize;
-use crate::universal_notifier::default_notifier;
-use crate::wutil::{fish_wcstol, wgetcwd};
-use fish_common::UnescapeStringStyle;
+use fish_common::{UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::join_strings;
 use fish_widestring::{cstr2wcstring, osstr2wcstring, str2wcstring};
 use libc::c_int;
@@ -32,10 +37,12 @@ use nix::{
     NixPath as _,
     unistd::{Uid, User, gethostname, getpid},
 };
-use std::collections::HashMap;
-use std::ffi::CStr;
-use std::path::PathBuf;
-use std::sync::{Arc, LazyLock, OnceLock};
+use std::{
+    collections::HashMap,
+    ffi::CStr,
+    path::PathBuf,
+    sync::{Arc, LazyLock, OnceLock},
+};
 
 /// Set when a universal variable has been modified but not yet been written to disk via sync().
 static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);

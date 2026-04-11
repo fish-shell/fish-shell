@@ -16,7 +16,7 @@
 
 use crate::{
     ast::{self, Kind, Node as _},
-    common::{CancelChecker, unescape_string, valid_var_name},
+    common::{CancelChecker, valid_var_name},
     env::{EnvMode, EnvSetMode, EnvStack, EnvVar, Environment},
     expand::{ExpandFlags, expand_one},
     fds::wopen_cloexec,
@@ -40,7 +40,7 @@ use crate::{
     wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
 use bitflags::bitflags;
-use fish_common::UnescapeStringStyle;
+use fish_common::{UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{subsequence_in_string, trim};
 use fish_widestring::{ANY_STRING, bytes2wcstring, cstr2wcstring, subslice_position};
 use lru::LruCache;

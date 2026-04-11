@@ -1,20 +1,24 @@
 // Generic output functions.
-use crate::common::escape_string;
 use crate::prelude::*;
-use crate::screen::{is_dumb, only_grayscale};
-use crate::text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle};
-use crate::threads::MainThread;
+use crate::{
+    screen::{is_dumb, only_grayscale},
+    text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle},
+    threads::MainThread,
+};
 use bitflags::bitflags;
 use fish_color::{Color, Color24};
-use fish_common::{EscapeStringStyle, write_loop};
+use fish_common::{EscapeStringStyle, escape_string, write_loop};
 use fish_feature_flags::FeatureFlag;
 use fish_widestring::{wcs2bytes, wcs2bytes_appending};
-use std::cell::{RefCell, RefMut};
-use std::ops::{Deref, DerefMut};
-use std::os::fd::RawFd;
-use std::os::unix::ffi::OsStrExt as _;
-use std::sync::OnceLock;
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::{
+    cell::{RefCell, RefMut},
+    ops::{Deref, DerefMut},
+    os::{fd::RawFd, unix::ffi::OsStrExt as _},
+    sync::{
+        OnceLock,
+        atomic::{AtomicU8, Ordering},
+    },
+};
 
 bitflags! {
     #[derive(Copy, Clone, Default)]

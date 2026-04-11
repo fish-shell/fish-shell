@@ -2,14 +2,14 @@ use super::prelude::*;
 use crate::{
     abbrs::{self, Abbreviation, Position},
     builtins::error::Error,
-    common::{escape, escape_string, valid_func_name},
+    common::valid_func_name,
     env::{EnvMode, EnvStackSetResult},
     err_fmt, err_str,
     highlight::highlight_and_colorize,
     parser::ParserEnvSetMode,
     re::{regex_make_anchored, to_boxed_chars},
 };
-use fish_common::{EscapeStringStyle, help_section};
+use fish_common::{EscapeStringStyle, escape, escape_string, help_section};
 use fish_widestring::bytes2wcstring;
 use pcre2::utf32::{Regex, RegexBuilder};
 

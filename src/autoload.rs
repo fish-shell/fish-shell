@@ -1,14 +1,13 @@
 //! The classes responsible for autoloading functions and completions.
 
 use crate::{
-    common::escape,
     env::Environment,
     flogf,
     io::IoChain,
     parser::Parser,
     wutil::{FileId, INVALID_FILE_ID, file_id_for_path},
 };
-use fish_common::ScopeGuard;
+use fish_common::{ScopeGuard, escape};
 use fish_widestring::{L, WExt as _, WString, wcs2bytes, wstr};
 use lru::LruCache;
 use rust_embed::RustEmbed;

@@ -1,20 +1,23 @@
-use crate::common::escape;
-use crate::env::Environment;
-use crate::flog::flog;
-use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::{
-    CharEvent, CharInputStyle, ImplicitEvent, InputEventQueuer, KeyMatchQuality,
-    R_END_INPUT_FUNCTIONS, ReadlineCmd, match_key_event_to_key,
+use crate::{
+    env::Environment,
+    flog::flog,
+    global_safety::RelaxedAtomicBool,
+    input_common::{
+        CharEvent, CharInputStyle, ImplicitEvent, InputEventQueuer, KeyMatchQuality,
+        R_END_INPUT_FUNCTIONS, ReadlineCmd, match_key_event_to_key,
+    },
+    key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl},
+    prelude::*,
+    reader::{Reader, reader_reset_interrupted},
+    threads::assert_is_main_thread,
 };
-use crate::key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl};
-use crate::prelude::*;
-use crate::reader::{Reader, reader_reset_interrupted};
-use crate::threads::assert_is_main_thread;
-use fish_common::{Named, assert_sorted_by_name, get_by_sorted_name};
-use std::mem;
-use std::sync::{
-    Mutex, MutexGuard,
-    atomic::{AtomicU32, Ordering},
+use fish_common::{Named, assert_sorted_by_name, escape, get_by_sorted_name};
+use std::{
+    mem,
+    sync::{
+        Mutex, MutexGuard,
+        atomic::{AtomicU32, Ordering},
+    },
 };
 
 pub const FISH_BIND_MODE_VAR: &wstr = L!("fish_bind_mode");

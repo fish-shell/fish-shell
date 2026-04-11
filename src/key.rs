@@ -1,10 +1,10 @@
 use libc::VERASE;
 
 use crate::{
-    common::escape_string, flog::FloggableDebug, localizable_string,
-    reader::safe_get_terminal_mode_on_startup, wgettext_fmt, wutil::fish_wcstoul,
+    flog::FloggableDebug, localizable_string, reader::safe_get_terminal_mode_on_startup,
+    wgettext_fmt, wutil::fish_wcstoul,
 };
-use fish_common::{EscapeFlags, EscapeStringStyle};
+use fish_common::{EscapeFlags, EscapeStringStyle, escape_string};
 use fish_fallback::fish_wcwidth;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_widestring::{

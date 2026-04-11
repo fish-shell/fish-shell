@@ -9,10 +9,7 @@ use crate::{
         STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH,
         STATUS_UNMATCHED_WILDCARD,
     },
-    common::{
-        escape, escape_string, escape_string_for_double_quotes, unescape_string,
-        valid_var_name_char,
-    },
+    common::valid_var_name_char,
     complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver},
     env::{EnvVar, Environment},
     exec::exec_subshell_for_expand,
@@ -26,7 +23,10 @@ use crate::{
     wutil::{Options, normalize_path, wcstoi_partial},
 };
 use bitflags::bitflags;
-use fish_common::{EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle};
+use fish_common::{
+    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, escape, escape_string,
+    escape_string_for_double_quotes, unescape_string,
+};
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::{join_strings, trim};

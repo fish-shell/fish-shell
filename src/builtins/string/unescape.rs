@@ -1,6 +1,5 @@
 use super::*;
-use crate::common::unescape_string;
-use fish_common::UnescapeStringStyle;
+use fish_common::{UnescapeStringStyle, unescape_string};
 
 #[derive(Default)]
 pub struct Unescape {

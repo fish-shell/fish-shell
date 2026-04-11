@@ -3,7 +3,7 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::{escape, escape_string, valid_var_name},
+    common::valid_var_name,
     err_fmt, err_raw, err_str,
     highlight::highlight_and_colorize,
     input::{
@@ -13,7 +13,7 @@ use crate::{
         self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
     },
 };
-use fish_common::{EscapeFlags, EscapeStringStyle, help_section};
+use fish_common::{EscapeFlags, EscapeStringStyle, escape, escape_string, help_section};
 use fish_widestring::bytes2wcstring;
 use std::sync::MutexGuard;
 

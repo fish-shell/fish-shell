@@ -1,12 +1,12 @@
 //! Reader implementation of InputEventQueuer.
 use super::{Reader, reader_reading_interrupted, reader_schedule_prompt_repaint};
 use crate::{
-    common::escape,
     event,
     input_common::{CharEvent, InputData, InputEventQueuer, ReadlineCmd},
     proc::job_reap,
     signal::signal_clear_cancel,
 };
+use fish_common::escape;
 use fish_widestring::bytes2wcstring;
 use std::os::fd::RawFd;
 

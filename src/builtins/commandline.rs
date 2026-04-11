@@ -3,7 +3,6 @@ use super::read::TokenOutputMode;
 use crate::{
     ast::{self, Kind, Leaf as _},
     builtins::error::Error,
-    common::unescape_string,
     complete::Completion,
     err_fmt, err_str,
     expand::{ExpandFlags, ExpandResultCode, expand_string},
@@ -24,7 +23,7 @@ use crate::{
     },
     tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer},
 };
-use fish_common::{UnescapeFlags, UnescapeStringStyle};
+use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::join_strings;
 use std::ops::Range;
 

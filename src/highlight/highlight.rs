@@ -189,13 +189,10 @@ impl HighlightColorResolver {
         // Handle modifiers.
         if highlight.valid_path {
             if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
+                let valid_path_face = parse_text_face(valid_path_var.as_list());
                 // Historical behavior is to not apply background.
-                let valid_path_face = parse_text_face_for_highlight(&valid_path_var)
-                    .unwrap_or(TextFace::terminal_default());
-                // Apply the foreground, except if it's normal. The intention here is likely
-                // to only override foreground if the valid path color has an explicit foreground.
-                if !valid_path_face.fg.is_normal() {
-                    face.fg = valid_path_face.fg;
+                if let Some(fg) = valid_path_face.fg {
+                    face.fg = fg;
                 }
                 face.style = face.style.union_prefer_right(valid_path_face.style);
             }

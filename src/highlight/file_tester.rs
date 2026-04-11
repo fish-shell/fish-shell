@@ -4,10 +4,7 @@
 // and provide them optimistically.
 use crate::common::unescape_string;
 use crate::{
-    expand::{
-        BRACE_BEGIN, BRACE_END, BRACE_SEP, ExpandFlags, HOME_DIRECTORY, INTERNAL_SEPARATOR,
-        PROCESS_EXPAND_SELF, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, expand_one, expand_tilde,
-    },
+    expand::{ExpandFlags, expand_one, expand_tilde},
     operation_context::OperationContext,
     path::path_apply_working_directory,
     redirection::RedirectionMode,
@@ -18,7 +15,11 @@ use fish_common::{UnescapeFlags, UnescapeStringStyle};
 use fish_wcstringutil::{
     string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,
 };
-use fish_widestring::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, L, WExt as _, WString, wstr};
+use fish_widestring::{
+    ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP, HOME_DIRECTORY,
+    INTERNAL_SEPARATOR, L, PROCESS_EXPAND_SELF, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, WExt as _,
+    WString, wstr,
+};
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
 use std::collections::{HashMap, HashSet};

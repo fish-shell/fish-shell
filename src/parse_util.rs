@@ -6,11 +6,7 @@ use crate::{
     },
     builtins::shared::builtin_exists,
     common::{unescape_string, valid_var_name, valid_var_name_char},
-    expand::{
-        BRACE_BEGIN, BRACE_END, BRACE_SEP, ExpandFlags, ExpandResultCode, INTERNAL_SEPARATOR,
-        VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, expand_one,
-        expand_to_command_and_args,
-    },
+    expand::{ExpandFlags, ExpandResultCode, expand_one, expand_to_command_and_args},
     operation_context::OperationContext,
     parse_constants::{
         ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
@@ -29,7 +25,10 @@ use crate::{
 use fish_common::{UnescapeFlags, UnescapeStringStyle, help_section};
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{count_newlines, truncate};
-use fish_widestring::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
+use fish_widestring::{
+    ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP,
+    INTERNAL_SEPARATOR, VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE,
+};
 use std::ops::Range;
 use std::{iter, ops};
 

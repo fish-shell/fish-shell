@@ -1,10 +1,7 @@
 //! Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
 
-use crate::expand::{
-    BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE, HOME_DIRECTORY, INTERNAL_SEPARATOR,
-    PROCESS_EXPAND_SELF, PROCESS_EXPAND_SELF_STR, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE,
-};
 use crate::{
+    expand::PROCESS_EXPAND_SELF_STR,
     global_safety::{AtomicRef, RelaxedAtomicBool},
     prelude::*,
     terminal::Outputter,
@@ -14,8 +11,10 @@ use crate::{
 use fish_fallback::fish_wcwidth;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_widestring::{
-    ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, ASCII_MAX, BYTE_MAX, UCS2_MAX, bytes2wcstring,
-    decode_byte_from_char, fish_reserved_codepoint, subslice_position, wcs2bytes,
+    ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, ASCII_MAX, BRACE_BEGIN, BRACE_END, BRACE_SEP,
+    BRACE_SPACE, BYTE_MAX, HOME_DIRECTORY, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, UCS2_MAX,
+    VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, bytes2wcstring, decode_byte_from_char,
+    fish_reserved_codepoint, subslice_position, wcs2bytes,
 };
 use nix::sys::termios::Termios;
 use std::{

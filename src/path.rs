@@ -3,13 +3,13 @@
 //! path-related issues.
 
 use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment, FALLBACK_PATH};
-use crate::expand::{HOME_DIRECTORY, expand_tilde};
+use crate::expand::expand_tilde;
 use crate::flog::{flog, flogf};
 use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use cfg_if::cfg_if;
 use errno::{Errno, errno, set_errno};
-use fish_widestring::{wcs2osstring, wcs2zstring};
+use fish_widestring::{HOME_DIRECTORY, wcs2osstring, wcs2zstring};
 use libc::{EACCES, ENOENT, ENOTDIR, X_OK};
 use nix::unistd::AccessFlags;
 use std::ffi::OsStr;

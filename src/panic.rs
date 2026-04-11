@@ -28,8 +28,10 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
             {
                 return;
             }
-            if let Some(at_exit) = AT_EXIT.get() {
-                (at_exit)();
+            if is_main_thread() {
+                if let Some(at_exit) = AT_EXIT.get() {
+                    (at_exit)();
+                }
             }
             eprintf!("%s crashed, please report a bug.", get_program_name());
             if !is_main_thread() {

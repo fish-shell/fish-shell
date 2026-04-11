@@ -7,7 +7,7 @@ pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
 
-use crate::{fds::BorrowedFdFile, flog, signal::SigChecker, topic_monitor::Topic};
+use crate::{fds::BorrowedFdFile, flog, signal::SigChecker};
 use errno::{Errno, set_errno};
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::join_strings;

@@ -1,8 +1,8 @@
 use libc::VERASE;
 
 use crate::{
-    flog::FloggableDebug, localizable_string, reader::safe_get_terminal_mode_on_startup,
-    wgettext_fmt, wutil::fish_wcstoul,
+    flog::FloggableDebug, localizable_string, reader::get_terminal_mode_on_startup, wgettext_fmt,
+    wutil::fish_wcstoul,
 };
 use fish_common::{EscapeFlags, EscapeStringStyle, escape_string};
 use fish_fallback::fish_wcwidth;
@@ -195,7 +195,7 @@ pub(crate) fn canonicalize_keyed_control_char(c: char) -> char {
     if c == ' ' {
         return Space;
     }
-    if let Some(tm) = safe_get_terminal_mode_on_startup() {
+    if let Some(tm) = get_terminal_mode_on_startup() {
         if c == char::from(tm.c_cc[VERASE]) {
             return Backspace;
         }

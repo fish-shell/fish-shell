@@ -1,6 +1,6 @@
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::prelude::*;
-use crate::reader::{reader_handle_sigint, safe_reader_set_exit_signal};
+use crate::reader::{safe_reader_handle_sigint, safe_reader_set_exit_signal};
 use crate::termsize::safe_termsize_invalidate_tty;
 use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_principal};
 use crate::tty_handoff::safe_mark_tty_invalid;
@@ -103,7 +103,7 @@ extern "C" fn fish_signal_handler(
             if !observed {
                 CANCELLATION_SIGNAL.store(libc::SIGINT, Ordering::Relaxed);
             }
-            reader_handle_sigint();
+            safe_reader_handle_sigint();
             topic_monitor_principal().post(Topic::SigHupIntTerm);
         }
         libc::SIGCHLD => {

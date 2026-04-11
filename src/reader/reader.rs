@@ -103,7 +103,7 @@ use crate::{
     },
     tty_handoff::{
         SCROLL_CONTENT_UP_TERMINFO_CODE, TtyHandoff, XTGETTCAP_QUERY_OS_NAME,
-        get_tty_protocols_active, initialize_tty_protocols, safe_deactivate_tty_protocols,
+        deactivate_tty_protocols, get_tty_protocols_active, initialize_tty_protocols,
     },
     wildcard::wildcard_has,
     wutil::{fstat, perror_nix, wstat},
@@ -173,7 +173,7 @@ fn zeroed_termios() -> Termios {
 
 pub static SHELL_MODES: LazyLock<Mutex<Termios>> = LazyLock::new(|| Mutex::new(zeroed_termios()));
 
-/// The valid terminal modes on startup. Raw global for async-signal-safe access.
+/// The valid terminal modes on startup.
 static TERMINAL_MODE_ON_STARTUP: OnceLock<libc::termios> = OnceLock::new();
 
 /// Mode we use to execute programs.
@@ -191,8 +191,8 @@ static INTERRUPTED: AtomicI32 = AtomicI32::new(0);
 /// Set from a signal handler.
 static EXIT_SIGNAL: AtomicI32 = AtomicI32::new(0);
 
-// Get the terminal mode on startup. This is "safe" because it's async-signal safe.
-pub fn safe_get_terminal_mode_on_startup() -> Option<&'static libc::termios> {
+// Get the terminal mode on startup.
+pub fn get_terminal_mode_on_startup() -> Option<&'static libc::termios> {
     TERMINAL_MODE_ON_STARTUP.get()
 }
 
@@ -993,7 +993,6 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
     {
         Ok(modes) => {
             // Save the initial terminal mode.
-            // Note this field is read by a signal handler, so do it atomically, with a leaked mode.
             // TODO: rationalize behavior if initial tcgetattr() fails.
             TERMINAL_MODE_ON_STARTUP.get_or_init(|| libc::termios::from(modes.clone()));
             modes
@@ -1030,8 +1029,8 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
 }
 
 pub fn reader_deinit(restore_foreground_pgroup: bool) {
-    safe_restore_term_mode();
-    safe_deactivate_tty_protocols();
+    restore_term_mode();
+    deactivate_tty_protocols();
     if restore_foreground_pgroup {
         restore_term_foreground_process_group_for_exit();
     }
@@ -1040,11 +1039,11 @@ pub fn reader_deinit(restore_foreground_pgroup: bool) {
 /// Restore the term mode if we own the terminal and are interactive (#8705).
 /// It's important we do this before restore_foreground_process_group,
 /// otherwise we won't think we own the terminal.
-pub fn safe_restore_term_mode() {
+pub fn restore_term_mode() {
     if !is_interactive_session() || getpgrp().as_raw() != unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
         return;
     }
-    if let Some(modes) = safe_get_terminal_mode_on_startup() {
+    if let Some(modes) = get_terminal_mode_on_startup() {
         unsafe { libc::tcsetattr(STDIN_FILENO, libc::TCSANOW, modes) };
     }
 }
@@ -1320,7 +1319,7 @@ const HIGHLIGHT_TIMEOUT_FOR_EXECUTION: Duration = Duration::from_millis(250);
 
 /// The readers interrupt signal handler. Cancels all currently running blocks.
 /// This is called from a signal handler!
-pub fn reader_handle_sigint() {
+pub fn safe_reader_handle_sigint() {
     INTERRUPTED.store(SIGINT, Ordering::Relaxed);
 }
 

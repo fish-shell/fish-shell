@@ -27,6 +27,9 @@ function prompt_pwd --description 'short CWD for the prompt'
 
     for path in $argv
         set -l tmp (__fish_unexpand_tilde $path)
+        # Strip control characters (e.g. ESC) so malicious directory names
+        # can't inject terminal escape sequences into the prompt.
+        set tmp (string replace -ra '[[:cntrl:]]' '' -- $tmp)
 
         if test "$fish_prompt_pwd_dir_length" -eq 0
             echo $tmp

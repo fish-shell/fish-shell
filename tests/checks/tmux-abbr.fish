@@ -8,7 +8,7 @@ isolated-tmux-start -C '
     abbr -g abbr-test "abbr-test [expanded]"
 '
 
-if { command -v less && ! less --version | grep BusyBox } >/dev/null
+if { command -v less && ! less --version 2>&1 | grep BusyBox } >/dev/null
     isolated-tmux send-keys "abbr --help | sed 1q | less" Enter
     tmux-sleep
     isolated-tmux capture-pane -p

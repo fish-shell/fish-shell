@@ -1,11 +1,11 @@
-use crate::common::{unescape_string, valid_var_name};
+use crate::common::valid_var_name;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::flog::{flog, flogf};
 use crate::fs::{PotentialUpdate, lock_and_load, rewrite_via_temporary_file};
 use crate::path::path_get_config;
 use crate::prelude::*;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path_narrow, wrealpath};
-use fish_common::{UnescapeFlags, UnescapeStringStyle};
+use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{LineIterator, join_strings};
 use fish_widestring::{decode_byte_from_char, wcs2zstring};
 use itertools::Itertools as _;

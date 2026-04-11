@@ -3,7 +3,7 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::{escape, unescape_string, valid_var_name},
+    common::valid_var_name,
     env::{EnvMode, EnvVar, EnvVarFlags, Environment as _, READ_BYTE_LIMIT},
     err_fmt, err_str,
     input_common::{DecodeState, InvalidPolicy, decode_utf8},
@@ -17,7 +17,7 @@ use crate::{
     tokenizer::{TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, Tok, Tokenizer},
     wutil,
 };
-use fish_common::{UnescapeStringStyle, read_blocked};
+use fish_common::{UnescapeStringStyle, escape, read_blocked, unescape_string};
 use fish_util::perror;
 use fish_wcstringutil::{split_about, split_string_tok};
 use fish_widestring::bytes2wcstring;

@@ -4,7 +4,7 @@ use super::prelude::*;
 use crate::{
     ast::{self, AsNode as _, Ast, Kind, Leaf as _, Node, NodeVisitor, SourceRangeList, Traversal},
     builtins::error::Error,
-    common::{PROGRAM_NAME, get_program_name, unescape_string},
+    common::{PROGRAM_NAME, get_program_name},
     env::{EnvStack, env_init, environment::Environment as _},
     err_fmt, err_str,
     global_safety::RelaxedAtomicBool,
@@ -22,7 +22,7 @@ use crate::{
     wutil::fish_iswalnum,
 };
 use assert_matches::assert_matches;
-use fish_common::{ReadExt as _, UnescapeFlags, UnescapeStringStyle};
+use fish_common::{ReadExt as _, UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::count_preceding_backslashes;
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 use fish_widestring::{INTERNAL_SEPARATOR, bytes2wcstring, osstr2wcstring, wcs2bytes};

@@ -5,7 +5,7 @@ use crate::{
         is_same_node,
     },
     builtins::shared::builtin_exists,
-    common::{unescape_string, valid_var_name, valid_var_name_char},
+    common::{valid_var_name, valid_var_name_char},
     expand::{ExpandFlags, ExpandResultCode, expand_one, expand_to_command_and_args},
     operation_context::OperationContext,
     parse_constants::{
@@ -22,15 +22,17 @@ use crate::{
         is_token_delimiter, quote_end,
     },
 };
-use fish_common::{UnescapeFlags, UnescapeStringStyle, help_section};
+use fish_common::{UnescapeFlags, UnescapeStringStyle, help_section, unescape_string};
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{count_newlines, truncate};
 use fish_widestring::{
     ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP,
     INTERNAL_SEPARATOR, VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE,
 };
-use std::ops::Range;
-use std::{iter, ops};
+use std::{
+    iter,
+    ops::{self, Range},
+};
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
 /// Return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.

@@ -2,26 +2,28 @@
 //! functions for tracking children. These functions do not themselves launch new processes,
 //! the exec library will call proc to create representations of the running jobs as needed.
 
-use crate::ast;
-use crate::common::{WSL, escape, is_windows_subsystem_for_linux};
-use crate::env::Statuses;
-use crate::event::{self, Event};
-use crate::flog::{flog, flogf};
-use crate::global_safety::RelaxedAtomicBool;
-use crate::io::IoChain;
-use crate::job_group::{JobGroup, MaybeJobId};
-use crate::parse_tree::NodeRef;
-use crate::parser::{Block, Parser};
-use crate::portable_atomic::AtomicU64;
-use crate::prelude::*;
-use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
-use crate::redirection::RedirectionSpecList;
-use crate::signal::{Signal, signal_set_handlers_once};
-use crate::topic_monitor::{GenerationsList, Topic, topic_monitor_principal};
-use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
-use crate::wutil::{perror_nix, wbasename};
+use crate::{
+    ast,
+    common::{WSL, is_windows_subsystem_for_linux},
+    env::Statuses,
+    event::{self, Event},
+    flog::{flog, flogf},
+    global_safety::RelaxedAtomicBool,
+    io::IoChain,
+    job_group::{JobGroup, MaybeJobId},
+    parse_tree::NodeRef,
+    parser::{Block, Parser},
+    portable_atomic::AtomicU64,
+    prelude::*,
+    reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint},
+    redirection::RedirectionSpecList,
+    signal::{Signal, signal_set_handlers_once},
+    topic_monitor::{GenerationsList, Topic, topic_monitor_principal},
+    wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore},
+    wutil::{perror_nix, wbasename},
+};
 use cfg_if::cfg_if;
-use fish_common::{Timepoint, timef};
+use fish_common::{Timepoint, escape, timef};
 use fish_widestring::ToWString;
 use libc::{
     _SC_CLK_TCK, EXIT_SUCCESS, SIG_IGN, SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGINT, SIGPIPE, SIGQUIT,
@@ -35,14 +37,18 @@ use nix::{
     },
     unistd::getpgrp,
 };
-use std::cell::{Cell, Ref, RefCell, RefMut};
-use std::fs;
-use std::io::{Read as _, Write as _};
-use std::num::NonZeroU32;
-use std::os::fd::RawFd;
-use std::rc::Rc;
-use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::{Arc, LazyLock, Mutex, OnceLock};
+use std::{
+    cell::{Cell, Ref, RefCell, RefMut},
+    fs,
+    io::{Read as _, Write as _},
+    num::NonZeroU32,
+    os::fd::RawFd,
+    rc::Rc,
+    sync::{
+        Arc, LazyLock, Mutex, OnceLock,
+        atomic::{AtomicU8, Ordering},
+    },
+};
 
 /// Types of processes.
 #[derive(Default)]

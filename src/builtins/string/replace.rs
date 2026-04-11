@@ -154,7 +154,7 @@ enum StringReplacer<'args, 'opts> {
 
 impl<'args, 'opts> StringReplacer<'args, 'opts> {
     fn interpret_escape(arg: &'args wstr) -> Option<WString> {
-        use crate::common::read_unquoted_escape;
+        use fish_common::read_unquoted_escape;
 
         let mut result: WString = WString::with_capacity(arg.len());
         let mut cursor = arg;

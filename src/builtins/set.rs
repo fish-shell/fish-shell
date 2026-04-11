@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::{escape, escape_string, valid_var_name},
+    common::valid_var_name,
     env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, INHERITED_VARS},
     err_fmt, err_str,
     event::{self, Event},
@@ -11,7 +11,7 @@ use crate::{
     parser::ParserEnvSetMode,
     wutil::wcstoi::wcstoi_partial,
 };
-use fish_common::{EscapeFlags, EscapeStringStyle, help_section};
+use fish_common::{EscapeFlags, EscapeStringStyle, escape, escape_string, help_section};
 use fish_widestring::ELLIPSIS_CHAR;
 
 #[derive(Debug, Clone)]

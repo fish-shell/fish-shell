@@ -3,7 +3,7 @@ use crate::{
     ast::unescape_keyword,
     autoload::{Autoload, AutoloadResult},
     builtins::shared::{builtin_exists, builtin_get_desc, builtin_get_names},
-    common::{escape, unescape_string, valid_var_name_char},
+    common::valid_var_name_char,
     env::{EnvMode, EnvStack, Environment},
     exec::exec_subshell,
     expand::{
@@ -28,7 +28,7 @@ use crate::{
 };
 use assert_matches::assert_matches;
 use bitflags::bitflags;
-use fish_common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle};
+use fish_common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle, escape, unescape_string};
 use fish_util::wcsfilecmp;
 use fish_wcstringutil::{
     StringFuzzyMatch, string_fuzzy_match_string, string_prefixes_string,

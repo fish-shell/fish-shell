@@ -1,15 +1,16 @@
 use super::string;
-use crate::builtins::shared::BuiltinResultExt as _;
-use crate::io::IoChain;
-use crate::io::{IoStreams, OutputStream, StringOutputStream};
-use crate::prelude::*;
-use crate::tests::prelude::*;
+use crate::{
+    builtins::shared::BuiltinResultExt as _,
+    io::{IoChain, IoStreams, OutputStream, StringOutputStream},
+    prelude::*,
+    tests::prelude::*,
+};
 
 #[macro_export]
 macro_rules! validate {
     ( [$($argv:expr),*], $expected_rc:expr, $expected_out:expr ) => {
         {
-            use $crate::common::escape;
+            use fish_common::escape;
             use $crate::prelude::*;
             use $crate::builtins::string::test_helpers::string_test;
             let (actual_out, actual_rc) = string_test(vec![$(L!($argv)),*]);

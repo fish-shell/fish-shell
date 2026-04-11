@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::{escape_string, reformat_for_screen, valid_func_name},
+    common::{reformat_for_screen, valid_func_name},
     err_fmt, err_str,
     event::{self},
     function,
@@ -10,7 +10,7 @@ use crate::{
     parser_keywords::parser_keywords_is_reserved,
     termsize::termsize_last,
 };
-use fish_common::{EscapeFlags, EscapeStringStyle};
+use fish_common::{EscapeFlags, EscapeStringStyle, escape_string};
 use fish_widestring::bytes2wcstring;
 
 #[derive(Default)]

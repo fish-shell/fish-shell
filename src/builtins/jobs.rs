@@ -2,7 +2,6 @@
 
 use super::prelude::*;
 use crate::{
-    common::escape_string,
     err_fmt,
     io::IoStreams,
     job_group::{JobId, MaybeJobId},
@@ -11,7 +10,7 @@ use crate::{
     proc::{HAVE_PROC_STAT, Job, clock_ticks_to_seconds, proc_get_jiffies},
     wutil::fish_wcstoi,
 };
-use fish_common::{EscapeFlags, EscapeStringStyle, timef};
+use fish_common::{EscapeFlags, EscapeStringStyle, escape_string, timef};
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 use fish_widestring::{L, WExt as _, WString, wstr};
 use std::num::NonZeroU32;

@@ -3,7 +3,7 @@
 use crate::{
     ast::{self, Node},
     builtins::shared::STATUS_ILLEGAL_CMD,
-    common::{CancelChecker, PROFILING_ACTIVE, escape_string},
+    common::{CancelChecker, PROFILING_ACTIVE},
     complete::CompletionList,
     env::{
         EnvMode, EnvSetMode, EnvStack, EnvStackSetResult, Environment,
@@ -34,6 +34,7 @@ use crate::{
 use assert_matches::assert_matches;
 use fish_common::{
     EscapeFlags, EscapeStringStyle, FilenameRef, ScopeGuarding, ScopedCell, ScopedRefCell,
+    escape_string,
 };
 use fish_util::get_time;
 use fish_widestring::{WExt as _, wcs2bytes};

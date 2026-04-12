@@ -17,6 +17,7 @@ Other improvements
 ------------------
 - History is no longer corrupted with NUL bytes when fish receives SIGTERM or SIGHUP (:issue:`10300`).
 - ``fish_update_completions`` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).
+- ``prompt_pwd`` now strips control characters.
 
 For distributors and developers
 -------------------------------

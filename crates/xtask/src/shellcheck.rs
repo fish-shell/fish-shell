@@ -3,7 +3,7 @@ use ignore::Walk;
 use pcre2::bytes::Regex;
 use std::{
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, ErrorKind},
     path::{Path, PathBuf},
     process::Command,
     sync::LazyLock,
@@ -20,8 +20,16 @@ pub fn shellcheck() {
             std::process::exit(status.code().unwrap_or(1));
         }
         Err(e) => {
-            eprintln!("Failed to run shellcheck: {e}");
-            std::process::exit(1);
+            if cfg!(cygwin) && e.kind() == ErrorKind::NotFound {
+                // Don't fail on Cygwin since there is no MSYS2/Cygwin package for it.
+                // It is available as a native app, but it won't be in the MSYS2
+                // path by default
+                eprintln!("Shellcheck is not available");
+                std::process::exit(0);
+            } else {
+                eprintln!("Failed to run shellcheck: {e}");
+                std::process::exit(1);
+            }
         }
     }
 }

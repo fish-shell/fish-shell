@@ -1238,6 +1238,7 @@ dependencies = [
  "fish-tempfile",
  "ignore",
  "pcre2",
+ "rsconf",
  "walkdir",
 ]
 

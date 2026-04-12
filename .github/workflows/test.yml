@@ -167,7 +167,7 @@ jobs:
     - name: Install deps
       # Not using setup-msys2 `install` option to make it easier to copy/paste
       run: |
-        pacman --noconfirm -S --needed git rust
+        pacman --noconfirm -S --needed git rust python3 diffutils tmux
     - name: rebase
       env:
         MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
@@ -177,10 +177,6 @@ jobs:
     - name: cargo build
       run: |
         cargo build
-    - name: smoketest
-      # We can't run `build_tools/check.sh` yet, there are just too many failures
-      # so this is just a quick check to make sure that fish can swim
+    - name: tests
       run: |
-        set -x
-        [ "$(target/debug/fish.exe -c 'echo (math 1 + 1)')" = 2 ]
-        cargo test
+        cargo xtask check

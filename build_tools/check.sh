@@ -99,7 +99,9 @@ if $lint; then
         cargo deny --all-features --locked --exclude-dev check licenses
     fi
 
-    cargo xtask shellcheck
+    if command -v shellcheck >/dev/null || { test -n "$CI" && ! $is_cygwin; }; then
+        cargo xtask shellcheck
+    fi
 
     PATH="$build_dir:$PATH" cargo xtask format --all --check
     for features in "" --no-default-features --all-features; do

@@ -3,7 +3,7 @@ name: Linux development builds
 on:
   push:
     branches:
-      - master
+      - buildscript
 
 jobs:
   deploy:

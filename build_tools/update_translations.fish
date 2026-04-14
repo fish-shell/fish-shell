@@ -34,8 +34,6 @@ set -gx LC_ALL C.UTF-8
 set -l build_tools (status dirname)
 set -l po_dir $build_tools/../localization/po
 
-set -l extract
-
 argparse dry-run use-existing-template= -- $argv
 or exit $status
 
@@ -80,14 +78,12 @@ function cleanup_exit
     exit $exit_status
 end
 
-if set -l --query extract
-    set -l xgettext_args
-    if set -l --query _flag_use_existing_template
-        set xgettext_args --use-existing-template=$_flag_use_existing_template
-    end
-    $build_tools/fish_xgettext.fish $xgettext_args >$template_file
-    or cleanup_exit
+set -l xgettext_args
+if set -l --query _flag_use_existing_template
+    set xgettext_args --use-existing-template=$_flag_use_existing_template
 end
+$build_tools/fish_xgettext.fish $xgettext_args >$template_file
+or cleanup_exit
 
 if set -l --query _flag_dry_run
     # On a dry run, we do not modify localization/po/ but write to a temporary directory instead

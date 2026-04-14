@@ -9,6 +9,8 @@ Deprecations and removed features
 
 Interactive improvements
 ------------------------
+- :doc:`prompt_pwd <cmds/prompt_pwd>` now strips control characters.
+- Background color and underline color specified in :envvar:`fish_color_valid_path` are now respected (:issue:`12622`).
 
 Improved terminal support
 -------------------------
@@ -16,15 +18,16 @@ Improved terminal support
 Other improvements
 ------------------
 - History is no longer corrupted with NUL bytes when fish receives SIGTERM or SIGHUP (:issue:`10300`).
-- ``fish_update_completions`` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).
-- ``prompt_pwd`` now strips control characters.
+- :doc:`fish_update_completions <cmds/fish_update_completions>` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).
 
 For distributors and developers
 -------------------------------
-- When the default global config directory (``$PREFIX/etc/fish``) exists but has been overridden with ``-DCMAKE_INSTALL_SYSCONFDIR``, fish will now respect that override (:issue:`10748`).
+- When the default global config directory (``$PREFIX/etc/fish``) exists but has been overridden via ``-DCMAKE_INSTALL_SYSCONFDIR``, fish will now respect that override (:issue:`10748`).
 
 Regression fixes:
 -----------------
+- Vi mode ``dl`` (:issue:`12461`).
+- (from 4.6) Backspace after newline (:issue:`12583`).
 
 fish 4.6.0 (released March 28, 2026)
 ====================================

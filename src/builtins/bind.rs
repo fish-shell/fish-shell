@@ -117,7 +117,7 @@ impl BuiltinBind {
                     if key.modifiers == Modifiers::ALT {
                         out.push_utfstr(&char_to_symbol('\x1b', i == 0));
                         out.push_utfstr(&char_to_symbol(
-                            if key.codepoint == key::Escape {
+                            if key.codepoint == key::ESCAPE {
                                 '\x1b'
                             } else {
                                 key.codepoint

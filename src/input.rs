@@ -361,19 +361,19 @@ pub fn init_input() {
         };
 
         add(vec![], "self-insert");
-        add(vec![Key::from_raw(key::Enter)], "execute");
-        add(vec![Key::from_raw(key::Tab)], "complete");
+        add(vec![Key::from_raw(key::ENTER)], "execute");
+        add(vec![Key::from_raw(key::TAB)], "complete");
         add(vec![ctrl('c')], "cancel-commandline");
         add(vec![ctrl('d')], "exit");
         add(vec![ctrl('e')], "bind");
         add(vec![ctrl('s')], "pager-toggle-search");
         add(vec![ctrl('u')], "backward-kill-line");
-        add(vec![Key::from_raw(key::Backspace)], "backward-delete-char");
+        add(vec![Key::from_raw(key::BACKSPACE)], "backward-delete-char");
         // Arrows - can't have functions, so *-or-search isn't available.
-        add(vec![Key::from_raw(key::Up)], "up-line");
-        add(vec![Key::from_raw(key::Down)], "down-line");
-        add(vec![Key::from_raw(key::Right)], "forward-char");
-        add(vec![Key::from_raw(key::Left)], "backward-char");
+        add(vec![Key::from_raw(key::UP)], "up-line");
+        add(vec![Key::from_raw(key::DOWN)], "down-line");
+        add(vec![Key::from_raw(key::RIGHT)], "forward-char");
+        add(vec![Key::from_raw(key::LEFT)], "backward-char");
         // Emacs style
         add(vec![ctrl('p')], "up-line");
         add(vec![ctrl('n')], "down-line");
@@ -585,11 +585,11 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             !seq.is_empty(),
             "Empty sequence passed to try_peek_sequence"
         );
-        let mut prev = Key::from_raw(key::Invalid);
+        let mut prev = Key::from_raw(key::INVALID);
         for key in seq {
             // If we just read an escape, we need to add a timeout for the next char,
             // to distinguish between the actual escape key and an "alt"-modifier.
-            let escaped = *style != KeyNameStyle::Plain && prev == Key::from_raw(key::Escape);
+            let escaped = *style != KeyNameStyle::Plain && prev == Key::from_raw(key::ESCAPE);
             let Some(spec) = self.next_is_char(style, *key, escaped) else {
                 return false;
             };
@@ -650,7 +650,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             if self.try_peek_sequence(&m.key_name_style, &m.seq, &mut quality) {
                 // // A binding for just escape should also be deferred
                 // // so escape sequences take precedence.
-                let is_escape = m.seq == vec![Key::from_raw(key::Escape)];
+                let is_escape = m.seq == vec![Key::from_raw(key::ESCAPE)];
                 let is_perfect_match = quality
                     .iter()
                     .all(|key_match| *key_match == KeyMatchQuality::Exact);

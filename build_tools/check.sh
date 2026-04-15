@@ -141,7 +141,7 @@ if $is_cygwin; then
 
     # shellcheck disable=2059
     printf "=== Running ${green}integration tests ${yellow}without${green} symlinks${reset}\n"
-    system_tests "$cygwin_var"=winsymlinks
+    system_tests "$cygwin_var"=
 else
     # shellcheck disable=2059
     printf "=== Running ${green}integration tests${reset}\n"

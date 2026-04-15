@@ -113,7 +113,8 @@ fi
 # - https://github.com/msys2/MSYS2-packages/issues/5784
 (
     if $is_cygwin; then
-        export PATH="$PATH:$(rustc --print target-libdir)"
+        PATH="$PATH:$(rustc --print target-libdir)"
+        export PATH
     fi
     cargo test --no-default-features --workspace --all-targets
 )

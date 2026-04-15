@@ -129,7 +129,6 @@ system_tests() (
     "$workspace_root/tests/test_driver.py" "$build_dir"
 )
 
-test_cmd='FISH_GETTEXT_EXTRACTION_DIR="$gettext_template_dir" "$workspace_root/tests/test_driver.py" "$build_dir"'
 if $is_cygwin; then
     echo -e "=== Running ${green}integration tests ${yellow}with${green} symlinks${reset}"
     system_tests $cygwin_var=winsymlinks

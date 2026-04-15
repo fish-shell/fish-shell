@@ -125,6 +125,7 @@ fi
 
 # Using "()" not "{}" because we do want a subshell (for the export)
 system_tests() (
+    # shellcheck disable=2163
     [ -n "$*" ] && export "$@"
     # shellcheck disable=2031
     export FISH_GETTEXT_EXTRACTION_DIR="$gettext_template_dir"

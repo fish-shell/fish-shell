@@ -124,7 +124,7 @@ fi
 
 # Using "()" not "{}" because we do want a subshell (for the export)
 system_tests() (
-    [ -n "$@" ] && export "$@"
+    [ -n "$*" ] && export "$@"
     export FISH_GETTEXT_EXTRACTION_DIR="$gettext_template_dir"
     "$workspace_root/tests/test_driver.py" "$build_dir"
 )

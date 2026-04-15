@@ -130,13 +130,16 @@ system_tests() (
 )
 
 if $is_cygwin; then
-    echo -e "=== Running ${green}integration tests ${yellow}with${green} symlinks${reset}"
+    # shellcheck disable=2059
+    printf "=== Running ${green}integration tests ${yellow}with${green} symlinks${reset}\n"
     system_tests $cygwin_var=winsymlinks
 
-    echo -e "=== Running ${green}integration tests ${yellow}without${green} symlinks${reset}"
+    # shellcheck disable=2059
+    printf "=== Running ${green}integration tests ${yellow}without${green} symlinks${reset}\n"
     system_tests $cygwin_var=winsymlinks
 else
-    echo -e "=== Running ${green}integration tests${reset}"
+    # shellcheck disable=2059
+    printf "=== Running ${green}integration tests${reset}\n"
     system_tests
 fi
 

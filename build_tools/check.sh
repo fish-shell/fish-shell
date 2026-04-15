@@ -89,6 +89,7 @@ fi
 
 gettext_template_dir=$(mktemp -d)
 (
+    # shellcheck disable=2030
     export FISH_GETTEXT_EXTRACTION_DIR="$gettext_template_dir"
     cargo build --workspace --all-targets --features=gettext-extract
 )
@@ -125,6 +126,7 @@ fi
 # Using "()" not "{}" because we do want a subshell (for the export)
 system_tests() (
     [ -n "$*" ] && export "$@"
+    # shellcheck disable=2031
     export FISH_GETTEXT_EXTRACTION_DIR="$gettext_template_dir"
     "$workspace_root/tests/test_driver.py" "$build_dir"
 )

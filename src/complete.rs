@@ -158,15 +158,16 @@ impl Completion {
         r#match: StringFuzzyMatch, /* = exact_match */
         flags: CompleteFlags,
     ) -> Self {
-        let flags = resolve_auto_space(&completion, flags);
-        let zelf = Self {
+        let mut flags = resolve_auto_space(&completion, flags);
+        if r#match.requires_full_replacement() {
+            flags |= CompleteFlags::REPLACES_TOKEN;
+        }
+        Self {
             completion,
             description,
             r#match,
             flags,
-        };
-        assert!(!zelf.r#match.requires_full_replacement() || zelf.replaces_token());
-        zelf
+        }
     }
 
     pub fn from_completion(completion: WString) -> Self {
@@ -1484,14 +1485,12 @@ impl<'ctx> Completer<'ctx> {
                     continue;
                 };
 
-                let mut offset = 0;
-                let mut flags = CompleteFlags::empty();
-
-                if r#match.requires_full_replacement() {
-                    flags = CompleteFlags::REPLACES_TOKEN;
+                let offset = if r#match.requires_full_replacement() {
+                    0
                 } else {
-                    offset = s.len();
-                }
+                    s.len()
+                };
+                let completion = whole_opt.slice_from(offset);
 
                 // does this switch have any known arguments
                 let has_arg = !o.comp.is_empty();
@@ -1503,14 +1502,14 @@ impl<'ctx> Completer<'ctx> {
                     // a completion. By default we avoid using '=' and instead rely on '--switch
                     // switch-arg', since it is more commonly supported by homebrew getopt-like
                     // functions.
-                    let completion = sprintf!("%s=", whole_opt.slice_from(offset));
+                    let completion = sprintf!("%s=", completion);
 
                     // Append a long-style option with a mandatory trailing equal sign
                     if !self.completions.add(Completion::new(
                         completion,
                         o.desc.localize().to_owned(),
                         r#match,
-                        flags | CompleteFlags::NO_SPACE,
+                        CompleteFlags::NO_SPACE,
                     )) {
                         return false;
                     }
@@ -1518,10 +1517,10 @@ impl<'ctx> Completer<'ctx> {
 
                 // Append a long-style option
                 if !self.completions.add(Completion::new(
-                    whole_opt.slice_from(offset).to_owned(),
+                    completion.to_owned(),
                     o.desc.localize().to_owned(),
                     r#match,
-                    flags,
+                    CompleteFlags::empty(),
                 )) {
                     return false;
                 }
@@ -1667,7 +1666,7 @@ impl<'ctx> Completer<'ctx> {
                 // Take only the suffix.
                 env_name.slice_from(varlen).to_owned()
             } else {
-                flags |= CompleteFlags::REPLACES_TOKEN | CompleteFlags::DONT_ESCAPE;
+                flags |= CompleteFlags::DONT_ESCAPE;
                 whole_var.slice_to(start_offset).to_owned() + env_name.as_utfstr()
             };
 
@@ -1830,7 +1829,7 @@ impl<'ctx> Completer<'ctx> {
                     // TODO: propagate overflow?
                     let mut flags = CompleteFlags::NO_SPACE;
                     if r#match.requires_full_replacement() {
-                        flags |= CompleteFlags::REPLACES_TOKEN | CompleteFlags::DONT_ESCAPE;
+                        flags |= CompleteFlags::DONT_ESCAPE;
                     }
                     let _ = self.completions.add(Completion::new(
                         if r#match.requires_full_replacement() {

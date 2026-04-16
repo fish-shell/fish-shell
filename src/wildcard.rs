@@ -149,16 +149,11 @@ fn wildcard_complete_internal(
 
         // Note: out_completion may be empty if the completion really is empty, e.g. tab-completing
         // 'foo' when a file 'foo' exists.
-        let local_flags = if full_replacement {
-            flags | CompleteFlags::REPLACES_TOKEN
-        } else {
-            flags
-        };
         if !out.add(Completion::new(
             out_completion.to_owned(),
             out_desc,
             m,
-            local_flags,
+            flags,
         )) {
             return WildcardResult::Overflow;
         }

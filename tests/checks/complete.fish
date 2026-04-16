@@ -727,3 +727,9 @@ complete -c foo -a "foo\\"
 
 complete -C
 # CHECKERR: complete: Can not get commandline in non-interactive mode
+
+if string match -rq -- '^[a-z]+$' $USER
+    set -l first_letter_wrong_case (string sub -l 1 -- $USER | string upper)
+    string match -rq -- "$USER\t.*" (complete -C "echo ~$first_letter_wrong_case")
+    or echo "`complete -C'echo ~$first_letter_wrong_case'` did not yield $USER"
+end

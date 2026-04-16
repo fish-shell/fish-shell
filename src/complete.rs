@@ -1823,30 +1823,23 @@ impl<'ctx> Completer<'ctx> {
                     break;
                 }
 
-                if string_prefixes_string(user_name, &pw_name) {
+                if let Some(r#match) = StringFuzzyMatch::try_create(user_name, &pw_name, true) {
                     let desc = wgettext_fmt!(COMPLETE_USER_DESC, &pw_name);
                     // Append a user name.
                     // TODO: propagate overflow?
+                    let mut flags = CompleteFlags::NO_SPACE;
+                    if r#match.requires_full_replacement() {
+                        flags |= CompleteFlags::REPLACES_TOKEN | CompleteFlags::DONT_ESCAPE;
+                    }
                     let _ = self.completions.add(Completion::new(
-                        pw_name.slice_from(name_len).to_owned(),
+                        if r#match.requires_full_replacement() {
+                            sprintf!("~%s", &pw_name)
+                        } else {
+                            pw_name.slice_from(name_len).to_owned()
+                        },
                         desc,
-                        StringFuzzyMatch::exact_match(),
-                        CompleteFlags::NO_SPACE,
-                    ));
-                    result = true;
-                } else if string_prefixes_string_case_insensitive(user_name, &pw_name) {
-                    let name = sprintf!("~%s", &pw_name);
-                    let desc = wgettext_fmt!(COMPLETE_USER_DESC, &pw_name);
-
-                    // Append a user name
-                    // TODO: propagate overflow?
-                    let _ = self.completions.add(Completion::new(
-                        name,
-                        desc,
-                        StringFuzzyMatch::exact_match(),
-                        CompleteFlags::REPLACES_TOKEN
-                            | CompleteFlags::DONT_ESCAPE
-                            | CompleteFlags::NO_SPACE,
+                        r#match,
+                        flags,
                     ));
                     result = true;
                 }

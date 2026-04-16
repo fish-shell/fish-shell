@@ -32,8 +32,7 @@ use fish_common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle, escape, unesca
 use fish_util::wcsfilecmp;
 use fish_wcstringutil::{
     StringFuzzyMatch, string_fuzzy_match_string, string_prefixes_string,
-    string_prefixes_string_case_insensitive, string_suffixes_string_case_insensitive,
-    strip_executable_suffix,
+    string_suffixes_string_case_insensitive, strip_executable_suffix,
 };
 use fish_widestring::{WExt as _, charptr2wcstring};
 use std::{
@@ -160,12 +159,14 @@ impl Completion {
         flags: CompleteFlags,
     ) -> Self {
         let flags = resolve_auto_space(&completion, flags);
-        Self {
+        let zelf = Self {
             completion,
             description,
             r#match,
             flags,
-        }
+        };
+        assert!(!zelf.r#match.requires_full_replacement() || zelf.replaces_token());
+        zelf
     }
 
     pub fn from_completion(completion: WString) -> Self {
@@ -1508,7 +1509,7 @@ impl<'ctx> Completer<'ctx> {
                     if !self.completions.add(Completion::new(
                         completion,
                         o.desc.localize().to_owned(),
-                        StringFuzzyMatch::exact_match(),
+                        r#match,
                         flags | CompleteFlags::NO_SPACE,
                     )) {
                         return false;
@@ -1519,7 +1520,7 @@ impl<'ctx> Completer<'ctx> {
                 if !self.completions.add(Completion::new(
                     whole_opt.slice_from(offset).to_owned(),
                     o.desc.localize().to_owned(),
-                    StringFuzzyMatch::exact_match(),
+                    r#match,
                     flags,
                 )) {
                     return false;

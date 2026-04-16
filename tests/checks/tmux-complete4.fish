@@ -15,7 +15,7 @@ isolated-tmux send-keys C-l ': -c'
 function tab
     isolated-tmux send-keys Tab
     tmux-sleep
-    isolated-tmux capture-pane -p | sed '/./ { s,^,[,; s,$,], }'
+    isolated-tmux capture-pane -p | awk '/./ { print "[" $0 "]" }'
 end
 
 tab

@@ -7026,9 +7026,11 @@ impl<'a> Reader<'a> {
 
         comp.retain(|c| !c.replaces_token() || reader_can_replace(&tok, c.flags));
 
-        for c in &mut comp {
-            if !will_replace_token && c.replaces_token() {
-                c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
+        if !will_replace_token {
+            for c in &mut comp {
+                if c.replaces_token() {
+                    c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
+                }
             }
         }
 

@@ -273,7 +273,7 @@ pub fn signal_handle(sig: Signal) {
     sigaction(sig, &act, std::ptr::null_mut());
 }
 
-pub static signals_to_default: LazyLock<libc::sigset_t> = LazyLock::new(|| {
+pub static SIGNALS_TO_DEFAULT: LazyLock<libc::sigset_t> = LazyLock::new(|| {
     let mut set = MaybeUninit::uninit();
     unsafe { libc::sigemptyset(set.as_mut_ptr()) };
     for data in SIGNAL_TABLE.iter() {

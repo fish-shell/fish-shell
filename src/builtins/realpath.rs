@@ -16,8 +16,8 @@ struct Options {
     no_symlinks: bool,
 }
 
-const short_options: &wstr = L!("+hs");
-const long_options: &[WOption] = &[
+const SHORT_OPTIONS: &wstr = L!("+hs");
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("no-symlinks"), NoArgument, 's'),
     wopt(L!("help"), NoArgument, 'h'),
 ];
@@ -31,7 +31,7 @@ fn parse_options(
 
     let mut opts = Options::default();
 
-    let mut w = WGetopter::new(short_options, long_options, args);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
 
     while let Some(c) = w.next_opt() {
         match c {

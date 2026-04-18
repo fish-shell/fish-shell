@@ -34,6 +34,7 @@ use fish_widestring::{
     WString, wstr,
 };
 use std::collections::{HashMap, hash_map::Entry};
+use strum_macros::Display;
 
 use super::file_tester::IsFile;
 
@@ -1257,7 +1258,7 @@ fn get_fallback(role: HighlightRole) -> HighlightRole {
 }
 
 /// Describes the role of a span of text.
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, Display)]
 #[repr(u8)]
 pub enum HighlightRole {
     #[default]
@@ -1292,47 +1293,6 @@ pub enum HighlightRole {
     pager_selected_prefix,
     pager_selected_completion,
     pager_selected_description,
-}
-
-impl From<HighlightRole> for &'static str {
-    fn from(value: HighlightRole) -> Self {
-        match value {
-            HighlightRole::normal => "normal",
-            HighlightRole::error => "error",
-            HighlightRole::command => "command",
-            HighlightRole::keyword => "keyword",
-            HighlightRole::statement_terminator => "statement_terminator",
-            HighlightRole::param => "param",
-            HighlightRole::option => "option",
-            HighlightRole::comment => "comment",
-            HighlightRole::search_match => "search_match",
-            HighlightRole::operat => "operat",
-            HighlightRole::escape => "escape",
-            HighlightRole::quote => "quote",
-            HighlightRole::redirection => "redirection",
-            HighlightRole::autosuggestion => "autosuggestion",
-            HighlightRole::selection => "selection",
-            HighlightRole::pager_progress => "pager_progress",
-            HighlightRole::pager_background => "pager_background",
-            HighlightRole::pager_prefix => "pager_prefix",
-            HighlightRole::pager_completion => "pager_completion",
-            HighlightRole::pager_description => "pager_description",
-            HighlightRole::pager_secondary_background => "pager_secondary_background",
-            HighlightRole::pager_secondary_prefix => "pager_secondary_prefix",
-            HighlightRole::pager_secondary_completion => "pager_secondary_completion",
-            HighlightRole::pager_secondary_description => "pager_secondary_description",
-            HighlightRole::pager_selected_background => "pager_selected_background",
-            HighlightRole::pager_selected_prefix => "pager_selected_prefix",
-            HighlightRole::pager_selected_completion => "pager_selected_completion",
-            HighlightRole::pager_selected_description => "pager_selected_description",
-        }
-    }
-}
-
-impl std::fmt::Display for HighlightRole {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        <&'static str>::from(*self).fmt(f)
-    }
 }
 
 /// Simple value type describing how a character should be highlighted.

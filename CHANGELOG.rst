@@ -59,6 +59,7 @@ Other improvements
 - For compatibility with Bash, fish now accepts ``|&`` as alternate spelling of ``&|``, for piping both standard output and standard error (:issue:`11516`).
 - ``fish_indent`` now preserves comments and newlines immediately preceding a brace block (``{ }``) (:issue:`12505`).
 - A crash when suspending certain pipelines with :kbd:`ctrl-z` has been fixed (:issue:`12301`).
+- Improvements and corrections to the documentation (:issue:`12644`).
 
 For distributors and developers
 -------------------------------

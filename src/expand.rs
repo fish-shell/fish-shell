@@ -800,10 +800,8 @@ fn expand_braces(
                     brace_end = Some(pos);
                 }
             }
-            BRACE_SEP => {
-                if brace_count == 1 {
-                    last_sep = Some(pos);
-                }
+            BRACE_SEP if brace_count == 1 => {
+                last_sep = Some(pos);
             }
             _ => {
                 // we ignore all other characters here

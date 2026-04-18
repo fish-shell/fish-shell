@@ -1735,10 +1735,8 @@ impl<'ctx> Completer<'ctx> {
 
             match c {
                 '\\' => skip_next = true,
-                '$' => {
-                    if mode == Unquoted || mode == DoubleQuoted {
-                        variable_start = Some(in_pos);
-                    }
+                '$' if (mode == Unquoted || mode == DoubleQuoted) => {
+                    variable_start = Some(in_pos);
                 }
                 '\'' => {
                     if mode == SingleQuoted {

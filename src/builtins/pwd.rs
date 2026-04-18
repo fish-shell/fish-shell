@@ -5,8 +5,8 @@ use super::prelude::*;
 use crate::{builtins::error::Error, env::Environment as _, err_fmt, wutil::wrealpath};
 
 // The pwd builtin. Respect -P to resolve symbolic links. Respect -L to not do that (the default).
-const short_options: &wstr = L!("LPh");
-const long_options: &[WOption] = &[
+const SHORT_OPTIONS: &wstr = L!("LPh");
+const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("help"), NoArgument, 'h'),
     wopt(L!("logical"), NoArgument, 'L'),
     wopt(L!("physical"), NoArgument, 'P'),
@@ -16,7 +16,7 @@ pub fn pwd(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Buil
     let cmd = argv[0];
     let argc = argv.len();
     let mut resolve_symlinks = false;
-    let mut w = WGetopter::new(short_options, long_options, argv);
+    let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, argv);
     while let Some(opt) = w.next_opt() {
         match opt {
             'L' => resolve_symlinks = false,

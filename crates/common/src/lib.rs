@@ -534,8 +534,8 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
         let mut to_append_or_none = Some(c);
         if mode == Mode::Unquoted {
             match c {
-                '\\' => {
-                    if !ignore_backslashes {
+                '\\'
+                    if !ignore_backslashes => {
                         // Backslashes (escapes) are complicated and may result in errors, or
                         // appending INTERNAL_SEPARATORs, so we have to handle them specially.
                         if let Some(escape_chars) = read_unquoted_escape(
@@ -555,28 +555,25 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                         // We've already appended, don't append anything else.
                         to_append_or_none = None;
                     }
-                }
-                '~' => {
+                '~'
                     if unescape_special
                         && (input_position == 0 || Some(input_position) == potential_word_start)
-                    {
+                    => {
                         to_append_or_none = Some(HOME_DIRECTORY);
                     }
-                }
-                '%' => {
+                '%'
                     // Note that this only recognizes %self if the string is literally %self.
                     // %self/foo will NOT match this.
                     if allow_percent_self
                         && unescape_special
                         && input_position == 0
                         && input == PROCESS_EXPAND_SELF_STR
-                    {
+                    => {
                         to_append_or_none = Some(PROCESS_EXPAND_SELF);
                         input_position += PROCESS_EXPAND_SELF_STR.len() - 1; // skip over 'self's
                     }
-                }
-                '*' => {
-                    if unescape_special {
+                '*'
+                    if unescape_special => {
                         // In general, this is ANY_STRING. But as a hack, if the last appended char
                         // is ANY_STRING, delete the last char and store ANY_STRING_RECURSIVE to
                         // reflect the fact that ** is the recursive wildcard.
@@ -588,14 +585,12 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                             to_append_or_none = Some(ANY_STRING);
                         }
                     }
-                }
-                '?' => {
-                    if unescape_special && !feature_test(FeatureFlag::QuestionMarkNoGlob) {
+                '?'
+                    if unescape_special && !feature_test(FeatureFlag::QuestionMarkNoGlob) => {
                         to_append_or_none = Some(ANY_CHAR);
                     }
-                }
-                '$' => {
-                    if unescape_special {
+                '$'
+                    if unescape_special => {
                         let is_cmdsub = input_position + 1 < input.len()
                             && input.char_at(input_position + 1) == '(';
                         if !is_cmdsub {
@@ -603,18 +598,16 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                             vars_or_seps.push(input_position);
                         }
                     }
-                }
-                '{' => {
-                    if unescape_special {
+                '{'
+                    if unescape_special => {
                         brace_count += 1;
                         to_append_or_none = Some(BRACE_BEGIN);
                         // We need to store where the brace *ends up* in the output.
                         braces.push(result.len());
                         potential_word_start = Some(input_position + 1);
                     }
-                }
-                '}' => {
-                    if unescape_special {
+                '}'
+                    if unescape_special => {
                         // HACK: The completion machinery sometimes hands us partial tokens.
                         // We can't parse them properly, but it shouldn't hurt,
                         // so we don't assert here.
@@ -646,19 +639,16 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                             }
                         }
                     }
-                }
-                ',' => {
-                    if unescape_special && brace_count > 0 {
+                ','
+                    if unescape_special && brace_count > 0 => {
                         to_append_or_none = Some(BRACE_SEP);
                         vars_or_seps.push(input_position);
                         potential_word_start = Some(input_position + 1);
                     }
-                }
-                ' ' => {
-                    if unescape_special && brace_count > 0 {
+                ' '
+                    if unescape_special && brace_count > 0 => {
                         to_append_or_none = Some(BRACE_SPACE);
                     }
-                }
                 '\'' => {
                     mode = Mode::SingleQuotes;
                     to_append_or_none = if unescape_special {
@@ -743,11 +733,9 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                         }
                     }
                 }
-                '$' => {
-                    if unescape_special {
-                        to_append_or_none = Some(VARIABLE_EXPAND_SINGLE);
-                        vars_or_seps.push(input_position);
-                    }
+                '$' if unescape_special => {
+                    to_append_or_none = Some(VARIABLE_EXPAND_SINGLE);
+                    vars_or_seps.push(input_position);
                 }
                 _ => (),
             }

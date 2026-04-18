@@ -586,10 +586,8 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                 } else {
                     // Not a backslash.
                     match c {
-                        '~' => {
-                            if in_pos == 0 {
-                                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
-                            }
+                        '~' if in_pos == 0 => {
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
                         }
                         '$' => {
                             assert!(in_pos < buff_len);
@@ -597,10 +595,8 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                             // Subtract one to account for the upcoming loop increment.
                             in_pos -= 1;
                         }
-                        '?' => {
-                            if !feature_test(FeatureFlag::QuestionMarkNoGlob) {
-                                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
-                            }
+                        '?' if !feature_test(FeatureFlag::QuestionMarkNoGlob) => {
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
                         }
                         '*' | '(' | ')' => {
                             colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
@@ -613,10 +609,8 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                             colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
                             bracket_count -= 1;
                         }
-                        ',' => {
-                            if bracket_count > 0 {
-                                colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
-                            }
+                        ',' if bracket_count > 0 => {
+                            colors[in_pos] = HighlightSpec::with_fg(HighlightRole::operat);
                         }
                         '\'' => {
                             colors[in_pos] = HighlightSpec::with_fg(HighlightRole::quote);
@@ -660,9 +654,9 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                     '"' => {
                         mode = Mode::unquoted;
                     }
-                    '\\' => {
+                    '\\'
                         // Backslash
-                        if in_pos + 1 < buff_len {
+                        if in_pos + 1 < buff_len => {
                             let escaped_char = buffstr.as_char_slice()[in_pos + 1];
                             if matches!(escaped_char, '\\' | '"' | '\n' | '$') {
                                 colors[in_pos] = HighlightSpec::with_fg(HighlightRole::escape); // backslash
@@ -670,7 +664,6 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
                                 in_pos += 1; // skip over backslash
                             }
                         }
-                    }
                     '$' => {
                         in_pos += color_variable(&buffstr[in_pos..], &mut colors[in_pos..]);
                         // Subtract one to account for the upcoming increment in the loop.

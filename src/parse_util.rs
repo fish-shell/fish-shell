@@ -968,17 +968,13 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
             //   ....cmd3
             //   end
             // See #7252.
-            Kind::JobContinuation(node) => {
-                if self.has_newline(&node.newlines) {
-                    inc_dec = (1, 1);
-                }
+            Kind::JobContinuation(node) if self.has_newline(&node.newlines) => {
+                inc_dec = (1, 1);
             }
 
             // Likewise for && and ||.
-            Kind::JobConjunctionContinuation(node) => {
-                if self.has_newline(&node.newlines) {
-                    inc_dec = (1, 1);
-                }
+            Kind::JobConjunctionContinuation(node) if self.has_newline(&node.newlines) => {
+                inc_dec = (1, 1);
             }
 
             Kind::CaseItemList(_) => {
@@ -1150,23 +1146,21 @@ pub fn detect_parse_errors_in_ast(
     let mut traversal = ast::Traversal::new(ast.top());
     while let Some(node) = traversal.next() {
         match node.kind() {
-            Kind::JobContinuation(jc) => {
+            Kind::JobContinuation(jc)
                 // Somewhat clumsy way of checking for a statement without source in a pipeline.
                 // See if our pipe has source but our statement does not.
-                if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
+                if jc.pipe.has_source() && jc.statement.try_source_range().is_none() => {
                     has_unclosed_pipe = true;
                 }
-            }
             Kind::JobConjunction(job_conjunction) => {
                 issue.error |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
             }
-            Kind::JobConjunctionContinuation(jcc) => {
+            Kind::JobConjunctionContinuation(jcc)
                 // Somewhat clumsy way of checking for a job without source in a conjunction.
                 // See if our conjunction operator (&& or ||) has source but our job does not.
-                if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
+                if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() => {
                     has_unclosed_conjunction = true;
                 }
-            }
             Kind::Argument(arg) => {
                 let arg_src = arg.source(buff_src);
                 if let Err(e) = detect_errors_in_argument(arg, arg_src, &mut out_errors) {
@@ -1174,7 +1168,7 @@ pub fn detect_parse_errors_in_ast(
                     issue.incomplete |= e.incomplete;
                 }
             }
-            Kind::JobPipeline(job) => {
+            Kind::JobPipeline(job)
                 // Disallow background in the following cases:
                 //
                 // foo & ; and bar
@@ -1182,11 +1176,10 @@ pub fn detect_parse_errors_in_ast(
                 // if foo & ; end
                 // while foo & ; end
                 // If it's not a background job, nothing to do.
-                if job.bg.is_some() {
+                if job.bg.is_some() => {
                     issue.error |=
                         detect_errors_in_backgrounded_job(&traversal, job, &mut out_errors);
                 }
-            }
             Kind::DecoratedStatement(stmt) => {
                 issue.error |= detect_errors_in_decorated_statement(
                     buff_src,

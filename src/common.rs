@@ -711,7 +711,7 @@ mod tests {
 #[cfg(test)]
 mod bench {
     extern crate test;
-    use crate::common::bytes2wcstring;
+    use fish_widestring::bytes2wcstring;
     use test::Bencher;
 
     #[bench]

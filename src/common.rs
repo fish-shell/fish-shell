@@ -286,7 +286,7 @@ pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
         Some(WSL::V1)
     });
 
-    wsl.map(|wsl| v == WSL::Any || wsl == v).unwrap_or(false)
+    wsl.is_some_and(|wsl| v == WSL::Any || wsl == v)
 }
 
 /// Test if the given char is valid in a variable name.

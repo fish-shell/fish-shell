@@ -36,8 +36,8 @@ status get-file __fish_build_paths.fish | source
 
 # Compute the directories for vendor configuration.  We want to include
 # all of XDG_DATA_DIRS, as well as the __extra_* dirs defined above.
-set -l xdg_data_dirs
-if set -q XDG_DATA_DIRS
+set -l xdg_data_dirs /usr/local/share/fish /usr/share/fish
+if test -n "$XDG_DATA_DIRS"
     set --path xdg_data_dirs $XDG_DATA_DIRS
     set xdg_data_dirs (string replace -r '([^/])/$' '$1' -- $xdg_data_dirs)/fish
 end

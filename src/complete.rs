@@ -1752,9 +1752,7 @@ impl<'ctx> Completer<'ctx> {
                         mode = DoubleQuoted;
                     }
                 }
-                _ => {
-                    // all other chars ignored here
-                }
+                _ => (),
             }
         }
 

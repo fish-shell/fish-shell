@@ -32,6 +32,8 @@ jobs:
             features: ""
           - rust_version: "stable"
             features: "--no-default-features"
+          - rust_version: "stable"
+            features: "--all-features"
           - rust_version: "msrv"
             features: ""
     steps:

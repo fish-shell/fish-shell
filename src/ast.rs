@@ -2889,7 +2889,7 @@ end
 }
 
 // Run with cargo +nightly bench --features=benchmark
-#[cfg(feature = "benchmark")]
+#[cfg(all(nightly, feature = "benchmark"))]
 #[cfg(test)]
 mod bench {
     extern crate test;

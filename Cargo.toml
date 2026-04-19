@@ -73,6 +73,7 @@ rust-embed = { version = "8.11.0", features = [
     "include-exclude",
     "interpolate-folder-path",
 ] }
+rustc_version = "0.4.1"
 serial_test = { version = "3", default-features = false }
 strum_macros = "0.28.0"
 widestring = "1.2.0"
@@ -158,6 +159,7 @@ fish-build-helper.workspace = true
 fish-gettext-mo-file-parser.workspace = true
 phf_codegen = { workspace = true, optional = true }
 rsconf.workspace = true
+rustc_version.workspace = true
 
 [target.'cfg(windows)'.build-dependencies]
 unix_path.workspace = true

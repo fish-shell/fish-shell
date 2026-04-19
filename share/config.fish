@@ -34,13 +34,14 @@ set -l __extra_functionsdir
 set -l __extra_confdir
 status get-file __fish_build_paths.fish | source
 
-# Compute the directories for vendor configuration.  We want to include
-# all of XDG_DATA_DIRS, as well as the __extra_* dirs defined above.
-set -l xdg_data_dirs
-if set -q XDG_DATA_DIRS
+# Compute the directories for vendor configuration. We want to include
+# all of XDG_DATA_DIRS, or its default when unset or empty, as well as
+# the __extra_* dirs defined above.
+set -l xdg_data_dirs /usr/local/share /usr/share
+if set -q XDG_DATA_DIRS; and string length -q -- $XDG_DATA_DIRS[1]
     set --path xdg_data_dirs $XDG_DATA_DIRS
-    set xdg_data_dirs (string replace -r '([^/])/$' '$1' -- $xdg_data_dirs)/fish
 end
+set xdg_data_dirs (string replace -r '([^/])/$' '$1' -- $xdg_data_dirs)/fish
 
 set -g __fish_vendor_completionsdirs
 set -g __fish_vendor_functionsdirs

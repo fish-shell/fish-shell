@@ -14,6 +14,9 @@ status job-control full
 sleep 1 &
 set -l pid (jobs -lp)
 kill -SIGSTOP $pid
+while not jobs | grep -q stopped
+    sleep .01
+end
 disown
 # CHECKERR: disown: job 1 ('sleep 1 &') was stopped and has been signalled to continue.
 echo $status

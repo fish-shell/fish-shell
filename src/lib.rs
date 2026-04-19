@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "benchmark", feature(test))]
+#![cfg_attr(all(nightly, feature = "benchmark"), feature(test))]
 #![allow(non_camel_case_types)]
 
 pub const BUILD_VERSION: &str = env!("FISH_BUILD_VERSION");

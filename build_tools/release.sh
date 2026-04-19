@@ -72,7 +72,7 @@ integration_branch=$(
         --format='%(refname:strip=2)'
 )
 [ -n "$integration_branch" ] ||
-    git merge-base --is-ancestor $remote/master HEAD
+    git merge-base --is-ancestor "$remote"/master HEAD
 
 sed -n 1p CHANGELOG.rst | grep -q '^fish .*(released .*)$'
 sed -n 2p CHANGELOG.rst | grep -q '^===*$'
@@ -113,9 +113,9 @@ CreateCommit "Release $version"
 # Tags must be full objects, not lightweight tags, for
 # git_version-gen.sh to work.
 git -c "user.signingKey=$committer" \
-    tag --sign --message="Release $version" $version
+    tag --sign --message="Release $version" "$version"
 
-git push $remote $version
+git push "$remote" "$version"
 
 TIMEOUT=
 gh() {
@@ -173,6 +173,7 @@ actual_tag_oid=$(git ls-remote "$remote" |
 (
     cd "$tmpdir/local-tarball/fish-$version"
     uv --no-managed-python venv
+    # shellcheck disable=1091
     . .venv/bin/activate
     cmake -GNinja -DCMAKE_BUILD_TYPE=Debug .
     ninja doc
@@ -180,14 +181,17 @@ actual_tag_oid=$(git ls-remote "$remote" |
 CopyDocs() {
     rm -rf "$fish_site/site/docs/$1"
     cp -r "$tmpdir/local-tarball/fish-$version/cargo/fish-docs/html" "$fish_site/site/docs/$1"
-    git -C $fish_site add "site/docs/$1"
+    git -C "$fish_site" add "site/docs/$1"
 }
 minor_version=${version%.*}
 CopyDocs "$minor_version"
 latest_release=$(
     releases=$(git tag | grep '^[0-9]*\.[0-9]*\.[0-9]*.*' |
-        sed $(: "De-prioritize release candidates (1.2.3-rc0)") \
-        's/-/~/g' | LC_ALL=C sort --version-sort)
+        sed '
+            # De-prioritize release candidates (1.2.3-rc0)
+            s/-/~/g
+        ' | LC_ALL=C sort --version-sort
+    )
     printf %s\\n "$releases" | tail -1
 )
 if [ "$version" = "$latest_release" ]; then
@@ -272,7 +276,7 @@ done
 )
 
 if [ -n "$integration_branch" ]; then {
-    git push $remote "$version^{commit}":refs/heads/$integration_branch
+    git push "$remote" "$version^{commit}:refs/heads/$integration_branch"
 } else {
     changelog=$(cat - CHANGELOG.rst <<EOF
 fish ?.?.? (released ???)
@@ -283,7 +287,7 @@ EOF
     printf %s\\n "$changelog" >CHANGELOG.rst
     git add CHANGELOG.rst
     CreateCommit "start new cycle"
-    git push $remote HEAD:master
+    git push "$remote" HEAD:master
 } fi
 
 milestone_version="$(

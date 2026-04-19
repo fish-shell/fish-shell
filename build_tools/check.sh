@@ -60,7 +60,7 @@ cargo() {
     fi
 }
 
-# shellcheck disable=2329
+# shellcheck disable=2317,2329
 cleanup () {
     if [ -n "$gettext_template_dir" ] && [ -e "$gettext_template_dir" ]; then
         rm -r "$gettext_template_dir"

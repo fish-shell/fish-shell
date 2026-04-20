@@ -98,6 +98,9 @@ if $lint; then
     if command -v cargo-deny >/dev/null; then
         cargo deny --all-features --locked --exclude-dev check licenses
     fi
+
+    cargo xtask shellcheck
+
     PATH="$build_dir:$PATH" cargo xtask format --all --check
     for features in "" --no-default-features --all-features; do
         cargo clippy --workspace --all-targets $features

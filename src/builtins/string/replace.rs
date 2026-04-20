@@ -160,12 +160,8 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
         let mut cursor = arg;
         while !cursor.is_empty() {
             if cursor.char_at(0) == '\\' {
-                if let Some(escape_len) = read_unquoted_escape(cursor, &mut result, true, false) {
-                    cursor = cursor.slice_from(escape_len);
-                } else {
-                    // invalid escape
-                    return None;
-                }
+                let escape_len = read_unquoted_escape(cursor, &mut result, true, false)?;
+                cursor = cursor.slice_from(escape_len);
             } else {
                 result.push(cursor.char_at(0));
                 cursor = cursor.slice_from(1);

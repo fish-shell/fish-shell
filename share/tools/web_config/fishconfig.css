@@ -56,6 +56,7 @@ tt {
 .tab:hover,
 #tab_contents .master_element:hover,
 .color_scheme_choice_container:hover,
+.data_table > tr:hover,
 .prompt_choices_list > .ng-scope:hover {
     background-color: #DDE;
 }
@@ -284,6 +285,7 @@ tt {
     width: 100%;
     padding-left: 10px;
     padding-right: 10px;
+    border-spacing: 0;
 }
 
 .data_table_row {}
@@ -310,7 +312,8 @@ tt {
 }
 
 .history_delete {
-    width: 20px;
+    width: 30px;
+    text-align: center;
 }
 
 .data_table_cell,

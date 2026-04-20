@@ -225,7 +225,7 @@ pub fn execute_fork() -> pid_t {
     exit_without_destructors(1)
 }
 
-pub(crate) fn safe_report_exec_error(
+pub(crate) fn signal_safe_report_exec_error(
     err: i32,
     actual_cmd: &CStr,
     argvv: &OwningNullTerminatedArray,

@@ -1,9 +1,9 @@
 use crate::event::{enqueue_signal, is_signal_observed};
 use crate::prelude::*;
-use crate::reader::{safe_reader_handle_sigint, safe_reader_set_exit_signal};
-use crate::termsize::safe_termsize_invalidate_tty;
+use crate::reader::{signal_safe_reader_handle_sigint, signal_safe_reader_set_exit_signal};
+use crate::termsize::signal_safe_termsize_invalidate_tty;
 use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_principal};
-use crate::tty_handoff::safe_mark_tty_invalid;
+use crate::tty_handoff::signal_safe_mark_tty_invalid;
 use crate::wutil::fish_wcstoi;
 use errno::{errno, set_errno};
 use fish_common::exit_without_destructors;
@@ -86,14 +86,14 @@ extern "C" fn fish_signal_handler(
     match sig {
         libc::SIGWINCH => {
             // Respond to a winch signal by telling the termsize container.
-            safe_termsize_invalidate_tty();
+            signal_safe_termsize_invalidate_tty();
         }
         libc::SIGHUP | libc::SIGTERM => {
             // Exit unless the signal was trapped.
             if !observed {
-                safe_reader_set_exit_signal(sig);
+                signal_safe_reader_set_exit_signal(sig);
                 if sig == libc::SIGHUP {
-                    safe_mark_tty_invalid();
+                    signal_safe_mark_tty_invalid();
                 }
             }
             topic_monitor_principal().post(Topic::SigHupIntTerm);
@@ -103,7 +103,7 @@ extern "C" fn fish_signal_handler(
             if !observed {
                 CANCELLATION_SIGNAL.store(libc::SIGINT, Ordering::Relaxed);
             }
-            safe_reader_handle_sigint();
+            signal_safe_reader_handle_sigint();
             topic_monitor_principal().post(Topic::SigHupIntTerm);
         }
         libc::SIGCHLD => {

@@ -20,7 +20,7 @@ use crate::fork_exec::{
     PATH_BSHELL, blocked_signals_for_job,
     postfork::{
         child_setup_process, execute_fork, execute_setpgid, report_setpgid_error,
-        safe_report_exec_error,
+        signal_safe_report_exec_error,
     },
 };
 use crate::function::{self, FunctionProperties};
@@ -393,7 +393,7 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
 /// This function is executed by the child process created by a call to fork(). It should be called
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
-fn safe_launch_process(
+fn signal_safe_launch_process(
     _p: &Process,
     actual_cmd: &CStr,
     argv: &OwningNullTerminatedArray,
@@ -431,7 +431,7 @@ fn safe_launch_process(
     }
 
     set_errno(err);
-    safe_report_exec_error(errno().0, actual_cmd, argv, envv);
+    signal_safe_report_exec_error(errno().0, actual_cmd, argv, envv);
     exit_without_destructors(exit_code_from_exec_error(err.0));
 }
 
@@ -451,7 +451,7 @@ fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
     // Ensure the terminal modes are what they were before we changed them.
     restore_term_mode();
     // Bounce to launch_process. This never returns.
-    safe_launch_process(p, &actual_cmd, &argv, &envp);
+    signal_safe_launch_process(p, &actual_cmd, &argv, &envp);
 }
 
 // Returns whether we can use posix spawn for a given process in a given job.
@@ -908,7 +908,7 @@ fn exec_external_command(
         let pid = match pid {
             Ok(pid) => pid,
             Err(err) => {
-                safe_report_exec_error(err.0, &actual_cmd, &argv, &envv);
+                signal_safe_report_exec_error(err.0, &actual_cmd, &argv, &envv);
                 p.status
                     .set(ProcStatus::from_exit_code(exit_code_from_exec_error(err.0)));
                 return Err(());
@@ -940,7 +940,7 @@ fn exec_external_command(
     }
 
     fork_child_for_process(j, p, &dup2s, pgroup_policy, |p| {
-        safe_launch_process(p, &actual_cmd, &argv, &envv)
+        signal_safe_launch_process(p, &actual_cmd, &argv, &envv)
     })
 }
 

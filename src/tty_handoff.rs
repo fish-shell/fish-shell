@@ -335,7 +335,7 @@ pub fn deactivate_tty_protocols() {
 
 // Called from a signal handler to mark the tty as invalid (e.g. SIGHUP).
 // This suppresses any further attempts to write protocols to the tty,
-pub fn safe_mark_tty_invalid() {
+pub fn signal_safe_mark_tty_invalid() {
     TTY_INVALID.store(true);
 }
 

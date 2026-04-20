@@ -256,7 +256,7 @@ pub fn termsize_update(parser: &Parser) -> Termsize {
 }
 
 /// May be called form a signal handler (WINCH).
-pub fn safe_termsize_invalidate_tty() {
+pub fn signal_safe_termsize_invalidate_tty() {
     TTY_TERMSIZE_GEN_COUNT.fetch_add(1, Ordering::Relaxed);
 }
 
@@ -298,7 +298,7 @@ mod tests {
         assert_eq!(ts.last(), Termsize::defaults());
 
         // Ok let's tell it. But it still doesn't update right away.
-        let handle_winch = safe_termsize_invalidate_tty;
+        let handle_winch = signal_safe_termsize_invalidate_tty;
         handle_winch();
         assert_eq!(ts.last(), Termsize::defaults());
 

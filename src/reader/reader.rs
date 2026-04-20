@@ -94,7 +94,7 @@ use crate::{
             QueryXtversion,
         },
     },
-    termsize::{safe_termsize_invalidate_tty, termsize_last, termsize_update},
+    termsize::{signal_safe_termsize_invalidate_tty, termsize_last, termsize_update},
     text_face::{TextFace, parse_text_face},
     threads::{assert_is_background_thread, assert_is_main_thread},
     tokenizer::{
@@ -284,7 +284,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
         use ImplicitEvent::{CheckExit, Eof};
         use QueryResultEvent::*;
         match input_queue.readch() {
-            Implicit(Eof) => safe_reader_set_exit_signal(libc::SIGHUP),
+            Implicit(Eof) => signal_safe_reader_set_exit_signal(libc::SIGHUP),
             Implicit(CheckExit) => {}
             CharEvent::QueryResult(Response(QueryResponse::PrimaryDeviceAttribute)) => {
                 break;
@@ -1319,7 +1319,7 @@ const HIGHLIGHT_TIMEOUT_FOR_EXECUTION: Duration = Duration::from_millis(250);
 
 /// The readers interrupt signal handler. Cancels all currently running blocks.
 /// This is called from a signal handler!
-pub fn safe_reader_handle_sigint() {
+pub fn signal_safe_reader_handle_sigint() {
     INTERRUPTED.store(SIGINT, Ordering::Relaxed);
 }
 
@@ -1341,7 +1341,7 @@ pub fn reader_test_and_clear_interrupted() -> i32 {
 }
 
 /// Mark that we received an exit signal (SIGHUP or SIGTERM). Invoked from a signal handler.
-pub fn safe_reader_set_exit_signal(sig: i32) {
+pub fn signal_safe_reader_set_exit_signal(sig: i32) {
     // Beware, we may be in a signal handler.
     EXIT_SIGNAL.store(sig, Ordering::Relaxed);
 }
@@ -2690,7 +2690,7 @@ impl<'a> Reader<'a> {
         // ECHO mode, causing a race between new input and restoring the mode (#7770). So we leave the
         // tty alone, run the commands in shell mode, and then restore shell modes.
         set_shell_modes(STDIN_FILENO, "bind scripts");
-        safe_termsize_invalidate_tty();
+        signal_safe_termsize_invalidate_tty();
     }
 
     /// Read normal characters, inserting them into the command line.
@@ -2873,7 +2873,7 @@ impl<'a> Reader<'a> {
             CharEvent::Implicit(implicit_event) => {
                 use ImplicitEvent::*;
                 match implicit_event {
-                    Eof => safe_reader_set_exit_signal(libc::SIGHUP),
+                    Eof => signal_safe_reader_set_exit_signal(libc::SIGHUP),
                     CheckExit => (),
                     FocusIn => {
                         event::fire_generic(self.parser, L!("fish_focus_in").to_owned(), vec![]);
@@ -4869,7 +4869,7 @@ fn term_steal(copy_modes: bool) {
         term_copy_modes();
     }
     set_shell_modes(STDIN_FILENO, "shell");
-    safe_termsize_invalidate_tty();
+    signal_safe_termsize_invalidate_tty();
 }
 
 // Ensure that fish owns the terminal, possibly waiting. If we cannot acquire the terminal, then
@@ -5006,7 +5006,7 @@ fn reader_interactive_init() {
         set_shell_modes(STDIN_FILENO, "startup");
     }
 
-    safe_termsize_invalidate_tty();
+    signal_safe_termsize_invalidate_tty();
 }
 
 /// Return whether fish is currently unwinding the stack in preparation to exit.

@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
 use fish_build_helper::as_os_strs;
 use std::{path::PathBuf, process::Command};
-use xtask::{CommandExt as _, cargo, format::FormatArgs};
+use xtask::{CommandExt as _, cargo, format::FormatArgs, shellcheck::shellcheck};
 
 #[derive(Parser)]
 #[command(
@@ -28,6 +28,9 @@ enum Task {
     },
     /// Build man pages
     ManPages,
+    /// run ShellCheck on non-fish shell scripts
+    #[command(name = "shellcheck")]
+    ShellCheck,
 }
 
 fn main() {
@@ -37,6 +40,7 @@ fn main() {
         Task::Format(format_args) => xtask::format::format(format_args),
         Task::HtmlDocs { fish_indent } => build_html_docs(fish_indent),
         Task::ManPages => cargo(["build", "--package", "fish-build-man-pages"]),
+        Task::ShellCheck => shellcheck(),
     }
 }
 

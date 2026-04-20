@@ -14,6 +14,7 @@ macro_rules! fail {
 }
 
 pub mod format;
+pub mod shellcheck;
 
 pub trait CommandExt {
     fn run_or_fail(&mut self);

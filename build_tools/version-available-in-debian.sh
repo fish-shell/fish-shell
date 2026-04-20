@@ -11,6 +11,6 @@ codename=$(
 curl -fsS https://sources.debian.org/api/src/"${package}"/ |
     jq -r --arg codename "${codename}" '
         .versions[] | select(.suites[] == $codename) | .version' |
-    sed 's/^\([0-9]\+\.[0-9]\+\).*/\1/' |
+    sed -E 's/^([0-9]+\.[0-9]+).*/\1/' |
     sort --version-sort |
     tail -1

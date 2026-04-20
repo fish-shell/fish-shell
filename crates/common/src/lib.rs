@@ -398,7 +398,7 @@ fn escape_string_url(input: &wstr) -> WString {
     for byte in narrow {
         if (byte & 0x80) == 0 {
             let c = char::from_u32(u32::from(byte)).unwrap();
-            if c.is_alphanumeric() || [b'/', b'.', b'~', b'-', b'_'].contains(&byte) {
+            if c.is_alphanumeric() || b"/.~-_".contains(&byte) {
                 // The above characters don't need to be encoded.
                 out.push(c);
                 continue;

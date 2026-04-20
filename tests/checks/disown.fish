@@ -14,7 +14,7 @@ status job-control full
 sleep 1 &
 set -l pid (jobs -lp)
 kill -SIGSTOP $pid
-while not jobs | grep -q stopped
+while jobs -l | grep -q running
     sleep .01
 end
 disown

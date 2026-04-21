@@ -91,9 +91,8 @@ function funced --description 'Edit function definition'
     # Repeatedly edit until it either parses successfully, or the user cancels
     # If the editor command itself fails, we assume the user cancelled or the file
     # could not be edited, and we do not try again
+    set -l checksum (__fish_md5 "$tmpname")
     while true
-        set -l checksum (__fish_md5 "$tmpname")
-
         if not $editor $tmpname
             echo (_ "Editing failed or was cancelled")
         else

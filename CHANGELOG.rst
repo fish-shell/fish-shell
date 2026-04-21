@@ -20,6 +20,7 @@ Other improvements
 - History is no longer corrupted with NUL bytes when fish receives SIGTERM or SIGHUP (:issue:`10300`).
 - :doc:`fish_update_completions <cmds/fish_update_completions>` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).
 - Improve user experience when removing history entries via the :doc:`web-based config <cmds/fish_config>`.
+- funced will no longer lose work if there are parse errors multiple times without new changes to the file
 
 For distributors and developers
 -------------------------------

@@ -117,6 +117,7 @@ use fish_common::{
 };
 use fish_fallback::{fish_wcwidth, lowercase};
 use fish_feature_flags::FeatureFlag;
+use fish_thread::SingleThreadedOnceCell;
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{
     CaseSensitivity, IsPrefix, StringFuzzyMatch, count_preceding_backslashes, is_prefix,
@@ -147,7 +148,7 @@ use std::{
     os::fd::{AsRawFd as _, BorrowedFd, FromRawFd as _, OwnedFd, RawFd},
     pin::Pin,
     sync::{
-        Arc, LazyLock, Mutex, MutexGuard, OnceLock,
+        Arc, LazyLock, Mutex, MutexGuard,
         atomic::{AtomicI32, AtomicU8, AtomicU32, Ordering},
     },
     time::{Duration, Instant},
@@ -174,7 +175,8 @@ fn zeroed_termios() -> Termios {
 pub static SHELL_MODES: LazyLock<Mutex<Termios>> = LazyLock::new(|| Mutex::new(zeroed_termios()));
 
 /// The valid terminal modes on startup.
-static TERMINAL_MODE_ON_STARTUP: OnceLock<libc::termios> = OnceLock::new();
+static TERMINAL_MODE_ON_STARTUP: SingleThreadedOnceCell<libc::termios> =
+    SingleThreadedOnceCell::new();
 
 /// Mode we use to execute programs.
 static TTY_MODES_FOR_EXTERNAL_CMDS: LazyLock<Mutex<Termios>> =

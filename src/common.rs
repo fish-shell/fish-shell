@@ -213,8 +213,8 @@ pub fn is_windows_subsystem_for_linux(_: WSL) -> bool {
 /// See <https://github.com/Microsoft/WSL/issues/423> and [Microsoft/WSL#2997](https://github.com/Microsoft/WSL/issues/2997)
 #[cfg(target_os = "linux")]
 pub fn is_windows_subsystem_for_linux(v: WSL) -> bool {
-    use std::sync::OnceLock;
-    static RESULT: OnceLock<Option<WSL>> = OnceLock::new();
+    use fish_thread::SingleThreadedOnceCell;
+    static RESULT: SingleThreadedOnceCell<Option<WSL>> = SingleThreadedOnceCell::new();
 
     // This is called post-fork from [`report_setpgid_error()`], so the fast path must not involve
     // any allocations or mutexes. We can't rely on all the std functions to be alloc-free in both

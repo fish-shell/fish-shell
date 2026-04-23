@@ -1,5 +1,6 @@
 use bitflags::bitflags;
 use fish_feature_flags::{FeatureFlag, feature_test};
+use fish_thread::SingleThreadedLazyCell;
 use fish_widestring::{
     ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, ASCII_MAX, BRACE_BEGIN, BRACE_END, BRACE_SEP,
     BRACE_SPACE, BYTE_MAX, HOME_DIRECTORY, INTERNAL_SEPARATOR, L, PROCESS_EXPAND_SELF,
@@ -18,7 +19,7 @@ use std::{
         unix::ffi::OsStrExt as _,
     },
     sync::{
-        Arc, OnceLock,
+        Arc,
         atomic::{AtomicI32, AtomicU32, Ordering},
     },
     time,
@@ -1018,9 +1019,8 @@ pub fn read_unquoted_escape(
 /// session. We err on the side of assuming it's not a console session. This approach isn't
 /// bullet-proof and that's OK.
 pub fn is_console_session() -> bool {
-    static IS_CONSOLE_SESSION: OnceLock<bool> = OnceLock::new();
     // TODO(terminal-workaround)
-    *IS_CONSOLE_SESSION.get_or_init(|| {
+    static IS_CONSOLE_SESSION: SingleThreadedLazyCell<bool> = SingleThreadedLazyCell::new(||
         // No console session on Apple, and ttyname may hang (#12506).
         !cfg!(apple)
             && nix::unistd::ttyname(unsafe { std::os::fd::BorrowedFd::borrow_raw(STDIN_FILENO) })
@@ -1037,8 +1037,8 @@ pub fn is_console_session() -> bool {
                     // and that $TERM is simple, e.g. `xterm` or `vt100`, not `xterm-something` or `sun-color`.
                     is_console_tty
                         && env::var_os("TERM").is_none_or(|t| !t.as_bytes().contains(&b'-'))
-                })
-    })
+                }));
+    *IS_CONSOLE_SESSION
 }
 
 /// Exits without invoking destructors (via _exit), useful for code after fork.

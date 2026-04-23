@@ -4,12 +4,12 @@ use crate::prelude::*;
 use crate::{
     screen::{is_dumb, only_grayscale},
     text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle},
-    threads::MainThread,
 };
 use bitflags::bitflags;
 use fish_color::{Color, Color24};
 use fish_common::{EscapeStringStyle, escape_string, write_loop};
 use fish_feature_flags::FeatureFlag;
+use fish_thread::SingleThreaded;
 use fish_widestring::{wcs2bytes, wcs2bytes_appending};
 use std::{
     cell::{RefCell, RefMut},
@@ -575,8 +575,8 @@ impl Outputter {
     /// Access the outputter for stdout.
     /// This should only be used from the main thread.
     pub fn stdoutput() -> &'static RefCell<Outputter> {
-        static STDOUTPUT: MainThread<RefCell<Outputter>> =
-            MainThread::new(RefCell::new(Outputter::new_from_fd(libc::STDOUT_FILENO)));
+        static STDOUTPUT: SingleThreaded<RefCell<Outputter>> =
+            SingleThreaded::new(RefCell::new(Outputter::new_from_fd(libc::STDOUT_FILENO)));
         STDOUTPUT.get()
     }
 }

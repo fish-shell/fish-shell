@@ -30,6 +30,7 @@ fish-gettext-maps = { path = "crates/gettext-maps" }
 fish-gettext-mo-file-parser = { path = "crates/gettext-mo-file-parser" }
 fish-printf = { path = "crates/printf", features = ["widestring"] }
 fish-tempfile = { path = "crates/tempfile" }
+fish-thread = { path = "crates/thread" }
 fish-util = { path = "crates/util" }
 fish-wcstringutil = { path = "crates/wcstringutil" }
 fish-widecharwidth = { path = "crates/widecharwidth" }
@@ -117,6 +118,7 @@ fish-gettext = { workspace = true, optional = true }
 fish-gettext-extraction = { workspace = true, optional = true }
 fish-printf.workspace = true
 fish-tempfile.workspace = true
+fish-thread.workspace = true
 fish-util.workspace = true
 fish-wcstringutil.workspace = true
 fish-wgetopt.workspace = true

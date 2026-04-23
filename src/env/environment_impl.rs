@@ -13,6 +13,7 @@ use crate::prelude::*;
 use crate::reader::{commandline_get_state, reader_status_count};
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wutil::fish_wcstol_radix;
+use fish_thread::SingleThreadedLazyCell;
 use fish_widestring::wcs2zstring;
 use nix::sys::stat::{Mode, umask};
 use std::cell::{RefCell, UnsafeCell};
@@ -27,13 +28,10 @@ use std::sync::{Arc, Mutex, MutexGuard, atomic::Ordering};
 /// Getter for universal variables.
 /// This is typically initialized in env_init(), and is considered empty before then.
 pub fn uvars() -> MutexGuard<'static, EnvUniversal> {
-    use std::sync::OnceLock;
     /// Universal variables instance.
-    static UVARS: OnceLock<Mutex<EnvUniversal>> = OnceLock::new();
-    UVARS
-        .get_or_init(|| Mutex::new(EnvUniversal::new()))
-        .lock()
-        .unwrap()
+    static UVARS: SingleThreadedLazyCell<Mutex<EnvUniversal>> =
+        SingleThreadedLazyCell::new(|| Mutex::new(EnvUniversal::new()));
+    UVARS.lock().unwrap()
 }
 
 /// Whether we were launched with no_config; in this case setting a uvar instead sets a global.

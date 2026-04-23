@@ -10,6 +10,7 @@ license.workspace = true
 bitflags.workspace = true
 fish-feature-flags.workspace = true
 fish-widestring.workspace = true
+fish-thread.workspace = true
 libc.workspace = true
 nix.workspace = true
 

@@ -1,4 +1,6 @@
-use std::{os::fd::RawFd, sync::OnceLock};
+use std::os::fd::RawFd;
+
+use fish_thread::SingleThreadedLazyCell;
 
 #[cfg(apple)]
 mod notifyd;
@@ -67,9 +69,9 @@ pub fn create_notifier() -> Box<dyn UniversalNotifier> {
     Box::new(NullNotifier)
 }
 
-// Default instance. Other instances are possible for testing.
-static DEFAULT_NOTIFIER: OnceLock<Box<dyn UniversalNotifier>> = OnceLock::new();
-
 pub fn default_notifier() -> &'static dyn UniversalNotifier {
-    DEFAULT_NOTIFIER.get_or_init(create_notifier).as_ref()
+    // Default instance. Other instances are possible for testing.
+    static DEFAULT_NOTIFIER: SingleThreadedLazyCell<Box<dyn UniversalNotifier>> =
+        SingleThreadedLazyCell::new(create_notifier);
+    &**DEFAULT_NOTIFIER
 }

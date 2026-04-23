@@ -30,6 +30,7 @@ use crate::{
     wutil::{fish_wcstol, wgetcwd},
 };
 use fish_common::{UnescapeStringStyle, unescape_string};
+use fish_thread::{SingleThreadedLazyCell, SingleThreadedOnceCell};
 use fish_wcstringutil::join_strings;
 use fish_widestring::{cstr2wcstring, osstr2wcstring, str2wcstring};
 use libc::c_int;
@@ -41,7 +42,7 @@ use std::{
     collections::HashMap,
     ffi::CStr,
     path::PathBuf,
-    sync::{Arc, LazyLock, OnceLock},
+    sync::{Arc, LazyLock},
 };
 
 /// Set when a universal variable has been modified but not yet been written to disk via sync().
@@ -405,14 +406,14 @@ impl EnvStack {
     /// A variable stack that only represents globals.
     /// Do not push or pop from this.
     pub fn globals() -> &'static EnvStack {
-        use std::sync::OnceLock;
-        static GLOBALS: OnceLock<EnvStack> = OnceLock::new();
-        GLOBALS.get_or_init(|| EnvStack {
-            inner: EnvStackImpl::new(),
-            can_push_pop: false,
-            // Do not dispatch variable changes - this is used at startup when we are importing env vars.
-            dispatches_var_changes: false,
-        })
+        static GLOBALS: SingleThreadedLazyCell<EnvStack> =
+            SingleThreadedLazyCell::new(|| EnvStack {
+                inner: EnvStackImpl::new(),
+                can_push_pop: false,
+                // Do not dispatch variable changes - this is used at startup when we are importing env vars.
+                dispatches_var_changes: false,
+            });
+        &GLOBALS
     }
 
     pub fn set_argv(&self, argv: Vec<WString>, is_repainting: bool) {
@@ -562,7 +563,8 @@ fn setup_path(global_exported_mode: EnvSetMode) {
 
 /// The originally inherited variables and their values.
 /// This is a simple key->value map and not e.g. cut into paths.
-pub static INHERITED_VARS: OnceLock<HashMap<WString, WString>> = OnceLock::new();
+pub static INHERITED_VARS: SingleThreadedOnceCell<HashMap<WString, WString>> =
+    SingleThreadedOnceCell::new();
 
 pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
     let vars = EnvStack::globals();

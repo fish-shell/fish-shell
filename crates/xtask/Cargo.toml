@@ -10,6 +10,7 @@ anstyle.workspace = true
 clap.workspace = true
 fish-build-helper.workspace = true
 fish-tempfile.workspace = true
+fish-thread.workspace = true
 ignore.workspace = true
 pcre2.workspace = true
 walkdir.workspace = true

@@ -44,6 +44,7 @@ use crate::tty_handoff::TtyHandoff;
 use crate::wutil::{fish_wcstol, perror_io};
 use errno::{errno, set_errno};
 use fish_common::{ScopeGuard, exit_without_destructors, truncate_at_nul, write_loop};
+use fish_thread::SingleThreadedLazyCell;
 use fish_widestring::{ToWString as _, bytes2wcstring, wcs2bytes, wcs2zstring};
 use libc::{
     EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
@@ -62,7 +63,7 @@ use std::{
     os::fd::{AsRawFd as _, FromRawFd as _, OwnedFd, RawFd},
     slice,
     sync::{
-        Arc, OnceLock,
+        Arc,
         atomic::{AtomicUsize, Ordering},
     },
 };
@@ -72,9 +73,10 @@ use std::{
 /// to their target fds.
 /// TODO: this IO could be multiplexed using FdMonitor.
 fn exec_thread_pool() -> &'static Arc<ThreadPool> {
-    static EXEC_THREAD_POOL: OnceLock<Arc<ThreadPool>> = OnceLock::new();
+    static EXEC_THREAD_POOL: SingleThreadedLazyCell<Arc<ThreadPool>> =
+        SingleThreadedLazyCell::new(|| ThreadPool::new(1, usize::MAX));
     // Use an unbounded queue because otherwise we risk deadlock.
-    EXEC_THREAD_POOL.get_or_init(|| ThreadPool::new(1, usize::MAX))
+    &EXEC_THREAD_POOL
 }
 
 /// Execute the processes specified by `j` in the parser \p.

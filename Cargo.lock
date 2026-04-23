@@ -303,6 +303,7 @@ dependencies = [
  "fish-gettext-mo-file-parser",
  "fish-printf",
  "fish-tempfile",
+ "fish-thread",
  "fish-util",
  "fish-wcstringutil",
  "fish-wgetopt",
@@ -358,6 +359,7 @@ dependencies = [
  "bitflags",
  "fish-build-helper",
  "fish-feature-flags",
+ "fish-thread",
  "fish-widestring",
  "libc",
  "nix",
@@ -434,6 +436,10 @@ dependencies = [
  "nix",
  "rand",
 ]
+
+[[package]]
+name = "fish-thread"
+version = "0.0.0"
 
 [[package]]
 name = "fish-util"
@@ -1236,6 +1242,7 @@ dependencies = [
  "clap",
  "fish-build-helper",
  "fish-tempfile",
+ "fish-thread",
  "ignore",
  "pcre2",
  "walkdir",

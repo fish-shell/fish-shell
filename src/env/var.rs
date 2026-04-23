@@ -1,6 +1,7 @@
 use crate::signal::Signal;
 use bitflags::bitflags;
 use fish_common::assert_sorted_by_name;
+use fish_thread::SingleThreadedLazyCell;
 use fish_wcstringutil::join_strings;
 use fish_widestring::{L, WString, wstr};
 use libc::c_int;
@@ -130,13 +131,12 @@ pub struct EnvVar {
 
 impl Default for EnvVar {
     fn default() -> Self {
-        use std::sync::OnceLock;
         /// A shared read-only empty list.
-        static EMPTY_LIST: OnceLock<Arc<[WString]>> = OnceLock::new();
-        let empty_list = EMPTY_LIST.get_or_init(|| Arc::new([]));
+        static EMPTY_LIST: SingleThreadedLazyCell<Arc<[WString]>> =
+            SingleThreadedLazyCell::new(|| Arc::new([]));
 
         EnvVar {
-            values: Arc::clone(empty_list),
+            values: Arc::clone(&*EMPTY_LIST),
             flags: EnvVarFlags::empty(),
         }
     }

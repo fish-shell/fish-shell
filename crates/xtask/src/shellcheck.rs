@@ -1,4 +1,5 @@
 use fish_build_helper::workspace_root;
+use fish_thread::SingleThreadedLazyCell;
 use ignore::Walk;
 use pcre2::bytes::Regex;
 use std::{
@@ -6,7 +7,6 @@ use std::{
     io::{BufRead, BufReader},
     path::{Path, PathBuf},
     process::Command,
-    sync::OnceLock,
 };
 
 pub fn shellcheck() {
@@ -32,9 +32,9 @@ fn is_shell_script<P: AsRef<Path>>(path: P) -> bool {
     let Ok(_) = BufReader::new(file).read_line(&mut first_line) else {
         return false;
     };
-    static SHEBANG_REGEX: OnceLock<Regex> = OnceLock::new();
+    static SHEBANG_REGEX: SingleThreadedLazyCell<Regex> =
+        SingleThreadedLazyCell::new(|| Regex::new("^#!.*[^i]sh").unwrap());
     SHEBANG_REGEX
-        .get_or_init(|| Regex::new("^#!.*[^i]sh").unwrap())
         .is_match(first_line.trim().as_bytes())
         .unwrap()
 }

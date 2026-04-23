@@ -21,6 +21,7 @@ Other improvements
 - :doc:`fish_update_completions <cmds/fish_update_completions>` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).
 - Improve user experience when removing history entries via the :doc:`web-based config <cmds/fish_config>`.
 - :doc:`funced <cmds/funced>` will no longer lose work if there are parse errors multiple times without new changes to the file
+- The default title no longer overrides ``$fish_prompt_pwd_dir_length`` and ``$fish_prompt_pwd_full_dirs``.
 
 For distributors and developers
 -------------------------------

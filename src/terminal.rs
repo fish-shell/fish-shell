@@ -1,3 +1,4 @@
+use crate::global_safety::RelaxedAtomicBool;
 // Generic output functions.
 use crate::prelude::*;
 use crate::{
@@ -14,10 +15,7 @@ use std::{
     cell::{RefCell, RefMut},
     ops::{Deref, DerefMut},
     os::{fd::RawFd, unix::ffi::OsStrExt as _},
-    sync::{
-        OnceLock,
-        atomic::{AtomicU8, Ordering},
-    },
+    sync::atomic::{AtomicU8, Ordering},
 };
 
 bitflags! {
@@ -189,8 +187,8 @@ fn osc_133_prompt_start(out: &mut Outputter) -> bool {
     if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
-    static TEST_BALLOON: OnceLock<()> = OnceLock::new();
-    if TEST_BALLOON.set(()).is_ok() {
+    static TEST_BALLOON: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+    if !TEST_BALLOON.swap(true) {
         write_to_output!(out, "\x1b]133;A;click_events=1\x1b\\");
     } else {
         write_to_output!(out, "\x1b]133;A;click_events=1\x07");

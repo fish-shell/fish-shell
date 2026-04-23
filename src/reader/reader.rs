@@ -1001,8 +1001,12 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
         Err(_) => zeroed_termios(),
     };
 
-    assert!(AT_EXIT.get().is_none());
-    AT_EXIT.get_or_init(|| Box::new(move || reader_deinit(will_restore_foreground_pgroup)));
+    AT_EXIT
+        .set(Box::new(move || {
+            reader_deinit(will_restore_foreground_pgroup);
+        }))
+        .map_err(|_| ())
+        .unwrap();
 
     // Set the mode used for program execution, initialized to the current mode.
     let mut external_modes = terminal_mode_on_startup;

@@ -15,6 +15,10 @@ Interactive improvements
 Improved terminal support
 -------------------------
 
+Scripting improvements
+----------------------
+- :envvar:`fish_trace_depth` can be set to limit the number of levels that :envvar:`fish_trace` will print. Setting it to 0 will only show top-level commands.
+
 Other improvements
 ------------------
 - History is no longer corrupted with NUL bytes when fish receives SIGTERM or SIGHUP (:issue:`10300`).

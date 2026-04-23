@@ -12,7 +12,7 @@ function __fish_edit_command_if_at_cursor --description 'If cursor is at the com
     or return 1
     set -l command_path (command -v -- $command)
     or return 1
-    test -w $command_path
+    test -r $command_path
     or return 1
     string match -q 'text/*' (file --brief --mime-type -L -- $command_path)
     or return 1

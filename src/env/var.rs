@@ -369,7 +369,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_env_vars() {
-        let _cleanup = test_init();
+        test_init();
         test_timezone_env_vars();
         // TODO: Add tests for the locale vars.
 

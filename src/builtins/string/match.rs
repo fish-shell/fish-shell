@@ -427,7 +427,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "match"], STATUS_INVALID_ARGS, "");
         validate!(["string", "match", ""], STATUS_CMD_ERROR, "");
         validate!(["string", "match", "", ""], STATUS_CMD_OK, "\n");

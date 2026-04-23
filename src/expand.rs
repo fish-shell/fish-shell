@@ -1606,7 +1606,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_expand() {
-        let _cleanup = test_init();
+        test_init();
         let parser = TestParser::new();
         /// Perform parameter expansion and test if the output equals the zero-terminated parameter list /// supplied.
         ///
@@ -1900,7 +1900,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_expand_overflow() {
-        let _cleanup = test_init();
+        test_init();
         // Testing overflowing expansions
         // Ensure that we have sane limits on number of expansions - see #7497.
 
@@ -1937,7 +1937,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_abbreviations() {
-        let _cleanup = test_init();
+        test_init();
         // Testing abbreviations
 
         with_abbrs_mut(|abbrset| {

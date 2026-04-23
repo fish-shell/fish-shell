@@ -2086,7 +2086,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_escape_code_length() {
-        let _cleanup = test_init();
+        test_init();
         let mut lc = LayoutCache::new();
         assert_eq!(lc.escape_code_length(L!("")), 0);
         assert_eq!(lc.escape_code_length(L!("abcd")), 0);
@@ -2121,7 +2121,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_layout_cache() {
-        let _cleanup = test_init();
+        test_init();
         let mut seqs = LayoutCache::new();
 
         // Verify escape code cache.
@@ -2193,7 +2193,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_prompt_truncation() {
-        let _cleanup = test_init();
+        test_init();
         let mut cache = LayoutCache::new();
         let mut trunc = WString::new();
 

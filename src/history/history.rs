@@ -2288,7 +2288,7 @@ mod tests {
 
     #[test]
     fn test_history_path_detection() {
-        let _cleanup = test_init();
+        test_init();
         // Regression test for #7582.
         // Temporary directory for the history files.
         let hist_tmpdir = fish_tempfile::new_dir().unwrap();

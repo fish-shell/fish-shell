@@ -463,7 +463,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_autoload() {
-        let _cleanup = test_init();
+        test_init();
         use crate::fds::wopen_cloexec;
         use fish_widestring::wcs2zstring;
         use nix::fcntl::OFlag;

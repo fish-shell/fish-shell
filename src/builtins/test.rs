@@ -1261,7 +1261,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_test_builtin() {
-        let _cleanup = test_init();
+        test_init();
         test_test_brackets();
         test_test();
     }

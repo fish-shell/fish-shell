@@ -733,7 +733,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_is_potential_path() {
-        let _cleanup = test_init();
+        test_init();
         // Directories
         std::fs::create_dir_all("test/is_potential_path_test/alpha/").unwrap();
         std::fs::create_dir_all("test/is_potential_path_test/beta/").unwrap();

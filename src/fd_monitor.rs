@@ -551,7 +551,7 @@ mod tests {
     #[test]
     #[serial]
     fn fd_monitor_items() {
-        let _cleanup = test_init();
+        test_init();
         let monitor = FdMonitor::new();
 
         // Item which will never receive data or be called.

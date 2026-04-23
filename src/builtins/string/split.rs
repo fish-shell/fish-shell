@@ -299,7 +299,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "split"], STATUS_INVALID_ARGS, "");
         validate!(["string", "split", ":"], STATUS_CMD_ERROR, "");
         validate!(["string", "split", ".", "www.ch.ic.ac.uk"], STATUS_CMD_OK, "www\nch\nic\nac\nuk\n");

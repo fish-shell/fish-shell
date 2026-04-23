@@ -4,12 +4,10 @@ use crate::env::{EnvMode, EnvVar, EnvVarFlags, Environment};
 use crate::locale::set_libc_locales;
 use crate::parser::{CancelBehavior, Parser};
 use crate::prelude::*;
-use crate::reader::{reader_deinit, reader_init};
 use crate::signal::signal_reset_handlers;
 use crate::topic_monitor::topic_monitor_init;
 use crate::wutil::wgetcwd;
 use crate::{env::EnvStack, proc::proc_init};
-use fish_common::{ScopeGuard, ScopeGuarding};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::env::set_current_dir;
@@ -18,7 +16,7 @@ use std::sync::OnceLock;
 
 pub use serial_test::serial;
 
-pub fn test_init() -> impl ScopeGuarding<Target = ()> {
+pub fn test_init() {
     static DONE: OnceLock<()> = OnceLock::new();
     DONE.get_or_init(|| {
         // If we are building with `cargo build` and have build w/ `cmake`, this might not
@@ -42,10 +40,6 @@ pub fn test_init() -> impl ScopeGuarding<Target = ()> {
         // Set PWD from getcwd - fixes #5599
         EnvStack::globals().set_pwd_from_getcwd();
     });
-    reader_init(false);
-    ScopeGuard::new((), |()| {
-        reader_deinit(false);
-    })
 }
 
 /// An environment built around an std::map.

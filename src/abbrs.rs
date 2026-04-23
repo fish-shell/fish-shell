@@ -293,7 +293,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_abbreviations() {
-        let _cleanup = test_init();
+        test_init();
         let parser = TestParser::new();
         {
             let mut abbrs = abbrs_get_set();
@@ -424,7 +424,7 @@ mod tests {
     #[test]
     #[serial]
     fn rename_abbrs() {
-        let _cleanup = test_init();
+        test_init();
 
         with_abbrs_mut(|abbrs_g| {
             let mut add = |name: &wstr, repl: &wstr, position: Position| {

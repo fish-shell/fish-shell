@@ -271,7 +271,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_termsize() {
-        let _cleanup = test_init();
+        test_init();
         let env_global = EnvSetMode::new(EnvMode::GLOBAL, false);
         let parser = TestParser::new();
         let vars = parser.vars();

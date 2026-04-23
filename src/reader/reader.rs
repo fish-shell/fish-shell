@@ -989,6 +989,7 @@ const FLOW_CONTROL_FLAGS: termios::InputFlags = {
 
 /// Initialize the reader.
 pub fn reader_init(will_restore_foreground_pgroup: bool) {
+    assert_is_main_thread();
     let terminal_mode_on_startup = match tcgetattr(unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) })
     {
         Ok(modes) => {
@@ -1000,9 +1001,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
         Err(_) => zeroed_termios(),
     };
 
-    if !cfg!(test) {
-        assert!(AT_EXIT.get().is_none());
-    }
+    assert!(AT_EXIT.get().is_none());
     AT_EXIT.get_or_init(|| Box::new(move || reader_deinit(will_restore_foreground_pgroup)));
 
     // Set the mode used for program execution, initialized to the current mode.

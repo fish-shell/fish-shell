@@ -281,7 +281,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "replace", ""], STATUS_INVALID_ARGS, "");
         validate!(["string", "replace", "", ""], STATUS_CMD_ERROR, "");
         validate!(["string", "replace", "", "", ""], STATUS_CMD_ERROR, "\n");

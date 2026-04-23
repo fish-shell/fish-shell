@@ -1915,7 +1915,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_error_messages() {
-        let _cleanup = test_init();
+        test_init();
         // Given a format string, returns a list of non-empty strings separated by format specifiers. The
         // format specifiers themselves are omitted.
         fn separate_by_format_specifiers(format: &wstr) -> Vec<&wstr> {
@@ -2007,7 +2007,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_get_cmdsubst_extent() {
-        let _cleanup = test_init();
+        test_init();
         let a = L!("echo (echo (echo hi");
         assert_eq!(get_cmdsubst_extent(a, 0), 0..a.len());
         assert_eq!(get_cmdsubst_extent(a, 1), 0..a.len());
@@ -2023,7 +2023,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_slice_length() {
-        let _cleanup = test_init();
+        test_init();
         assert_eq!(slice_length(L!("[2]")), Some(3));
         assert_eq!(slice_length(L!("[12]")), Some(4));
         assert_eq!(slice_length(L!("[\"foo\"]")), Some(7));
@@ -2033,7 +2033,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_indents() {
-        let _cleanup = test_init();
+        test_init();
         // A struct which is either text or a new indent.
         struct Segment {
             // The indent to set

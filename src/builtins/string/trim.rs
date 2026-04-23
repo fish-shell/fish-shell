@@ -105,7 +105,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "trim"], STATUS_CMD_ERROR, "");
         validate!(["string", "trim", ""], STATUS_CMD_ERROR, "\n");
         validate!(["string", "trim", " "], STATUS_CMD_OK, "\n");

@@ -2646,7 +2646,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_complete() {
-        let _cleanup = test_init();
+        test_init();
         let vars = PwdEnvironment {
             parent: TestEnvironment {
                 vars: HashMap::from([
@@ -3164,7 +3164,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_autosuggest_suggest_special() {
-        let _cleanup = test_init();
+        test_init();
         let parser = TestParser::new();
         macro_rules! perform_one_autosuggestion_cd_test {
             ($command:literal, $expected:literal, $vars:expr) => {
@@ -3345,7 +3345,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_autosuggestion_ignores() {
-        let _cleanup = test_init();
+        test_init();
         // Testing scenarios that should produce no autosuggestions
         macro_rules! perform_one_autosuggestion_should_ignore_test {
             ($command:literal) => {

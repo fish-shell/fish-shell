@@ -812,7 +812,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_env_snapshot() {
-        let _cleanup = test_init();
+        test_init();
         std::fs::create_dir_all("test/fish_env_snapshot_test/").unwrap();
         let parser = TestParser::new();
         let vars = parser.vars();

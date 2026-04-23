@@ -130,7 +130,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "sub"], STATUS_CMD_ERROR, "");
         validate!(["string", "sub", "abcde"], STATUS_CMD_OK, "abcde\n");
         validate!(["string", "sub", "-l", "x", "abcde"], STATUS_INVALID_ARGS, "");

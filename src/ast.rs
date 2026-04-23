@@ -2832,7 +2832,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_ast_parse() {
-        let _cleanup = test_init();
+        test_init();
         let src = L!("echo");
         let ast = ast::parse(src, ParseTreeFlags::default(), None);
         assert!(!ast.any_error);

@@ -467,7 +467,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_escape_quotes() {
-        let _cleanup = test_init();
+        test_init();
         macro_rules! validate {
             ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
                 assert_eq!(

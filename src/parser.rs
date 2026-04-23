@@ -1522,7 +1522,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_parser() {
-        let _cleanup = test_init();
+        test_init();
         macro_rules! detect_errors {
             ($src:literal) => {
                 detect_parse_errors(L!($src), None, true /* accept incomplete */)
@@ -1825,7 +1825,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_new_parser_correctness() {
-        let _cleanup = test_init();
+        test_init();
         macro_rules! validate {
             ($src:expr, $ok:expr) => {
                 let ast = ast::parse(L!($src), ParseTreeFlags::default(), None);
@@ -1855,7 +1855,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_new_parser_correctness_by_fuzzing() {
-        let _cleanup = test_init();
+        test_init();
         let fuzzes = [
             L!("if"),
             L!("else"),
@@ -1921,7 +1921,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_new_parser_ll2() {
-        let _cleanup = test_init();
+        test_init();
         // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
         // true if successful.
         fn test_1_parse_ll2(src: &wstr) -> Option<(WString, WString, StatementDecoration)> {
@@ -2042,7 +2042,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_new_parser_ad_hoc() {
-        let _cleanup = test_init();
+        test_init();
         // Very ad-hoc tests for issues encountered.
 
         // Ensure that 'case' terminates a job list.
@@ -2102,7 +2102,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_new_parser_errors() {
-        let _cleanup = test_init();
+        test_init();
         macro_rules! validate {
             ($src:expr, $expected_code:expr) => {
                 let mut errors = vec![];
@@ -2138,7 +2138,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_eval_recursion_detection() {
-        let _cleanup = test_init();
+        test_init();
         // Ensure that we don't crash on infinite self recursion and mutual recursion.
         let parser = TestParser::new();
         parser.eval(
@@ -2158,7 +2158,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_eval_illegal_exit_code() {
-        let _cleanup = test_init();
+        test_init();
         let parser = TestParser::new();
         macro_rules! validate {
             ($cmd:expr, $result:expr) => {
@@ -2184,7 +2184,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_eval_empty_function_name() {
-        let _cleanup = test_init();
+        test_init();
         let parser = TestParser::new();
         parser.eval(
             L!("function '' ; echo fail; exit 42 ; end ; ''"),
@@ -2195,7 +2195,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_expand_argument_list() {
-        let _cleanup = test_init();
+        test_init();
         let parser = TestParser::new();
         let comps: Vec<WString> = Parser::expand_argument_list(
             L!("alpha 'beta gamma' delta"),
@@ -2237,7 +2237,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_cancellation() {
-        let _cleanup = test_init();
+        test_init();
         let parser = Parser::new(EnvStack::new(), CancelBehavior::Clear);
         let _pop = fake_scoped_reader(&parser);
 

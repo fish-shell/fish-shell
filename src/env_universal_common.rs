@@ -830,7 +830,7 @@ mod tests {
     }
 
     fn test_universal_helper(x: usize, path: &wstr) {
-        let _cleanup = test_init();
+        test_init();
         let mut uvars = EnvUniversal::new();
         uvars.initialize_at_path(path.to_owned());
 
@@ -853,7 +853,7 @@ mod tests {
 
     #[test]
     fn test_universal() {
-        let _cleanup = test_init();
+        test_init();
         let (_test_dir, test_path) = make_test_uvar_path().unwrap();
 
         let threads = 1;
@@ -893,7 +893,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_universal_output() {
-        let _cleanup = test_init();
+        test_init();
         let flag_export = EnvVarFlags::EXPORT;
         let flag_pathvar = EnvVarFlags::PATHVAR;
 
@@ -950,7 +950,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_universal_parsing() {
-        let _cleanup = test_init();
+        test_init();
         let input = concat!(
             "# This file contains fish universal variable definitions.\n",
             "# VERSION: 3.0\n",
@@ -1002,7 +1002,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_universal_parsing_legacy() {
-        let _cleanup = test_init();
+        test_init();
         let input = concat!(
             "# This file contains fish universal variable definitions.\n",
             "SET varA:ValA1\\x1eValA2\n",
@@ -1030,7 +1030,7 @@ mod tests {
 
     #[test]
     fn test_universal_callbacks() {
-        let _cleanup = test_init();
+        test_init();
         let (_test_dir, test_path) = make_test_uvar_path().unwrap();
         let mut uvars1 = EnvUniversal::new();
         let mut uvars2 = EnvUniversal::new();
@@ -1100,7 +1100,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_universal_formats() {
-        let _cleanup = test_init();
+        test_init();
         macro_rules! validate {
             ( $version_line:literal, $expected_format:expr ) => {
                 assert_eq!(
@@ -1121,7 +1121,7 @@ mod tests {
 
     #[test]
     fn test_universal_ok_to_save() {
-        let _cleanup = test_init();
+        test_init();
         // Ensure we don't try to save after reading from a newer fish.
         let (_test_dir, test_path) = make_test_uvar_path().unwrap();
         let contents = b"# VERSION: 99999.99\n";

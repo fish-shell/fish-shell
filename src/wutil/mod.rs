@@ -641,7 +641,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_wwrite_to_fd() {
-        let _cleanup = test_init();
+        test_init();
         let temp_file = fish_tempfile::new_file().unwrap();
         let mut rng = rand::rng();
         let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];

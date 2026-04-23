@@ -74,7 +74,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "escape"], STATUS_CMD_ERROR, "");
         validate!(["string", "escape", ""], STATUS_CMD_OK, "''\n");
         validate!(["string", "escape", "-n", ""], STATUS_CMD_OK, "\n");

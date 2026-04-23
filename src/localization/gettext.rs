@@ -204,7 +204,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_unlocalized() {
-        let _cleanup = test_init();
+        test_init();
         let abc_str = LocalizableString::from_external_source(WString::from("abc"));
         let s: &'static wstr = wgettext!(abc_str);
         assert_eq!(s, "abc");

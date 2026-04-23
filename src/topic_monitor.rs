@@ -618,7 +618,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_topic_monitor() {
-        let _cleanup = test_init();
+        test_init();
         let monitor = TopicMonitor::default();
         let gens = GenerationsList::new();
         let t = Topic::SigChld;
@@ -644,7 +644,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_topic_monitor_torture() {
-        let _cleanup = test_init();
+        test_init();
         let monitor = Arc::new(TopicMonitor::default());
         const THREAD_COUNT: usize = 64;
         let t1 = Topic::SigChld;

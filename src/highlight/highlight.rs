@@ -1330,7 +1330,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_highlighting() {
-        let _cleanup = test_init();
+        test_init();
         let parser = TestParser::new();
         // Testing syntax highlighting
         parser.pushd("test/fish_highlight_test/");
@@ -1815,7 +1815,7 @@ mod tests {
     #[serial]
     #[allow(clippy::needless_range_loop)]
     fn test_trailing_spaces_after_command() {
-        let _cleanup = test_init();
+        test_init();
         let parser = TestParser::new();
         let vars = parser.vars();
 
@@ -1869,7 +1869,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_resolve_role() {
-        let _cleanup = test_init();
+        test_init();
         let parser = TestParser::new();
         let vars = parser.vars();
 

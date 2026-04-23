@@ -17,6 +17,13 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
     // running in a simulated terminal emulator environment (such as the tmux or pexpect
     // tests). The FISH_FAST_FAIL environment variable is set in the test driver to
     // prevent the test suite from hanging on panic.
+    let cleanup = || {
+        if is_main_thread() {
+            if let Some(at_exit) = AT_EXIT.get() {
+                (at_exit)();
+            }
+        }
+    };
     if isatty(STDIN_FILENO) && std::env::var_os("FISH_FAST_FAIL").is_none() {
         let standard_hook = take_hook();
         set_hook(Box::new(move |panic_info| {
@@ -28,11 +35,7 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
             {
                 return;
             }
-            if is_main_thread() {
-                if let Some(at_exit) = AT_EXIT.get() {
-                    (at_exit)();
-                }
-            }
+            cleanup();
             eprintf!("%s crashed, please report a bug.", get_program_name());
             if !is_main_thread() {
                 eprintf!("\n");
@@ -53,8 +56,6 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
         }));
     }
     let exit_status = main();
-    if let Some(at_exit) = AT_EXIT.get() {
-        (at_exit)();
-    }
+    cleanup();
     std::process::exit(exit_status)
 }

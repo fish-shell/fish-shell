@@ -17,8 +17,8 @@ use std::sync::OnceLock;
 pub use serial_test::serial;
 
 pub fn test_init() {
-    static DONE: OnceLock<()> = OnceLock::new();
-    DONE.get_or_init(|| {
+    static DONE: std::sync::Once = std::sync::Once::new();
+    DONE.call_once(|| {
         // If we are building with `cargo build` and have build w/ `cmake`, this might not
         // yet exist.
         let mut test_dir = PathBuf::from(BUILD_DIR);

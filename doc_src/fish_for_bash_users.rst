@@ -453,7 +453,6 @@ By now it has become apparent that fish puts much more of a focus on its builtin
 Other facilities
 ----------------
 
-Bash has ``set -x`` or ``set -o xtrace`` to print all commands that are being executed. In fish, this would be enabled by setting :envvar:`fish_trace`.
+Bash has ``set -x`` or ``set -o xtrace`` to print all commands that are being executed. In fish, this would be enabled by setting :envvar:`fish_trace`. :envvar:`fish_trace_depth` can also be set to limit the number of levels printed.
 
 Or, if your intention is to *profile* how long each line of a script takes, you can use ``fish --profile`` - see the :doc:`page for the fish command <cmds/fish>`.
-

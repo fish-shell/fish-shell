@@ -73,6 +73,7 @@ function __fish_complete_special_vars
         fish_term24bit "set to 0 to use the color palette instead of true-colors" \
         fish_term256 "set to 0 to use the 16-color palette instead of 256" \
         fish_trace "Enables execution tracing (if set to non-empty value)" \
+        fish_trace_depth "How many levels deep to trace execution with fish_trace" \
         fish_transient_prompt "set to 1 to re-run prompts before pushing them to scrollback" \
         fish_user_paths "A list of dirs to prepend to PATH"
     __fish_complete_special_vars_ifndef fish_color_option 'defaults to $fish_color_param'

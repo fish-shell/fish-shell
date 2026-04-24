@@ -5447,11 +5447,17 @@ msgstr ""
 msgid "Add OFFSET to file positions in hexdump"
 msgstr ""
 
+msgid "Add Requires dependencies to a target unit"
+msgstr ""
+
 msgid "Add Signed-off-by line at the end of the merge commit message"
 msgstr ""
 
 msgid "Add Signed-off-by line to the commit message"
 msgstr "Ajouter une ligne Signed-off-by dans le message de validation"
+
+msgid "Add Wants dependencies to a target unit"
+msgstr ""
 
 msgid "Add Winelib to import"
 msgstr ""
@@ -8198,6 +8204,9 @@ msgstr ""
 msgid "Ask the server to reimport files for UTIs claimed by the listed plugin"
 msgstr ""
 
+msgid "Ask the service manager to exit"
+msgstr ""
+
 msgid "Ask the user for confirmation before killing a process"
 msgstr "Demander confirmation avant de tuer un processus"
 
@@ -9197,6 +9206,9 @@ msgstr ""
 msgid "Bind mount a file or directory from the host in the container"
 msgstr ""
 
+msgid "Bind mount a path into the mount namespace of a unit"
+msgstr ""
+
 msgid "Bind mounts src into CHROOTDIR/dest"
 msgstr ""
 
@@ -9922,6 +9934,9 @@ msgstr "Annuler toute action programmée pour un paquet"
 
 msgid "Cancel jobs owned by username"
 msgstr "Annuler les tâches de l’utilisateur"
+
+msgid "Cancel one or more jobs"
+msgstr ""
 
 msgid "Cancel pairing with device"
 msgstr ""
@@ -16988,6 +17003,9 @@ msgstr ""
 msgid "Disable the docs title"
 msgstr ""
 
+msgid "Disable the enable one or more units"
+msgstr ""
+
 msgid "Disable the eval extension"
 msgstr ""
 
@@ -23222,6 +23240,9 @@ msgstr "Afficher l’arborescence des périphériques USB physiques"
 msgid "Dump the relocated contents of of specified section"
 msgstr ""
 
+msgid "Dump the systemd manager environment block"
+msgstr ""
+
 msgid "Dump tree structures from a given device"
 msgstr ""
 
@@ -23370,6 +23391,9 @@ msgid "Edit a file in a port"
 msgstr ""
 
 msgid "Edit a property with an external editor"
+msgstr ""
+
+msgid "Edit a unit file or drop-in snippet"
 msgstr ""
 
 msgid "Edit an entry"
@@ -24764,10 +24788,16 @@ msgstr ""
 msgid "Enable/Disable colored error messages"
 msgstr ""
 
+msgid "Enable/disable a unit depending on preset configuration"
+msgstr ""
+
 msgid "Enable/disable advertising with given type"
 msgstr ""
 
 msgid "Enable/disable agent with given capability"
+msgstr ""
+
+msgid "Enable/disable all units depending on preset configuration"
 msgstr ""
 
 msgid "Enable/disable bucket access logging"
@@ -25104,6 +25134,15 @@ msgid "Ensure transactions are ordered by date"
 msgstr ""
 
 msgid "Ensure value is of given type"
+msgstr ""
+
+msgid "Enter and isolate emergency mode"
+msgstr ""
+
+msgid "Enter and isolate rescue mode"
+msgstr ""
+
+msgid "Enter and isolate the default mode"
 msgstr ""
 
 msgid "Enter commit message as a string"
@@ -31598,6 +31637,9 @@ msgstr ""
 msgid "Import cuesheet and store in CUESHEET block"
 msgstr "Importer un fichier cue et le stocker dans le bloc CUESHEET"
 
+msgid "Import environment variables into the service manager"
+msgstr ""
+
 msgid "Import every tag from a remote with git fetch <name>"
 msgstr "Importer toutes les étiquettes d’un serveur distant avec git fetch <nom>"
 
@@ -33560,6 +33602,9 @@ msgstr "Terminer la connexion actuelle depuis le périphérique et le faire se r
 msgid "Kick current connection from host side and make it reconnect."
 msgstr "Terminer la connexion actuelle depuis l’hôte et le faire se reconnecter"
 
+msgid "Kill one or more units"
+msgstr ""
+
 msgid "Kill only processes the specified user owns. Command names are optional"
 msgstr "Ne tuer que les processus appartenant à l’utilisateur spécifié. Les noms des commandes sont alors optionnels"
 
@@ -34182,6 +34227,9 @@ msgid "Lines end with 0 byte"
 msgstr "Utiliser \\0 comme fin de ligne"
 
 msgid "Linewrap entries as width[,indent1[,indent2]]"
+msgstr ""
+
+msgid "Link a unit file into the unit search path"
 msgstr ""
 
 msgid "Link against framework (Darwin)"
@@ -36183,6 +36231,9 @@ msgid "List the files owned by PACKAGE"
 msgstr ""
 
 msgid "List the files that are supplied by the named package"
+msgstr ""
+
+msgid "List the host and all running local containers"
 msgstr ""
 
 msgid "List the installed extensions"
@@ -38647,6 +38698,9 @@ msgstr "Monter tous les systèmes de fichiers ZFS disponibles"
 
 msgid "Mount an entire disk (all mountable volumes)"
 msgstr "Monter tous les volumes montables d’un disque"
+
+msgid "Mount an image into the mount namespace of a unit"
+msgstr ""
 
 msgid "Mount as mountable"
 msgstr ""
@@ -43922,6 +43976,9 @@ msgstr "Empêcher l’utilisation, de quelque manière que ce soit, les registre
 msgid "Prevent including compiler-rt symbols"
 msgstr ""
 
+msgid "Prevent one or more units from starting"
+msgstr ""
+
 msgid "Prevent override"
 msgstr ""
 
@@ -47753,6 +47810,9 @@ msgstr "Obtenir seulement les noms de paquet"
 msgid "Query the specified service"
 msgstr ""
 
+msgid "Query the unit that owns a process"
+msgstr ""
+
 msgid "Query to select investment transactions"
 msgstr ""
 
@@ -48503,6 +48563,12 @@ msgstr "Redémarrer l’ordinateur"
 msgid "Reboot to EFI setup"
 msgstr "Redémarrer sur l’interface d’administration de l’EFI"
 
+msgid "Reboot userspace"
+msgstr ""
+
+msgid "Reboot via kexec"
+msgstr ""
+
 msgid "Reboots the device, optionally into the bootloader or recovery program"
 msgstr "Redémarrer le périphérique, possiblement vers le chargeur d’amorçage ou le programme de récupération"
 
@@ -49200,6 +49266,9 @@ msgid "Reload rules and database"
 msgstr ""
 
 msgid "Reload server configuration"
+msgstr ""
+
+msgid "Reload the configuration of the system manager"
 msgstr ""
 
 msgid "Reload the default keys"
@@ -50838,6 +50907,9 @@ msgid "Request Name Server ID"
 msgstr "Demander l’ID du serveur de noms"
 
 msgid "Request a subset of objects from server"
+msgstr ""
+
+msgid "Request a unit reload its configuration"
 msgstr ""
 
 msgid "Request allocation of a pseudo TTY for stdio"
@@ -59738,6 +59810,9 @@ msgstr ""
 msgid "Show properties of machines"
 msgstr "Afficher les propriétés des machines"
 
+msgid "Show properties of one or more units, jobs, or the manager itself"
+msgstr ""
+
 msgid "Show properties of systemd-timedated"
 msgstr ""
 
@@ -60089,6 +60164,9 @@ msgstr ""
 msgid "Show the author email instead of author name"
 msgstr "Afficher l’adresse email de l’auteur au lieu de son nom"
 
+msgid "Show the backing files of one or more units"
+msgstr ""
+
 msgid "Show the branch and tracking info even in short-format"
 msgstr "Afficher la branche et les informations de suivi même en format concis"
 
@@ -60243,6 +60321,9 @@ msgid "Show the maintainer(s) for the pkg"
 msgstr ""
 
 msgid "Show the manual page"
+msgstr ""
+
+msgid "Show the manual page for a unit"
 msgstr ""
 
 msgid "Show the menubar"
@@ -64836,6 +64917,9 @@ msgid "Stop pairing to a said device"
 msgstr "Arrêter l’appairage au périphérique spécifié"
 
 msgid "Stop playing"
+msgstr ""
+
+msgid "Stop preventing one or more units from starting"
 msgstr ""
 
 msgid "Stop preventing package modification"

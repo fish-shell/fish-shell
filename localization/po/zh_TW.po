@@ -5316,10 +5316,16 @@ msgstr ""
 msgid "Add OFFSET to file positions in hexdump"
 msgstr ""
 
+msgid "Add Requires dependencies to a target unit"
+msgstr ""
+
 msgid "Add Signed-off-by line at the end of the merge commit message"
 msgstr ""
 
 msgid "Add Signed-off-by line to the commit message"
+msgstr ""
+
+msgid "Add Wants dependencies to a target unit"
 msgstr ""
 
 msgid "Add Winelib to import"
@@ -8067,6 +8073,9 @@ msgstr ""
 msgid "Ask the server to reimport files for UTIs claimed by the listed plugin"
 msgstr ""
 
+msgid "Ask the service manager to exit"
+msgstr ""
+
 msgid "Ask the user for confirmation before killing a process"
 msgstr ""
 
@@ -9066,6 +9075,9 @@ msgstr ""
 msgid "Bind mount a file or directory from the host in the container"
 msgstr ""
 
+msgid "Bind mount a path into the mount namespace of a unit"
+msgstr ""
+
 msgid "Bind mounts src into CHROOTDIR/dest"
 msgstr ""
 
@@ -9790,6 +9802,9 @@ msgid "Cancel any scheduled actions on the packages"
 msgstr ""
 
 msgid "Cancel jobs owned by username"
+msgstr ""
+
+msgid "Cancel one or more jobs"
 msgstr ""
 
 msgid "Cancel pairing with device"
@@ -16857,6 +16872,9 @@ msgstr ""
 msgid "Disable the docs title"
 msgstr ""
 
+msgid "Disable the enable one or more units"
+msgstr ""
+
 msgid "Disable the eval extension"
 msgstr ""
 
@@ -23091,6 +23109,9 @@ msgstr ""
 msgid "Dump the relocated contents of of specified section"
 msgstr ""
 
+msgid "Dump the systemd manager environment block"
+msgstr ""
+
 msgid "Dump tree structures from a given device"
 msgstr ""
 
@@ -23239,6 +23260,9 @@ msgid "Edit a file in a port"
 msgstr ""
 
 msgid "Edit a property with an external editor"
+msgstr ""
+
+msgid "Edit a unit file or drop-in snippet"
 msgstr ""
 
 msgid "Edit an entry"
@@ -24633,10 +24657,16 @@ msgstr ""
 msgid "Enable/Disable colored error messages"
 msgstr ""
 
+msgid "Enable/disable a unit depending on preset configuration"
+msgstr ""
+
 msgid "Enable/disable advertising with given type"
 msgstr ""
 
 msgid "Enable/disable agent with given capability"
+msgstr ""
+
+msgid "Enable/disable all units depending on preset configuration"
 msgstr ""
 
 msgid "Enable/disable bucket access logging"
@@ -24973,6 +25003,15 @@ msgid "Ensure transactions are ordered by date"
 msgstr ""
 
 msgid "Ensure value is of given type"
+msgstr ""
+
+msgid "Enter and isolate emergency mode"
+msgstr ""
+
+msgid "Enter and isolate rescue mode"
+msgstr ""
+
+msgid "Enter and isolate the default mode"
 msgstr ""
 
 msgid "Enter commit message as a string"
@@ -31467,6 +31506,9 @@ msgstr ""
 msgid "Import cuesheet and store in CUESHEET block"
 msgstr ""
 
+msgid "Import environment variables into the service manager"
+msgstr ""
+
 msgid "Import every tag from a remote with git fetch <name>"
 msgstr ""
 
@@ -33429,6 +33471,9 @@ msgstr ""
 msgid "Kick current connection from host side and make it reconnect."
 msgstr ""
 
+msgid "Kill one or more units"
+msgstr ""
+
 msgid "Kill only processes the specified user owns. Command names are optional"
 msgstr ""
 
@@ -34051,6 +34096,9 @@ msgid "Lines end with 0 byte"
 msgstr ""
 
 msgid "Linewrap entries as width[,indent1[,indent2]]"
+msgstr ""
+
+msgid "Link a unit file into the unit search path"
 msgstr ""
 
 msgid "Link against framework (Darwin)"
@@ -36052,6 +36100,9 @@ msgid "List the files owned by PACKAGE"
 msgstr ""
 
 msgid "List the files that are supplied by the named package"
+msgstr ""
+
+msgid "List the host and all running local containers"
 msgstr ""
 
 msgid "List the installed extensions"
@@ -38515,6 +38566,9 @@ msgid "Mount all available ZFS filesystems"
 msgstr ""
 
 msgid "Mount an entire disk (all mountable volumes)"
+msgstr ""
+
+msgid "Mount an image into the mount namespace of a unit"
 msgstr ""
 
 msgid "Mount as mountable"
@@ -43791,6 +43845,9 @@ msgstr ""
 msgid "Prevent including compiler-rt symbols"
 msgstr ""
 
+msgid "Prevent one or more units from starting"
+msgstr ""
+
 msgid "Prevent override"
 msgstr ""
 
@@ -47622,6 +47679,9 @@ msgstr ""
 msgid "Query the specified service"
 msgstr ""
 
+msgid "Query the unit that owns a process"
+msgstr ""
+
 msgid "Query to select investment transactions"
 msgstr ""
 
@@ -48372,6 +48432,12 @@ msgstr ""
 msgid "Reboot to EFI setup"
 msgstr ""
 
+msgid "Reboot userspace"
+msgstr ""
+
+msgid "Reboot via kexec"
+msgstr ""
+
 msgid "Reboots the device, optionally into the bootloader or recovery program"
 msgstr ""
 
@@ -49069,6 +49135,9 @@ msgid "Reload rules and database"
 msgstr ""
 
 msgid "Reload server configuration"
+msgstr ""
+
+msgid "Reload the configuration of the system manager"
 msgstr ""
 
 msgid "Reload the default keys"
@@ -50707,6 +50776,9 @@ msgid "Request Name Server ID"
 msgstr ""
 
 msgid "Request a subset of objects from server"
+msgstr ""
+
+msgid "Request a unit reload its configuration"
 msgstr ""
 
 msgid "Request allocation of a pseudo TTY for stdio"
@@ -59607,6 +59679,9 @@ msgstr ""
 msgid "Show properties of machines"
 msgstr ""
 
+msgid "Show properties of one or more units, jobs, or the manager itself"
+msgstr ""
+
 msgid "Show properties of systemd-timedated"
 msgstr ""
 
@@ -59958,6 +60033,9 @@ msgstr ""
 msgid "Show the author email instead of author name"
 msgstr ""
 
+msgid "Show the backing files of one or more units"
+msgstr ""
+
 msgid "Show the branch and tracking info even in short-format"
 msgstr ""
 
@@ -60112,6 +60190,9 @@ msgid "Show the maintainer(s) for the pkg"
 msgstr ""
 
 msgid "Show the manual page"
+msgstr ""
+
+msgid "Show the manual page for a unit"
 msgstr ""
 
 msgid "Show the menubar"
@@ -64705,6 +64786,9 @@ msgid "Stop pairing to a said device"
 msgstr ""
 
 msgid "Stop playing"
+msgstr ""
+
+msgid "Stop preventing one or more units from starting"
 msgstr ""
 
 msgid "Stop preventing package modification"

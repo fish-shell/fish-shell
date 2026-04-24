@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use fish_build_helper::workspace_root;
 use ignore::Walk;
 use pcre2::bytes::Regex;
@@ -9,40 +10,43 @@ use std::{
     sync::LazyLock,
 };
 
-pub fn shellcheck() {
-    let file_paths = files_to_check();
-    match Command::new("shellcheck")
-        .args(file_paths)
+use crate::CommandExt;
+
+pub fn shellcheck() -> Result<()> {
+    Command::new("shellcheck")
+        .args(files_to_check()?)
         .current_dir(workspace_root())
-        .status()
-    {
-        Ok(status) => {
-            std::process::exit(status.code().unwrap_or(1));
-        }
-        Err(e) => {
-            eprintln!("Failed to run shellcheck: {e}");
-            std::process::exit(1);
-        }
-    }
+        .run()
 }
 
-fn is_shell_script<P: AsRef<Path>>(path: P) -> bool {
-    let file = File::open(&path).unwrap();
+fn is_shell_script<P: AsRef<Path>>(path: P) -> Result<bool> {
+    let file = File::open(&path).with_context(|| format!("Failed to open {:?}", path.as_ref()))?;
     let mut first_line = String::new();
     let Ok(_) = BufReader::new(file).read_line(&mut first_line) else {
-        return false;
+        return Ok(false);
     };
     static SHEBANG_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new("^#!.*[^i]sh").unwrap());
-    SHEBANG_REGEX
+    Ok(SHEBANG_REGEX
         .is_match(first_line.trim().as_bytes())
-        .unwrap()
+        .unwrap())
 }
 
-fn files_to_check() -> Vec<PathBuf> {
-    Walk::new(workspace_root())
-        .map(|path| path.unwrap_or_else(|e| fail!("Error traversing workspace: {e}")))
-        .filter(|path| path.file_type().unwrap().is_file())
-        .map(|path| path.into_path())
-        .filter(|path| is_shell_script(path))
-        .collect()
+fn files_to_check() -> Result<Vec<PathBuf>> {
+    let mut files = vec![];
+    for dir_entry in Walk::new(workspace_root()) {
+        let dir_entry = dir_entry.context("Error traversing workspace")?;
+        if !dir_entry
+            .file_type()
+            .with_context(|| format!("Failed to determine file type of {dir_entry:?}"))?
+            .is_file()
+        {
+            continue;
+        }
+        let path = dir_entry.into_path();
+        if !is_shell_script(&path)? {
+            continue;
+        }
+        files.push(path);
+    }
+    Ok(files)
 }

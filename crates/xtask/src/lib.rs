@@ -4,68 +4,59 @@ use std::{
     process::Command,
 };
 
+use anyhow::{Context, Result, bail};
 use walkdir::WalkDir;
-
-macro_rules! fail {
-    ($($arg:tt)+) => {{
-        eprintln!($($arg)+);
-        std::process::exit(1);
-    }}
-}
 
 pub mod format;
 pub mod shellcheck;
 
 pub trait CommandExt {
-    fn run_or_fail(&mut self);
+    fn run(&mut self) -> Result<()>;
 }
 
 impl CommandExt for Command {
-    fn run_or_fail(&mut self) {
-        match self.status() {
-            Ok(exit_status) => {
-                if !exit_status.success() {
-                    fail!("Command did not run successfully: {:?}", self.get_program())
-                }
-            }
-            Err(err) => {
-                fail!("Failed to run command: {err}")
-            }
+    fn run(&mut self) -> Result<()> {
+        if !self
+            .status()
+            .with_context(|| format!("Failed to run {:?}", self.get_program()))?
+            .success()
+        {
+            bail!("Command did not run successfully: {:?}", self.get_program())
         }
+        Ok(())
     }
 }
 
-pub fn cargo<I, S>(cargo_args: I)
+pub fn cargo<I, S>(cargo_args: I) -> Result<()>
 where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
-    Command::new(env!("CARGO")).args(cargo_args).run_or_fail();
+    Command::new(env!("CARGO")).args(cargo_args).run()
 }
 
 fn get_matching_files<P: AsRef<Path>, I: IntoIterator<Item = P>, M: Fn(&Path) -> bool>(
     all_paths: I,
     matcher: M,
-) -> Vec<PathBuf> {
-    all_paths
-        .into_iter()
-        .flat_map(WalkDir::new)
-        .filter_map(|res| {
-            let entry = res.unwrap();
-            let path = entry.path();
-            if entry.file_type().is_file() && matcher(path) {
-                Some(path.to_owned())
-            } else {
-                None
+) -> Result<Vec<PathBuf>> {
+    let mut matching_files = vec![];
+    for path in all_paths {
+        for dir_entry in WalkDir::new(path.as_ref()) {
+            let dir_entry = dir_entry
+                .with_context(|| format!("Failed to check paths at {:?}", path.as_ref()))?;
+            let path = dir_entry.path();
+            if dir_entry.file_type().is_file() && matcher(path) {
+                matching_files.push(path.to_owned());
             }
-        })
-        .collect()
+        }
+    }
+    Ok(matching_files)
 }
 
 fn files_with_extension<P: AsRef<Path>, I: IntoIterator<Item = P>>(
     all_paths: I,
     extension: &str,
-) -> Vec<PathBuf> {
+) -> Result<Vec<PathBuf>> {
     let matcher = |p: &Path| p.extension().is_some_and(|e| e == extension);
     get_matching_files(all_paths, matcher)
 }

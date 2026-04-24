@@ -207,7 +207,14 @@ end
 if status is-interactive
     __fish_migrate
 end
-fish_config theme choose default --no-override
+# Default-theme selection re-parses share/functions/fish_config/default.theme on
+# every startup and is expensive even though --no-override makes the final set
+# operations no-ops when color variables already exist. Gate on the universal
+# variable fish itself sets during first-time initialization so subsequent
+# startups skip this work. Fresh shells (no __fish_initialized universal) still
+# run it and seed the default theme as before.
+set -q __fish_initialized
+or fish_config theme choose default --no-override
 
 # As last part of initialization, source the conf directories.
 # Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".

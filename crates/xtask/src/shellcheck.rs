@@ -6,7 +6,7 @@ use std::{
     io::{BufRead, BufReader},
     path::{Path, PathBuf},
     process::Command,
-    sync::OnceLock,
+    sync::LazyLock,
 };
 
 pub fn shellcheck() {
@@ -32,9 +32,8 @@ fn is_shell_script<P: AsRef<Path>>(path: P) -> bool {
     let Ok(_) = BufReader::new(file).read_line(&mut first_line) else {
         return false;
     };
-    static SHEBANG_REGEX: OnceLock<Regex> = OnceLock::new();
+    static SHEBANG_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new("^#!.*[^i]sh").unwrap());
     SHEBANG_REGEX
-        .get_or_init(|| Regex::new("^#!.*[^i]sh").unwrap())
         .is_match(first_line.trim().as_bytes())
         .unwrap()
 }

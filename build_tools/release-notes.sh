@@ -48,7 +48,7 @@ if test -z "$CI" || [ "$(git -C "$workspace_root" tag | wc -l)" -gt 1 ]; then {
             num_new_authors=$(wc -l <"$relnotes_tmp/committers-new")
             printf %s \
                 "This release brings $num_commits new commits since $previous_version," \
-                " contributed by $num_authors authors, $num_new_authors of which are new committers."
+                " contributed by $num_authors authors, $num_new_authors of which are new faces."
             echo
             echo
         )

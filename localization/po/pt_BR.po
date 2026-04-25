@@ -3699,9 +3699,6 @@ msgstr ""
 msgid "wait for app to exit"
 msgstr ""
 
-msgid "fish-section-tier3-from-script-explicitly-added"
-msgstr ""
-
 msgid "fish-section-tier3-from-script-implicitly-added"
 msgstr ""
 

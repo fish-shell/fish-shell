@@ -3719,9 +3719,6 @@ msgstr "fish 中类似 vi 的键位绑定"
 msgid "wait for app to exit"
 msgstr "等待应用程序退出"
 
-msgid "fish-section-tier3-from-script-explicitly-added"
-msgstr ""
-
 msgid "fish-section-tier3-from-script-implicitly-added"
 msgstr ""
 

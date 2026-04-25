@@ -34,6 +34,16 @@ jobs:
     - name: shellcheck
       run: cargo xtask shellcheck
 
+  po_files_up_to_date:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - uses: ./.github/actions/rust-toolchain@stable
+    - name: Install deps
+      uses: ./.github/actions/install-dependencies
+    - name: Check PO files
+      run: cargo xtask gettext check
+
   clippy:
     runs-on: ubuntu-latest
     strategy:

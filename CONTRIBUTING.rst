@@ -271,13 +271,14 @@ Adding translations for a new language
 --------------------------------------
 
 Creating new translations requires the Gettext tools.
-More specifically, you will need ``msguniq`` and ``msgmerge`` for creating translations for a new
-language.
-To create a new translation, run::
+More specifically, you will need ``msguniq``, ``msgmerge``, and ``msgattrib``
+for creating translations for a new language.
+To create a PO file for a new language ``ll_CC``, run::
 
-    build_tools/update_translations.fish localization/po/ll_CC.po
+    cargo xtask gettext new ll_CC
 
-This will create a new PO file containing all messages available for translation.
+This will create a new PO file in ``localization/po/``
+containing all messages available for translation.
 If the file already exists, it will be updated.
 
 After modifying a PO file, you can recompile fish, and it will integrate the modifications you made.
@@ -347,10 +348,12 @@ Modifications to strings in source files
 ----------------------------------------
 
 If a string changes in the sources, the old translations will no longer work.
-They will be preserved in the PO files, but commented-out (starting with ``#~``).
 If you add/remove/change a translatable strings in a source file,
-run ``build_tools/update_translations.fish`` to propagate this to all translation files (``localization/po/*.po``).
+run ``cargo xtask gettext update`` to propagate this to all translation files (``localization/po/*.po``).
 This is only relevant for developers modifying the source files of fish or fish scripts.
+Note translations for messages which are no longer present in the sources will be deleted from the PO files.
+If the source string changed in a way which should not affect translations,
+consider updating the ``msgid`` in the PO files such that translations are preserved.
 
 Setting Code Up For Translations
 --------------------------------

@@ -17,6 +17,7 @@ Improved terminal support
 
 Other improvements
 ------------------
+- Non-interactive shell startup is faster: ``fish_config theme choose default --no-override`` at the end of ``share/config.fish`` is now skipped when the ``__fish_initialized`` universal variable is already set, avoiding a re-parse of ``share/functions/fish_config/default.theme`` on every invocation. A fresh shell (no ``__fish_initialized`` universal yet) still runs it and seeds the default theme as before.
 - History is no longer corrupted with NUL bytes when fish receives SIGTERM or SIGHUP (:issue:`10300`).
 - :doc:`fish_update_completions <cmds/fish_update_completions>` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).
 - Improve user experience when removing history entries via the :doc:`web-based config <cmds/fish_config>`.

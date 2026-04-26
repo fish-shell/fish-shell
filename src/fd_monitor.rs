@@ -10,8 +10,9 @@ use fish_util::perror;
 use libc::{EAGAIN, EINTR, EWOULDBLOCK};
 use std::collections::HashMap;
 use std::os::unix::prelude::*;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+use std::thread::yield_now;
 use std::time::Duration;
 
 cfg_if!(
@@ -202,7 +203,7 @@ pub struct FdMonitor {
     /// Our self-signaller, used to wake up the background thread out of select().
     change_signaller: Arc<FdEventSignaller>,
     /// The data shared between the background thread and the `FdMonitor` instance.
-    data: Arc<Mutex<SharedData>>,
+    data: Arc<SharedData>,
     /// The last ID assigned or `0` if none.
     last_id: AtomicU64,
 }
@@ -217,13 +218,25 @@ const _: () = {
 };
 
 /// Data shared between the `FdMonitor` instance and its associated `BackgroundFdMonitor`.
-struct SharedData {
+struct LockedSharedData {
     /// The map of items. This may be modified by the main thread with the mutex locked.
     items: HashMap<FdMonitorItemId, FdMonitorItem>,
     /// Whether the background thread is running.
     running: bool,
     /// Used to signal that the background thread should terminate.
     terminate: bool,
+}
+struct SharedData {
+    /// Note the locking here is very coarse and the lock is held while servicing items.
+    /// This means that an item which reads a lot of data may prevent adding other items.
+    /// When we do true multithreaded execution, we may want to make the locking more fine-grained (per-item).
+    locked: Mutex<LockedSharedData>,
+
+    /// Used to know when the monitor thread is done with an item, in particular, when
+    /// it's safe to close its fd.
+    /// Modification and reading a baseline value must be done within the `locked` context.
+    /// Checking for changes against the baseline can be done without acquiring `locked`.
+    generation: AtomicUsize,
 }
 
 /// The background half of the fd monitor, running on its own thread.
@@ -232,10 +245,7 @@ struct BackgroundFdMonitor {
     /// in the poke list, or terminate has been set.
     change_signaller: Arc<FdEventSignaller>,
     /// The data shared between the background thread and the `FdMonitor` instance.
-    /// Note the locking here is very coarse and the lock is held while servicing items.
-    /// This means that an item which reads a lot of data may prevent adding other items.
-    /// When we do true multithreaded execution, we may want to make the locking more fine-grained (per-item).
-    data: Arc<Mutex<SharedData>>,
+    data: Arc<SharedData>,
 }
 
 impl FdMonitor {
@@ -249,7 +259,7 @@ impl FdMonitor {
         };
         let start_thread = {
             // Lock around a local region
-            let mut data = self.data.lock().expect("Mutex poisoned!");
+            let mut data = self.data.locked.lock().expect("Mutex poisoned!");
 
             // Assign an id and add the item.
             let old_value = data.items.insert(item_id, item);
@@ -279,7 +289,7 @@ impl FdMonitor {
     }
 
     pub fn with_fd(&self, item_id: FdMonitorItemId, cb: impl FnOnce(BorrowedFd)) {
-        let data = self.data.lock().expect("Mutex poisoned!");
+        let data = self.data.locked.lock().expect("Mutex poisoned!");
         if let Some(fd) = &data.items.get(&item_id).unwrap().fd {
             cb(fd.as_fd());
         }
@@ -291,21 +301,35 @@ impl FdMonitor {
     /// callback will not be invoked.
     pub fn remove_item(&self, item_id: FdMonitorItemId) -> Option<OwnedFd> {
         assert!(item_id.0 > 0, "Invalid item id!");
-        let mut data = self.data.lock().expect("Mutex poisoned!");
+
+        let mut data = self.data.locked.lock().expect("Mutex poisoned!");
         let removed = data.items.remove(&item_id).expect("Item ID not found");
+        let generation = self.data.generation.load(Ordering::Relaxed);
         drop(data);
+
         // Allow it to recompute the wait set.
         self.change_signaller.post();
+
+        // Wait for select() to return since we do not know when the caller will close
+        // the descriptor and doing so has unspecified results (e.g. occasionally
+        // Cygwin returns EFAULT)
+        while generation == self.data.generation.load(Ordering::Relaxed) {
+            yield_now();
+        }
+
         removed.fd
     }
 
     pub fn new() -> Self {
         Self {
-            data: Arc::new(Mutex::new(SharedData {
-                items: HashMap::new(),
-                running: false,
-                terminate: false,
-            })),
+            data: Arc::new(SharedData {
+                locked: Mutex::new(LockedSharedData {
+                    items: HashMap::new(),
+                    running: false,
+                    terminate: false,
+                }),
+                generation: Default::default(),
+            }),
             change_signaller: Arc::new(FdEventSignaller::new()),
             last_id: AtomicU64::new(0),
         }
@@ -364,7 +388,7 @@ impl BackgroundFdMonitor {
             fds.add(change_signal_fd);
 
             // Grab the lock and snapshot the item_ids. Skip items with invalid fds.
-            let mut data = self.data.lock().expect("Mutex poisoned!");
+            let mut data = self.data.locked.lock().expect("Mutex poisoned!");
             item_ids.clear();
             item_ids.reserve(data.items.len());
             for (item_id, item) in &data.items {
@@ -400,16 +424,17 @@ impl BackgroundFdMonitor {
             let ret = fds.check_readable(timeout.map_or(Timeout::Forever, Timeout::Duration));
             // Cygwin reports ret < 0 && errno == 0 as success.
             let err = errno().0;
-            if ret < 0
-                && !matches!(err, libc::EINTR | libc::EBADF | libc::EAGAIN)
-                && !(cfg!(cygwin) && err == 0)
+            if ret < 0 && !matches!(err, libc::EINTR | libc::EAGAIN) && !(cfg!(cygwin) && err == 0)
             {
                 // Surprising error
                 perror("select");
             }
 
             // Re-acquire the lock.
-            data = self.data.lock().expect("Mutex poisoned!");
+            data = self.data.locked.lock().expect("Mutex poisoned!");
+
+            // Signal any thread waiting to remove an item
+            let _ = self.data.generation.fetch_add(1, Ordering::Relaxed);
 
             // For each item id that we snapshotted, if the corresponding item is still in our
             // set of active items and its fd was readable, then service it.
@@ -452,11 +477,11 @@ impl BackgroundFdMonitor {
 /// fds arounds; this is why it's very hacky!
 impl Drop for FdMonitor {
     fn drop(&mut self) {
-        self.data.lock().expect("Mutex poisoned!").terminate = true;
+        self.data.locked.lock().expect("Mutex poisoned!").terminate = true;
         self.change_signaller.post();
 
         // Safety: see note above.
-        while self.data.lock().expect("Mutex poisoned!").running {
+        while self.data.locked.lock().expect("Mutex poisoned!").running {
             std::thread::sleep(Duration::from_millis(5));
         }
     }

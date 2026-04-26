@@ -13,3 +13,7 @@ fish-tempfile.workspace = true
 ignore.workspace = true
 pcre2.workspace = true
 walkdir.workspace = true
+
+[build-dependencies]
+fish-build-helper.workspace = true
+rsconf.workspace = true

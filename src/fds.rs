@@ -86,7 +86,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
 /// setting it again.
 /// Return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
 /// which case an error will have been printed, and the input fd closed.
-fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> {
+pub fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> {
     let raw_fd = fd.as_raw_fd();
 
     if raw_fd >= FIRST_HIGH_FD {
@@ -145,7 +145,7 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     // If it is that's our cancel signal, so we abort.
     loop {
         let ret = nix::fcntl::open(path, flags | OFlag::O_CLOEXEC, mode);
-        let ret = ret.map(File::from);
+        let ret = ret.and_then(|fd| heightenize_fd(fd, true)).map(File::from);
         match ret {
             Ok(file) => {
                 return Ok(file);

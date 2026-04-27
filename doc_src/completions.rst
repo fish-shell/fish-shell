@@ -14,13 +14,43 @@ To provide a list of possible completions for myprog, use the ``-a`` switch. If 
 
 ::
 
-    set -l my_cmds 'start\tStart the service' 'stop\tStop the service'
+    set -l my_cmds start\t'Start the service' stop\t'Stop the service'
 
-    # INCORRECT: Expanded immediately, tokenized poorly later.
-    complete -c myprog -a "$my_cmds"
-
-    # CORRECT: Expansion is delayed until completion time.
+    # CORRECT: The single-quoted string is stored as-is and evaluated at completion
+    # time, not when this `complete` command runs. At completion time, $my_cmds
+    # is expanded and the result is tokenized on spaces and tabs.
     complete -c myprog -a '$my_cmds'
+
+    # CORRECT: `string escape` quotes each element so that spaces within
+    # descriptions (after the tab) are not mistaken for argument separators.
+    # The command substitution runs now (at script time), producing a single
+    # pre-expanded, safely-escaped string that completion-time tokenization
+    # will split correctly on the unescaped spaces between items.
+    complete -c myprog -f -a "$(string escape $my_cmds)"
+
+    # CORRECT: Equivalent to the above. `string escape` escapes each element,
+    # `string join " "` assembles them into a single space-separated string.
+    # The unquoted outer command substitution passes that string as a single
+    # argument to -a (fish does not word-split command substitution output
+    # the way bash does; the result is one token here because it is the
+    # entire argument).
+    complete -c myprog -f -a $(string join " " $(string escape $my_cmds))
+
+    # INCORRECT: Expands $my_cmds now, at script time, passing each list
+    # element as a *separate argument* to `complete`. The -a flag only
+    # consumes its one immediately following argument; the remaining elements
+    # become extra positional arguments to `complete` and are silently ignored
+    # (or cause an error), so only "start\tStart the service" is registered.
+    complete -c myprog -f -a $my_cmds
+
+    # INCORRECT: Tokenized poorly. Double quotes expand $my_cmds now and join
+    # the list elements with spaces, producing a single string
+    # "start\tStart the service stop\tStop the service". At completion time
+    # that string is re-tokenized on spaces and tabs, so the embedded tab in
+    # each entry (which separates the completion from its description) is
+    # consumed — but the space inside 'Start the service' and 'Stop the service'
+    # also splits the descriptions into spurious extra tokens, mangling the
+    # output.
 
 ``fish`` has a special syntax to support specifying switches accepted by a command. The switches ``-s``, ``-l`` and ``-o`` are used to specify a short switch (single character, such as ``-l``), a gnu style long switch (such as ``--color``) and an old-style long switch (with one ``-``, like ``-shuffle``), respectively. If the command 'myprog' has an option that can be written as ``-o`` or ``--output``, that is::
 

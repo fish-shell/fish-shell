@@ -99,7 +99,7 @@ When ``-a`` or ``--arguments`` is specified in conjunction with long, short, or 
 
 Command substitutions found in ``ARGUMENTS`` should return a newline-separated list of arguments, and each argument may optionally have a tab character followed by the argument description. Description given this way override a description given with ``-d`` or ``--description``.
 
-Note that ``ARGUMENTS`` is evaluated at completion time. If you are passing a fish variable containing an array of completions, you should use **single quotes** (e.g., ``-a '$my_completions'``) to delay expansion. Using double quotes expands the variable immediately, which often results in incorrect tokenization on spaces.
+Note that ``ARGUMENTS`` must be passed as a single string that will be evaluated at completion time. This affects how variables and command substitutions are quoted. See :ref:`Completions <completions>` for details and examples.
 
 Descriptions given with ``--description`` are also used to group options given with ``-s``, ``-o`` or ``-l``. Options with the same (non-empty) description will be listed as one candidate, and one of them will be picked. If the description is empty or no description was given this is skipped.
 

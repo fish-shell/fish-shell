@@ -83,6 +83,7 @@ pub enum ReadlineCmd {
     YankPop,
     Complete,
     CompleteAndSearch,
+    CompletePrefix,
     PagerToggleSearch,
     BeginningOfHistory,
     EndOfHistory,

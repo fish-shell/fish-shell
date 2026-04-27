@@ -1630,6 +1630,11 @@ You can change the settings of fish by changing the values of certain variables.
    It goes to stderr by default.
    Set it to ``all`` to also trace execution of key bindings, event handlers as well as prompt and title functions.
 
+.. envvar:: fish_trace_depth
+
+   if set to a nonnegative integer, will limit the number of levels printed by :envvar:`fish_trace`.
+   The first level is '0' which will print only top-level commands.
+
 .. envvar:: FISH_DEBUG
 
    Controls which debug categories :command:`fish` enables for output, analogous to the ``--debug`` option.

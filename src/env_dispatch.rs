@@ -84,6 +84,7 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
             vars!(handle_fish_use_posix_spawn_change),
         );
         table.add_anon(L!("fish_trace"), vars!(handle_fish_trace));
+        table.add_anon(L!("fish_trace_depth"), vars!(handle_fish_trace_depth));
         table.add_anon(
             L!("fish_cursor_selection_mode"),
             vars!(handle_fish_cursor_selection_mode_change),
@@ -347,6 +348,25 @@ fn handle_fish_trace(vars: &EnvStack) {
     );
 }
 
+fn handle_fish_trace_depth(vars: &EnvStack) {
+    let Some(depth_str) = vars.get(L!("fish_trace_depth")) else {
+        crate::trace::trace_set_depth_default();
+        return;
+    };
+    let Ok(new_depth) = fish_wcstoi(&depth_str.as_string()) else {
+        flog!(env_dispatch, "Trace depth needs to be an integer");
+        crate::trace::trace_set_depth_default();
+        return;
+    };
+    let Ok(new_depth) = usize::try_from(new_depth) else {
+        flog!(env_dispatch, "Trace depth needs to be a positive integer");
+        crate::trace::trace_set_depth_default();
+        return;
+    };
+    flog!(env_dispatch, "Setting trace depth to ", new_depth);
+    crate::trace::trace_set_depth(new_depth);
+}
+
 pub fn env_dispatch_init(vars: &EnvStack) {
     use once_cell::sync::Lazy;
 
@@ -367,6 +387,7 @@ fn run_inits(vars: &EnvStack) {
     handle_read_limit_change(vars);
     handle_fish_use_posix_spawn_change(vars);
     handle_fish_trace(vars);
+    handle_fish_trace_depth(vars);
 }
 
 /// Updates our idea of whether we support term256 and term24bit (see issue #10222).

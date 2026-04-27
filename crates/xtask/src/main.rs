@@ -29,7 +29,7 @@ enum Task {
     },
     /// Build man pages
     ManPages,
-    /// run ShellCheck on non-fish shell scripts
+    /// Run ShellCheck on non-fish shell scripts
     #[command(name = "shellcheck")]
     ShellCheck,
 }

@@ -32,6 +32,7 @@ use fish::{
     },
     eprintf, err_fmt,
     event::{self, Event},
+    fds::heightenize_fd,
     flog::{self, activate_flog_categories_by_pattern, flog, flogf, set_flog_file_fd},
     fprintf, function,
     history::{self, start_private_mode},
@@ -564,11 +565,11 @@ fn throwing_main() -> i32 {
         }
         res = reader_read(parser, libc::STDIN_FILENO, &IoChain::new());
     } else {
-        let n = wcs2bytes(&args[my_optind]);
+        let filename = &args[my_optind];
+        let n = wcs2bytes(filename);
         let path = OsStr::from_bytes(&n);
         my_optind += 1;
         // Rust sets cloexec by default, see above
-        // We don't need autoclose_fd_t when we use File, it will be closed on drop.
         match File::open(path) {
             Err(e) => {
                 flogf!(
@@ -579,24 +580,25 @@ fn throwing_main() -> i32 {
                 eprintf!("%s\n", e);
             }
             Ok(f) => {
-                let list = &args[my_optind..];
-                parser.set_var(
-                    L!("argv"),
-                    ParserEnvSetMode::default(),
-                    list.iter().map(|s| s.to_owned()).collect(),
-                );
-                let rel_filename = &args[my_optind - 1];
-                let _filename_push = parser
-                    .library_data
-                    .scoped_set(Some(Arc::new(rel_filename.to_owned())), |s| {
-                        &mut s.current_filename
-                    });
-                res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
-                if res.is_err() {
-                    flog!(
-                        warning,
-                        wgettext_fmt!("Error while reading file %s", path.to_string_lossy())
+                if let Ok(f) = heightenize_fd(f.into(), true).map(File::from) {
+                    let list = &args[my_optind..];
+                    parser.set_var(
+                        L!("argv"),
+                        ParserEnvSetMode::default(),
+                        list.iter().map(|s| s.to_owned()).collect(),
                     );
+                    let _filename_push = parser
+                        .library_data
+                        .scoped_set(Some(Arc::new(filename.to_owned())), |s| {
+                            &mut s.current_filename
+                        });
+                    res = reader_read(parser, f.as_raw_fd(), &IoChain::new());
+                    if res.is_err() {
+                        flog!(
+                            warning,
+                            wgettext_fmt!("Error while reading file %s", path.to_string_lossy())
+                        );
+                    }
                 }
             }
         }

@@ -15,7 +15,7 @@ To provide a list of possible completions for myprog, use the ``-a`` switch. If 
 
 ::
 
-    set -l my_cmds start\t'Start the service' stop\t'Stop the service'
+    set -g my_cmds start\t'Start the service' stop\t'Stop the service'
 
     # CORRECT: The single-quoted string is stored as-is and evaluated at completion
     # time, not when this `complete` command runs. At completion time, $my_cmds

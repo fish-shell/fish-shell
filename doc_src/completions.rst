@@ -10,7 +10,8 @@ To provide a list of possible completions for myprog, use the ``-a`` switch. If 
   # If myprog can list the valid outputs with the list-outputs subcommand:
   complete -c myprog -l output -a '(myprog list-outputs)'
 
-*Note:* Use single quotes when passing variables to ensure they are expanded at the right time. Double quotes cause the shell to expand the variable before complete is called, which breaks descriptions containing spaces.
+
+*Note:* When using a variable, make sure it is passed to ``complete -a`` as a single string:
 
 ::
 
@@ -51,6 +52,7 @@ To provide a list of possible completions for myprog, use the ``-a`` switch. If 
     # consumed — but the space inside 'Start the service' and 'Stop the service'
     # also splits the descriptions into spurious extra tokens, mangling the
     # output.
+    complete -c myprog -f -a "$my_cmds"
 
 ``fish`` has a special syntax to support specifying switches accepted by a command. The switches ``-s``, ``-l`` and ``-o`` are used to specify a short switch (single character, such as ``-l``), a gnu style long switch (such as ``--color``) and an old-style long switch (with one ``-``, like ``-shuffle``), respectively. If the command 'myprog' has an option that can be written as ``-o`` or ``--output``, that is::
 

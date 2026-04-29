@@ -122,12 +122,12 @@ impl Autoload {
     /// Helper to actually perform an autoload.
     /// This is a static function because it executes fish script, and so must be called without
     /// holding any particular locks.
-    pub fn perform_autoload(path: &AutoloadPath, parser: &Parser) {
+    pub fn perform_autoload(path: &AutoloadPath, parser: &mut Parser) {
         // We do the useful part of what exec_subshell does ourselves
         // - we source the file.
         // We don't create a buffer or check ifs or create a read_limit
         let prev_statuses = parser.last_statuses();
-        let _put_back = ScopeGuard::new((), |()| parser.set_last_statuses(prev_statuses));
+        let mut parser = ScopeGuard::new(parser, |parser| parser.set_last_statuses(prev_statuses));
         match path {
             AutoloadPath::OnDisk(p) => {
                 let script_source = L!("source ").to_owned() + &escape(p)[..];

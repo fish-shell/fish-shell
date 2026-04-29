@@ -146,7 +146,7 @@ impl ExecutionContext {
 
     pub fn eval_node(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         node: &dyn Node,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
@@ -161,7 +161,7 @@ impl ExecutionContext {
     /// error.
     fn eval_statement(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         statement: &ast::Statement,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
@@ -179,7 +179,7 @@ impl ExecutionContext {
 
     fn eval_job_list(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         job_list: &ast::JobList,
         associated_block: BlockId,
     ) -> EndExecutionReason {
@@ -219,7 +219,7 @@ impl ExecutionContext {
     // Check to see if we should end execution.
     // Return the eval result to end with, or none() to continue on.
     // This will never return end_execution_reason_t::ok.
-    fn check_end_execution(&self, ctx: &OperationContext<'_>) -> Option<EndExecutionReason> {
+    fn check_end_execution(&self, ctx: &mut OperationContext<'_>) -> Option<EndExecutionReason> {
         // If one of our jobs ended with SIGINT, we stop execution.
         // Likewise if fish itself got a SIGINT, or if something ran exit, etc.
         if self.cancel_signal.is_some() || ctx.check_cancel() || fish_is_unwinding_for_exit() {
@@ -241,7 +241,7 @@ impl ExecutionContext {
 
     fn report_errors(
         &self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         status: c_int,
         error_list: &ParseErrorList,
     ) -> EndExecutionReason {
@@ -267,7 +267,7 @@ impl ExecutionContext {
     /// Command not found support.
     fn handle_command_not_found(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         cmd: &wstr,
         statement: &ast::DecoratedStatement,
         err: std::io::Error,
@@ -385,27 +385,23 @@ impl ExecutionContext {
 
     fn infinite_recursive_statement_in_job_list<'a>(
         &self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         jobs: &'a ast::JobList,
         out_func_name: &mut WString,
     ) -> Option<&'a ast::DecoratedStatement> {
         // This is a bit fragile. It is a test to see if we are inside of function call, but
         // not inside a block in that function call. If, in the future, the rules for what
         // block scopes are pushed on function invocation changes, then this check will break.
-        let parser = ctx.parser();
-        let parent;
-        let parent_fn_name = {
+        fn parent_fn_name<'a, 'ctx>(ctx: &'ctx mut OperationContext<'a>) -> Option<&'ctx wstr> {
+            let parser = ctx.parser();
             match (parser.block_at_index(0), parser.block_at_index(1)) {
-                (Some(current), Some(p)) if current.typ() == BlockType::Top => {
-                    parent = p;
-                    match parent.data() {
-                        Some(BlockData::Function { name, .. }) => name,
-                        _ => return None,
-                    }
-                }
-                _ => return None, // Not within function call.
+                (Some(current), Some(p)) if current.typ() == BlockType::Top => match p.data() {
+                    Some(BlockData::Function { name, .. }) => Some(name),
+                    _ => None,
+                },
+                _ => None, // Not within function call.
             }
-        };
+        }
 
         // Get the function name of the immediate block.
         let forbidden_function_name = parent_fn_name;
@@ -415,16 +411,18 @@ impl ExecutionContext {
         let job = &jc.job;
 
         // Helper to return if a statement is infinitely recursive in this function.
-        let statement_recurses = |stat: &'a ast::Statement| -> Option<&'a ast::DecoratedStatement> {
+        let statement_recurses = |ctx: &mut OperationContext<'_>,
+                                  stat: &'a ast::Statement|
+         -> Option<Option<&'a ast::DecoratedStatement>> {
             // Ignore non-decorated statements like `if`, etc.
             let Statement::Decorated(dc) = &stat else {
-                return None;
+                return Some(None);
             };
 
             // Ignore statements with decorations like 'builtin' or 'command', since those
             // are not infinite recursion. In particular that is what enables 'wrapper functions'.
             if dc.decoration() != StatementDecoration::None {
-                return None;
+                return Some(None);
             }
 
             // Check the command.
@@ -436,16 +434,20 @@ impl ExecutionContext {
                     ctx,
                     None,
                 )
-                && &cmd == forbidden_function_name;
-            if forbidden { Some(dc) } else { None }
+                && cmd == forbidden_function_name(ctx)?;
+            if forbidden {
+                Some(Some(dc))
+            } else {
+                Some(None)
+            }
         };
 
         // Check main statement.
-        let infinite_recursive_statement = statement_recurses(&jc.job.statement)
+        let infinite_recursive_statement = statement_recurses(ctx, &jc.job.statement)?
             // Check piped remainder.
             .or_else(|| {
                 for c in &job.continuation {
-                    let s = statement_recurses(&c.statement);
+                    let s = statement_recurses(ctx, &c.statement)?;
                     if s.is_some() {
                         return s;
                     }
@@ -454,7 +456,7 @@ impl ExecutionContext {
             });
 
         if infinite_recursive_statement.is_some() {
-            forbidden_function_name.clone_into(out_func_name);
+            forbidden_function_name(ctx)?.clone_into(out_func_name);
         }
 
         // may be none
@@ -463,7 +465,7 @@ impl ExecutionContext {
 
     fn report_wildcard_error(
         &self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         node: &dyn ast::Node,
     ) -> EndExecutionReason {
         report_error!(
@@ -481,7 +483,7 @@ impl ExecutionContext {
     // arguments. Prints an error message on error.
     fn expand_command(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         statement: &ast::DecoratedStatement,
         out_cmd: &mut WString,
         out_args: &mut Vec<WString>,
@@ -579,7 +581,7 @@ impl ExecutionContext {
 
     fn process_type_for_command(
         &self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         statement: &ast::DecoratedStatement,
         cmd: &wstr,
     ) -> ProcessType {
@@ -603,7 +605,7 @@ impl ExecutionContext {
 
     fn apply_variable_assignments(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         mut proc: Option<&mut Process>,
         variable_assignment_list: &ast::VariableAssignmentList,
         block: &mut Option<BlockId>,
@@ -663,7 +665,7 @@ impl ExecutionContext {
     // These create process_t structures from statements.
     fn populate_job_process(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         job: &mut Job,
         proc: &mut Process,
         statement: &ast::Statement,
@@ -672,7 +674,7 @@ impl ExecutionContext {
         let mut block = None;
         let result =
             self.apply_variable_assignments(ctx, Some(proc), variable_assignments, &mut block);
-        let _scope = ScopeGuard::new((), |()| {
+        let ctx = &mut **ScopeGuard::new(ctx, |ctx| {
             if let Some(block) = block {
                 ctx.parser().pop_block(block);
             }
@@ -696,7 +698,7 @@ impl ExecutionContext {
 
     fn populate_not_process(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         job: &mut Job,
         proc: &mut Process,
         not_statement: &ast::NotStatement,
@@ -717,7 +719,7 @@ impl ExecutionContext {
     /// Creates a 'normal' (non-block) process.
     fn populate_plain_process(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         proc: &mut Process,
         statement: &ast::DecoratedStatement,
     ) -> EndExecutionReason {
@@ -836,7 +838,7 @@ impl ExecutionContext {
 
     fn populate_block_process(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         proc: &mut Process,
         statement: &ast::Statement,
     ) -> EndExecutionReason {
@@ -864,7 +866,7 @@ impl ExecutionContext {
     // These encapsulate the actual logic of various (block) statements.
     fn run_block_statement(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         statement: &ast::BlockStatement,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
@@ -882,7 +884,7 @@ impl ExecutionContext {
 
     fn run_for_statement(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         header: &ast::ForHeader,
         block_contents: &ast::JobList,
     ) -> EndExecutionReason {
@@ -991,7 +993,7 @@ impl ExecutionContext {
 
     fn run_if_statement(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         statement: &ast::IfStatement,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
@@ -1081,7 +1083,7 @@ impl ExecutionContext {
 
     fn run_switch_statement(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         statement: &ast::SwitchStatement,
     ) -> EndExecutionReason {
         // Get the switch variable.
@@ -1191,7 +1193,7 @@ impl ExecutionContext {
 
     fn run_while_statement(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         header: &ast::WhileHeader,
         contents: &ast::JobList,
         associated_block: Option<BlockId>,
@@ -1276,7 +1278,7 @@ impl ExecutionContext {
     // Define a function.
     fn run_function_statement(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         statement: &ast::BlockStatement,
         header: &ast::FunctionHeader,
     ) -> EndExecutionReason {
@@ -1325,7 +1327,7 @@ impl ExecutionContext {
 
     fn run_begin_statement(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         contents: &ast::JobList,
     ) -> EndExecutionReason {
         // Basic begin/end block. Push a scope block, run jobs, pop it
@@ -1359,7 +1361,7 @@ impl ExecutionContext {
 
     fn expand_arguments_from_nodes(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         argument_nodes: &AstArgsList<'_>,
         out_arguments: &mut Vec<WString>,
         glob_behavior: WildcardNoMatchBehavior,
@@ -1424,7 +1426,7 @@ impl ExecutionContext {
     // Determines the list of redirections for a node.
     fn determine_redirections(
         &self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         list: &ast::ArgumentOrRedirectionList,
         out_redirections: &mut RedirectionSpecList,
     ) -> EndExecutionReason {
@@ -1526,7 +1528,7 @@ impl ExecutionContext {
 
     fn run_1_job(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         job_node: &ast::JobPipeline,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
@@ -1557,15 +1559,15 @@ impl ExecutionContext {
             } else {
                 0
             };
-            move |ctx: &OperationContext<'_>, cmd: WString, skipped: bool| {
+            move |ctx: &mut OperationContext<'_>, cmd: WString, skipped: bool| {
                 let Some(profile_item_id) = profile_item_id else {
                     return;
                 };
                 let parser = ctx.parser();
-                let mut profile_items = parser.profile_items_mut();
-                let profile_item = &mut profile_items[profile_item_id];
+                let eval_level = parser.scope().eval_level;
+                let profile_item = &mut parser.profile_items_mut()[profile_item_id];
                 profile_item.duration = ProfileItem::now() - start_time;
-                profile_item.level = ctx.parser().scope().eval_level;
+                profile_item.level = eval_level;
                 profile_item.cmd = cmd;
                 profile_item.skipped = skipped;
             }
@@ -1595,7 +1597,7 @@ impl ExecutionContext {
             let mut block = None;
             let mut result =
                 self.apply_variable_assignments(ctx, None, &job_node.variables, &mut block);
-            let _scope = ScopeGuard::new((), |()| {
+            let ctx = &mut **ScopeGuard::new(ctx, |ctx| {
                 if let Some(block) = block {
                     ctx.parser().pop_block(block);
                 }
@@ -1705,7 +1707,7 @@ impl ExecutionContext {
 
     fn test_and_run_1_job_conjunction(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         jc: &ast::JobConjunction,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
@@ -1740,7 +1742,7 @@ impl ExecutionContext {
 
     fn run_job_conjunction(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         job_expr: &ast::JobConjunction,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
@@ -1774,7 +1776,7 @@ impl ExecutionContext {
 
     fn run_job_list(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         job_list_node: &ast::JobList,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
@@ -1788,7 +1790,7 @@ impl ExecutionContext {
 
     fn run_andor_job_list(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         job_list_node: &ast::AndorJobList,
         associated_block: Option<BlockId>,
     ) -> EndExecutionReason {
@@ -1802,7 +1804,7 @@ impl ExecutionContext {
 
     fn populate_job_from_job_node(
         &mut self,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
         j: &mut Job,
         job_node: &ast::JobPipeline,
         _associated_block: Option<BlockId>,
@@ -1875,7 +1877,7 @@ impl ExecutionContext {
     }
 
     // Assign a job group to the given job.
-    fn setup_group(&self, ctx: &OperationContext<'_>, j: &mut Job) {
+    fn setup_group(&self, ctx: &mut OperationContext<'_>, j: &mut Job) {
         // We can use the parent group if it's compatible and we're not backgrounded.
         if ctx
             .job_group
@@ -1904,7 +1906,7 @@ impl ExecutionContext {
     }
 
     // Return whether we should apply job control to our processes.
-    fn use_job_control(&self, ctx: &OperationContext<'_>) -> bool {
+    fn use_job_control(&self, ctx: &mut OperationContext<'_>) -> bool {
         if ctx.parser().is_command_substitution() {
             return false;
         }
@@ -2011,8 +2013,8 @@ fn job_node_wants_timing(job_node: &ast::JobPipeline) -> bool {
     false
 }
 
-fn remove_job(parser: &Parser, job: &JobRef) -> bool {
-    let mut jobs = parser.jobs_mut();
+fn remove_job(parser: &mut Parser, job: &JobRef) -> bool {
+    let jobs = parser.jobs_mut();
     let num_jobs = jobs.len();
     for i in 0..num_jobs {
         if Rc::ptr_eq(&jobs[i], job) {

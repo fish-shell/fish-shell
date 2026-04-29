@@ -258,7 +258,7 @@ pub fn input_mappings() -> MutexGuard<'static, InputMappingSet> {
 }
 
 /// Return the current bind mode.
-fn input_get_bind_mode(vars: &dyn Environment) -> WString {
+pub fn input_get_bind_mode(vars: &dyn Environment) -> WString {
     if let Some(mode) = vars.get(FISH_BIND_MODE_VAR) {
         mode.as_string()
     } else {
@@ -610,12 +610,8 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
     /// user's mapping list, then the preset list.
     /// Return none if nothing matches, or if we may have matched a longer sequence but it was
     /// interrupted by a readline event.
-    pub fn find_mapping<'a>(
-        &mut self,
-        vars: &dyn Environment,
-        ip: &'a InputMappingSet,
-    ) -> Option<InputMapping> {
-        let bind_mode = input_get_bind_mode(vars);
+    pub fn find_mapping<'a>(&mut self, ip: &'a InputMappingSet) -> Option<InputMapping> {
+        let bind_mode = self.event_queue.get_bind_mode();
 
         struct MatchedMapping<'a> {
             mapping: &'a InputMapping,
@@ -789,11 +785,10 @@ impl<'a> Reader<'a> {
     }
 
     fn mapping_execute_matching_or_generic(&mut self) {
-        let vars = self.parser.vars();
         let mut peeker = EventQueuePeeker::new(self);
         // Check for ordinary mappings.
         let ip = input_mappings();
-        if let Some(mapping) = peeker.find_mapping(vars, &ip) {
+        if let Some(mapping) = peeker.find_mapping(&ip) {
             flog!(
                 reader,
                 format!("Found mapping {:?} from {:?}", &mapping, &peeker.peeked)
@@ -1009,8 +1004,7 @@ pub fn input_function_get_code(name: &wstr) -> Option<ReadlineCmd> {
 
 #[cfg(test)]
 mod tests {
-    use super::{DEFAULT_BIND_MODE, EventQueuePeeker, InputMappingSet, KeyNameStyle};
-    use crate::env::EnvStack;
+    use super::{EventQueuePeeker, InputMappingSet, KeyNameStyle};
     use crate::input_common::{CharEvent, InputData, InputEventQueuer, KeyEvent};
     use crate::key::Key;
     use crate::prelude::*;
@@ -1030,7 +1024,6 @@ mod tests {
 
     #[test]
     fn test_input() {
-        let vars = EnvStack::new();
         let mut input = TestInputEventQueuer {
             input_data: InputData::new(i32::MAX, None), // value doesn't matter since we don't read from it
         };
@@ -1041,14 +1034,14 @@ mod tests {
         let mut desired_binding = prefix_binding.clone();
         desired_binding.push(Key::from_raw('a'));
 
-        let default_mode = || DEFAULT_BIND_MODE.to_owned();
+        let bind_mode = || input.get_bind_mode();
 
         let mut input_mappings = InputMappingSet::default();
         input_mappings.add1(
             prefix_binding,
             KeyNameStyle::Plain,
             L!("up-line").to_owned(),
-            default_mode(),
+            bind_mode(),
             None,
             true,
         );
@@ -1056,7 +1049,7 @@ mod tests {
             desired_binding.clone(),
             KeyNameStyle::Plain,
             L!("down-line").to_owned(),
-            default_mode(),
+            bind_mode(),
             None,
             true,
         );
@@ -1069,7 +1062,7 @@ mod tests {
         }
 
         let mut peeker = EventQueuePeeker::new(&mut input);
-        let mapping = peeker.find_mapping(&vars, &input_mappings);
+        let mapping = peeker.find_mapping(&input_mappings);
         assert!(mapping.is_some());
         assert_eq!(mapping.unwrap().commands, ["down-line"]);
         peeker.restart();

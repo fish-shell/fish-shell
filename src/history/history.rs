@@ -16,7 +16,7 @@
 
 use crate::{
     ast::{self, Kind, Node as _},
-    common::{CancelChecker, valid_var_name},
+    common::valid_var_name,
     env::{EnvMode, EnvSetMode, EnvStack, EnvVar, Environment},
     expand::{ExpandFlags, expand_one},
     fds::wopen_cloexec,
@@ -1094,12 +1094,12 @@ fn string_could_be_path(potential_path: &wstr) -> bool {
 /// Perform a search of `hist` for `search_string`. Invoke a function `func` for each match. If
 /// `func` returns [`ControlFlow::Break`], stop the search.
 fn do_1_history_search(
+    parser: &mut Parser,
     hist: Arc<History>,
     search_type: SearchType,
     search_string: WString,
     case_sensitive: bool,
-    mut func: impl FnMut(&HistoryItem) -> ControlFlow<(), ()>,
-    cancel_check: &CancelChecker,
+    mut func: impl FnMut(&mut Parser, &HistoryItem) -> ControlFlow<(), ()>,
 ) {
     let mut searcher = HistorySearch::new_with(
         hist,
@@ -1112,8 +1112,11 @@ fn do_1_history_search(
         },
         0,
     );
-    while !cancel_check() && searcher.go_to_next_match(SearchDirection::Backward) {
-        if let ControlFlow::Break(()) = func(searcher.current_item()) {
+
+    while !(parser.context().cancel_checker)()
+        && searcher.go_to_next_match(SearchDirection::Backward)
+    {
+        if let ControlFlow::Break(()) = func(parser, searcher.current_item()) {
             break;
         }
     }
@@ -1124,7 +1127,7 @@ fn format_history_record(
     item: &HistoryItem,
     show_time_format: Option<&str>,
     null_terminate: bool,
-    parser: &Parser,
+    parser: &mut Parser,
     color_enabled: bool,
 ) -> WString {
     let mut result = WString::new();
@@ -1156,7 +1159,7 @@ fn format_history_record(
 
     let mut command = item.str().to_owned();
     if color_enabled {
-        command = bytes2wcstring(&highlight_and_colorize(&command, &parser.context()));
+        command = bytes2wcstring(&highlight_and_colorize(&command, &mut parser.context()));
     }
 
     result.push_utfstr(&command);
@@ -1377,7 +1380,7 @@ impl History {
     #[allow(clippy::too_many_arguments)]
     pub fn search(
         self: &Arc<Self>,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
         search_type: SearchType,
         search_args: &[&wstr],
@@ -1393,7 +1396,7 @@ impl History {
         let mut output_error = false;
 
         // The function we use to act on each item.
-        let mut func = |item: &HistoryItem| {
+        let mut func = |parser: &mut Parser, item: &HistoryItem| {
             if remaining == 0 {
                 return ControlFlow::Break(());
             }
@@ -1420,17 +1423,15 @@ impl History {
             ControlFlow::Continue(())
         };
 
-        let cancel_check = &parser.context().cancel_checker;
-
         if search_args.is_empty() {
             // The user had no search terms; just append everything.
             do_1_history_search(
+                parser,
                 Arc::clone(self),
                 SearchType::Contains,
                 WString::new(),
                 true,
                 &mut func,
-                cancel_check,
             );
         } else {
             #[allow(clippy::unnecessary_to_owned)]
@@ -1442,12 +1443,12 @@ impl History {
                     return false;
                 }
                 do_1_history_search(
+                    parser,
                     Arc::clone(self),
                     search_type,
                     search_string.to_owned(),
                     case_sensitive,
                     &mut func,
-                    cancel_check,
                 );
             }
         }
@@ -1750,7 +1751,7 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
 ) -> Vec<WString> {
     assert_is_background_thread();
     let working_directory = vars.get_pwd_slash();
-    let ctx = OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND);
+    let ctx = &mut OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND);
     let mut result = Vec::new();
     for path in paths {
         // Suppress cmdsubs since we are on a background thread and don't want to execute fish
@@ -1762,7 +1763,7 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
         if expand_one(
             &mut expanded_path,
             ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
-            &ctx,
+            ctx,
             None,
         ) && path_is_valid(&expanded_path, &working_directory)
         {
@@ -1777,7 +1778,7 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
 /// Given a list of proposed paths and a context, expand each one and see if it refers to a file.
 /// Wildcard expansions are suppressed.
 /// Returns `true` if `paths` is empty or every path is valid.
-pub fn all_paths_are_valid(paths: &[WString], ctx: &OperationContext<'_>) -> bool {
+pub fn all_paths_are_valid(paths: &[WString], ctx: &mut OperationContext<'_>) -> bool {
     assert_is_background_thread();
     let working_directory = ctx.vars().get_pwd_slash();
     let mut path = WString::new();

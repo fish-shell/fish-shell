@@ -33,12 +33,12 @@ enum WaitHandleQuery<'a> {
 /// Return true if we found a matching job (even if not waitable), false if not.
 fn find_wait_handles(
     query: WaitHandleQuery<'_>,
-    parser: &Parser,
+    parser: &mut Parser,
     handles: &mut Vec<WaitHandleRef>,
 ) -> bool {
     // Has a job already completed?
     let mut matched = false;
-    let wait_handles: &mut WaitHandleStore = &mut parser.mut_wait_handles();
+    let wait_handles: &mut WaitHandleStore = parser.mut_wait_handles();
     match query {
         WaitHandleQuery::Pid(pid) => {
             if let Some(wh) = wait_handles.get_by_pid(pid) {
@@ -57,7 +57,7 @@ fn find_wait_handles(
     }
 
     // Is there a running job match?
-    for j in &*parser.jobs() {
+    for j in parser.jobs() {
         // We want to set 'matched' to true if we could have matched, even if the job was stopped.
         let provide_handle = can_wait_on_job(j);
         let internal_job_id = j.internal_job_id;
@@ -81,7 +81,7 @@ fn get_all_wait_handles(parser: &Parser) -> Vec<WaitHandleRef> {
     let mut result = parser.wait_handles().get_list();
 
     // Get wait handles for running jobs.
-    for j in &*parser.jobs() {
+    for j in parser.jobs() {
         if !can_wait_on_job(j) {
             continue;
         }
@@ -102,7 +102,11 @@ fn is_completed(wh: &WaitHandleRef) -> bool {
 /// Wait for the given wait handles to be marked as completed.
 /// If `any_flag` is set, wait for the first one; otherwise wait for all.
 /// Return a status code.
-fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -> BuiltinResult {
+fn wait_for_completion(
+    parser: &mut Parser,
+    whs: &[WaitHandleRef],
+    any_flag: bool,
+) -> BuiltinResult {
     if whs.is_empty() {
         return Ok(SUCCESS);
     }
@@ -134,7 +138,7 @@ fn wait_for_completion(parser: &Parser, whs: &[WaitHandleRef], any_flag: bool) -
     }
 }
 
-pub fn wait(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn wait(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
     let argc = argv.len();
     let mut any_flag = false; // flag for -n option

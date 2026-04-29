@@ -294,7 +294,7 @@ mod tests {
     #[serial]
     fn test_abbreviations() {
         test_init();
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
         {
             let mut abbrs = abbrs_get_set();
             abbrs.add(Abbreviation::new(
@@ -352,12 +352,12 @@ mod tests {
         abbr_expand_1!("gc", cmd, "git checkout");
         abbr_expand_1!("foo", cmd, "bar");
 
-        let expand_abbreviation_in_command =
+        let mut expand_abbreviation_in_command =
             |cmdline: &wstr, cursor_pos: Option<usize>| -> Option<WString> {
                 let replacement = reader_expand_abbreviation_at_cursor(
                     cmdline,
                     cursor_pos.unwrap_or(cmdline.len()),
-                    &parser,
+                    parser,
                 )?;
                 let mut cmdline_expanded = cmdline.to_owned();
                 let mut colors = vec![HighlightSpec::new(); cmdline.len()];

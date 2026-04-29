@@ -14,7 +14,7 @@ use fish_common::{Named, assert_sorted_by_name, escape, get_by_sorted_name};
 use fish_widestring::{L, bytes2wcstring, str2wcstring};
 use std::io::{BufRead as _, BufReader, Read as _};
 
-pub type BuiltinCmd = fn(&Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult;
+pub type BuiltinCmd = fn(&mut Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult;
 
 /// The default prompt for the read command.
 pub const DEFAULT_READ_PROMPT: &wstr =
@@ -393,7 +393,7 @@ fn cmd_needs_help(cmd: &wstr) -> bool {
 }
 
 /// Execute a builtin command
-pub fn builtin_run(parser: &Parser, argv: &mut [&wstr], streams: &mut IoStreams) -> ProcStatus {
+pub fn builtin_run(parser: &mut Parser, argv: &mut [&wstr], streams: &mut IoStreams) -> ProcStatus {
     if argv.is_empty() {
         return ProcStatus::from_exit_code(STATUS_INVALID_ARGS);
     }
@@ -546,7 +546,7 @@ pub fn builtin_get_desc(name: &wstr) -> Option<&'static wstr> {
 ///    builtin or function name to get up help for
 ///
 /// Process and print help for the specified builtin or function.
-pub fn builtin_print_help(parser: &Parser, streams: &mut IoStreams, cmd: &wstr) {
+pub fn builtin_print_help(parser: &mut Parser, streams: &mut IoStreams, cmd: &wstr) {
     // This won't ever work if no_exec is set.
     if no_exec() {
         return;
@@ -650,7 +650,7 @@ pub struct HelpOnlyCmdOpts {
 impl HelpOnlyCmdOpts {
     pub fn parse(
         args: &mut [&wstr],
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
     ) -> Result<Self, ErrorCode> {
         let cmd = args[0];
@@ -903,7 +903,11 @@ fn parsed_pid(
 
 /// A generic builtin that only supports showing a help message. This is only a placeholder that
 /// prints the help message. Useful for commands that live in the parser.
-fn builtin_generic(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+fn builtin_generic(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> BuiltinResult {
     let argc = argv.len();
     let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
 
@@ -925,7 +929,7 @@ fn builtin_generic(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr])
 /// This function handles both the 'continue' and the 'break' builtins that are used for loop
 /// control.
 pub fn builtin_break_continue(
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
     argv: &mut [&wstr],
 ) -> BuiltinResult {

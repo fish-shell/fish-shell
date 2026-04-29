@@ -15,7 +15,7 @@ use std::os::fd::BorrowedFd;
 use super::prelude::*;
 
 /// Builtin for putting a job in the foreground.
-pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn fg(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let opts = HelpOnlyCmdOpts::parse(argv, parser, streams)?;
 
     let Some(&cmd) = argv.first() else {

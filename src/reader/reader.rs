@@ -277,7 +277,9 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
         query_capabilities_via_dcs(&mut out, vars);
         out.write_command(QueryPrimaryDeviceAttribute);
     }
-    input_queue.blocking_query().replace(TerminalQuery::Initial);
+    input_queue
+        .blocking_query_mut()
+        .replace(TerminalQuery::Initial);
 
     while !check_exit_loop_maybe_warning(None) {
         use CharEvent::{Command, Implicit, Key, Readline};
@@ -322,7 +324,7 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
         }
     }
 
-    stop_query(input_queue.blocking_query());
+    stop_query(input_queue.blocking_query_mut());
 
     let input_data = input_queue.get_input_data();
     // We blocked execution of code and mappings so input function args must be empty.
@@ -370,13 +372,14 @@ use fish_widestring::word_char::{WordCharClass, is_blank};
 
 /// Add a new reader to the reader stack.
 pub fn reader_push<'a>(
-    parser: &'a Parser,
+    parser: &'a mut Parser,
     history_id: HistoryId,
     conf: ReaderConfig,
 ) -> Reader<'a> {
     assert_is_main_thread();
     let inputfd = conf.inputfd;
-    let input_data = if !parser.interactive_initialized.swap(true) {
+    let input_data = if !parser.interactive_initialized {
+        parser.interactive_initialized = true;
         let TerminalInitResult {
             mut input_queue,
             background_color,
@@ -392,14 +395,12 @@ pub fn reader_push<'a>(
             ParserEnvSetMode::new(EnvMode::GLOBAL),
             L!("fish").to_owned(),
         );
-        let old = parser
-            .blocking_query_timeout
-            .replace(input_data.blocking_query_timeout);
-        assert!(old.is_none());
+        assert!(parser.blocking_query_timeout.is_none());
+        parser.blocking_query_timeout = input_data.blocking_query_timeout;
         parser.set_color_theme(background_color.as_ref());
         std::mem::take(input_data)
     } else {
-        InputData::new(inputfd, *parser.blocking_query_timeout.borrow())
+        InputData::new(inputfd, parser.blocking_query_timeout)
     };
     let hist = History::new(history_id);
     hist.resolve_pending();
@@ -424,7 +425,7 @@ pub fn reader_pop() {
     }
 }
 
-pub fn fake_scoped_reader<'a>(parser: &'a Parser) -> impl DerefMut<Target = Reader<'a>> + 'a {
+pub fn fake_scoped_reader<'a>(parser: &'a mut Parser) -> impl DerefMut<Target = Reader<'a>> + 'a {
     let inputfd = -1;
     let conf = ReaderConfig {
         inputfd,
@@ -749,7 +750,7 @@ pub struct ReaderData {
 /// It also provides access to I/O threads.
 pub struct Reader<'a> {
     pub data: &'a mut ReaderData,
-    pub parser: &'a Parser,
+    pub parser: &'a mut Parser,
 }
 
 /// Reader dereferences to its referenced ReaderData.
@@ -789,13 +790,13 @@ impl<'a> Reader<'a> {
 
 /// Read commands from \c fd until encountering EOF.
 /// The fd is not closed.
-pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
+pub fn reader_read(parser: &mut Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
     // If reader_read is called recursively through the '.' builtin, we need to preserve
     // is_interactive. This, and signal handler setup is handled by
     // proc_push_interactive/proc_pop_interactive.
     let interactive = (fd == STDIN_FILENO) && isatty(STDIN_FILENO);
 
-    let _interactive_push = parser.push_scope(|s| s.is_interactive = interactive);
+    let _interactive_push = parser.push_scope(move |s| s.is_interactive = interactive);
     signal_set_handlers_once(interactive);
 
     let res = if interactive {
@@ -812,7 +813,7 @@ pub fn reader_read(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), Error
 }
 
 /// Read interactively. Read input from stdin while providing editing facilities.
-fn read_i(parser: &Parser) {
+fn read_i(parser: &mut Parser) {
     assert_is_main_thread();
     let mut conf = ReaderConfig {
         event: L!("fish_prompt"),
@@ -833,18 +834,18 @@ fn read_i(parser: &Parser) {
         conf.right_prompt_cmd = RIGHT_PROMPT_FUNCTION_NAME.to_owned();
     }
 
-    let mut data = reader_push(parser, history_id(parser.vars()), conf);
-    data.import_history_if_necessary();
+    let mut reader = reader_push(parser, history_id(parser.vars()), conf);
+    reader.import_history_if_necessary();
 
     // Set up tty protocols. These should be enabled while we're reading interactively,
     // and disabled before we run fish script, wildcards, or completions. This is scoped.
     // Note this may be disabled within the loop, e.g. when running fish script bound to keys.
     let mut tty = TtyHandoff::new(reader_save_screen_state);
 
-    while !check_exit_loop_maybe_warning(Some(&mut data)) {
+    while !check_exit_loop_maybe_warning(Some(&mut reader)) {
         RUN_COUNT.fetch_add(1, Ordering::Relaxed);
 
-        let Some(command) = data.readline(set_shell_modes_temporarily(data.conf.inputfd), None)
+        let Some(command) = reader.readline(set_shell_modes_temporarily(reader.conf.inputfd), None)
         else {
             continue;
         };
@@ -855,38 +856,42 @@ fn read_i(parser: &Parser) {
 
         // Got a command. Disable tty protocols while we execute it.
         tty.disable_tty_protocols();
-        data.clear(EditableLineTag::Commandline);
-        data.update_buff_pos(EditableLineTag::Commandline, None);
+        reader.clear(EditableLineTag::Commandline);
+        reader.update_buff_pos(EditableLineTag::Commandline, None);
         BufferedOutputter::new(Outputter::stdoutput()).write_command(Osc133CommandStart(&command));
-        event::fire_generic(parser, L!("fish_preexec").to_owned(), vec![command.clone()]);
-        let eval_res = reader_run_command(parser, &command);
+        event::fire_generic(
+            reader.parser,
+            L!("fish_preexec").to_owned(),
+            vec![command.clone()],
+        );
+        let eval_res = reader_run_command(reader.parser, &command);
         signal_clear_cancel();
         if !eval_res.no_status {
             STATUS_COUNT.fetch_add(1, Ordering::Relaxed);
         }
 
         // If the command requested an exit, then process it now and clear it.
-        data.exit_loop_requested |= parser.libdata().exit_current_script;
-        parser.libdata_mut().exit_current_script = false;
+        reader.data.exit_loop_requested |= reader.parser.libdata().exit_current_script;
+        reader.parser.libdata_mut().exit_current_script = false;
 
         BufferedOutputter::new(Outputter::stdoutput()).write_command(Osc133CommandFinished {
-            exit_status: parser.last_status(),
+            exit_status: reader.parser.last_status(),
         });
-        event::fire_generic(parser, L!("fish_postexec").to_owned(), vec![command]);
+        event::fire_generic(reader.parser, L!("fish_postexec").to_owned(), vec![command]);
         // Allow any pending history items to be returned in the history array.
-        data.history.resolve_pending();
+        reader.history.resolve_pending();
 
         // Make cursor visible. Every even vaguely used terminal agrees on this sequence.
-        data.screen.write_command(DecsetShowCursor);
+        reader.screen.write_command(DecsetShowCursor);
 
-        let already_warned = data.did_warn_for_bg_jobs;
-        if check_exit_loop_maybe_warning(Some(&mut data)) {
+        let already_warned = reader.did_warn_for_bg_jobs;
+        if check_exit_loop_maybe_warning(Some(&mut reader)) {
             break;
         }
         if already_warned {
             // We had previously warned the user and they ran another command.
             // Reset the warning.
-            data.did_warn_for_bg_jobs = false;
+            reader.did_warn_for_bg_jobs = false;
         }
     }
     reader_pop();
@@ -901,16 +906,16 @@ fn read_i(parser: &Parser) {
     if reader_data_stack().is_empty() {
         // Send the exit event and then commit to not executing any more fish script.
         EXIT_STATE.store(ExitState::RunningHandlers as u8, Ordering::Relaxed);
-        event::fire_generic(parser, L!("fish_exit").to_owned(), vec![]);
+        event::fire_generic(reader.parser, L!("fish_exit").to_owned(), vec![]);
         EXIT_STATE.store(ExitState::FinishedHandlers as u8, Ordering::Relaxed);
-        hup_jobs(&parser.jobs());
+        hup_jobs(reader.parser.jobs());
     }
 }
 
 /// Read non-interactively.  Read input from stdin without displaying the prompt, using syntax
 /// highlighting. This is used for reading scripts and init files.
 /// The file is not closed.
-fn read_ni(parser: &Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
+fn read_ni(parser: &mut Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode> {
     let md = match fstat(fd) {
         Ok(md) => md,
         Err(err) => {
@@ -1130,7 +1135,7 @@ pub fn reader_schedule_prompt_repaint() {
     data.schedule_prompt_repaint();
 }
 
-pub fn reader_update_termsize(parser: &Parser) {
+pub fn reader_update_termsize(parser: &mut Parser) {
     let last = termsize_last();
     let new = termsize_update(parser);
     if new.height() == last.height() {
@@ -1143,7 +1148,7 @@ pub fn reader_update_termsize(parser: &Parser) {
     data.push_front(CharEvent::Implicit(ImplicitEvent::NewWindowHeight));
 }
 
-pub fn reader_execute_readline_cmd(parser: &Parser, ch: CharEvent) {
+pub fn reader_execute_readline_cmd(parser: &mut Parser, ch: CharEvent) {
     if parser.scope().readonly_commandline {
         return;
     }
@@ -1183,7 +1188,7 @@ pub fn reader_jump(direction: JumpDirection, precision: JumpPrecision, target: c
     data.jump_and_remember_last_jump(direction, precision, elt, target, false)
 }
 
-pub fn reader_showing_suggestion(parser: &Parser) -> bool {
+pub fn reader_showing_suggestion(parser: &mut Parser) -> bool {
     if !is_interactive_session() {
         return false;
     }
@@ -1220,7 +1225,7 @@ pub fn reader_reading_interrupted(data: &mut ReaderData) -> i32 {
 /// than nchars if a single keypress resulted in multiple characters being inserted into the
 /// commandline.
 pub fn reader_readline(
-    parser: &Parser,
+    parser: &mut Parser,
     old_modes: Option<Termios>,
     nchars: Option<NonZeroUsize>,
 ) -> Option<WString> {
@@ -1713,7 +1718,7 @@ impl<'a> Reader<'a> {
         if !querying_allowed(self.vars()) {
             return;
         }
-        let mut query = self.blocking_query();
+        let query = self.blocking_query_mut();
         assert!(query.is_none());
         {
             let mut out = Outputter::stdoutput().borrow_mut();
@@ -1728,7 +1733,6 @@ impl<'a> Reader<'a> {
             out.end_buffering();
         }
         *query = Some(TerminalQuery::Recurrent(query_state));
-        drop(query);
         self.save_screen_state();
     }
 
@@ -2913,11 +2917,10 @@ impl<'a> Reader<'a> {
                 }
             }
             CharEvent::QueryResult(query_result) => {
-                let mut maybe_query = self.blocking_query();
-                let query = &mut maybe_query;
+                let query = self.blocking_query_mut();
                 use QueryResponse::*;
                 use QueryResultEvent::*;
-                let query = match (&mut **query, query_result) {
+                let query = match (query, query_result) {
                     (Some(TerminalQuery::Initial), _) => panic!(),
                     (
                         Some(TerminalQuery::Recurrent(RecurrentQuery {
@@ -2944,7 +2947,6 @@ impl<'a> Reader<'a> {
                         Response(PrimaryDeviceAttribute) | Timeout | Interrupted,
                     ) => {
                         let query = query_state.clone();
-                        drop(maybe_query);
                         if let Some(cursor_pos_query) = query.cursor_position {
                             let cursor_pos = cursor_pos_query.result;
                             use CursorPositionQueryReason::*;
@@ -2968,7 +2970,7 @@ impl<'a> Reader<'a> {
                                 self.parser.set_color_theme(Some(background_color));
                             }
                         }
-                        self.blocking_query()
+                        self.blocking_query_mut()
                     }
                     // Rogue reply
                     (_, _) => return ControlFlow::Continue(()),
@@ -4677,7 +4679,7 @@ impl ReaderData {
 
         if let Some(completion) = self.pager.selected_completion(&self.current_page_rendering) {
             let new_cmd_line = completion_apply_to_command_line(
-                &OperationContext::background_interruptible(EnvStack::globals()), // To-do: include locals.
+                &mut OperationContext::background_interruptible(EnvStack::globals()), // To-do: include locals.
                 &completion.completion,
                 completion.flags,
                 &self.cycle_command_line,
@@ -5042,11 +5044,11 @@ pub fn fish_is_unwinding_for_exit() -> bool {
 /// \param reset_cursor_position If set, issue a \r so the line driver knows where we are
 pub fn reader_write_title(
     cmd: &wstr,
-    parser: &Parser,
+    parser: &mut Parser,
     reset_cursor_position: bool, /* = true */
 ) {
     fn write_title(
-        parser: &Parser,
+        parser: &mut Parser,
         out: &mut BufferedOutputter,
         cmd: &wstr,
         osc: fn(&[WString]) -> TerminalCommand<'_>,
@@ -5116,7 +5118,7 @@ pub fn reader_write_title(
     }
 }
 
-fn exec_prompt_cmd(parser: &Parser, prompt_cmd: &wstr, final_prompt: bool) -> Vec<WString> {
+fn exec_prompt_cmd(parser: &mut Parser, prompt_cmd: &wstr, final_prompt: bool) -> Vec<WString> {
     let mut output = vec![];
     let prompt_cmd = if final_prompt && function::exists(prompt_cmd, parser) {
         Cow::Owned(prompt_cmd.to_owned() + L!(" --final-rendering"))
@@ -5163,9 +5165,9 @@ impl<'a> Reader<'a> {
                 // If the left prompt function is deleted, then use a default prompt instead of
                 // producing an error.
                 let prompt_cmd = if self.conf.left_prompt_cmd != LEFT_PROMPT_FUNCTION_NAME
-                    || function::exists(&self.conf.left_prompt_cmd, self.parser)
+                    || function::exists(&self.data.conf.left_prompt_cmd, self.parser)
                 {
-                    &self.conf.left_prompt_cmd
+                    &self.data.conf.left_prompt_cmd
                 } else {
                     DEFAULT_PROMPT
                 };
@@ -5190,12 +5192,12 @@ impl<'a> Reader<'a> {
             // Don't execute the right prompt if it is undefined fish_right_prompt
             if !self.conf.right_prompt_cmd.is_empty()
                 && (self.conf.right_prompt_cmd != RIGHT_PROMPT_FUNCTION_NAME
-                    || function::exists(&self.conf.right_prompt_cmd, self.parser))
+                    || function::exists(&self.data.conf.right_prompt_cmd, self.parser))
             {
                 // Right prompt does not support multiple lines, so just concatenate all of them.
                 self.right_prompt_buff = WString::from_iter(exec_prompt_cmd(
                     self.parser,
-                    &self.conf.right_prompt_cmd,
+                    &self.data.conf.right_prompt_cmd,
                     final_prompt,
                 ));
             }
@@ -5307,7 +5309,7 @@ fn get_autosuggestion_performer(
     move || {
         assert_is_background_thread();
         let nothing = AutosuggestionResult::default();
-        let ctx = get_bg_context(&vars, generation_count);
+        let ctx = &mut get_bg_context(&vars, generation_count);
         if ctx.check_cancel() {
             return nothing;
         }
@@ -5406,7 +5408,7 @@ fn get_autosuggestion_performer(
                     suggested_range.clone(),
                     item.get_required_paths(),
                     &working_directory,
-                    &ctx,
+                    ctx,
                 ) {
                     // The command autosuggestion was handled specially, so we're done.
                     let is_whole = suggested_range.len() == item.str().len();
@@ -5454,7 +5456,7 @@ fn get_autosuggestion_performer(
         let complete_flags = CompletionRequestOptions::autosuggest();
         let mut would_be_cursor = line_range.end;
         let (mut completions, needs_load) =
-            complete(&command_line[..would_be_cursor], complete_flags, &ctx);
+            complete(&command_line[..would_be_cursor], complete_flags, ctx);
 
         let suggestion = if completions.is_empty() {
             // If there are no completions to suggest, fall back to icase history.
@@ -5474,7 +5476,7 @@ fn get_autosuggestion_performer(
             }
 
             let full_line = completion_apply_to_command_line(
-                &OperationContext::background_interruptible(&vars),
+                &mut OperationContext::background_interruptible(&vars),
                 &comp.completion,
                 comp.flags,
                 &command_line,
@@ -5736,9 +5738,9 @@ fn get_highlight_performer(
         if text.is_empty() {
             return HighlightResult::default();
         }
-        let ctx = get_bg_context(&vars, generation_count);
+        let ctx = &mut get_bg_context(&vars, generation_count);
         let mut colors = vec![];
-        highlight_shell(&text, &mut colors, &ctx, io_ok, Some(position));
+        highlight_shell(&text, &mut colors, ctx, io_ok, Some(position));
         HighlightResult { colors, text }
     }
 }
@@ -5992,7 +5994,7 @@ fn expand_replacer(
     range: SourceRange,
     token: &wstr,
     repl: &abbrs::Replacer,
-    parser: &Parser,
+    parser: &mut Parser,
 ) -> Option<abbrs::Replacement> {
     if !repl.is_function {
         // Literal replacement cannot fail.
@@ -6117,7 +6119,7 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
 pub fn reader_expand_abbreviation_at_cursor(
     cmdline: &wstr,
     cursor_pos: usize,
-    parser: &Parser,
+    parser: &mut Parser,
 ) -> Option<abbrs::Replacement> {
     // Find the token containing the cursor. Usually users edit from the end, so walk backwards.
     let tokens = extract_tokens(cmdline);
@@ -6166,7 +6168,7 @@ impl<'a> Reader<'a> {
     /// may change the command line but does NOT repaint it. This is to allow the caller to coalesce
     /// repaints.
     fn expand_abbreviation_at_cursor(&mut self, cursor_backtrack: usize) -> bool {
-        let (elt, el) = self.active_edit_line();
+        let (elt, el) = self.data.active_edit_line();
         if self.conf.expand_abbrev_ok && elt == EditableLineTag::Commandline {
             // Try expanding abbreviations.
             let cursor_pos = el.position().saturating_sub(cursor_backtrack);
@@ -6363,7 +6365,7 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
 
 /// Run the specified command with the correct terminal modes, and while taking care to perform job
 /// notification, set the title, etc.
-fn reader_run_command(parser: &Parser, cmd: &wstr) -> EvalRes {
+fn reader_run_command(parser: &mut Parser, cmd: &wstr) -> EvalRes {
     assert!(
         !get_tty_protocols_active(),
         "TTY protocols should not be active"
@@ -6464,7 +6466,7 @@ impl<'a> Reader<'a> {
     }
 
     fn should_add_to_history(&mut self, text: &wstr) -> bool {
-        let parser = self.parser;
+        let parser = &mut *self.parser;
         if !function::exists(L!("fish_should_add_to_history"), parser) {
             // Historical behavior, if the command starts with a space we don't save it.
             return text.as_char_slice()[0] != ' ';
@@ -6591,7 +6593,7 @@ fn try_expand_wildcard(
     /// If expansion would exceed this many results, beep and do nothing.
     const TAB_COMPLETE_WILDCARD_MAX_EXPANSION: usize = 256;
 
-    let ctx = OperationContext::background_with_cancel_checker(
+    let ctx = &mut OperationContext::background_with_cancel_checker(
         &parser.variables,
         Box::new(|| signal_check_cancel() != 0),
         TAB_COMPLETE_WILDCARD_MAX_EXPANSION,
@@ -6603,7 +6605,7 @@ fn try_expand_wildcard(
         | ExpandFlags::SKIP_VARIABLES
         | ExpandFlags::PRESERVE_HOME_TILDES;
     let mut expanded = CompletionList::new();
-    let ret = expand_string(wc, &mut expanded, flags, &ctx, None);
+    let ret = expand_string(wc, &mut expanded, flags, ctx, None);
     if ret.result != ExpandResultCode::ok {
         return ret.result;
     }
@@ -6724,7 +6726,7 @@ pub(crate) fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
 ///
 /// Return The completed string
 pub fn completion_apply_to_command_line(
-    ctx: &OperationContext,
+    ctx: &mut OperationContext,
     val_str: &wstr,
     flags: CompleteFlags,
     command_line: &wstr,
@@ -6764,7 +6766,7 @@ pub fn completion_apply_to_command_line(
         escape_flags.insert(EscapeFlags::NO_TILDE);
     }
 
-    let maybe_add_slash = |trailer: &mut char, token: &wstr| {
+    let mut maybe_add_slash = |trailer: &mut char, token: &wstr| {
         let mut expanded = token.to_owned();
         if expand_one(&mut expanded, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None)
             && wstat(&expanded).is_ok_and(|md| md.is_dir())
@@ -6940,7 +6942,7 @@ impl<'a> Reader<'a> {
         let mut wc_expanded = WString::new();
         match try_expand_wildcard(
             self.parser,
-            el.text()[token_range.clone()].to_owned(),
+            self.command_line.text()[token_range.clone()].to_owned(),
             position_in_token,
             &mut wc_expanded,
         ) {
@@ -6970,11 +6972,11 @@ impl<'a> Reader<'a> {
         // up to the end of the token we're completing.
 
         let (mut comp, _needs_load) = {
-            let cmdsub = &el.text()[cmdsub_range.start..token_range.end];
+            let cmdsub = &self.data.command_line.text()[cmdsub_range.start..token_range.end];
             complete(
                 cmdsub,
                 CompletionRequestOptions::normal(),
-                &self.parser.context(),
+                &mut self.parser.context(),
             )
         };
 
@@ -7216,7 +7218,7 @@ impl<'a> Reader<'a> {
         let (_elt, el) = self.active_edit_line();
         let mut cursor = el.position();
         let new_command_line = completion_apply_to_command_line(
-            &OperationContext::background_interruptible(self.parser.vars()),
+            &mut OperationContext::background_interruptible(self.parser.vars()),
             val,
             flags,
             el.text(),
@@ -7281,7 +7283,7 @@ mod tests {
 
     #[test]
     fn test_completion_insertions() {
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
 
         macro_rules! validate {
             (
@@ -7302,8 +7304,8 @@ mod tests {
                 let mut cursor_pos = in_cursor_pos;
 
                 let result = completion_apply_to_command_line(
-                    &OperationContext::foreground(
-                        &parser,
+                    &mut OperationContext::foreground(
+                        parser,
                         Box::new(no_cancel),
                         crate::operation_context::EXPANSION_LIMIT_DEFAULT,
                     ),

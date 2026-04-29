@@ -22,11 +22,11 @@ pub const EXPANSION_LIMIT_BACKGROUND: usize = 512;
 enum Vars<'a> {
     // The parser, if this is a foreground operation. If this is a background operation, this may be
     // nullptr.
-    Parser(&'a Parser),
+    Parser(&'a mut Parser),
     // A set of variables.
     Vars(&'a dyn Environment),
 
-    TestOnly(&'a Parser, &'a dyn Environment),
+    TestOnly(&'a mut Parser, &'a dyn Environment),
 }
 
 /// A operation_context_t is a simple property bag which wraps up data needed for highlighting,
@@ -70,7 +70,7 @@ impl<'a> OperationContext<'a> {
 
     /// Construct from a full set of properties.
     pub fn foreground(
-        parser: &'a Parser,
+        parser: &'a mut Parser,
         cancel_checker: CancelChecker,
         expansion_limit: usize,
     ) -> OperationContext<'a> {
@@ -83,7 +83,7 @@ impl<'a> OperationContext<'a> {
     }
 
     pub fn test_only_foreground(
-        parser: &'a Parser,
+        parser: &'a mut Parser,
         vars: &'a dyn Environment,
         cancel_checker: CancelChecker,
     ) -> OperationContext<'a> {
@@ -129,15 +129,15 @@ impl<'a> OperationContext<'a> {
     pub fn has_parser(&self) -> bool {
         matches!(self.vars, Vars::Parser(_) | Vars::TestOnly(_, _))
     }
-    pub fn maybe_parser(&self) -> Option<&Parser> {
-        match &self.vars {
+    pub fn maybe_parser(&mut self) -> Option<&mut Parser> {
+        match &mut self.vars {
             Vars::Parser(parser) => Some(parser),
             Vars::Vars(_) => None,
             Vars::TestOnly(parser, _) => Some(parser),
         }
     }
-    pub fn parser(&self) -> &Parser {
-        match &self.vars {
+    pub fn parser(&mut self) -> &mut Parser {
+        match &mut self.vars {
             Vars::Parser(parser) => parser,
             Vars::Vars(_) => panic!(),
             Vars::TestOnly(parser, _) => parser,

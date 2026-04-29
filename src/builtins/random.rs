@@ -10,7 +10,7 @@ use std::sync::{LazyLock, Mutex};
 static RNG: LazyLock<Mutex<SmallRng>> =
     LazyLock::new(|| Mutex::new(get_seeded_rng(rand::rng().next_u64())));
 
-pub fn random(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn random(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;

@@ -174,7 +174,7 @@ fn setup_and_process_keys(
 }
 
 fn parse_flags(
-    parser: Option<&Parser>,
+    parser: Option<&mut Parser>,
     streams: &mut IoStreams,
     args: Vec<WString>,
     continuous_mode: &mut bool,
@@ -239,7 +239,7 @@ fn parse_flags(
 }
 
 pub fn fish_key_reader(
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
     args: &mut [&wstr],
 ) -> BuiltinResult {

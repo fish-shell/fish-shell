@@ -223,7 +223,7 @@ fn parse_cmd_opts(
 /// we weren't asked to split on null characters.
 #[allow(clippy::too_many_arguments)]
 fn read_interactive(
-    parser: &Parser,
+    parser: &mut Parser,
     buff: &mut WString,
     nchars: Option<NonZeroUsize>,
     shell: bool,
@@ -543,7 +543,7 @@ fn validate_read_args(
 }
 
 /// The read builtin. Reads from stdin and stores the values in environment variables.
-pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let mut buff = WString::new();
     let mut exit_res: BuiltinResult;
 
@@ -575,7 +575,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
 
     let mut var_ptr = 0;
     let vars_left = |var_ptr: usize| argc - var_ptr;
-    let clear_remaining_vars = |var_ptr: &mut usize| {
+    let clear_remaining_vars = |parser: &mut Parser, var_ptr: &mut usize| {
         while vars_left(*var_ptr) != 0 {
             parser.set_empty(argv[*var_ptr], opts.place);
             *var_ptr += 1;
@@ -635,7 +635,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
         }
 
         if exit_res.is_err() {
-            clear_remaining_vars(&mut var_ptr);
+            clear_remaining_vars(parser, &mut var_ptr);
             return exit_res;
         }
 
@@ -800,7 +800,7 @@ pub fn read(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
 
     if !opts.array {
         // In case there were more args than splits
-        clear_remaining_vars(&mut var_ptr);
+        clear_remaining_vars(parser, &mut var_ptr);
     }
 
     exit_res

@@ -125,7 +125,7 @@ pub fn expand_string(
     input: WString,
     out_completions: &mut CompletionList,
     flags: ExpandFlags,
-    ctx: &OperationContext,
+    ctx: &mut OperationContext,
     errors: Option<&mut ParseErrorList>,
 ) -> ExpandResult {
     let completions = std::mem::take(out_completions);
@@ -140,7 +140,7 @@ pub fn expand_to_receiver(
     input: WString,
     out_completions: &mut CompletionReceiver,
     flags: ExpandFlags,
-    ctx: &OperationContext,
+    ctx: &mut OperationContext,
     errors: Option<&mut ParseErrorList>,
 ) -> ExpandResult {
     Expander::expand_string(input, out_completions, flags, ctx, errors)
@@ -158,7 +158,7 @@ pub fn expand_to_receiver(
 pub fn expand_one(
     s: &mut WString,
     flags: ExpandFlags,
-    ctx: &OperationContext,
+    ctx: &mut OperationContext,
     errors: Option<&mut ParseErrorList>,
 ) -> bool {
     if !flags.contains(ExpandFlags::FOR_COMPLETIONS) && expand_is_clean(s) {
@@ -187,7 +187,7 @@ pub fn expand_one(
 /// Return an expand error.
 pub fn expand_to_command_and_args(
     instr: &wstr,
-    ctx: &OperationContext<'_>,
+    ctx: &mut OperationContext<'_>,
     out_cmd: &mut WString,
     mut out_args: Option<&mut Vec<WString>>,
     errors: Option<&mut ParseErrorList>,
@@ -894,7 +894,7 @@ fn expand_braces(
 /// `out_list`, or any errors into `errors`. Return an expand result.
 pub fn expand_cmdsubst(
     input: WString,
-    ctx: &OperationContext,
+    ctx: &mut OperationContext,
     out: &mut CompletionReceiver,
     errors: &mut Option<&mut ParseErrorList>,
 ) -> ExpandResult {
@@ -1173,7 +1173,7 @@ fn remove_internal_separator(s: &mut WString, conv: bool) {
 /// A type that knows how to perform expansions.
 struct Expander<'a, 'b, 'c> {
     /// Operation context for this expansion.
-    ctx: &'c OperationContext<'b>,
+    ctx: &'c mut OperationContext<'b>,
 
     /// Flags to use during expansion.
     flags: ExpandFlags,
@@ -1184,7 +1184,7 @@ struct Expander<'a, 'b, 'c> {
 
 impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
     fn new(
-        ctx: &'c OperationContext<'b>,
+        ctx: &'c mut OperationContext<'b>,
         flags: ExpandFlags,
         errors: &'c mut Option<&'a mut ParseErrorList>,
     ) -> Self {
@@ -1195,7 +1195,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         input: WString,
         out_completions: &'a mut CompletionReceiver,
         flags: ExpandFlags,
-        ctx: &'a OperationContext<'b>,
+        ctx: &'a mut OperationContext<'b>,
         mut errors: Option<&'a mut ParseErrorList>,
     ) -> ExpandResult {
         assert!(
@@ -1567,19 +1567,14 @@ mod tests {
         expected: Vec<WString>,
         error_message: Option<&str>,
     ) {
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
         let mut output = CompletionList::new();
         let mut errors = ParseErrorList::new();
         let pwd = PwdEnvironment::default();
-        let ctx = OperationContext::test_only_foreground(&parser, &pwd, Box::new(no_cancel));
+        let ctx = &mut OperationContext::test_only_foreground(parser, &pwd, Box::new(no_cancel));
 
-        if expand_string(
-            input.to_owned(),
-            &mut output,
-            flags,
-            &ctx,
-            Some(&mut errors),
-        ) == ExpandResultCode::error
+        if expand_string(input.to_owned(), &mut output, flags, ctx, Some(&mut errors))
+            == ExpandResultCode::error
         {
             assert_ne!(
                 errors,
@@ -1607,7 +1602,10 @@ mod tests {
     #[serial]
     fn test_expand() {
         test_init();
-        let parser = TestParser::new();
+        let TestParser {
+            ref mut parser,
+            ref mut pushed_dirs,
+        } = TestParser::new();
         /// Perform parameter expansion and test if the output equals the zero-terminated parameter list /// supplied.
         ///
         /// \param in the string to expand
@@ -1882,7 +1880,7 @@ mod tests {
             ""
         );
 
-        parser.pushd("test/fish_expand_test");
+        parser.pushd(pushed_dirs, "test/fish_expand_test");
 
         expand_test!(
             "b/xx",
@@ -1894,7 +1892,7 @@ mod tests {
         // multiple slashes with fuzzy matching - #3185
         expand_test!("l///n", fuzzy_comp, "lol///nub/", "Wrong fuzzy matching 6");
 
-        parser.popd();
+        parser.popd(pushed_dirs);
     }
 
     #[test]
@@ -1909,14 +1907,14 @@ mod tests {
         let vals: Vec<WString> = (1..=64).map(|i| i.to_wstring()).collect();
         let expansion = str2wcstring(str::repeat("$bigvar", 64));
 
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
         parser.vars().push(true);
         let set = parser.set_var(L!("bigvar"), ParserEnvSetMode::new(EnvMode::LOCAL), vals);
         assert_eq!(set, EnvStackSetResult::Ok);
 
         let mut errors = ParseErrorList::new();
         let ctx =
-            OperationContext::foreground(&parser, Box::new(no_cancel), EXPANSION_LIMIT_DEFAULT);
+            &mut OperationContext::foreground(parser, Box::new(no_cancel), EXPANSION_LIMIT_DEFAULT);
 
         // We accept only 1024 completions.
         let mut output = CompletionReceiver::new(1024);
@@ -1925,13 +1923,13 @@ mod tests {
             expansion,
             &mut output,
             ExpandFlags::default(),
-            &ctx,
+            ctx,
             Some(&mut errors),
         );
         assert_ne!(errors, vec![]);
         assert_eq!(res, ExpandResultCode::error);
 
-        parser.vars().pop(false);
+        ctx.parser().vars().pop(false);
     }
 
     #[test]

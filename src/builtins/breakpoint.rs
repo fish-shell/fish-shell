@@ -6,7 +6,11 @@ use crate::{err_fmt, err_str};
 use libc::STDIN_FILENO;
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
-pub fn breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn breakpoint(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> BuiltinResult {
     let cmd = argv[0];
     if argv.len() != 1 {
         err_fmt!(Error::UNEXP_ARG_COUNT, 0, argv.len() - 1)

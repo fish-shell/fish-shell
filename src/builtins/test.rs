@@ -984,7 +984,7 @@ mod test_expressions {
 /// Evaluate a conditional expression given the arguments. For POSIX conformance this
 /// supports a more limited range of functionality.
 /// Return status is the final shell status, i.e. 0 for true, 1 for false and 2 for error.
-pub fn test(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn test(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     // The first argument should be the name of the command ('test').
     if argv.is_empty() {
         return Err(STATUS_INVALID_ARGS);
@@ -1092,7 +1092,7 @@ mod tests {
     use fish_widestring::str2wcstring;
 
     fn run_one_test_test_mbracket(expected: i32, lst: &[&str], bracket: bool) -> bool {
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
         let mut argv = Vec::new();
         if bracket {
             argv.push(L!("[").to_owned());
@@ -1113,7 +1113,7 @@ mod tests {
         let io_chain = IoChain::new();
         let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
 
-        let result = builtin_test(&parser, &mut streams, &mut argv).builtin_status_code();
+        let result = builtin_test(parser, &mut streams, &mut argv).builtin_status_code();
 
         if result != expected {
             eprintf!(
@@ -1134,7 +1134,7 @@ mod tests {
 
     fn test_test_brackets() {
         // Ensure [ knows it needs a ].
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
 
         let mut out = OutputStream::Null;
         let mut err = OutputStream::Null;
@@ -1143,16 +1143,16 @@ mod tests {
 
         let args1 = &mut [L!("["), L!("foo")];
         assert_eq!(
-            builtin_test(&parser, &mut streams, args1),
+            builtin_test(parser, &mut streams, args1),
             Err(STATUS_INVALID_ARGS)
         );
 
         let args2 = &mut [L!("["), L!("foo"), L!("]")];
-        assert_eq!(builtin_test(&parser, &mut streams, args2), Ok(SUCCESS));
+        assert_eq!(builtin_test(parser, &mut streams, args2), Ok(SUCCESS));
 
         let args3 = &mut [L!("["), L!("foo"), L!("]"), L!("bar")];
         assert_eq!(
-            builtin_test(&parser, &mut streams, args3),
+            builtin_test(parser, &mut streams, args3),
             Err(STATUS_INVALID_ARGS)
         );
     }

@@ -31,7 +31,7 @@ trait StringSubCommand<'args> {
     fn parse_opts(
         &mut self,
         args: &mut [&'args wstr],
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
     ) -> Result<usize, ErrorCode> {
         let cmd = L!("string");
@@ -98,7 +98,7 @@ trait StringSubCommand<'args> {
     /// Perform the business logic of the command.
     fn handle(
         &mut self,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&'args wstr],
@@ -106,7 +106,7 @@ trait StringSubCommand<'args> {
 
     fn run(
         &mut self,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
         args: &mut [&'args wstr],
     ) -> BuiltinResult {
@@ -118,7 +118,7 @@ trait StringSubCommand<'args> {
 
     fn run_impl(
         &mut self,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
         args: &mut [&'args wstr],
     ) -> Result<(), ErrorCode> {
@@ -280,7 +280,7 @@ fn arguments<'iter, 'args>(
 }
 
 /// The string builtin, for manipulating strings.
-pub fn string(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn string(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let cmd = args[0];
     let argc = args.len();
 

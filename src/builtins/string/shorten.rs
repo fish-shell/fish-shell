@@ -61,7 +61,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],

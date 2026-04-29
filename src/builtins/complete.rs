@@ -14,7 +14,7 @@ use crate::{
     proc::is_interactive_session,
     reader::{commandline_get_state, completion_apply_to_command_line},
 };
-use fish_common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle, unescape_string};
+use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::string_suffixes_string;
 use fish_widestring::bytes2wcstring;
 
@@ -222,7 +222,7 @@ fn builtin_complete_remove(
 fn builtin_complete_print(
     cmd: &wstr,
     streams: &mut IoStreams,
-    parser: &Parser,
+    parser: &mut Parser,
     color: ColorEnabled,
 ) {
     let repr = complete_print(cmd);
@@ -230,7 +230,7 @@ fn builtin_complete_print(
     if color.enabled(streams) {
         streams.out.append(&bytes2wcstring(&highlight_and_colorize(
             &repr,
-            &parser.context(),
+            &mut parser.context(),
         )));
     } else {
         streams.out.append(&repr);
@@ -242,7 +242,7 @@ const OPT_ESCAPE: char = '\x01';
 
 /// The complete builtin. Used for specifying programmable tab-completions. Calls the functions in
 /// complete.rs for any heavy lifting.
-pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     localizable_consts! {
         OPTION_REQUIRES_NON_EMPTY_STRING
         "%s requires a non-empty string"
@@ -486,7 +486,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             None => {
                 // No argument given, try to use the current commandline.
                 let commandline_state = commandline_get_state(true);
-                if !parser.interactive_initialized.load() && !is_interactive_session() {
+                if !parser.interactive_initialized && !is_interactive_session() {
                     err_str!("Can not get commandline in non-interactive mode")
                         .cmd(cmd)
                         .finish(streams);
@@ -501,13 +501,10 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
 
         // Create a scoped transient command line, so that builtin_commandline will see our
         // argument, not the reader buffer.
-        let saved_transient = parser
-            .libdata_mut()
+        let _remove_transient = parser
+            .libdata()
             .transient_commandline
-            .replace(do_complete_param.clone());
-        let _remove_transient = ScopeGuard::new((), |()| {
-            parser.libdata_mut().transient_commandline = saved_transient;
-        });
+            .scoped_replace(Some(do_complete_param.clone()));
 
         // Prevent accidental recursion (see #6171).
         if !parser.libdata().builtin_complete_current_commandline {
@@ -518,7 +515,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             let (mut comp, _needs_load) = crate::complete::complete(
                 &do_complete_param,
                 CompletionRequestOptions::normal(),
-                &parser.context(),
+                &mut parser.context(),
             );
 
             // Apply the same sort and deduplication treatment as pager completions
@@ -529,7 +526,7 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let faux_cmdline = &do_complete_param[token.clone()];
                 let mut tmp_cursor = faux_cmdline.len();
                 let mut faux_cmdline_with_completion = completion_apply_to_command_line(
-                    &OperationContext::background_interruptible(parser.vars()),
+                    &mut OperationContext::background_interruptible(parser.vars()),
                     &next.completion,
                     next.flags,
                     faux_cmdline,

@@ -52,7 +52,7 @@ fn parse_options(
 }
 
 /// Function for handling the return builtin.
-pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn r#return(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let mut retval = match parse_return_value(args, parser, streams) {
         ControlFlow::Continue(r) => r,
         ControlFlow::Break(result) => return result,
@@ -88,7 +88,7 @@ pub fn r#return(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
 
 pub fn parse_return_value(
     args: &mut [&wstr],
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
 ) -> ControlFlow<BuiltinResult, i32> {
     let cmd = args[0];

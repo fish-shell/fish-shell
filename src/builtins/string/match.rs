@@ -88,7 +88,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
 
     fn handle(
         &mut self,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],

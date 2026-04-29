@@ -151,7 +151,7 @@ impl BuiltinBind {
         seq: &[Key],
         bind_mode: Option<&wstr>,
         user: bool,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
     ) -> bool {
         let results = self.input_mappings.get(seq, bind_mode, user);
@@ -167,7 +167,7 @@ impl BuiltinBind {
             if self.opts.color.enabled(streams) {
                 streams.out.append(&bytes2wcstring(&highlight_and_colorize(
                     &out,
-                    &parser.context(),
+                    &mut parser.context(),
                 )));
             } else {
                 streams.out.append(&out);
@@ -187,7 +187,7 @@ impl BuiltinBind {
         bind_mode: Option<&wstr>,
         user: bool,
         preset: bool,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
     ) -> bool {
         let mut retval = false;
@@ -201,7 +201,13 @@ impl BuiltinBind {
     }
 
     /// List all current key bindings.
-    fn list(&self, bind_mode: Option<&wstr>, user: bool, parser: &Parser, streams: &mut IoStreams) {
+    fn list(
+        &self,
+        bind_mode: Option<&wstr>,
+        user: bool,
+        parser: &mut Parser,
+        streams: &mut IoStreams,
+    ) {
         let lst = self.input_mappings.get_names(user);
         for binding in lst {
             if bind_mode.is_some_and(|m| m != binding.mode) {
@@ -301,7 +307,7 @@ impl BuiltinBind {
         &mut self,
         optind: usize,
         argv: &[&wstr],
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
     ) -> bool {
         let argc = argv.len();
@@ -407,7 +413,7 @@ fn parse_cmd_opts(
     opts: &mut Options,
     optind: &mut usize,
     argv: &mut [&wstr],
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     let cmd = argv[0];
@@ -509,7 +515,7 @@ impl BuiltinBind {
     /// The bind builtin, used for setting character sequences.
     pub fn bind(
         &mut self,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
         argv: &mut [&wstr],
     ) -> BuiltinResult {
@@ -568,6 +574,6 @@ impl BuiltinBind {
     }
 }
 
-pub fn bind(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn bind(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     BuiltinBind::new().bind(parser, streams, args)
 }

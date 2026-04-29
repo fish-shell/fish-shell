@@ -8,7 +8,6 @@ use crate::signal::signal_reset_handlers;
 use crate::topic_monitor::topic_monitor_init;
 use crate::wutil::wgetcwd;
 use crate::{env::EnvStack, proc::proc_init};
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::env::set_current_dir;
 use std::path::PathBuf;
@@ -93,35 +92,42 @@ impl Environment for PwdEnvironment {
 
 /// A wrapper around a Parser with some test helpers.
 pub struct TestParser {
-    parser: Parser,
-    pushed_dirs: RefCell<Vec<String>>,
+    pub parser: Parser,
+    pub pushed_dirs: Vec<String>,
 }
 
 impl TestParser {
     pub fn new() -> TestParser {
         TestParser {
             parser: Parser::new(EnvStack::new(), CancelBehavior::default()),
-            pushed_dirs: RefCell::new(Vec::new()),
+            pushed_dirs: Vec::new(),
         }
     }
+}
 
+pub trait ParserExt {
     /// Helper to chdir and then update $PWD.
-    pub fn pushd(&self, path: &str) {
+    fn pushd(&self, pushed_dirs: &mut Vec<String>, path: &str);
+    fn popd(&self, pushed_dirs: &mut Vec<String>);
+}
+
+impl ParserExt for Parser {
+    fn pushd(&self, pushed_dirs: &mut Vec<String>, path: &str) {
         let cwd = wgetcwd();
-        self.pushed_dirs.borrow_mut().push(cwd.to_string());
+        pushed_dirs.push(cwd.to_string());
 
         // We might need to create the directory. We don't care if this fails due to the directory
         // already being present.
         std::fs::create_dir_all(path).unwrap();
 
         std::env::set_current_dir(path).unwrap();
-        self.parser.vars().set_pwd_from_getcwd();
+        self.vars().set_pwd_from_getcwd();
     }
 
-    pub fn popd(&self) {
-        let old_cwd = self.pushed_dirs.borrow_mut().pop().unwrap();
+    fn popd(&self, pushed_dirs: &mut Vec<String>) {
+        let old_cwd = pushed_dirs.pop().unwrap();
         std::env::set_current_dir(old_cwd).unwrap();
-        self.parser.vars().set_pwd_from_getcwd();
+        self.vars().set_pwd_from_getcwd();
     }
 }
 
@@ -129,5 +135,11 @@ impl std::ops::Deref for TestParser {
     type Target = Parser;
     fn deref(&self) -> &Self::Target {
         &self.parser
+    }
+}
+
+impl std::ops::DerefMut for TestParser {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.parser
     }
 }

@@ -21,14 +21,14 @@ macro_rules! validate {
 }
 
 pub fn string_test(mut args: Vec<&wstr>) -> (WString, libc::c_int) {
-    let parser = TestParser::new();
+    let parser = &mut TestParser::new();
     let mut outs = OutputStream::String(StringOutputStream::new());
     let mut errs = OutputStream::Null;
     let io_chain = IoChain::new();
     let mut streams = IoStreams::new(&mut outs, &mut errs, &io_chain);
     streams.stdin_is_directly_redirected = false; // read from argv instead of stdin
 
-    let rc = string(&parser, &mut streams, args.as_mut_slice());
+    let rc = string(parser, &mut streams, args.as_mut_slice());
 
     (outs.contents().to_owned(), rc.builtin_status_code())
 }

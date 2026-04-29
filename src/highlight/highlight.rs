@@ -95,10 +95,10 @@ pub fn colorize(text: &wstr, colors: &[HighlightSpec], vars: &dyn Environment) -
 /// \param io_ok If set, allow IO which may block. This means that e.g. invalid commands may be
 /// detected.
 /// \param cursor The position of the cursor in the commandline.
-pub fn highlight_shell(
-    buff: &wstr,
+pub fn highlight_shell<'src, 'ctx>(
+    buff: &'src wstr,
     color: &mut Vec<HighlightSpec>,
-    ctx: &OperationContext<'_>,
+    ctx: &'ctx mut OperationContext<'src>,
     io_ok: bool, /* = false */
     cursor: Option<usize>,
 ) {
@@ -107,7 +107,10 @@ pub fn highlight_shell(
     *color = highlighter.highlight();
 }
 
-pub fn highlight_and_colorize(text: &wstr, ctx: &OperationContext<'_>) -> Vec<u8> {
+pub fn highlight_and_colorize<'src, 'ctx>(
+    text: &'src wstr,
+    ctx: &'ctx mut OperationContext<'src>,
+) -> Vec<u8> {
     let mut colors = Vec::new();
     highlight_shell(
         text,
@@ -301,7 +304,7 @@ fn has_expand_reserved(s: &wstr) -> bool {
 // command (as a string), if any. This is used to validate autosuggestions.
 fn autosuggest_parse_command(
     buff: &wstr,
-    ctx: &OperationContext<'_>,
+    ctx: &mut OperationContext<'_>,
 ) -> Option<(WString, WString)> {
     let flags = ParseTreeFlags {
         continue_after_error: true,
@@ -342,7 +345,7 @@ pub fn autosuggest_validate_from_history(
     suggested_range: std::ops::Range<usize>,
     required_paths: &[WString],
     working_directory: &wstr,
-    ctx: &OperationContext<'_>,
+    ctx: &mut OperationContext<'_>,
 ) -> bool {
     assert_is_background_thread();
 
@@ -683,32 +686,30 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
 pub type ColorArray = Vec<HighlightSpec>;
 
 /// Syntax highlighter helper.
-struct Highlighter<'s> {
+struct Highlighter<'src, 'ctx> {
     // The string we're highlighting. Note this is a reference member variable (to avoid copying)!
-    buff: &'s wstr,
+    buff: &'src wstr,
     // The position of the cursor within the string.
     cursor: Option<usize>,
-    // The operation context.
-    ctx: &'s OperationContext<'s>,
     // Whether it's OK to do I/O.
     io_ok: bool,
     // Working directory.
     working_directory: WString,
     // Our component for testing strings for being potential file paths.
-    file_tester: FileTester<'s>,
+    file_tester: FileTester<'src, 'ctx>,
     // The resulting colors.
     color_array: ColorArray,
     // A stack of variables that the current commandline probably defines.  We mark redirections
     // as valid if they use one of these variables, to avoid marking valid targets as error.
-    pending_variables: Vec<&'s wstr>,
+    pending_variables: Vec<&'src wstr>,
     done: bool,
 }
 
-impl<'s> Highlighter<'s> {
+impl<'src, 'ctx> Highlighter<'src, 'ctx> {
     pub fn new(
-        buff: &'s wstr,
+        buff: &'src wstr,
         cursor: Option<usize>,
-        ctx: &'s OperationContext<'s>,
+        ctx: &'ctx mut OperationContext<'src>,
         working_directory: WString,
         can_do_io: bool,
     ) -> Self {
@@ -716,7 +717,6 @@ impl<'s> Highlighter<'s> {
         Self {
             buff,
             cursor,
-            ctx,
             io_ok: can_do_io,
             working_directory,
             file_tester,
@@ -724,6 +724,10 @@ impl<'s> Highlighter<'s> {
             pending_variables: vec![],
             done: false,
         }
+    }
+
+    fn ctx(&self) -> &OperationContext<'src> {
+        self.file_tester.ctx
     }
 
     pub fn highlight(&mut self) -> ColorArray {
@@ -750,7 +754,7 @@ impl<'s> Highlighter<'s> {
         let ast = ast::parse(self.buff, ast_flags, None);
 
         self.visit_children(ast.top());
-        if self.ctx.check_cancel() {
+        if self.file_tester.ctx.check_cancel() {
             return std::mem::take(&mut self.color_array);
         }
 
@@ -777,14 +781,14 @@ impl<'s> Highlighter<'s> {
     }
 
     /// Return a substring of our buffer.
-    pub fn get_source(&self, r: SourceRange) -> &'s wstr {
+    pub fn get_source(&self, r: SourceRange) -> &'src wstr {
         assert!(r.end() >= r.start(), "Overflow");
         assert!(r.end() <= self.buff.len(), "Out of range");
         &self.buff[r.start()..r.end()]
     }
 
     fn io_still_ok(&self) -> bool {
-        self.io_ok && !self.ctx.check_cancel()
+        self.io_ok && !self.ctx().check_cancel()
     }
 
     // Color a command.
@@ -847,7 +851,7 @@ impl<'s> Highlighter<'s> {
             let mut cmdsub_highlighter = Highlighter::new(
                 cmdsub_contents,
                 arg_cursor,
-                self.ctx,
+                self.file_tester.ctx,
                 self.working_directory.clone(),
                 self.io_still_ok(),
             );
@@ -1041,14 +1045,16 @@ impl<'s> Highlighter<'s> {
         } else {
             // Check to see if the command is valid.
             // Try expanding it. If we cannot, it's an error.
-            if let Some(expanded) = statement_get_expanded_command(self.buff, stmt, self.ctx) {
+            if let Some(expanded) =
+                statement_get_expanded_command(self.buff, stmt, self.file_tester.ctx)
+            {
                 expanded_cmd = expanded;
                 if !has_expand_reserved(&expanded_cmd) {
                     is_valid_cmd = command_is_valid(
                         &expanded_cmd,
                         stmt.decoration(),
                         &self.working_directory,
-                        self.ctx.vars(),
+                        self.file_tester.ctx.vars(),
                     );
                 }
             }
@@ -1143,7 +1149,7 @@ fn contains_pending_variable(pending_variables: &[&wstr], haystack: &wstr) -> bo
     false
 }
 
-impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
+impl<'src, 'ctx, 'a> NodeVisitor<'a> for Highlighter<'src, 'ctx> {
     fn visit(&mut self, node: &'a dyn Node) {
         if let Some(keyword) = node.as_keyword() {
             return self.visit_keyword(keyword);
@@ -1174,7 +1180,7 @@ impl<'s, 'a> NodeVisitor<'a> for Highlighter<'s> {
 fn statement_get_expanded_command(
     src: &wstr,
     stmt: &ast::DecoratedStatement,
-    ctx: &OperationContext<'_>,
+    ctx: &mut OperationContext<'_>,
 ) -> Option<WString> {
     // Get the command. Try expanding it. If we cannot, it's an error.
     let cmd = stmt.command.try_source(src)?;
@@ -1329,10 +1335,13 @@ mod tests {
     #[serial]
     fn test_highlighting() {
         test_init();
-        let parser = TestParser::new();
+        let TestParser {
+            ref mut parser,
+            ref mut pushed_dirs,
+        } = TestParser::new();
         // Testing syntax highlighting
-        parser.pushd("test/fish_highlight_test/");
-        let _popd = ScopeGuard::new((), |_| parser.popd());
+        parser.pushd(pushed_dirs, "test/fish_highlight_test/");
+        let parser = &mut **ScopeGuard::new(parser, |parser| parser.popd(pushed_dirs));
         std::fs::create_dir_all("dir").unwrap();
         std::fs::create_dir_all("cdpath-entry/dir-in-cdpath").unwrap();
         std::fs::write("foo", []).unwrap();
@@ -1388,7 +1397,7 @@ mod tests {
                 highlight_shell(
                     &text,
                     &mut colors,
-                    &OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND),
+                    &mut OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND),
                     true, /* io_ok */
                     Some(text.len()),
                 );
@@ -1814,7 +1823,7 @@ mod tests {
     #[allow(clippy::needless_range_loop)]
     fn test_trailing_spaces_after_command() {
         test_init();
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
         let vars = parser.vars();
 
         // First, set up fish_color_command to include underline
@@ -1830,7 +1839,7 @@ mod tests {
         highlight_shell(
             &text,
             &mut colors,
-            &OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND),
+            &mut OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND),
             true, /* io_ok */
             Some(text.len()),
         );
@@ -1868,7 +1877,7 @@ mod tests {
     #[serial]
     fn test_resolve_role() {
         test_init();
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
         let vars = parser.vars();
 
         let set = |var: &wstr, value: Vec<WString>| {

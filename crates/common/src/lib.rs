@@ -17,6 +17,7 @@ use std::{
         fd::{AsRawFd, BorrowedFd, RawFd},
         unix::ffi::OsStrExt as _,
     },
+    rc::Rc,
     sync::{
         Arc, LazyLock,
         atomic::{AtomicI32, AtomicU32, Ordering},
@@ -1184,10 +1185,10 @@ pub fn restore_term_foreground_process_group_for_exit() {
     }
 }
 
-/// A wrapper around Cell which supports modifying the contents, scoped to a region of code.
-/// This provides a somewhat nicer API than ScopedRefCell because you can directly modify the value,
-/// instead of requiring an accessor function which returns a mutable reference to a field.
-pub struct ScopedCell<T>(Cell<T>);
+/// A wrapper around `Rc<Cell>` which supports modifying the contents, scoped to a region of code.
+/// This provides a somewhat nicer API than ScopedRefCell because you can directly modify the
+/// value, instead of requiring an accessor function which returns a mutable reference to a field.
+pub struct ScopedCell<T>(Rc<Cell<T>>);
 
 impl<T> Deref for ScopedCell<T> {
     type Target = Cell<T>;
@@ -1197,15 +1198,9 @@ impl<T> Deref for ScopedCell<T> {
     }
 }
 
-impl<T> DerefMut for ScopedCell<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 impl<T: Copy> ScopedCell<T> {
     pub fn new(value: T) -> Self {
-        Self(Cell::new(value))
+        Self(Rc::new(Cell::new(value)))
     }
 
     /// Temporarily modify a value in the ScopedCell, restoring it when the returned object is dropped.
@@ -1229,19 +1224,25 @@ impl<T: Copy> ScopedCell<T> {
     /// // Restored after scope
     /// assert_eq!(cell.get(), 5);
     /// ```
-    pub fn scoped_mod<'a, Modifier: FnOnce(&mut T)>(
-        &'a self,
+    pub fn scoped_mod<Modifier: FnOnce(&mut T) + 'static>(
+        &self,
         modifier: Modifier,
-    ) -> impl DerefMut + 'a {
+    ) -> impl DerefMut + 'static
+    where
+        T: 'static,
+    {
         let mut val = self.get();
         modifier(&mut val);
         let saved = self.replace(val);
-        ScopeGuard::new(self, move |cell| cell.set(saved))
+        let weak_inner = Rc::downgrade(&self.0);
+        ScopeGuard::new((), move |()| weak_inner.upgrade().unwrap().set(saved))
     }
 }
 
-/// A wrapper around RefCell which supports modifying the contents, scoped to a region of code.
-pub struct ScopedRefCell<T>(RefCell<T>);
+/// A wrapper around `Rc<RefCell>` which supports modifying the contents, scoped to a region
+/// of code.
+#[derive(Default)]
+pub struct ScopedRefCell<T>(Rc<RefCell<T>>);
 
 impl<T> Deref for ScopedRefCell<T> {
     type Target = RefCell<T>;
@@ -1251,15 +1252,9 @@ impl<T> Deref for ScopedRefCell<T> {
     }
 }
 
-impl<T> DerefMut for ScopedRefCell<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
-impl<T> ScopedRefCell<T> {
+impl<T: 'static> ScopedRefCell<T> {
     pub fn new(value: T) -> Self {
-        Self(RefCell::new(value))
+        Self(Rc::new(RefCell::new(value)))
     }
 
     /// Temporarily modify a field in the ScopedRefCell, restoring it when the returned guard is dropped.
@@ -1286,19 +1281,21 @@ impl<T> ScopedRefCell<T> {
     /// // Restored after scope
     /// assert_eq!(cell.borrow().flag, false);
     /// ```
-    pub fn scoped_set<'a, Accessor, Value: 'a>(
-        &'a self,
+    pub fn scoped_set<Accessor, Value: 'static>(
+        &self,
         value: Value,
         accessor: Accessor,
-    ) -> impl DerefMut + 'a
+    ) -> impl DerefMut + 'static
     where
-        Accessor: Fn(&mut T) -> &mut Value + 'a,
+        Accessor: Fn(&mut T) -> &mut Value + 'static,
     {
         let mut data = self.borrow_mut();
         let mut saved = std::mem::replace(accessor(&mut data), value);
-        ScopeGuard::new(self, move |cell| {
-            let mut data = cell.borrow_mut();
-            std::mem::swap((accessor)(&mut data), &mut saved);
+        let weak_inner = Rc::downgrade(&self.0);
+        ScopeGuard::new((), move |()| {
+            let inner = weak_inner.upgrade().unwrap();
+            let mut inner = inner.borrow_mut();
+            std::mem::swap((accessor)(&mut inner), &mut saved);
         })
     }
 
@@ -1320,7 +1317,7 @@ impl<T> ScopedRefCell<T> {
     ///
     /// assert_eq!(*cell.borrow(), 10);
     /// ```
-    pub fn scoped_replace<'a>(&'a self, value: T) -> impl DerefMut + 'a {
+    pub fn scoped_replace(&self, value: T) -> impl DerefMut + 'static {
         self.scoped_set(value, |s| s)
     }
 }

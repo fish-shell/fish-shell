@@ -148,7 +148,7 @@ fn strip_dollar_prefixes(insert_mode: AppendMode, prefix: &wstr, insert: &wstr) 
 /// \param cursor_pos the position of the cursor in the command line
 #[allow(clippy::too_many_arguments)]
 fn write_part(
-    parser: &Parser,
+    parser: &mut Parser,
     range: Range<usize>,
     range_is_single_token: bool,
     cut_at_cursor: bool,
@@ -179,7 +179,7 @@ fn write_part(
                     token_text.to_owned(),
                     &mut args,
                     ExpandFlags::SKIP_CMDSUBST,
-                    &OperationContext::foreground(
+                    &mut OperationContext::foreground(
                         parser,
                         Box::new(no_cancel),
                         COMMANDLINE_TOKENS_MAX_EXPANSION,
@@ -242,7 +242,11 @@ fn write_part(
 }
 
 /// The commandline builtin. It is used for specifying a new value for the commandline.
-pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn commandline(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> BuiltinResult {
     let rstate = commandline_get_state(true);
 
     let mut buffer_part = None;
@@ -684,7 +688,7 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
     } else if let Some(override_buffer) = &override_buffer {
         current_buffer = override_buffer;
         current_cursor_pos = current_buffer.len();
-    } else if parser.libdata().transient_commandline.is_some() {
+    } else if parser.libdata().transient_commandline.borrow().is_some() {
         if cursor_mode && positional_args != 0 {
             err_str!("setting cursor while evaluating 'complete --arguments' is not yet supported")
                 .cmd(cmd)
@@ -695,12 +699,13 @@ pub fn commandline(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr])
         transient = parser
             .libdata()
             .transient_commandline
+            .borrow()
             .as_ref()
             .unwrap()
             .clone();
         current_buffer = &transient;
         current_cursor_pos = transient.len();
-    } else if parser.interactive_initialized.load() || is_interactive_session() {
+    } else if parser.interactive_initialized || is_interactive_session() {
         current_buffer = &rstate.text;
         current_cursor_pos = rstate.cursor_pos;
     } else {

@@ -53,7 +53,11 @@ fn print_colors(
 }
 
 /// set_color builtin.
-pub fn set_color(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn set_color(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> BuiltinResult {
     // Variables used for parsing the argument list.
     let argc = argv.len();
 

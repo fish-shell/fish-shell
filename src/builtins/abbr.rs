@@ -120,7 +120,7 @@ fn join(list: &[&wstr], sep: &wstr) -> WString {
 }
 
 // Print abbreviations in a fish-script friendly way.
-fn abbr_show(opts: &Options, streams: &mut IoStreams, parser: &Parser) -> BuiltinResult {
+fn abbr_show(opts: &Options, streams: &mut IoStreams, parser: &mut Parser) -> BuiltinResult {
     let style = EscapeStringStyle::Script(Default::default());
 
     abbrs::with_abbrs(|abbrs| {
@@ -172,7 +172,7 @@ fn abbr_show(opts: &Options, streams: &mut IoStreams, parser: &Parser) -> Builti
             if opts.color.enabled(streams) {
                 streams.out.append(&bytes2wcstring(&highlight_and_colorize(
                     &result,
-                    &parser.context(),
+                    &mut parser.context(),
                 )));
             } else {
                 streams.out.append(&result);
@@ -423,7 +423,7 @@ fn abbr_add(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
 }
 
 // Erase the named abbreviations.
-fn abbr_erase(opts: &Options, parser: &Parser) -> BuiltinResult {
+fn abbr_erase(opts: &Options, parser: &mut Parser) -> BuiltinResult {
     if opts.args.is_empty() {
         // This has historically been a silent failure.
         return Err(STATUS_CMD_ERROR);
@@ -454,7 +454,7 @@ fn abbr_erase(opts: &Options, parser: &Parser) -> BuiltinResult {
     })
 }
 
-pub fn abbr(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let mut argv_read = Vec::with_capacity(argv.len());
     argv_read.extend_from_slice(argv);
 

@@ -21,7 +21,6 @@ use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_widestring::{bytes2wcstring, encode_byte_to_char, fish_reserved_codepoint};
 use nix::sys::{select::FdSet, signal::SigSet, time::TimeSpec};
 use std::{
-    cell::{RefCell, RefMut},
     collections::VecDeque,
     os::fd::{BorrowedFd, RawFd},
     sync::atomic::{AtomicUsize, Ordering},
@@ -671,7 +670,7 @@ pub struct InputData {
     pub blocking_query_timeout: Option<Duration>,
 
     // If set, events will be buffered until the query finishes.
-    pub blocking_query: RefCell<Option<TerminalQuery>>,
+    pub blocking_query: Option<TerminalQuery>,
 }
 
 impl InputData {
@@ -685,7 +684,7 @@ impl InputData {
             function_status: false,
             event_storage: Vec::new(),
             blocking_query_timeout,
-            blocking_query: RefCell::new(None),
+            blocking_query: None,
         }
     }
 
@@ -888,7 +887,7 @@ pub trait InputEventQueuer {
                                 reader,
                                 "Received interrupt key, giving up waiting for response from terminal"
                             );
-                            let ok = stop_query(self.blocking_query());
+                            let ok = stop_query(self.blocking_query_mut());
                             assert!(ok);
                             self.get_input_data_mut().queue.clear();
                             self.push_front(CharEvent::QueryResult(QueryResultEvent::Interrupted));
@@ -1603,8 +1602,11 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
-        self.get_input_data().blocking_query.borrow_mut()
+    fn blocking_query(&self) -> &Option<TerminalQuery> {
+        &self.get_input_data().blocking_query
+    }
+    fn blocking_query_mut(&mut self) -> &mut Option<TerminalQuery> {
+        &mut self.get_input_data_mut().blocking_query
     }
     fn is_blocked_querying(&self) -> bool {
         self.blocking_query().is_some()
@@ -1621,7 +1623,7 @@ pub trait InputEventQueuer {
         let vintr = shell_modes().control_chars[libc::VINTR];
         if vintr != 0 {
             let interrupt_evt = CharEvent::from_key(KeyEvent::from_single_byte(vintr));
-            if stop_query(self.blocking_query()) {
+            if stop_query(self.blocking_query_mut()) {
                 flog!(
                     reader,
                     "Received interrupt, giving up on waiting for terminal response"
@@ -1650,6 +1652,14 @@ pub trait InputEventQueuer {
     /// Return if we have any lookahead.
     fn has_lookahead(&self) -> bool {
         !self.get_input_data().queue.is_empty()
+    }
+
+    fn get_bind_mode(&self) -> WString {
+        #[allow(clippy::assertions_on_constants)]
+        {
+            assert!(cfg!(test));
+        }
+        WString::from("test-bind-mode")
     }
 }
 
@@ -1711,7 +1721,7 @@ pub(crate) fn decode_utf8(
     }
 }
 
-pub(crate) fn stop_query(mut query: RefMut<'_, Option<TerminalQuery>>) -> bool {
+pub(crate) fn stop_query(query: &mut Option<TerminalQuery>) -> bool {
     query.take().is_some()
 }
 

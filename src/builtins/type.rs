@@ -20,7 +20,7 @@ struct type_cmd_opts_t {
     color: ColorEnabled,
 }
 
-pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -168,7 +168,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                         if opts.color.enabled(streams) {
                             streams.out.append(&bytes2wcstring(&highlight_and_colorize(
                                 &def,
-                                &parser.context(),
+                                &mut parser.context(),
                             )));
                         } else {
                             streams.out.append(&def);

@@ -83,7 +83,7 @@ fn exec_thread_pool() -> &'static Arc<ThreadPool> {
 /// On a true return, the job was successfully launched and the parser will take responsibility for
 /// cleaning it up. On a false return, the job could not be launched and the caller must clean it
 /// up.
-pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
+pub fn exec_job(parser: &mut Parser, job: &Job, block_io: IoChain) -> bool {
     // If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
     if no_exec() {
         return true;
@@ -269,7 +269,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
 /// Return a value appropriate for populating $status.
 pub fn exec_subshell(
     cmd: &wstr,
-    parser: &Parser,
+    parser: &mut Parser,
     outputs: Option<&mut Vec<WString>>,
     apply_exit_status: bool,
 ) -> Result<(), ErrorCode> {
@@ -291,7 +291,7 @@ pub fn exec_subshell(
 /// pgroup.
 pub fn exec_subshell_for_expand(
     cmd: &wstr,
-    parser: &Parser,
+    parser: &mut Parser,
     job_group: Option<&JobGroupRef>,
     outputs: &mut Vec<WString>,
 ) -> Result<(), ErrorCode> {
@@ -652,7 +652,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
 /// If `outdata` or `errdata` are both empty, then mark the process as completed immediately.
 /// Otherwise, run an internal process.
 fn run_internal_process_or_short_circuit(
-    parser: &Parser,
+    parser: &mut Parser,
     j: &Job,
     p: &Process,
     outdata: Vec<u8>,
@@ -838,7 +838,7 @@ fn create_output_stream_for_builtin(
 /// Handle output from a builtin, by printing the contents of builtin_io_streams to the redirections
 /// given in io_chain.
 fn handle_builtin_output(
-    parser: &Parser,
+    parser: &mut Parser,
     j: &Job,
     p: &Process,
     io_chain: &IoChain,
@@ -867,7 +867,7 @@ fn handle_builtin_output(
 /// An error return here indicates that the process failed to launch, and the rest of
 /// the pipeline should be cancelled.
 fn exec_external_command(
-    parser: &Parser,
+    parser: &mut Parser,
     j: &Job,
     p: &Process,
     proc_io_chain: &IoChain,
@@ -949,7 +949,7 @@ fn exec_external_command(
 // Given that we are about to execute a function, push a function block and set up the
 // variable environment.
 fn function_prepare_environment(
-    parser: &Parser,
+    parser: &mut Parser,
     mut argv: Vec<WString>,
     props: &FunctionProperties,
 ) -> BlockId {
@@ -1000,7 +1000,7 @@ fn function_prepare_environment(
 }
 
 // Given that we are done executing a function, restore the environment.
-fn function_restore_environment(parser: &Parser, block: BlockId) {
+fn function_restore_environment(parser: &mut Parser, block: BlockId) {
     parser.pop_block(block);
 
     // If we returned due to a return statement, then stop returning now.
@@ -1011,7 +1011,7 @@ fn function_restore_environment(parser: &Parser, block: BlockId) {
 // This accepts a place to execute as `parser` and then executes the result, returning a status.
 // This is factored out in this funny way in preparation for concurrent execution.
 type ProcPerformer =
-    dyn FnOnce(&Parser, Option<&mut OutputStream>, Option<&mut OutputStream>) -> ProcStatus;
+    dyn FnOnce(&mut Parser, Option<&mut OutputStream>, Option<&mut OutputStream>) -> ProcStatus;
 
 // Return a function which may be to run the given block node process 'p'.
 fn get_performer_for_block_node(p: &Process, job: &Job, io_chain: &IoChain) -> Box<ProcPerformer> {
@@ -1023,7 +1023,7 @@ fn get_performer_for_block_node(p: &Process, job: &Job, io_chain: &IoChain) -> B
     let job_group = job.group.clone();
     let io_chain = io_chain.clone();
     let node = node.clone();
-    Box::new(move |parser: &Parser, _out, _err| {
+    Box::new(move |parser: &mut Parser, _out, _err| {
         parser
             .eval_node(&node, &io_chain, job_group.as_ref(), BlockType::Top, false)
             .status
@@ -1057,7 +1057,7 @@ fn get_performer_for_function(
         return Err(());
     };
     let argv = p.argv().clone();
-    Ok(Box::new(move |parser: &Parser, _out, _err| {
+    Ok(Box::new(move |parser: &mut Parser, _out, _err| {
         // Pull out the job list from the function.
         let fb = function_prepare_environment(parser, argv, &props);
         let body_node = props.func_node.child_ref(|n| &n.jobs);
@@ -1081,7 +1081,7 @@ fn get_performer_for_function(
 /// Execute a block node or function "process".
 /// `piped_output_needs_buffering` if true, buffer the output.
 fn exec_block_or_func_process(
-    parser: &Parser,
+    parser: &mut Parser,
     j: &Job,
     p: &Process,
     mut io_chain: IoChain,
@@ -1159,7 +1159,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
     // thread.
     let argv = p.argv().clone();
     Box::new(
-        move |parser: &Parser,
+        move |parser: &mut Parser,
               output_stream: Option<&mut OutputStream>,
               errput_stream: Option<&mut OutputStream>| {
             let output_stream = output_stream.unwrap();
@@ -1207,7 +1207,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
 
 /// Executes a builtin "process".
 fn exec_builtin_process(
-    parser: &Parser,
+    parser: &mut Parser,
     j: &Job,
     p: &Process,
     io_chain: &IoChain,
@@ -1242,7 +1242,7 @@ struct PartialPipes {
 /// An error return here indicates that the process failed to launch, and the rest of
 /// the pipeline should be cancelled.
 fn exec_process_in_job(
-    parser: &Parser,
+    parser: &mut Parser,
     p: &Process,
     j: &Job,
     block_io: IoChain,
@@ -1324,7 +1324,7 @@ fn exec_process_in_job(
     if !p.variable_assignments.is_empty() {
         block_id = Some(parser.push_block(Block::variable_assignment_block()));
     }
-    let _pop_block = ScopeGuard::new((), |()| {
+    let parser = &mut **ScopeGuard::new(parser, |parser| {
         if let Some(block_id) = block_id {
             parser.pop_block(block_id);
         }
@@ -1419,7 +1419,7 @@ fn abort_pipeline_from(job: &Job, offset: usize) {
 // Given that we are about to execute an exec() call, check if the parser is interactive and there
 // are extant background jobs. If so, warn the user and do not exec().
 // Return true if we should allow exec, false to disallow it.
-fn allow_exec_with_background_jobs(parser: &Parser) -> bool {
+fn allow_exec_with_background_jobs(parser: &mut Parser) -> bool {
     // If we're not interactive, we cannot warn.
     if !parser.is_interactive() {
         return true;
@@ -1439,7 +1439,7 @@ fn allow_exec_with_background_jobs(parser: &Parser) -> bool {
         *last_exec_run_count = current_run_count;
         false
     } else {
-        hup_jobs(&parser.jobs());
+        hup_jobs(parser.jobs());
         true
     }
 }
@@ -1492,14 +1492,14 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
 /// of $status.
 fn exec_subshell_internal(
     cmd: &wstr,
-    parser: &Parser,
+    parser: &mut Parser,
     job_group: Option<&JobGroupRef>,
     lst: Option<&mut Vec<WString>>,
     break_expand: &mut bool,
     apply_exit_status: bool,
     is_subcmd: bool,
 ) -> Result<(), ErrorCode> {
-    let _scoped = parser.push_scope(|s| {
+    let _scoped = parser.push_scope(move |s| {
         s.is_subshell = true;
         s.read_limit = if is_subcmd {
             READ_BYTE_LIMIT.load(Ordering::Relaxed)
@@ -1509,7 +1509,7 @@ fn exec_subshell_internal(
     });
 
     let prev_statuses = parser.last_statuses();
-    let _put_back = ScopeGuard::new((), |()| {
+    let parser = &mut **ScopeGuard::new(parser, |parser| {
         if !apply_exit_status {
             parser.set_last_statuses(prev_statuses);
         }

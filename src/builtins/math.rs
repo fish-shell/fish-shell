@@ -30,7 +30,7 @@ struct Options {
 
 fn parse_cmd_opts(
     args: &mut [&wstr],
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
 ) -> Result<(Options, usize), ErrorCode> {
     let cmd = L!("math");
@@ -275,7 +275,7 @@ fn evaluate_expression(
 const MATH_CHUNK_SIZE: usize = 1024;
 
 /// The math builtin evaluates math expressions.
-pub fn math(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn math(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
 
     let (opts, mut optind) = parse_cmd_opts(argv, parser, streams)?;

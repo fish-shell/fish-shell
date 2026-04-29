@@ -1291,7 +1291,7 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
             highlight_shell(
                 &comp.completion,
                 &mut comp_info.colors,
-                &OperationContext::empty(),
+                &mut OperationContext::empty(),
                 false,
                 None,
             );

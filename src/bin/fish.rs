@@ -139,7 +139,7 @@ fn print_rusage_self() {
 
 // Source the file config.fish in the given directory.
 // Returns true if successful, false if not.
-fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
+fn source_config_in_directory(parser: &mut Parser, dir: &wstr) -> bool {
     // If the config.fish file doesn't exist or isn't readable silently return. Fish versions up
     // thru 2.2.0 would instead try to source the file with stderr redirected to /dev/null to deal
     // with that possibility.
@@ -168,7 +168,7 @@ fn source_config_in_directory(parser: &Parser, dir: &wstr) -> bool {
 }
 
 /// Parse init files. exec_path is the path of fish executable as determined by argv[0].
-fn read_init(parser: &Parser, paths: &ConfigPaths) {
+fn read_init(parser: &mut Parser, paths: &ConfigPaths) {
     use fish::autoload::Asset;
     let emfile = Asset::get("config.fish").expect("Embedded file not found");
     let src = bytes2wcstring(&emfile.data);
@@ -190,7 +190,7 @@ fn read_init(parser: &Parser, paths: &ConfigPaths) {
     }
 }
 
-fn run_command_list(parser: &Parser, cmds: &[OsString]) -> Result<(), libc::c_int> {
+fn run_command_list(parser: &mut Parser, cmds: &[OsString]) -> Result<(), libc::c_int> {
     let mut retval = Ok(());
     for cmd in cmds {
         let cmd_wcs = osstr2wcstring(cmd);
@@ -490,7 +490,7 @@ fn throwing_main() -> i32 {
 
     // Construct the root parser!
     let env = EnvStack::globals().create_child(true /* dispatches_var_changes */);
-    let parser = &Parser::new(env, CancelBehavior::Clear);
+    let parser = &mut Parser::new(env, CancelBehavior::Clear);
     parser.set_syncs_uvars(!opts.no_config);
 
     if !opts.no_exec && !opts.no_config {

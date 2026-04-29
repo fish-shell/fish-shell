@@ -814,9 +814,12 @@ mod tests {
     fn test_env_snapshot() {
         test_init();
         std::fs::create_dir_all("test/fish_env_snapshot_test/").unwrap();
-        let parser = TestParser::new();
+        let TestParser {
+            ref mut parser,
+            ref mut pushed_dirs,
+        } = TestParser::new();
+        parser.pushd(pushed_dirs, "test/fish_env_snapshot_test/");
         let vars = parser.vars();
-        parser.pushd("test/fish_env_snapshot_test/");
         vars.push(true);
         let before_pwd = vars.get(L!("PWD")).unwrap().as_string();
         vars.set_one(
@@ -878,7 +881,7 @@ mod tests {
         );
 
         vars.pop(false);
-        parser.popd();
+        parser.popd(pushed_dirs);
     }
 
     // Can't push/pop from globals.

@@ -56,7 +56,7 @@ fn parse_cmd_opts<'args>(
     opts: &mut FunctionsCmdOpts<'args>,
     optind: &mut usize,
     argv: &mut [&'args wstr],
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     let cmd = L!("functions");
@@ -119,7 +119,11 @@ fn parse_cmd_opts<'args>(
     Ok(SUCCESS)
 }
 
-pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn functions(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> BuiltinResult {
     let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
@@ -435,7 +439,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         if opts.color.enabled(streams) {
             streams.out.append(&bytes2wcstring(&highlight_and_colorize(
                 &def,
-                &parser.context(),
+                &mut parser.context(),
             )));
         } else {
             streams.out.append(&def);

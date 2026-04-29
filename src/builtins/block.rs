@@ -1,5 +1,3 @@
-use std::sync::atomic::Ordering;
-
 use crate::err_str;
 
 // Implementation of the block builtin.
@@ -74,7 +72,7 @@ fn parse_options(
 }
 
 /// The block builtin, used for temporarily blocking events.
-pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn block(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let cmd = args[0];
 
     let (opts, _) = parse_options(args, parser, streams)?;
@@ -92,11 +90,11 @@ pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
             return Err(STATUS_INVALID_ARGS);
         }
 
-        if parser.global_event_blocks.load(Ordering::Relaxed) == 0 {
+        if parser.global_event_blocks == 0 {
             err_str!("No blocks defined").cmd(cmd).finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
-        parser.global_event_blocks.fetch_sub(1, Ordering::Relaxed);
+        parser.global_event_blocks -= 1;
         return Ok(SUCCESS);
     }
 
@@ -135,7 +133,7 @@ pub fn block(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bu
     if have_block {
         parser.block_at_index_mut(block_idx).unwrap().event_blocks |= true;
     } else {
-        parser.global_event_blocks.fetch_add(1, Ordering::Relaxed);
+        parser.global_event_blocks += 1;
     }
 
     Ok(SUCCESS)

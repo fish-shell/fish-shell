@@ -950,13 +950,17 @@ fn throwing_main() -> i32 {
     do_indent(None, &mut streams, args).builtin_status_code()
 }
 
-pub fn fish_indent(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn fish_indent(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> BuiltinResult {
     let args = args.iter_mut().map(|x| x.to_owned()).collect();
     do_indent(Some(parser), streams, args)
 }
 
 fn do_indent(
-    parser: Option<&Parser>,
+    parser: Option<&mut Parser>,
     streams: &mut IoStreams,
     args: Vec<WString>,
 ) -> BuiltinResult {
@@ -1139,7 +1143,7 @@ fn do_indent(
             highlight_shell(
                 &output_wtext,
                 &mut colors,
-                &OperationContext::globals(),
+                &mut OperationContext::globals(),
                 false,
                 None,
             );
@@ -1214,7 +1218,13 @@ fn read_file(mut f: impl Read) -> Result<WString, ()> {
 // 3,7,command
 fn make_pygments_csv(src: &wstr) -> Vec<u8> {
     let mut colors = vec![];
-    highlight_shell(src, &mut colors, &OperationContext::globals(), false, None);
+    highlight_shell(
+        src,
+        &mut colors,
+        &mut OperationContext::globals(),
+        false,
+        None,
+    );
     assert_eq!(
         colors.len(),
         src.len(),

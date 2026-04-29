@@ -274,7 +274,7 @@ impl Event {
             }
         }
 
-        parser.global_event_blocks.load(Ordering::Relaxed) != 0
+        parser.global_event_blocks != 0
     }
 }
 
@@ -463,7 +463,7 @@ pub fn get_function_handlers(name: &wstr) -> EventHandlerList {
 /// Perform the specified event. Since almost all event firings will not be matched by even a single
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
-fn fire_internal(parser: &Parser, event: &Event) {
+fn fire_internal(parser: &mut Parser, event: &Event) {
     // Suppress fish_trace during events.
     let _saved = parser.push_scope(|s| {
         s.is_event = true;
@@ -499,7 +499,7 @@ fn fire_internal(parser: &Parser, event: &Event) {
         // non-interactive.
         let _non_interactive = parser.push_scope(|s| s.is_interactive = false);
         let saved_statuses = parser.last_statuses();
-        let _cleanup = ScopeGuard::new((), |()| {
+        let parser = &mut **ScopeGuard::new(&mut *parser, |parser| {
             parser.set_last_statuses(saved_statuses);
         });
 
@@ -526,7 +526,7 @@ fn fire_internal(parser: &Parser, event: &Event) {
 }
 
 /// Fire all delayed events attached to the given parser.
-pub fn fire_delayed(parser: &Parser) {
+pub fn fire_delayed(parser: &mut Parser) {
     // Do not invoke new event handlers from within event handlers.
     if parser.scope().is_event {
         return;
@@ -585,7 +585,7 @@ pub fn enqueue_signal(signal: libc::c_int) {
 }
 
 /// Fire the specified event event, executing it on `parser`.
-pub fn fire(parser: &Parser, event: Event) {
+pub fn fire(parser: &mut Parser, event: Event) {
     // Fire events triggered by signals.
     fire_delayed(parser);
 
@@ -661,7 +661,7 @@ pub fn print(streams: &mut IoStreams, type_filter: &wstr) {
 }
 
 /// Fire a generic event with the specified name.
-pub fn fire_generic(parser: &Parser, name: WString, arguments: Vec<WString>) {
+pub fn fire_generic(parser: &mut Parser, name: WString, arguments: Vec<WString>) {
     fire(
         parser,
         Event {

@@ -663,7 +663,7 @@ fn populate_option_strings<'args>(
 }
 
 fn validate_arg<'opts>(
-    parser: &Parser,
+    parser: &mut Parser,
     opts_name: &wstr,
     opt_spec: &mut OptionSpec<'opts>,
     is_long_flag: bool,
@@ -732,7 +732,7 @@ fn is_implicit_int(opts: &ArgParseCmdOpts, val: &wstr) -> bool {
 
 // Store this value under the implicit int option.
 fn validate_and_store_implicit_int<'args>(
-    parser: &Parser,
+    parser: &mut Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     val: &'args wstr,
     w: &mut WGetopter,
@@ -823,7 +823,7 @@ fn delete_flag<'args>(w: &mut WGetopter<'_, 'args, '_>, is_long_flag: bool) -> C
 }
 
 fn handle_flag<'args>(
-    parser: &Parser,
+    parser: &mut Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     opt: char,
     is_long_flag: bool,
@@ -874,7 +874,7 @@ fn handle_flag<'args>(
 }
 
 fn argparse_parse_flags<'args>(
-    parser: &Parser,
+    parser: &mut Parser,
     opts: &mut ArgParseCmdOpts<'args>,
     argc: usize,
     args: &mut [&'args wstr],
@@ -1067,7 +1067,7 @@ fn argparse_parse_args<'args>(
     opts: &mut ArgParseCmdOpts<'args>,
     args: &mut [&'args wstr],
     argc: usize,
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     if argc <= 1 {
@@ -1146,7 +1146,7 @@ fn set_argparse_result_vars(vars: &EnvStack, local_mode: EnvSetMode, opts: ArgPa
 /// an external command also means its output has to be in a form that can be eval'd. Because our
 /// version is a builtin it can directly set variables local to the current scope (e.g., a
 /// function). It doesn't need to write anything to stdout that then needs to be eval'd.
-pub fn argparse(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn argparse(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };

@@ -1653,7 +1653,7 @@ fn detect_errors_in_decorated_statement(
         if matches!(
             expand_to_command_and_args(
                 unexp_command,
-                &OperationContext::empty(),
+                &mut OperationContext::empty(),
                 &mut command,
                 None,
                 Some(&mut new_errors),
@@ -1729,7 +1729,7 @@ fn detect_errors_in_decorated_statement(
             if expand_one(
                 &mut command,
                 ExpandFlags::FAIL_ON_CMDSUBST,
-                &OperationContext::empty(),
+                &mut OperationContext::empty(),
                 match parse_errors {
                     Some(pe) => Some(pe),
                     None => None,

@@ -84,7 +84,7 @@ impl Options {
     fn parse(
         cmd: &wstr,
         args: &mut [&wstr],
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
     ) -> Result<Option<(Options, usize)>, ErrorCode> {
         /// Values used for long-only options.
@@ -376,7 +376,7 @@ fn env_set_reporting_errors(
     mode: EnvMode,
     list: Vec<WString>,
     streams: &mut IoStreams,
-    parser: &Parser,
+    parser: &mut Parser,
 ) -> EnvStackSetResult {
     let mode = ParserEnvSetMode::user(mode);
     let retval = if opts.no_event {
@@ -779,7 +779,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
 fn erase(
     cmd: &wstr,
     opts: &Options,
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
     args: &[&wstr],
 ) -> BuiltinResult {
@@ -949,7 +949,7 @@ fn new_var_values_by_index(split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
 fn set_internal(
     cmd: &wstr,
     opts: &Options,
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
     argv: &[&wstr],
 ) -> BuiltinResult {
@@ -1042,7 +1042,7 @@ fn set_internal(
 }
 
 /// The set builtin creates, updates, and erases (removes, deletes) variables.
-pub fn set(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn set(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let cmd = args[0];
     let (opts, optind) = match Options::parse(cmd, args, parser, streams)? {
         Some((opts, optind)) => (opts, optind),

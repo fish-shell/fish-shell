@@ -32,7 +32,7 @@ impl StringSubCommand<'_> for Unescape {
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],

@@ -9,7 +9,7 @@ use std::os::fd::AsRawFd as _;
 
 /// The  source builtin, sometimes called `.`. Evaluates the contents of a file in the current
 /// context.
-pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn source(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let argc = args.len();
 
     let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;

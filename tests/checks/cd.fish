@@ -407,3 +407,10 @@ cd (string repeat 4096 a)
 # CHECKERR: ^
 # CHECKERR: in function 'cd' with arguments '{{.*}}'
 # CHECKERR: called on line {{\d+}} of file {{.*}}/cd.fish
+
+# Ensures `cd` doesn't create `<pwd>+/+<dir>` internally, when pwd is `/`, i.e.
+# results in `//<dir>`. This test will (hopefully) fail on platforms where such
+# a path has a special meaning (e.g. Windows would fail trying to access a server
+# named "bin")
+cd /
+cd bin

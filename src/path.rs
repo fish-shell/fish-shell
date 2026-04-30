@@ -358,7 +358,14 @@ pub fn path_apply_cdpath(dir: &wstr, wd: &wstr, env_vars: &dyn Environment) -> V
             // We want to return an absolute path (see issue 6220)
             if ![Some('/'), Some('~')].contains(&path.chars().next()) {
                 abspath = wd.to_owned();
-                abspath.push('/');
+
+                // Do not add a second slash if `wd` already ends with one
+                // (typically, when it's the root directory).
+                // This could result in unwanted paths (e.g. `//<path>`, which
+                // on Windows, is a remote directory).
+                if abspath.chars().next_back() != Some('/') {
+                    abspath.push('/');
+                }
             }
             abspath.push_utfstr(&path);
 

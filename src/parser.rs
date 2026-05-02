@@ -30,8 +30,7 @@ use crate::{
 };
 use assert_matches::assert_matches;
 use fish_common::{
-    EscapeFlags, EscapeStringStyle, FilenameRef, ScopeGuarding, ScopedCell, ScopedRefCell,
-    escape_string,
+    EscapeFlags, EscapeStringStyle, FilenameRef, ScopedCell, ScopedRefCell, escape_string,
 };
 use fish_util::get_time;
 use fish_widestring::{WExt as _, wcs2bytes};
@@ -41,6 +40,7 @@ use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Write as _;
 use std::num::NonZeroU32;
+use std::ops::DerefMut;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Duration;
@@ -906,10 +906,7 @@ impl Parser {
     /// Modify the scoped values for the duration of the caller's scope (or whenever the ParserScope is dropped).
     /// This accepts a closure which modifies the ScopedData, and returns a ParserScope which restores the
     /// data when dropped.
-    pub fn push_scope<'a, F: FnOnce(&mut ScopedData)>(
-        &'a self,
-        modifier: F,
-    ) -> impl ScopeGuarding + 'a {
+    pub fn push_scope<'a, F: FnOnce(&mut ScopedData)>(&'a self, modifier: F) -> impl DerefMut + 'a {
         self.scoped_data.scoped_mod(modifier)
     }
 

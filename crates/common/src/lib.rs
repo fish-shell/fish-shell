@@ -1232,7 +1232,7 @@ impl<T: Copy> ScopedCell<T> {
     pub fn scoped_mod<'a, Modifier: FnOnce(&mut T)>(
         &'a self,
         modifier: Modifier,
-    ) -> impl ScopeGuarding + 'a {
+    ) -> impl DerefMut + 'a {
         let mut val = self.get();
         modifier(&mut val);
         let saved = self.replace(val);
@@ -1290,7 +1290,7 @@ impl<T> ScopedRefCell<T> {
         &'a self,
         value: Value,
         accessor: Accessor,
-    ) -> impl ScopeGuarding + 'a
+    ) -> impl DerefMut + 'a
     where
         Accessor: Fn(&mut T) -> &mut Value + 'a,
     {
@@ -1320,7 +1320,7 @@ impl<T> ScopedRefCell<T> {
     ///
     /// assert_eq!(*cell.borrow(), 10);
     /// ```
-    pub fn scoped_replace<'a>(&'a self, value: T) -> impl ScopeGuarding + 'a {
+    pub fn scoped_replace<'a>(&'a self, value: T) -> impl DerefMut + 'a {
         self.scoped_set(value, |s| s)
     }
 }
@@ -1382,13 +1382,6 @@ impl<T, F: FnOnce(T)> Drop for ScopeGuard<T, F> {
         }
     }
 }
-
-/// A trait expressing what ScopeGuard can do. This is necessary because our scoped cells return an
-/// `impl Trait` object and therefore methods on ScopeGuard which take a self parameter cannot be
-/// used.
-pub trait ScopeGuarding: DerefMut + Sized {}
-
-impl<T, F: FnOnce(T)> ScopeGuarding for ScopeGuard<T, F> {}
 
 pub const fn assert_send<T: Send>() {}
 pub const fn assert_sync<T: Sync>() {}

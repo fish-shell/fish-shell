@@ -111,8 +111,8 @@ use crate::{
 use assert_matches::assert_matches;
 use errno::{Errno, errno};
 use fish_common::{
-    EscapeFlags, EscapeStringStyle, ScopeGuard, ScopeGuarding, escape, escape_string,
-    escape_string_with_quote, exit_without_destructors, get_obfuscation_read_char, help_section,
+    EscapeFlags, EscapeStringStyle, ScopeGuard, escape, escape_string, escape_string_with_quote,
+    exit_without_destructors, get_obfuscation_read_char, help_section,
     restore_term_foreground_process_group_for_exit, write_loop,
 };
 use fish_fallback::{fish_wcwidth, lowercase};
@@ -143,7 +143,7 @@ use std::{
     cmp,
     io::BufReader,
     num::NonZeroUsize,
-    ops::{ControlFlow, Range},
+    ops::{ControlFlow, DerefMut, Range},
     os::fd::{AsRawFd as _, BorrowedFd, FromRawFd as _, OwnedFd, RawFd},
     pin::Pin,
     sync::{
@@ -424,7 +424,7 @@ pub fn reader_pop() {
     }
 }
 
-pub fn fake_scoped_reader<'a>(parser: &'a Parser) -> impl ScopeGuarding<Target = Reader<'a>> + 'a {
+pub fn fake_scoped_reader<'a>(parser: &'a Parser) -> impl DerefMut<Target = Reader<'a>> + 'a {
     let inputfd = -1;
     let conf = ReaderConfig {
         inputfd,

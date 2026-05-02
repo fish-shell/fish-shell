@@ -19,6 +19,7 @@ Improved terminal support
 
 Other improvements
 ------------------
+- :doc:`test <cmds/test>` / `[` now correctly evaluates its subjects only once when using `-a` or `-o` combiners, preventing silent side-effect doubling in command substitutions.
 - History is no longer corrupted with NUL bytes when fish receives SIGTERM or SIGHUP (:issue:`10300`).
 - Private mode in-memory history (``set fish_history``) is no longer shared with :doc:`builtin read <cmds/read>` (:issue:`12662`).
 - :doc:`fish_update_completions <cmds/fish_update_completions>` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).

@@ -99,6 +99,24 @@ test epoch -ef old && echo bad ef || echo good ef
 
 rm -f epoch old newest epochlink
 
+# Regression: CombiningExpression must not double-evaluate its first subject.
+# Previously, `test (cmd) -a/-o ...` ran `cmd` twice (silently doubling any
+# command-substitution side effects).
+set -g count 0
+function _bump
+    set -g count (math $count + 1)
+    echo a
+end
+
+test (_bump) = a -a 2 = 2
+echo $count
+# CHECK: 1
+
+set -g count 0
+test (_bump) = a -o 1 = 2
+echo $count
+# CHECK: 1
+
 test -n
 echo -- -n $status
 #CHECK: -n 1

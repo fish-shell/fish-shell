@@ -313,10 +313,10 @@ mod test_expressions {
 
     /// Combining expression. Contains a list of AND or OR expressions. It takes more than two so that
     /// we don't have to worry about precedence in the parser.
-    struct CombiningExpression {
-        subjects: Vec<Box<dyn Expression>>,
-        combiners: Vec<Combiner>,
-        range: Range,
+    pub(super) struct CombiningExpression {
+        pub(super) subjects: Vec<Box<dyn Expression>>,
+        pub(super) combiners: Vec<Combiner>,
+        pub(super) range: Range,
     }
 
     /// Parenthentical expression.
@@ -369,7 +369,6 @@ mod test_expressions {
 
     impl Expression for CombiningExpression {
         fn evaluate(&self, streams: &mut IoStreams, errors: &mut Vec<WString>) -> bool {
-            let _res = self.subjects[0].evaluate(streams, errors);
             assert!(!self.subjects.is_empty());
             assert_eq!(self.combiners.len() + 1, self.subjects.len());
 
@@ -1256,6 +1255,47 @@ mod tests {
         // test out-of-range numbers
         assert!(run_test_test(2, &["99999999999999999999999999", "-ge", "1"]));
         assert!(run_test_test(2, &["1", "-eq", "-99999999999999999999999999.9"]));
+    }
+
+    #[test]
+    fn test_combining_expression_no_double_eval() {
+        use super::test_expressions::{Combiner, CombiningExpression, Expression};
+        use std::cell::Cell;
+        use std::rc::Rc;
+
+        struct CountingExpr(Rc<Cell<usize>>);
+        impl Expression for CountingExpr {
+            fn evaluate(&self, _: &mut IoStreams, _: &mut Vec<WString>) -> bool {
+                self.0.set(self.0.get() + 1);
+                true
+            }
+            fn range(&self) -> std::ops::Range<usize> {
+                0..0
+            }
+        }
+
+        let counter = Rc::new(Cell::new(0));
+        let expr = CombiningExpression {
+            subjects: vec![
+                Box::new(CountingExpr(counter.clone())),
+                Box::new(CountingExpr(Rc::new(Cell::new(0)))),
+            ],
+            combiners: vec![Combiner::And],
+            range: 0..0,
+        };
+
+        let mut out = OutputStream::Null;
+        let mut err = OutputStream::Null;
+        let io_chain = IoChain::new();
+        let mut streams = IoStreams::new(&mut out, &mut err, &io_chain);
+        let mut errors = Vec::new();
+        expr.evaluate(&mut streams, &mut errors);
+
+        assert_eq!(
+            counter.get(),
+            1,
+            "Subject 0 should be evaluated exactly once"
+        );
     }
 
     #[test]

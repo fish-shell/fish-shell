@@ -39,7 +39,7 @@ tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 5> read
 # CHECK: read> read-input
-# CHECK: read-input⏎
+# CHECK: read-input{{⏎|¶|\^J}}
 # CHECK: prompt 6> set fish_history
 # CHECK: prompt 6> true some command; read
 # CHECK: read> read-input

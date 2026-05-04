@@ -41169,6 +41169,15 @@ msgstr ""
 msgid "Output in RFC 2822 format"
 msgstr ""
 
+msgid "Output in RFC 3339 format with date precision"
+msgstr ""
+
+msgid "Output in RFC 3339 format with nanosecond precision"
+msgstr ""
+
+msgid "Output in RFC 3339 format with second precision"
+msgstr ""
+
 msgid "Output in an easy-to-parse format for scripts"
 msgstr ""
 

@@ -5,6 +5,9 @@ if date --version >/dev/null 2>/dev/null
     complete -c date -s I -l iso-8601 -d "Use ISO 8601 output format" -x -a "date hours minutes seconds"
     complete -c date -s s -l set -d "Set time" -x
     complete -c date -s R -l rfc-2822 -d "Output in RFC 2822 format"
+    complete -c date -l rfc-3339=date -d "Output in RFC 3339 format with date precision"
+    complete -c date -l rfc-3339=second -d "Output in RFC 3339 format with second precision"
+    complete -c date -l rfc-3339=ns -d "Output in RFC 3339 format with nanosecond precision"
     complete -c date -s r -l reference -d "Display last modification time of file" -r
     complete -c date -s u -l utc -d "Print/set UTC time" -f
     complete -c date -l universal -d "Print/set UTC time" -f

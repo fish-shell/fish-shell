@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Deprecations and removed features
+---------------------------------
+- `--command` and `--path` options in `complete` no longer unescape their value.
+
 fish 4.7.0 (released May 05, 2026)
 ==================================
 

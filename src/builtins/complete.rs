@@ -316,20 +316,11 @@ pub fn complete(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 preserve_order = true;
             }
             'p' | 'c' => {
-                if let Some(tmp) = unescape_string(
-                    w.woptarg.unwrap(),
-                    UnescapeStringStyle::Script(UnescapeFlags::SPECIAL),
-                ) {
-                    if opt == 'p' {
-                        path.push(tmp);
-                    } else {
-                        cmd_to_complete.push(tmp);
-                    }
+                let v = w.woptarg.unwrap().to_owned();
+                if opt == 'p' {
+                    path.push(v);
                 } else {
-                    err_fmt!("Invalid token '%s'", w.woptarg.unwrap())
-                        .cmd(cmd)
-                        .finish(streams);
-                    return Err(STATUS_INVALID_ARGS);
+                    cmd_to_complete.push(v);
                 }
             }
             'd' => {

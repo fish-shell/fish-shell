@@ -716,9 +716,6 @@ begin
     # CHECK: -command-starting-with-dash{{\t}}command
 end
 
-complete --command="foo\\"
-# CHECKERR: complete: Invalid token 'foo\'
-
 complete -c foo -a "foo\\"
 # CHECKERR: complete: foo\: contains a syntax error
 # CHECKERR: complete: Expected a string, but found an incomplete token

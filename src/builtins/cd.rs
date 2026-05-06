@@ -7,7 +7,7 @@ use crate::{
     fds::{BEST_O_SEARCH, wopen_dir},
     parser::ParserEnvSetMode,
     path::path_apply_cdpath,
-    wutil::{normalize_path, wreadlink},
+    wutil::{normalize_path, wreadlink, wrealpath},
 };
 use errno::Errno;
 use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
@@ -118,6 +118,28 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
             vec![norm_dir],
         );
         return Ok(SUCCESS);
+    }
+
+    let is_relative_to_cwd = [L!("."), L!("..")].contains(&dir_in)
+        || dir_in.starts_with(L!("./"))
+        || dir_in.starts_with(L!("../"));
+    if best_errno == ENOENT && is_relative_to_cwd {
+        if let Some(real_pwd) = wrealpath(L!(".")) {
+            let retry_dirs = path_apply_cdpath(dir_in, &(real_pwd.clone() + L!("/")), vars);
+            for dir in retry_dirs {
+                let norm_dir = normalize_path(&dir, true);
+                if let Ok(fd) = wopen_dir(&norm_dir, BEST_O_SEARCH) {
+                    if fchdir(&fd).is_ok() {
+                        parser.set_var_and_fire(
+                            L!("PWD"),
+                            ParserEnvSetMode::new(EnvMode::EXPORT | EnvMode::GLOBAL),
+                            vec![norm_dir],
+                        );
+                        return Ok(SUCCESS);
+                    }
+                }
+            }
+        }
     }
 
     let mut err = if best_errno == ENOTDIR {

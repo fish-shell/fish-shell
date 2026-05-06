@@ -430,3 +430,19 @@ cd (string repeat 4096 a)
 # named "bin")
 cd /
 cd bin
+
+# Test that cd works after the current directory has been moved (issue #12700)
+if __fish_is_cygwin
+    # Not supported on Cygwin/MSYS. Satisfy the CHECK below.
+    echo "cd after move succeeded"
+else
+        set -l tmp (mktemp -d)
+        set -l tmp_moved {$tmp}_moved
+        cd $tmp
+        mv $tmp $tmp_moved
+        cd .
+        test $PWD = $tmp_moved
+        and echo "cd after move succeeded"
+        cd $tmp_moved
+end
+# CHECK: cd after move succeeded

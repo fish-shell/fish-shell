@@ -12,7 +12,6 @@ use crate::{
 use errno::Errno;
 use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
 use nix::unistd::fchdir;
-use std::sync::Arc;
 
 // cd is highlighted specially in src/highlight/highlight.rs - new options also need to be added
 // there
@@ -22,6 +21,31 @@ const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("no-dereference"), ArgType::NoArgument, 'L'),
     wopt(L!("dereference"), ArgType::NoArgument, 'P'),
 ];
+
+fn try_chdir(dirs: Vec<WString>, parser: &mut Parser, deref_symlink: bool) -> bool {
+    for dir in dirs {
+        let norm_dir = normalize_path(&dir, true);
+        if let Ok(fd) = wopen_dir(&norm_dir, BEST_O_SEARCH) {
+            if fchdir(&fd).is_ok() {
+                parser.libdata_mut().cwd_fd = Some(std::sync::Arc::new(fd));
+
+                let mut new_pwd = norm_dir;
+                if deref_symlink {
+                    if let Some(real_dir) = wrealpath(&new_pwd) {
+                        new_pwd = real_dir;
+                    }
+                }
+                parser.set_var_and_fire(
+                    L!("PWD"),
+                    ParserEnvSetMode::new(EnvMode::EXPORT | EnvMode::GLOBAL),
+                    vec![new_pwd],
+                );
+                return true;
+            }
+        }
+    }
+    false
+}
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
@@ -107,6 +131,18 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
     }
 
+    let is_relative_to_cwd = [L!("."), L!("..")].contains(&dir_in)
+        || dir_in.starts_with(L!("./"))
+        || dir_in.starts_with(L!("../"));
+    if is_relative_to_cwd && wopen_dir(&normalize_path(&pwd, true), BEST_O_SEARCH).is_err() {
+        if let Some(mut real_pwd) = wrealpath(L!(".")) {
+            if !real_pwd.ends_with('/') {
+                real_pwd.push('/');
+            }
+            pwd = real_pwd;
+        }
+    }
+
     let dirs = path_apply_cdpath(dir_in, &pwd, vars);
     assert!(
         !dirs.is_empty(),
@@ -133,7 +169,7 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 .map(|()| fd)
         });
 
-        let fd = match res {
+        let _fd = match res {
             Ok(fd) => fd,
             Err(err) => {
                 // Some errors we skip and only report if nothing worked.
@@ -158,23 +194,9 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
         };
 
-        // Stash the fd for the cwd in the parser so it stays open.
-        // Eventually fish will support distinct CWDs for different parsers in different threads.
-        parser.libdata_mut().cwd_fd = Some(Arc::new(fd));
-
-        let mut new_pwd = norm_dir;
-        if deref_symlink {
-            if let Some(real_dir) = wrealpath(&new_pwd) {
-                new_pwd = real_dir;
-            }
+        if try_chdir(vec![dir], parser, deref_symlink) {
+            return Ok(SUCCESS);
         }
-
-        parser.set_var_and_fire(
-            L!("PWD"),
-            ParserEnvSetMode::new(EnvMode::EXPORT | EnvMode::GLOBAL),
-            vec![new_pwd],
-        );
-        return Ok(SUCCESS);
     }
 
     let mut err = if best_errno == ENOTDIR {

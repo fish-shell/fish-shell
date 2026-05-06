@@ -210,3 +210,15 @@ end
 
 $fish -c 'complete -C "git -C ./.gi"'
 # CHECK: ./.git/	Directory
+
+# Test bare repo doesn't produce trailing space (issue #12705)
+set -l bare_tmp (mktemp -d)
+git clone --bare . $bare_tmp/bare.git >/dev/null 2>&1
+cd $bare_tmp/bare.git
+set -e __fish_git_prompt_showdirtystate
+set -e __fish_git_prompt_show_informative_status
+set -e __fish_git_prompt_showuntrackedfiles
+set -l bare_output (fish_git_prompt)
+string match -qr '^\s*\(BARE:\S+\)$' -- $bare_output
+and echo "bare repo prompt has no trailing space"
+#CHECK: bare repo prompt has no trailing space

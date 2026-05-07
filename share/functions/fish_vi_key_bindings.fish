@@ -49,10 +49,8 @@ end
 function __fish_vi_delete_char
     set -l count (__fish_vi_consume_count __fish_vi_count)
     commandline -f begin-selection
-    if test $count -gt 1
-        for i in (seq 1 (math $count - 1))
-            commandline -f forward-char
-        end
+    for i in (seq 1 $count)
+        commandline -f forward-char
     end
     commandline -f kill-selection end-selection
 end

@@ -9503,9 +9503,6 @@ msgstr ""
 msgid "Build an RPM package"
 msgstr ""
 
-msgid "Build and analyze a Docker image from a Dockerfile"
-msgstr ""
-
 msgid "Build and install a new package"
 msgstr "Construire et installer un nouveau paquet"
 
@@ -12361,9 +12358,6 @@ msgstr "Ficher de configuration"
 
 msgid "Config and front matter format"
 msgstr "Configuration et format du frontal"
-
-msgid "Config file"
-msgstr ""
 
 msgid "Config file (default: $HOME/.s3cfg)"
 msgstr ""
@@ -30470,9 +30464,6 @@ msgstr "Aide sur « config »"
 msgid "Help for convert"
 msgstr "Aide sur « convert »"
 
-msgid "Help for dive"
-msgstr ""
-
 msgid "Help for doc"
 msgstr "Aide sur « doc »"
 
@@ -30630,12 +30621,6 @@ msgid "Hides the copyright banner at startup"
 msgstr ""
 
 msgid "Higher-order task to perform other tasks in succession."
-msgstr ""
-
-msgid "Highest allowable bytes wasted"
-msgstr ""
-
-msgid "Highest allowable percentage of bytes wasted"
 msgstr ""
 
 msgid "Highest compression, same as -12"
@@ -30989,9 +30974,6 @@ msgstr "Types d’identité à afficher"
 msgid "Idiomatically format Dart source code"
 msgstr ""
 
-msgid "If CI=true in the environment, use the given yaml to drive validation rules"
-msgstr ""
-
 msgid "If HTTP proxy is used, make curl tunnel through it"
 msgstr ""
 
@@ -31290,9 +31272,6 @@ msgid "Ignore host and package OS mismatch"
 msgstr ""
 
 msgid "Ignore host and package architecture mismatch"
-msgstr ""
-
-msgid "Ignore image parsing errors and run the analysis anyway"
 msgstr ""
 
 msgid "Ignore inhibitor locks on shutdown or sleep"
@@ -37221,9 +37200,6 @@ msgid "Lossy quality"
 msgstr ""
 
 msgid "Lower the volume by 8%"
-msgstr ""
-
-msgid "Lowest allowable image efficiency"
 msgstr ""
 
 msgid "MAC address"
@@ -61442,12 +61418,6 @@ msgstr ""
 msgid "Skip the given initial samples for each input {#|mm:ss.ss}"
 msgstr "Partir de l’échantillon spécifié pour chaque fichier en entrée (#|mm:ss.ss)"
 
-msgid "Skip the interactive TUI and validate against CI rules"
-msgstr ""
-
-msgid "Skip the interactive TUI and write the layer analysis statistics to a given file"
-msgstr ""
-
 msgid "Skip the normal function prologue and epilogue that sets up the stack-frame"
 msgstr ""
 
@@ -66570,9 +66540,6 @@ msgid "The configuration file for init"
 msgstr "Le fichier de configuration à utiliser pour l’utilisation"
 
 msgid "The connection protocol to use"
-msgstr ""
-
-msgid "The container engine to fetch the image from"
 msgstr ""
 
 msgid "The copy job is not persisted if VM is turned off"

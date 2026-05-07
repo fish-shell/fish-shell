@@ -95,7 +95,7 @@ The following options control how much is read and how it is stored:
     Marks the end of the line with the NUL character, instead of newline. This also disables interactive mode.
 
 **-L** or **--line**
-    Reads each line into successive variables, and stops after each variable has been filled. This cannot be combined with the ``--delimiter`` option.
+    Reads each line into successive variables, and stops after each variable has been filled. This cannot be combined with the ``--null`` option, or options to control splitting like ``--delimiter``.
 
 Without the ``--line`` option, ``read`` reads a single line of input from standard input, breaks it into tokens, and then assigns one token to each variable specified in *VARIABLES*. If there are more tokens than variables, the complete remainder is assigned to the last variable.
 

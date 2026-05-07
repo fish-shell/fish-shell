@@ -132,21 +132,26 @@ if $lint; then
     cargo doc --workspace --no-deps
 fi
 
-# Using "()" not "{}" because we do want a subshell (for the export)
-system_tests() (
-    # shellcheck disable=2163
-    [ -n "$*" ] && export "$@"
-    "$workspace_root/tests/test_driver.py" "$build_dir"
-)
+system_tests() {
+    "$workspace_root/tests/test_driver.py" "$build_dir" "$@"
+}
 
 if $is_cygwin; then
     # shellcheck disable=2059
     printf "=== Running ${green}integration tests ${yellow}with${green} symlinks${reset}\n"
-    system_tests "$cygwin_var"=winsymlinks
+    (
+        export "$cygwin_var"=winsymlinks
+        system_tests
+    )
 
     # shellcheck disable=2059
     printf "=== Running ${green}integration tests ${yellow}without${green} symlinks${reset}\n"
-    system_tests "$cygwin_var"=
+    (
+        # Only redo the tests that use `ln` to saves some time
+        export "$cygwin_var"=
+        # shellcheck disable=2046
+        system_tests $(grep -l -E '\bln\b' -r tests/checks/)
+    )
 else
     # shellcheck disable=2059
     printf "=== Running ${green}integration tests${reset}\n"

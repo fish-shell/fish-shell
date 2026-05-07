@@ -99,6 +99,15 @@ See :ref:`Shell variables <variables>` for more.
 
 .. _bash-globs:
 
+Variable defaults (``${my_variable:-"default value"}``)
+-------------------------------------------------------
+
+Fish doesn't have ``${my_variable:-fallback}`` for providing default values to unset variables. Instead, you can set default values by checking whether the variable has been set yet::
+
+  # Ensure XDG_CONFIG_HOME is set or use a default value
+  set -q XDG_CONFIG_HOME || set XDG_CONFIG_HOME $HOME/.config
+  # now use XDG_CONFIG_HOME as normal
+
 Wildcards (globs)
 -----------------
 

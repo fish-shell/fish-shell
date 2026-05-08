@@ -2,9 +2,9 @@
 members = ["crates/*"]
 
 [workspace.package]
+edition = "2024"
 # To build revisions that use Corrosion (those before 2024-01), use CMake 3.19, Rustc 1.78 and Rustup 1.27.
 rust-version = "1.85"
-edition = "2024"
 repository = "https://github.com/fish-shell/fish-shell"
 # see doc_src/license.rst for details
 # don't forget to update COPYING and debian/copyright too
@@ -34,9 +34,9 @@ fish-printf = { path = "crates/printf", features = ["widestring"] }
 fish-tempfile = { path = "crates/tempfile" }
 fish-util = { path = "crates/util" }
 fish-wcstringutil = { path = "crates/wcstringutil" }
+fish-wgetopt = { path = "crates/wgetopt" }
 fish-widecharwidth = { path = "crates/widecharwidth" }
 fish-widestring = { path = "crates/widestring" }
-fish-wgetopt = { path = "crates/wgetopt" }
 ignore = "0.4.25"
 itertools = "0.14.0"
 libc = "0.2.177"
@@ -47,10 +47,10 @@ lru = "0.16.2"
 nix = { version = "0.31.1", default-features = false, features = [
   "event",
   "fs",
-  "inotify",
   "hostname",
-  "resource",
+  "inotify",
   "process",
+  "resource",
   "signal",
   "term",
   "user",
@@ -80,11 +80,11 @@ rust-embed = { version = "8.11.0", features = [
 rustc_version = "0.4.1"
 serial_test = { version = "3", default-features = false }
 strum_macros = "0.28.0"
-widestring = "1.2.0"
 unicode-segmentation = "1.12.0"
 unicode-width = "0.2.0"
 unix_path = "1.0.1"
 walkdir = "2.5.0"
+widestring = "1.2.0"
 xterm-color = "1.0.1"
 
 [profile.release]
@@ -188,14 +188,14 @@ path = "src/bin/fish_key_reader.rs"
 default = ["embed-manpages", "localize-messages"]
 benchmark = []
 embed-manpages = ["dep:fish-build-man-pages"]
-# Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
-# build time.
-localize-messages = ["dep:fish-gettext"]
 # This feature is used to enable extracting messages from the source code for localization.
 # It only needs to be enabled if updating these messages (and the corresponding PO files) is
 # desired. This happens for the `gettext` xtask, which is also invoked via `cargo xtask check`.
 # There should not be a need to enable this feature manually.
 gettext-extract = ["dep:fish-gettext-extraction"]
+# Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
+# build time.
+localize-messages = ["dep:fish-gettext"]
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
 tsan = []

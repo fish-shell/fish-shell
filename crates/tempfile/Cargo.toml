@@ -1,13 +1,13 @@
 [package]
 name = "fish-tempfile"
+version = "0.0.0"
 edition.workspace = true
 rust-version.workspace = true
-version = "0.0.0"
 repository.workspace = true
 license.workspace = true
 
 [dependencies]
-nix = { workspace = true, features = ["fs", "feature"] }
+nix = { workspace = true, features = ["feature", "fs"] }
 rand.workspace = true
 
 [lints]

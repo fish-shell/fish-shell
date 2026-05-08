@@ -1,11 +1,11 @@
 [package]
 name = "fish-gettext-extraction"
+version = "0.0.0"
 edition.workspace = true
 rust-version.workspace = true
-version = "0.0.0"
+description = "proc-macro for extracting strings for gettext translation"
 repository.workspace = true
 license.workspace = true
-description = "proc-macro for extracting strings for gettext translation"
 
 [lib]
 proc-macro = true

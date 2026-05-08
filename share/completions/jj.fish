@@ -6,5 +6,5 @@ if set -l completion (COMPLETE=fish jj __this-command-does-not-exist 2>/dev/null
     # jj is new enough for dynamic completions to be implemented
     printf %s\n $completion | source
 else
-    jj util completion fish | source
+    jj util completion --fish | source
 end

@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Interactive improvements
+------------------------
+- Several prompt and listing functions now strip control characters from filesystem-derived data, matching what :doc:`prompt_pwd <cmds/prompt_pwd>` already did. Affected: the ``arrow``, ``informative`` and ``minimalist`` sample prompts, :doc:`fish_git_prompt <cmds/fish_git_prompt>`, ``fish_hg_prompt``, ``fish_fossil_prompt``, :doc:`dirh <cmds/dirh>`, :doc:`dirs <cmds/dirs>`, :doc:`cdh <cmds/cdh>`, :doc:`fish_add_path <cmds/fish_add_path>` (verbose mode) and :doc:`funced <cmds/funced>` (save-confirmation message). The shared filter is exposed as the internal ``__fish_strip_ctrl`` helper. The character class has also been extended to cover C1 (U+0080..U+009F) and the PUA range fish uses for raw invalid-UTF-8 filename bytes.
+
 fish 4.7.1 (released May 08, 2026)
 ==================================
 

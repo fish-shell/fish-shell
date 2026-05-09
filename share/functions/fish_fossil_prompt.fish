@@ -5,7 +5,7 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
     end
 
     # Read branch and bookmark (bail if not checkout)
-    set -l branch (fossil branch current 2>/dev/null)
+    set -l branch (__fish_strip_ctrl (fossil branch current 2>/dev/null))
     or return 127
 
     set -q fish_color_fossil_clean

@@ -476,9 +476,9 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
     set -l total
 
     if test -d $git_dir/rebase-merge
-        set branch (cat $git_dir/rebase-merge/head-name 2>/dev/null)
-        set step (cat $git_dir/rebase-merge/msgnum 2>/dev/null)
-        set total (cat $git_dir/rebase-merge/end 2>/dev/null)
+        set branch (__fish_strip_ctrl (cat $git_dir/rebase-merge/head-name 2>/dev/null))
+        set step (__fish_strip_ctrl (cat $git_dir/rebase-merge/msgnum 2>/dev/null))
+        set total (__fish_strip_ctrl (cat $git_dir/rebase-merge/end 2>/dev/null))
         if test -f $git_dir/rebase-merge/interactive
             set operation "|REBASE-i"
         else
@@ -486,10 +486,10 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
         end
     else
         if test -d $git_dir/rebase-apply
-            set step (cat $git_dir/rebase-apply/next 2>/dev/null)
-            set total (cat $git_dir/rebase-apply/last 2>/dev/null)
+            set step (__fish_strip_ctrl (cat $git_dir/rebase-apply/next 2>/dev/null))
+            set total (__fish_strip_ctrl (cat $git_dir/rebase-apply/last 2>/dev/null))
             if test -f $git_dir/rebase-apply/rebasing
-                set branch (cat $git_dir/rebase-apply/head-name 2>/dev/null)
+                set branch (__fish_strip_ctrl (cat $git_dir/rebase-apply/head-name 2>/dev/null))
                 set operation "|REBASE"
             else if test -f $git_dir/rebase-apply/applying
                 set operation "|AM"

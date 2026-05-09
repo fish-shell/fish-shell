@@ -27,7 +27,7 @@ function fish_prompt
         end
 
         function _hg_branch_name
-            echo (hg branch 2>/dev/null)
+            echo (__fish_strip_ctrl (hg branch 2>/dev/null))
         end
 
         function _is_hg_dirty

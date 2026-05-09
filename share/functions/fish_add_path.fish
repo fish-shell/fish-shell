@@ -56,10 +56,11 @@ function fish_add_path --description "Add paths to the PATH"
             # path does not exist
             if set -q _flag_verbose
                 # print a message in verbose mode
+                set -l p_disp (__fish_strip_ctrl "$p")
                 if test -f "$p"
-                    printf (_ "Skipping path because it is a file instead of a directory: %s\n") "$p"
+                    printf (_ "Skipping path because it is a file instead of a directory: %s\n") "$p_disp"
                 else
-                    printf (_ "Skipping non-existent path: %s\n") "$p"
+                    printf (_ "Skipping non-existent path: %s\n") "$p_disp"
                 end
             end
             continue
@@ -71,7 +72,7 @@ function fish_add_path --description "Add paths to the PATH"
                 set -a indexes $ind
                 set -a newpaths $p
             else if set -q _flag_verbose
-                printf (_ "Skipping already included path: %s\n") "$p"
+                printf (_ "Skipping already included path: %s\n") (__fish_strip_ctrl "$p")
             end
         else if not contains -- $p $newpaths
             # Without move, we only add it if it's not in.

@@ -130,7 +130,7 @@ function funced --description 'Edit function definition'
             else if test -n "$writepath"
                 if not set -q _flag_save
                     echo (_ "Warning: the file containing this function has not been saved. Changes may be lost when fish is closed.")
-                    set -l prompt (printf (_ 'Save function to %s? [Y/n]') "$writepath")
+                    set -l prompt (printf (_ 'Save function to %s? [Y/n]') (__fish_strip_ctrl "$writepath"))
                     read --prompt-str "$prompt " response
                     if test -z "$response"
                         or contains $response {Y,y}{E,e,}{S,s,}
@@ -144,7 +144,7 @@ function funced --description 'Edit function definition'
                     # try to write the file back
                     # cp preserves existing permissions, though it might overwrite the owner
                     if cp $tmpname "$writepath" 2>&1
-                        printf (_ "Function saved to %s") "$writepath"
+                        printf (_ "Function saved to %s") (__fish_strip_ctrl "$writepath")
                         echo
                         # read it back again - this ensures that the output of `functions --details` is correct
                         source "$writepath"
@@ -152,7 +152,7 @@ function funced --description 'Edit function definition'
                         echo (_ "Saving to original location failed; saving to user configuration instead.")
                         set writepath $__fish_config_dir/functions/(path basename "$writepath")
                         if cp $tmpname "$writepath"
-                            printf (_ "Function saved to %s") "$writepath"
+                            printf (_ "Function saved to %s") (__fish_strip_ctrl "$writepath")
                             echo
                             # read it back again - this ensures that the output of `functions --details` is correct
                             source "$writepath"

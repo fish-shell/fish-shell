@@ -15,17 +15,17 @@ function dirh --description "Print the current directory history (the prev and n
         # This can't be (seq $dirc -1 1) because of BSD.
         set -l dirnum (seq 1 $dirc)
         for i in $dirnum[-1..1]
-            printf '%2d) %s\n' $i $dirprev_rev[$i]
+            printf '%2d) %s\n' $i (__fish_strip_ctrl $dirprev_rev[$i])
         end
     end
 
-    echo (set_color $fish_color_history_current)'   ' $PWD(set_color --reset)
+    echo (set_color $fish_color_history_current)'   ' (__fish_strip_ctrl $PWD)(set_color --reset)
 
     set -l dirc (count $dirnext)
     if test $dirc -gt 0
         set -l dirnext_rev $dirnext[-1..1]
         for i in (seq $dirc)
-            printf '%2d) %s\n' $i $dirnext_rev[$i]
+            printf '%2d) %s\n' $i (__fish_strip_ctrl $dirnext_rev[$i])
         end
     end
     echo

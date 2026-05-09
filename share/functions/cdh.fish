@@ -59,7 +59,7 @@ function cdh --description "Menu based cd command"
         if set -q home_dir[2]
             set dir "~$home_dir[2]"
         end
-        printf '%s %s %2d) %s %s%s%s\n' (set_color $label_color) $letters[$i] $i (set_color --reset) $dir_color $dir $dir_color_reset
+        printf '%s %s %2d) %s %s%s%s\n' (set_color $label_color) $letters[$i] $i (set_color --reset) $dir_color (__fish_strip_ctrl $dir) $dir_color_reset
     end
 
     # Ask the user which directory from their history they want to cd to.

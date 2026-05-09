@@ -7,6 +7,8 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
     # Read branch and bookmark (bail if not checkout)
     set -l branch (fossil branch current 2>/dev/null)
     or return 127
+    # Strip control characters to avoid injecting terminal escape sequences into the prompt.
+    set branch (string replace -ra '[[:cntrl:]]' '' -- $branch)
 
     set -q fish_color_fossil_clean
     or set -g fish_color_fossil_clean green

@@ -1,6 +1,8 @@
 fish ?.?.? (released ???)
 =========================
 
+- ``fish_hg_prompt``, ``fish_git_prompt`` and ``fish_fossil_prompt`` now strip control characters from VCS state read off disk, matching ``prompt_pwd``.
+
 fish 4.7.1 (released May 08, 2026)
 ==================================
 

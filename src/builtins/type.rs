@@ -1,6 +1,7 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
+    common::sanitize_for_display,
     err_fmt, err_str, function,
     highlight::highlight_and_colorize,
     parse_util::{apply_indents, compute_indents},
@@ -123,7 +124,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                         let lineno: i32 = props.definition_lineno();
                         comment.push_utfstr(&wgettext_fmt!(
                             "Defined in %s @ line %d",
-                            path,
+                            sanitize_for_display(path),
                             lineno
                         ));
                     }
@@ -138,7 +139,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                             let lineno = props.copy_definition_lineno();
                             comment.push_utfstr(&wgettext_fmt!(
                                 ", copied in %s @ line %d",
-                                path,
+                                sanitize_for_display(path),
                                 lineno
                             ));
                         }
@@ -152,7 +153,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                     } else if !opts.short_output {
                         streams.out.append(&sprintf!(
                             "%s %s\n",
-                            wgettext_fmt!("%s is a function", arg),
+                            wgettext_fmt!("%s is a function", sanitize_for_display(arg)),
                             wgettext!("with definition")
                         ));
                         let mut def = WString::new();
@@ -174,7 +175,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                             streams.out.append(&def);
                         }
                     } else {
-                        streams.out.append(&wgettext_fmt!("%s is a function", arg));
+                        streams.out.append(&wgettext_fmt!("%s is a function", sanitize_for_display(arg)));
                         streams.out.append(" ");
                         streams.out.appendln(&wgettext_fmt!("(%s)", comment));
                     }
@@ -194,7 +195,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 return Ok(SUCCESS);
             }
             if !opts.get_type {
-                streams.out.appendln(&wgettext_fmt!("%s is a builtin", arg));
+                streams.out.appendln(&wgettext_fmt!("%s is a builtin", sanitize_for_display(arg)));
             } else if opts.get_type {
                 streams.out.append(L!("builtin\n"));
             }
@@ -222,7 +223,11 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 if opts.path || opts.force_path {
                     streams.out.appendln(path);
                 } else {
-                    streams.out.appendln(&wgettext_fmt!("%s is %s", arg, path));
+                    streams.out.appendln(&wgettext_fmt!(
+                        "%s is %s",
+                        sanitize_for_display(arg),
+                        sanitize_for_display(path)
+                    ));
                 }
             } else if opts.get_type {
                 streams.out.appendln(L!("file"));
@@ -238,7 +243,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         }
 
         if found == 0 && !opts.query && !opts.path {
-            err_fmt!("Could not find '%s'", arg)
+            err_fmt!("Could not find '%s'", sanitize_for_display(arg))
                 .cmd(cmd)
                 .finish(streams);
         }

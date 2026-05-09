@@ -3,6 +3,7 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::prelude::*;
 use crate::{
     screen::{is_dumb, only_grayscale},
+    common::sanitize_for_display,
     text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle},
     threads::MainThread,
 };
@@ -177,7 +178,8 @@ fn query_kitty_progressive_enhancements(out: &mut Outputter) -> bool {
 fn osc_0_or_1_terminal_title(out: &mut Outputter, is_1: bool, title: &[WString]) -> bool {
     out.write_bytes(if is_1 { b"\x1b]1;" } else { b"\x1b]0;" });
     for title_line in title {
-        out.write_bytes(&wcs2bytes(title_line));
+        // Drop bytes that would close or restart the OSC envelope.
+        out.write_bytes(&wcs2bytes(&sanitize_for_display(title_line)));
     }
     out.write_bytes(b"\x07"); // BEL
     true

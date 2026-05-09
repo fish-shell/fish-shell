@@ -1,5 +1,6 @@
 //! Constants used in the programmatic representation of fish code.
 
+use crate::common::sanitize_for_display;
 use crate::prelude::*;
 use fish_fallback::{fish_wcswidth, fish_wcwidth};
 
@@ -367,11 +368,14 @@ impl ParseError {
             return result;
         }
 
-        // Append the line of text.
+        // Append the line of text. Strip controls so a hostile source line
+        // can't inject terminal sequences when the error is shown.
         if !result.is_empty() {
             result += "\n";
         }
-        result += wstr::from_char_slice(&src.as_char_slice()[line_start..line_end]);
+        result += &sanitize_for_display(wstr::from_char_slice(
+            &src.as_char_slice()[line_start..line_end],
+        ))[..];
 
         // Append the caret line. The input source may include tabs; for that reason we
         // construct a "caret line" that has tabs in corresponding positions.

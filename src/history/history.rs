@@ -16,7 +16,7 @@
 
 use crate::{
     ast::{self, Kind, Node as _},
-    common::{CancelChecker, valid_var_name},
+    common::{CancelChecker, sanitize_for_display, valid_var_name},
     env::{EnvMode, EnvSetMode, EnvStack, EnvVar, Environment},
     expand::{ExpandFlags, expand_one},
     fds::wopen_cloexec,
@@ -926,7 +926,7 @@ impl HistoryImpl {
             let Ok(line) = line else {
                 break;
             };
-            let wide_line = trim(bytes2wcstring(&line), None);
+            let wide_line = sanitize_for_display(&trim(bytes2wcstring(&line), None));
             // Add this line if it doesn't contain anything we know we can't handle.
             if should_import_bash_history_line(&wide_line) {
                 self.add(

@@ -2,6 +2,7 @@
 
 use super::prelude::*;
 use crate::{
+    common::sanitize_for_display,
     err_fmt,
     io::IoStreams,
     job_group::{JobId, MaybeJobId},
@@ -120,7 +121,7 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
             }
 
             for p in j.processes() {
-                out += &sprintf!("%s\n", p.argv0().unwrap())[..];
+                out += &sprintf!("%s\n", sanitize_for_display(p.argv0().unwrap()))[..];
             }
             streams.out.append(&out);
         }

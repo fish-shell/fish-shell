@@ -4,7 +4,7 @@ use super::prelude::*;
 use crate::{
     ast::{self, AsNode as _, Ast, Kind, Leaf as _, Node, NodeVisitor, SourceRangeList, Traversal},
     builtins::error::Error,
-    common::{PROGRAM_NAME, get_program_name},
+    common::{PROGRAM_NAME, get_program_name, sanitize_for_display},
     env::{EnvStack, env_init, environment::Environment as _},
     err_fmt, err_str,
     global_safety::RelaxedAtomicBool,
@@ -1080,7 +1080,12 @@ fn do_indent(
                     output_location = arg;
                 }
                 Err(err) => {
-                    err_fmt!("Opening \"%s\" failed: %s", arg, err.to_string()).finish(streams);
+                    err_fmt!(
+                        "Opening \"%s\" failed: %s",
+                        sanitize_for_display(arg),
+                        err.to_string()
+                    )
+                    .finish(streams);
                     return Err(STATUS_CMD_ERROR);
                 }
             }
@@ -1180,7 +1185,7 @@ fn do_indent(
             OutputType::Check => {
                 if output_wtext != src {
                     if let Some(arg) = args.get(i) {
-                        streams.err.appendln(*arg);
+                        streams.err.appendln(&sanitize_for_display(arg));
                     }
                     retval += 1;
                 }

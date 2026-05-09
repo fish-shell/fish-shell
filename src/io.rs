@@ -1,5 +1,6 @@
 use crate::{
     builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH},
+    common::sanitize_for_display,
     fd_monitor::{Callback, FdMonitor, FdMonitorItemId},
     fds::{BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec},
     flog::{flog, flogf, should_flog},
@@ -540,6 +541,9 @@ impl IoChain {
         let mut have_error = false;
 
         let print_error = |err, target: &wstr| {
+            // Strip controls so a hostile-named target path can't inject
+            // terminal sequences via the warning.
+            let target = &sanitize_for_display(target)[..];
             // If the error is that the file doesn't exist
             // or there's a non-directory component,
             // find the first problematic component for a better message.
@@ -591,7 +595,7 @@ impl IoChain {
                         }
                         Err(err) => {
                             if oflags.contains(OFlag::O_EXCL) && err == nix::Error::EEXIST {
-                                flogf!(warning, NOCLOB_ERROR, spec.target);
+                                flogf!(warning, NOCLOB_ERROR, sanitize_for_display(&spec.target));
                             } else if spec.mode != RedirectionMode::TryInput
                                 && should_flog!(warning)
                             {

@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::{
     builtins::error::Error,
-    common::{reformat_for_screen, valid_func_name},
+    common::{reformat_for_screen, sanitize_for_display, valid_func_name},
     err_fmt, err_str,
     event::{self},
     function,
@@ -392,7 +392,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 Some(path) => {
                     comment.push_utfstr(&wgettext_fmt!(
                         "Defined in %s @ line %d",
-                        path,
+                        sanitize_for_display(path),
                         props.definition_lineno()
                     ));
                 }
@@ -407,7 +407,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                     Some(path) => {
                         comment.push_utfstr(&wgettext_fmt!(
                             ", copied in %s @ line %d",
-                            path,
+                            sanitize_for_display(path),
                             props.copy_definition_lineno()
                         ));
                     }

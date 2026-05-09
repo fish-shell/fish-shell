@@ -21,6 +21,16 @@ pub const BUILD_DIR: &str = env!("FISH_RESOLVED_BUILD_DIR");
 
 pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 
+/// Strip C0, DEL, C1 and the PUA range fish uses for raw invalid-UTF-8 bytes.
+pub fn sanitize_for_display(s: &wstr) -> WString {
+    s.chars()
+        .filter(|c| {
+            let v = u32::from(*c);
+            !(v <= 0x1f || (0x7f..=0x9f).contains(&v) || (0xf680..=0xf69f).contains(&v))
+        })
+        .collect()
+}
+
 pub fn shell_modes() -> MutexGuard<'static, Termios> {
     crate::reader::SHELL_MODES.lock().unwrap()
 }
@@ -321,7 +331,7 @@ pub const ESCAPE_TEST_CHAR: usize = 4000;
 mod tests {
     use super::{
         ESCAPE_TEST_CHAR, EscapeFlags, EscapeStringStyle, UnescapeStringStyle, escape_string,
-        escape_string_with_quote, unescape_string,
+        escape_string_with_quote, sanitize_for_display, unescape_string,
     };
     use crate::tests::prelude::*;
     use fish_util::get_seeded_rng;
@@ -331,6 +341,27 @@ mod tests {
     };
     use rand::{Rng as _, RngCore as _};
     use std::fmt::Write as _;
+
+    #[test]
+    fn sanitize_strips_c0_del_and_c1() {
+        // C0 controls (including ESC), DEL and C1 are dropped.
+        let s = WString::from_chars(['a', '\x00', 'b', '\x1b', 'c', '\x7f', 'd', '\u{0080}', 'e', '\u{009f}', 'f']);
+        assert_eq!(sanitize_for_display(&s), L!("abcdef"));
+    }
+
+    #[test]
+    fn sanitize_strips_pua_invalid_utf8_bytes() {
+        // The PUA range fish uses for raw invalid-UTF-8 bytes is dropped too.
+        let s = WString::from_chars(['x', '\u{f680}', 'y', '\u{f69f}', 'z']);
+        assert_eq!(sanitize_for_display(&s), L!("xyz"));
+    }
+
+    #[test]
+    fn sanitize_keeps_latin1_supplement_and_higher() {
+        // Anything from U+00A0 onward is preserved.
+        let s = WString::from_chars(['a', '\u{00a0}', 'b', '\u{00ff}', 'c', '中', '🦀']);
+        assert_eq!(sanitize_for_display(&s), s);
+    }
 
     #[test]
     fn test_escape_string() {

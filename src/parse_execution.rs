@@ -14,7 +14,7 @@ use crate::{
             STATUS_UNMATCHED_WILDCARD, builtin_exists,
         },
     },
-    common::valid_var_name,
+    common::{sanitize_for_display, valid_var_name},
     complete::CompletionList,
     env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment as _, Statuses},
     err_fmt,
@@ -274,6 +274,9 @@ impl ExecutionContext {
     ) -> EndExecutionReason {
         // We couldn't find the specified command. This is a non-fatal error. We want to set the exit
         // status to 127, which is the standard number used by other shells like bash and zsh.
+        // Strip controls so a hostile-named binary can't inject sequences via the error.
+        let cmd_disp = sanitize_for_display(cmd);
+        let cmd = &cmd_disp[..];
 
         if err.kind() != ErrorKind::NotFound {
             // TODO: We currently handle all errors here the same,

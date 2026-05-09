@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::{err_str, should_flog};
+use crate::{common::sanitize_for_display, err_str, should_flog};
 use fish_feature_flags::{FeatureFlag, feature_test};
 
 mod test_expressions {
@@ -761,7 +761,7 @@ mod test_expressions {
                 if narg > 0 {
                     commandline.push(' ');
                 }
-                commandline.push_utfstr(arg);
+                commandline.push_utfstr(&sanitize_for_display(arg));
                 narg += 1;
                 if narg == parser.error_idx {
                     len_to_err = fish_wcswidth(&commandline).unwrap_or_default();

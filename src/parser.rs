@@ -1284,9 +1284,10 @@ impl Parser {
     }
 }
 
-// Given a file path, return something nicer. Currently we just "unexpand" tildes.
+// Given a file path, return something nicer. Currently we just "unexpand"
+// tildes and strip control characters that could disturb terminal display.
 fn user_presentable_path(path: &wstr, vars: &dyn Environment) -> WString {
-    replace_home_directory_with_tilde(path, vars)
+    crate::common::sanitize_for_display(&replace_home_directory_with_tilde(path, vars))
 }
 
 /// Print profiling information to the specified stream.

@@ -2,6 +2,7 @@
 
 use super::prelude::*;
 use crate::{
+    common::sanitize_for_display,
     env::{EnvMode, Environment as _},
     err_fmt, err_raw, err_str,
     fds::{BEST_O_SEARCH, wopen_dir},
@@ -120,24 +121,25 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         return Ok(SUCCESS);
     }
 
+    let dir_in_clean = sanitize_for_display(dir_in);
     let mut err = if best_errno == ENOTDIR {
-        err_fmt!("'%s' is not a directory", dir_in)
+        err_fmt!("'%s' is not a directory", dir_in_clean)
     } else if !broken_symlink.is_empty() {
         err_fmt!(
             "'%s' is a broken symbolic link to '%s'",
-            broken_symlink,
-            broken_symlink_target
+            sanitize_for_display(&broken_symlink),
+            sanitize_for_display(&broken_symlink_target)
         )
     } else if best_errno == ELOOP {
-        err_fmt!("Too many levels of symbolic links: '%s'", dir_in)
+        err_fmt!("Too many levels of symbolic links: '%s'", dir_in_clean)
     } else if best_errno == ENOENT {
-        err_fmt!(DIR_DOES_NOT_EXIST, dir_in)
+        err_fmt!(DIR_DOES_NOT_EXIST, dir_in_clean)
     } else if best_errno == EACCES || best_errno == EPERM {
-        err_fmt!("Permission denied: '%s'", dir_in)
+        err_fmt!("Permission denied: '%s'", dir_in_clean)
     } else {
         errno::set_errno(Errno(best_errno));
         err_raw!(builtin_strerror()).cmd(L!("cd")).finish(streams);
-        err_fmt!("Unknown error trying to locate directory '%s'", dir_in)
+        err_fmt!("Unknown error trying to locate directory '%s'", dir_in_clean)
     };
 
     if !parser.is_interactive() {

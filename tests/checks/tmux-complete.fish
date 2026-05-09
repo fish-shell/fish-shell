@@ -43,7 +43,7 @@ isolated-tmux capture-pane -p
 # CHECK: aabc  aaBd
 
 # Check that a larger-than-screen completion list does not stomp a multiline commandline (#8509).
-isolated-tmux send-keys C-u 'complete -c foo3 -fa "(seq $LINES)\t(string repeat -n $COLUMNS d)"' Enter \
+isolated-tmux send-keys C-u 'complete -c foo3 -fa \'(set desc (string repeat -n $COLUMNS d); for i in (seq $LINES); echo -e "$i\t$desc$i"; end)\'' Enter \
     C-l begin Enter foo3 Enter "echo some trailing line" \
     C-p C-e Space Tab Tab
 tmux-sleep

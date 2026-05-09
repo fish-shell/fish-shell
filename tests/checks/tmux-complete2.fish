@@ -35,7 +35,7 @@ isolated-tmux send-keys 'echo $FISH_TEST_v' Tab
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: prompt 1> echo $FISH_TEST_VAR_
-# CHECK: …TEST_VAR_1  (Variable: /)  …TEST_VAR_2  (Variable: /)
+# CHECK: …TEST_VAR_1  …TEST_VAR_2  (Variable: /)
 
 mkdir -p clang/include
 touch clang/INSTALL.txt

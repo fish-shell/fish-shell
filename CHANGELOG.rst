@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Interactive improvements
+------------------------
+- Completion will always join candidates sharing the same description, not just when completing a single `-`. Most notably, this includes possibly joining subcommands with options (e.g. ``help`` and ``--help``)
+
 fish 4.7.1 (released May 08, 2026)
 ==================================
 

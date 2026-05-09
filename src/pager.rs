@@ -667,9 +667,7 @@ impl Pager {
         self.unfiltered_completion_infos = process_completions_into_infos(raw_completions);
 
         // Maybe join them.
-        if *self.prefix == "-" {
-            join_completions(&mut self.unfiltered_completion_infos);
-        }
+        join_completions(&mut self.unfiltered_completion_infos);
 
         // Compute their various widths.
         self.measure_completion_infos();
@@ -1500,31 +1498,31 @@ mod tests {
         // Multiple completions, uneven comp, even desc
         pager.set_completions(
             &completions(&[
-                ("coverity_scan_master", "Local Branch"),
-                ("curly-underlines", "Local Branch"),
-                ("docker-builds", "Local Branch"),
-                ("fish-reenable-cirrus", "Local Branch"),
-                ("macos-apropos", "Local Branch"),
-                ("master", "Local Branch"),
+                ("coverity_scan_master", "Local Branch1"),
+                ("curly-underlines", "Local Branch2"),
+                ("docker-builds", "Local Branch3"),
+                ("fish-reenable-cirrus", "Local Branch4"),
+                ("macos-apropos", "Local Branch5"),
+                ("master", "Local Branch6"),
             ]),
             true,
         );
         validate!(
             &mut pager,
             80,
-            "coverity_scan_master  (Local Branch)  fish-reenable-cirrus  (Local Branch)",
-            "curly-underlines      (Local Branch)  macos-apropos         (Local Branch)",
-            "docker-builds         (Local Branch)  master                (Local Branch)",
+            "coverity_scan_master  (Local Branch1)  fish-reenable-cirrus  (Local Branch4)",
+            "curly-underlines      (Local Branch2)  macos-apropos         (Local Branch5)",
+            "docker-builds         (Local Branch3)  master                (Local Branch6)",
         );
         validate!(
             &mut pager,
             40,
-            "coverity_scan_master  (Local Branch)",
-            "curly-underlines      (Local Branch)",
-            "docker-builds         (Local Branch)",
-            "fish-reenable-cirrus  (Local Branch)",
-            "macos-apropos         (Local Branch)",
-            "master                (Local Branch)",
+            "coverity_scan_master  (Local Branch1)",
+            "curly-underlines      (Local Branch2)",
+            "docker-builds         (Local Branch3)",
+            "fish-reenable-cirrus  (Local Branch4)",
+            "macos-apropos         (Local Branch5)",
+            "master                (Local Branch6)",
         );
         validate!(
             &mut pager,
@@ -1650,6 +1648,40 @@ mod tests {
             "фиш  (123456789)",
             "abc  (鱼殼層)   ",
             "鱼-  (१२३४५६७८९)",
+        );
+
+        // Multiple completions, uneven comp, shared desc
+        pager.set_completions(
+            &completions(&[
+                ("coverity_scan_master", "Local Branch1"),
+                ("curly-underlines", "Local Branch1"),
+                ("docker-builds", "Local Branch1"),
+                ("fish-reenable-cirrus", "Local Branch2"),
+                ("macos-apropos", "Local Branch3"),
+                ("master", "Local Branch3"),
+            ]),
+            true,
+        );
+        validate!(
+            &mut pager,
+            80,
+            "coverity_scan_master  curly-underlines  docker-builds  (Local Branch1)",
+            "fish-reenable-cirrus                                   (Local Branch2)",
+            "macos-apropos  master                                  (Local Branch3)",
+        );
+        validate!(
+            &mut pager,
+            40,
+            "coverity_scan_master  c…  (Local Branc…)",
+            "fish-reenable-cirrus     (Local Branch2)",
+            "macos-apropos  master    (Local Branch3)",
+        );
+        validate!(
+            &mut pager,
+            20,
+            "coverity_…  (Local…)",
+            "fish-reen…  (Local…)",
+            "macos-apr…  (Local…)",
         );
 
         // Newlines in prefix

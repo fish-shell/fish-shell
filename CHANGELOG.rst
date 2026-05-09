@@ -3,7 +3,7 @@ fish ?.?.? (released ???)
 
 Interactive improvements
 ------------------------
-- Filesystem-derived bytes (paths, argv0, command names, source lines) are now stripped of control characters before being printed in error messages and listings, in the same spirit as the :doc:`prompt_pwd <cmds/prompt_pwd>` fix. Affected sites include :doc:`cd <cmds/cd>` errors, the OSC 0/1 terminal title, parse-error display, "Unknown command" / "Unknown builtin" / "Could not find" errors, redirection warnings, the ``Defined in`` / ``copied in`` annotation in :doc:`functions <cmds/functions>` and :doc:`type <cmds/type>` output, the ``is a function/builtin/<path>`` lines in :doc:`type <cmds/type>` output, :doc:`jobs <cmds/jobs>` ``-c`` listings, :doc:`fish_indent <cmds/fish_indent>` error messages, :doc:`test <cmds/test>` parser errors, and bash history entries imported by :doc:`history <cmds/history>` (sanitized at the storage boundary so typed entries are unaffected). Data-returning builtins such as :doc:`pwd <cmds/pwd>`, :doc:`realpath <cmds/realpath>`, :doc:`type <cmds/type>` ``--path``, :doc:`functions <cmds/functions>` ``--details``, :doc:`status <cmds/status>` ``filename``, and the :doc:`path <cmds/path>` builtin still preserve their bytes so script captures are not affected.
+- Builtin error messages and listings now strip control characters from filesystem-derived data (paths, argv0, command names, source lines). Data-returning builtins like :doc:`pwd <cmds/pwd>`, :doc:`realpath <cmds/realpath>` and :doc:`type <cmds/type>` ``--path`` still pass bytes through unchanged.
 
 fish 4.7.1 (released May 08, 2026)
 ==================================

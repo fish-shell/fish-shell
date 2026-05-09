@@ -345,7 +345,9 @@ mod tests {
     #[test]
     fn sanitize_strips_c0_del_and_c1() {
         // C0 controls (including ESC), DEL and C1 are dropped.
-        let s = WString::from_chars(['a', '\x00', 'b', '\x1b', 'c', '\x7f', 'd', '\u{0080}', 'e', '\u{009f}', 'f']);
+        let s = WString::from_chars([
+            'a', '\x00', 'b', '\x1b', 'c', '\x7f', 'd', '\u{0080}', 'e', '\u{009f}', 'f',
+        ]);
         assert_eq!(sanitize_for_display(&s), L!("abcdef"));
     }
 

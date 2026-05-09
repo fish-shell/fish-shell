@@ -898,12 +898,9 @@ fn parsed_pid(
     match pid {
         Ok(pid @ 1..) => Ok(Pid::new(pid)),
         _ => {
-            err_fmt!(
-                "'%s' is not a valid process ID",
-                sanitize_for_display(arg)
-            )
-            .cmd(cmd)
-            .finish(streams);
+            err_fmt!("'%s' is not a valid process ID", sanitize_for_display(arg))
+                .cmd(cmd)
+                .finish(streams);
             Err(STATUS_INVALID_ARGS)
         }
     }

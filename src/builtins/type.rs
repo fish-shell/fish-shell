@@ -175,7 +175,10 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                             streams.out.append(&def);
                         }
                     } else {
-                        streams.out.append(&wgettext_fmt!("%s is a function", sanitize_for_display(arg)));
+                        streams.out.append(&wgettext_fmt!(
+                            "%s is a function",
+                            sanitize_for_display(arg)
+                        ));
                         streams.out.append(" ");
                         streams.out.appendln(&wgettext_fmt!("(%s)", comment));
                     }
@@ -195,7 +198,9 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 return Ok(SUCCESS);
             }
             if !opts.get_type {
-                streams.out.appendln(&wgettext_fmt!("%s is a builtin", sanitize_for_display(arg)));
+                streams
+                    .out
+                    .appendln(&wgettext_fmt!("%s is a builtin", sanitize_for_display(arg)));
             } else if opts.get_type {
                 streams.out.append(L!("builtin\n"));
             }

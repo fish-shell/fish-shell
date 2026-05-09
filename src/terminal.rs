@@ -2,8 +2,8 @@ use crate::global_safety::RelaxedAtomicBool;
 // Generic output functions.
 use crate::prelude::*;
 use crate::{
-    screen::{is_dumb, only_grayscale},
     common::sanitize_for_display,
+    screen::{is_dumb, only_grayscale},
     text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle},
     threads::MainThread,
 };

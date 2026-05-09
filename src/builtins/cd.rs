@@ -139,7 +139,10 @@ pub fn cd(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
     } else {
         errno::set_errno(Errno(best_errno));
         err_raw!(builtin_strerror()).cmd(L!("cd")).finish(streams);
-        err_fmt!("Unknown error trying to locate directory '%s'", dir_in_clean)
+        err_fmt!(
+            "Unknown error trying to locate directory '%s'",
+            dir_in_clean
+        )
     };
 
     if !parser.is_interactive() {

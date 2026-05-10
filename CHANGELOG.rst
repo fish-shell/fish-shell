@@ -1,6 +1,8 @@
 fish ?.?.? (released ???)
 =========================
 
+- ``--no-config`` no longer implicitly enables private mode, so history is read and written as usual (:issue:`12711`). Use ``--private`` to opt into private mode.
+
 fish 4.7.1 (released May 08, 2026)
 ==================================
 

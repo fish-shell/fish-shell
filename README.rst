@@ -31,7 +31,7 @@ macOS
 
 fish can be installed:
 
--  using `Homebrew <http://brew.sh/>`__: ``brew install fish``
+-  using `Homebrew <https://brew.sh/>`__: ``brew install fish``
 -  using `MacPorts <https://www.macports.org/>`__:
    ``sudo port install fish``
 -  using the `installer from fishshell.com <https://fishshell.com/>`__

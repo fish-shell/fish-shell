@@ -153,7 +153,11 @@ pub fn gettext(args: GettextArgs) -> Result<()> {
                 return Err(e);
             }
             if found_diff {
-                bail!("Not all files are up to date");
+                bail!(
+                    "Not all PO files are up to date.\n\
+                     Run `cargo xtask gettext update` to bring them up to date automatically.\
+                    "
+                );
             }
             Ok(())
         }

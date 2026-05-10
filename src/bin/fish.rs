@@ -274,8 +274,6 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             'l' => opts.is_login = true,
             'N' => {
                 opts.no_config = true;
-                // --no-config implies private mode, we won't be saving history
-                opts.enable_private_mode = true;
             }
             'n' => opts.no_exec = true,
             RUSAGE_ARG => opts.print_rusage_self = true,

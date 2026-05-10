@@ -3827,6 +3827,9 @@ msgstr ""
 msgid "wait for app to exit"
 msgstr ""
 
+msgid "fish-section-tier3-from-script-explicitly-added"
+msgstr ""
+
 msgid "fish-section-tier3-from-script-implicitly-added"
 msgstr ""
 
@@ -30439,105 +30442,6 @@ msgstr "Aide à propos des formats actuellement supportés"
 
 msgid "Help about supported formats"
 msgstr "Aide à propos des formats supportés"
-
-msgid "Help for autocomplete"
-msgstr "Aide sur « autocomplete »"
-
-msgid "Help for benchmark"
-msgstr "Aide sur le banc d’essai"
-
-msgid "Help for build"
-msgstr ""
-
-msgid "Help for check"
-msgstr "Aide sur « check »"
-
-msgid "Help for chromastyles"
-msgstr "Aide sur « chromastyles »"
-
-msgid "Help for cjpm"
-msgstr ""
-
-msgid "Help for config"
-msgstr "Aide sur « config »"
-
-msgid "Help for convert"
-msgstr "Aide sur « convert »"
-
-msgid "Help for doc"
-msgstr "Aide sur « doc »"
-
-msgid "Help for drafts"
-msgstr "Aide pour « drafts »"
-
-msgid "Help for env"
-msgstr "Aide sur « env »"
-
-msgid "Help for expired"
-msgstr "Aide pour « expired »"
-
-msgid "Help for future"
-msgstr "Aide pour « future »"
-
-msgid "Help for gen"
-msgstr "Aide sur « gen »"
-
-msgid "Help for hugo"
-msgstr "Afficher l’aide"
-
-msgid "Help for import"
-msgstr "Aide pour « import »"
-
-msgid "Help for init"
-msgstr ""
-
-msgid "Help for install"
-msgstr ""
-
-msgid "Help for jekyll"
-msgstr "Aide pour « jekyll »"
-
-msgid "Help for list"
-msgstr "Aide pour « list »"
-
-msgid "Help for man"
-msgstr "Aide pour « man »"
-
-msgid "Help for new"
-msgstr "Aide pour « new »"
-
-msgid "Help for run"
-msgstr ""
-
-msgid "Help for server"
-msgstr "Aide pour « server »"
-
-msgid "Help for site"
-msgstr "Aide pour « site »"
-
-msgid "Help for test"
-msgstr ""
-
-msgid "Help for theme"
-msgstr "Aide pour « theme »"
-
-msgid "Help for toJSON"
-msgstr "Aide sur « toJSON »"
-
-msgid "Help for toTOML"
-msgstr "Aide sur « toTOML »"
-
-msgid "Help for toYAML"
-msgstr "Aide sur « toYAML »"
-
-msgid "Help for ulimit"
-msgstr "Aide sur « ulimit »"
-
-msgid "Help for undraft"
-msgstr "Aide pour « undraft »"
-
-msgid "Help for version"
-msgstr "Aide pour « version »"
 
 msgid "Help screen"
 msgstr ""

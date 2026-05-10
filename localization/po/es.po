@@ -3698,6 +3698,9 @@ msgstr ""
 msgid "wait for app to exit"
 msgstr ""
 
+msgid "fish-section-tier3-from-script-explicitly-added"
+msgstr ""
+
 msgid "fish-section-tier3-from-script-implicitly-added"
 msgstr ""
 
@@ -30309,105 +30312,6 @@ msgid "Help about current supported formats"
 msgstr ""
 
 msgid "Help about supported formats"
-msgstr ""
-
-msgid "Help for autocomplete"
-msgstr ""
-
-msgid "Help for benchmark"
-msgstr ""
-
-msgid "Help for build"
-msgstr ""
-
-msgid "Help for check"
-msgstr ""
-
-msgid "Help for chromastyles"
-msgstr ""
-
-msgid "Help for cjpm"
-msgstr ""
-
-msgid "Help for config"
-msgstr ""
-
-msgid "Help for convert"
-msgstr ""
-
-msgid "Help for doc"
-msgstr ""
-
-msgid "Help for drafts"
-msgstr ""
-
-msgid "Help for env"
-msgstr ""
-
-msgid "Help for expired"
-msgstr ""
-
-msgid "Help for future"
-msgstr ""
-
-msgid "Help for gen"
-msgstr ""
-
-msgid "Help for hugo"
-msgstr ""
-
-msgid "Help for import"
-msgstr ""
-
-msgid "Help for init"
-msgstr ""
-
-msgid "Help for install"
-msgstr ""
-
-msgid "Help for jekyll"
-msgstr ""
-
-msgid "Help for list"
-msgstr ""
-
-msgid "Help for man"
-msgstr ""
-
-msgid "Help for new"
-msgstr ""
-
-msgid "Help for run"
-msgstr ""
-
-msgid "Help for server"
-msgstr ""
-
-msgid "Help for site"
-msgstr ""
-
-msgid "Help for test"
-msgstr ""
-
-msgid "Help for theme"
-msgstr ""
-
-msgid "Help for toJSON"
-msgstr ""
-
-msgid "Help for toTOML"
-msgstr ""
-
-msgid "Help for toYAML"
-msgstr ""
-
-msgid "Help for ulimit"
-msgstr ""
-
-msgid "Help for undraft"
-msgstr ""
-
-msgid "Help for version"
 msgstr ""
 
 msgid "Help screen"

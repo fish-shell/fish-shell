@@ -1,7 +1,7 @@
 # cjpm.fish - Fish completion script for Cangjie Package Manager
 
 # Global options
-complete -c cjpm -l help -s h -d "Help for cjpm"
+complete -c cjpm -l help -s h -d (printf (_ "Help for `%s`") cjpm)
 complete -c cjpm -l version -s v -d "Version for cjpm"
 
 # Subcommands
@@ -18,7 +18,7 @@ complete -c cjpm -n __fish_use_subcommand -f -a install -d "Install a cangjie bi
 complete -c cjpm -n __fish_use_subcommand -f -a uninstall -d "Uninstall a cangjie binary"
 
 # 'init' subcommand options
-complete -c cjpm -n "__fish_seen_subcommand_from init" -f -l help -s h -d "Help for init"
+complete -c cjpm -n "__fish_seen_subcommand_from init" -f -l help -s h -d (printf (_ "Help for `%s`") init)
 complete -c cjpm -n "__fish_seen_subcommand_from init" -f -l workspace -d "Initialize a workspace's default configuration file"
 complete -c cjpm -n "__fish_seen_subcommand_from init" -f -l name -d "Specify root package name (default: current directory)" -r
 complete -c cjpm -n "__fish_seen_subcommand_from init" -l path -d "Specify path to create the module (default: current directory)" -r
@@ -31,12 +31,12 @@ complete -c cjpm -n "__fish_seen_subcommand_from run" -f -l skip-build -d "Skip 
 complete -c cjpm -n "__fish_seen_subcommand_from run" -f -l run-args -d "Arguments to pass to the executable product" -r
 complete -c cjpm -n "__fish_seen_subcommand_from run" -l target-dir -d "Specify target directory" -r
 complete -c cjpm -n "__fish_seen_subcommand_from run" -f -s g -d "Enable debug version"
-complete -c cjpm -n "__fish_seen_subcommand_from run" -f -s h -l help -d "Help for run"
+complete -c cjpm -n "__fish_seen_subcommand_from run" -f -s h -l help -d (printf (_ "Help for `%s`") run)
 complete -c cjpm -n "__fish_seen_subcommand_from run" -f -s V -l verbose -d "Enable verbose"
 complete -c cjpm -n "__fish_seen_subcommand_from run" -f -l skip-script -d "Disable script 'build.cj'"
 
 # 'install' subcommand options
-complete -c cjpm -n "__fish_seen_subcommand_from install" -f -s h -l help -d "Help for install"
+complete -c cjpm -n "__fish_seen_subcommand_from install" -f -s h -l help -d (printf (_ "Help for `%s`") install)
 complete -c cjpm -n "__fish_seen_subcommand_from install" -f -s V -l verbose -d "Enable verbose"
 complete -c cjpm -n "__fish_seen_subcommand_from install" -f -s m -l member -d "Specify a member module of the workspace" -r
 complete -c cjpm -n "__fish_seen_subcommand_from install" -f -s g -d "Enable install debug version target"
@@ -55,7 +55,7 @@ complete -c cjpm -n "__fish_seen_subcommand_from install" -f -l list -d "List al
 complete -c cjpm -n "__fish_seen_subcommand_from install" -f -l skip-script -d "Disable script 'build.cj'"
 
 # 'build' subcommand options
-complete -c cjpm -n "__fish_seen_subcommand_from build" -f -s h -l help -d "Help for build"
+complete -c cjpm -n "__fish_seen_subcommand_from build" -f -s h -l help -d (printf (_ "Help for `%s`") build)
 complete -c cjpm -n "__fish_seen_subcommand_from build" -f -s i -l incremental -d "Enable incremental compilation"
 complete -c cjpm -n "__fish_seen_subcommand_from build" -f -s j -l jobs -d "Number of jobs to spawn in parallel" -r
 complete -c cjpm -n "__fish_seen_subcommand_from build" -f -s V -l verbose -d "Enable verbose"
@@ -71,7 +71,7 @@ complete -c cjpm -n "__fish_seen_subcommand_from build" -f -l mock -d "Enable su
 complete -c cjpm -n "__fish_seen_subcommand_from build" -f -l skip-script -d "Disable script 'build.cj'"
 
 # 'test' subcommand options
-complete -c cjpm -n "__fish_seen_subcommand_from test" -f -s h -l help -d "Help for test"
+complete -c cjpm -n "__fish_seen_subcommand_from test" -f -s h -l help -d (printf (_ "Help for `%s`") test)
 complete -c cjpm -n "__fish_seen_subcommand_from test" -f -s j -l jobs -d "Number of jobs to spawn in parallel" -r
 complete -c cjpm -n "__fish_seen_subcommand_from test" -f -s V -l verbose -d "Enable verbose"
 complete -c cjpm -n "__fish_seen_subcommand_from test" -f -s g -d "Enable compile debug version tests"

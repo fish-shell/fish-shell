@@ -65,7 +65,7 @@ complete -c hugo -n __fish_hugo_using_main_like_command -l disableRSS -f -d "Do 
 complete -c hugo -n __fish_hugo_using_main_like_command -l disableSitemap -f -d "Do not build sitemap files"
 complete -c hugo -n __fish_hugo_using_main_like_command -l enableGitInfo -f -d "Add Git revision, date and author info to the pages"
 complete -c hugo -n __fish_hugo_using_main_like_command -l forceSyncStatic -f -d "Copy all files when static is changed"
-complete -c hugo -n __fish_hugo_using_main_like_command -s h -l help -f -d "Help for hugo"
+complete -c hugo -n __fish_hugo_using_main_like_command -s h -l help -f -d (printf (_ "Help for `%s`") hugo)
 complete -c hugo -n __fish_hugo_using_main_like_command -l i18n-warnings -f -d "Print missing translations"
 complete -c hugo -n __fish_hugo_using_main_like_command -l ignoreCache -f -d "Ignore the cache directory"
 complete -c hugo -n __fish_hugo_using_main_like_command -s l -l layoutDir -f -a "(__fish_complete_directories (commandline -ct) 'Layout directory')" -d "Layout directory"
@@ -89,7 +89,7 @@ complete -c hugo -n __fish_hugo_using_main_like_command -s w -l watch -f -d "Wat
 complete -c hugo -n "not __fish_hugo_command" -f -a benchmark -d "Benchmark Hugo by building the site a number of times"
 complete -c hugo -n "__fish_hugo_using_command benchmark" -s n -l count -f -d "Number of times to build the site"
 complete -c hugo -n "__fish_hugo_using_command benchmark" -l cpuprofile -r -d "CPU profile file"
-complete -c hugo -n "__fish_hugo_using_command benchmark" -s h -l help -f -d "Help for benchmark"
+complete -c hugo -n "__fish_hugo_using_command benchmark" -s h -l help -f -d (printf (_ "Help for `%s`") benchmark)
 complete -c hugo -n "__fish_hugo_using_command benchmark" -l memprofile -r -d "Memory profile file"
 complete -c hugo -n "__fish_hugo_using_command benchmark" -l renderToMemory -f -d "Render to memory"
 complete -c hugo -n "__fish_hugo_using_command benchmark" -l stepAnalysis -f -d "Display memory and timing of different steps of the program"
@@ -98,52 +98,52 @@ complete -c hugo -n "__fish_hugo_using_command benchmark" -l templateMetricsHint
 
 # check
 complete -c hugo -n "not __fish_hugo_command" -f -a check -d "Perform some verification checks"
-complete -c hugo -n "__fish_hugo_using_command check" -s h -l help -f -d "Help for check"
+complete -c hugo -n "__fish_hugo_using_command check" -s h -l help -f -d (printf (_ "Help for `%s`") check)
 
 # check ulimit
 complete -c hugo -n "__fish_hugo_using_command check" -f -a ulimit -d "Check system ulimit settings"
-complete -c hugo -n "__fish_hugo_using_command check ulimit" -s h -l help -f -d "Help for ulimit"
+complete -c hugo -n "__fish_hugo_using_command check ulimit" -s h -l help -f -d (printf (_ "Help for `%s`") ulimit)
 
 # config
 complete -c hugo -n "not __fish_hugo_command" -f -a config -d "Print the site configuration"
-complete -c hugo -n "__fish_hugo_using_command config" -s h -l help -f -d "Help for config"
+complete -c hugo -n "__fish_hugo_using_command config" -s h -l help -f -d (printf (_ "Help for `%s`") config)
 
 # convert
 complete -c hugo -n "not __fish_hugo_command" -f -a convert -d "Convert the content to different formats"
-complete -c hugo -n "__fish_hugo_using_command convert" -s h -l help -f -d "Help for convert"
+complete -c hugo -n "__fish_hugo_using_command convert" -s h -l help -f -d (printf (_ "Help for `%s`") convert)
 complete -c hugo -n "__fish_hugo_using_command convert" -s o -l output -f -a "(__fish_complete_directories (commandline -ct) 'Output directory')" -d "Output directory"
 complete -c hugo -n "__fish_hugo_using_command convert" -s s -l source -f -a "(__fish_complete_directories (commandline -ct) 'Source directory')" -d "Source directory"
 complete -c hugo -n "__fish_hugo_using_command convert" -l unsafe -f -d "Enable less safe operations"
 
 # convert toJSON
 complete -c hugo -n "__fish_hugo_using_command convert" -f -a toJSON -d "Convert front matter to JSON"
-complete -c hugo -n "__fish_hugo_using_command convert toJSON" -s h -l help -f -d "Help for toJSON"
+complete -c hugo -n "__fish_hugo_using_command convert toJSON" -s h -l help -f -d (printf (_ "Help for `%s`") toJSON)
 
 # convert toTOML
 complete -c hugo -n "__fish_hugo_using_command convert" -f -a toTOML -d "Convert front matter to TOML"
-complete -c hugo -n "__fish_hugo_using_command convert toTOML" -s h -l help -f -d "Help for toTOML"
+complete -c hugo -n "__fish_hugo_using_command convert toTOML" -s h -l help -f -d (printf (_ "Help for `%s`") toTOML)
 
 # convert toYAML
 complete -c hugo -n "__fish_hugo_using_command convert" -f -a toYAML -d "Convert front matter to YAML"
-complete -c hugo -n "__fish_hugo_using_command convert toYAML" -s h -l help -f -d "Help for toYAML"
+complete -c hugo -n "__fish_hugo_using_command convert toYAML" -s h -l help -f -d (printf (_ "Help for `%s`") toYAML)
 
 # env
 complete -c hugo -n "not __fish_hugo_command" -f -a env -d "Print Hugo version and environment info"
-complete -c hugo -n "__fish_hugo_using_command env" -s h -l help -f -d "Help for env"
+complete -c hugo -n "__fish_hugo_using_command env" -s h -l help -f -d (printf (_ "Help for `%s`") env)
 
 # gen
 complete -c hugo -n "not __fish_hugo_command" -f -a gen -d "Collection of several useful generators"
-complete -c hugo -n "__fish_hugo_using_command gen" -s h -l help -f -d "Help for gen"
+complete -c hugo -n "__fish_hugo_using_command gen" -s h -l help -f -d (printf (_ "Help for `%s`") gen)
 
 # gen autocomplete
 complete -c hugo -n "__fish_hugo_using_command gen" -f -a autocomplete -d "Generate shell autocompletion script for Hugo"
 complete -c hugo -n "__fish_hugo_using_command gen autocomplete" -l completionfile -r -d "Autocompletion file"
-complete -c hugo -n "__fish_hugo_using_command gen autocomplete" -s h -l help -f -d "Help for autocomplete"
+complete -c hugo -n "__fish_hugo_using_command gen autocomplete" -s h -l help -f -d (printf (_ "Help for `%s`") autocomplete)
 complete -c hugo -n "__fish_hugo_using_command gen autocomplete" -l type -f -a bash -d "Autocompletion type"
 
 # gen chromastyles
 complete -c hugo -n "__fish_hugo_using_command gen" -f -a chromastyles -d "Generate CSS stylesheet for the Chroma code highlighter"
-complete -c hugo -n "__fish_hugo_using_command gen chromastyles" -s h -l help -f -d "Help for chromastyles"
+complete -c hugo -n "__fish_hugo_using_command gen chromastyles" -s h -l help -f -d (printf (_ "Help for `%s`") chromastyles)
 complete -c hugo -n "__fish_hugo_using_command gen chromastyles" -l highlightStyle -r -d "Style used for highlighting lines"
 complete -c hugo -n "__fish_hugo_using_command gen chromastyles" -l lineStyle -r -d "Style used for line numbers"
 complete -c hugo -n "__fish_hugo_using_command gen chromastyles" -l style -r -d "Highlighter style"
@@ -151,43 +151,43 @@ complete -c hugo -n "__fish_hugo_using_command gen chromastyles" -l style -r -d 
 # gen doc
 complete -c hugo -n "__fish_hugo_using_command gen" -f -a doc -d "Generate Markdown documentation for the Hugo CLI"
 complete -c hugo -n "__fish_hugo_using_command gen doc" -l dir -f -a "(__fish_complete_directories (commandline -ct) 'Doc directory')" -d "Doc directory"
-complete -c hugo -n "__fish_hugo_using_command gen doc" -s h -l help -f -d "Help for doc"
+complete -c hugo -n "__fish_hugo_using_command gen doc" -s h -l help -f -d (printf (_ "Help for `%s`") doc)
 
 # gen man
 complete -c hugo -n "__fish_hugo_using_command gen" -f -a man -d "Generate man pages for the Hugo CLI"
 complete -c hugo -n "__fish_hugo_using_command gen man" -l dir -f -a "(__fish_complete_directories (commandline -ct) 'Man pages directory')" -d "Man pages directory"
-complete -c hugo -n "__fish_hugo_using_command gen man" -s h -l help -f -d "Help for man"
+complete -c hugo -n "__fish_hugo_using_command gen man" -s h -l help -f -d (printf (_ "Help for `%s`") man)
 
 # import
 complete -c hugo -n "not __fish_hugo_command" -f -a import -d "Import your site from others"
-complete -c hugo -n "__fish_hugo_using_command import" -s h -l help -f -d "Help for import"
+complete -c hugo -n "__fish_hugo_using_command import" -s h -l help -f -d (printf (_ "Help for `%s`") import)
 
 # import jekyll
 complete -c hugo -n "__fish_hugo_using_command import" -f -a jekyll -d "Import from Jekyll"
 complete -c hugo -n "__fish_hugo_using_command import jekyll" -l force -f -d "Allow import into non-empty target directory"
-complete -c hugo -n "__fish_hugo_using_command import jekyll" -s h -l help -f -d "Help for jekyll"
+complete -c hugo -n "__fish_hugo_using_command import jekyll" -s h -l help -f -d (printf (_ "Help for `%s`") jekyll)
 
 # list
 complete -c hugo -n "not __fish_hugo_command" -f -a list -d "List various types of content"
-complete -c hugo -n "__fish_hugo_using_command list" -s h -l help -f -d "Help for list"
+complete -c hugo -n "__fish_hugo_using_command list" -s h -l help -f -d (printf (_ "Help for `%s`") list)
 complete -c hugo -n "__fish_hugo_using_command list" -s s -l source -f -a "(__fish_complete_directories (commandline -ct) 'Source directory')" -d "Source directory"
 
 # list drafts
 complete -c hugo -n "__fish_hugo_using_command list" -f -a drafts -d "List all drafts"
-complete -c hugo -n "__fish_hugo_using_command list drafts" -s h -l help -f -d "Help for drafts"
+complete -c hugo -n "__fish_hugo_using_command list drafts" -s h -l help -f -d (printf (_ "Help for `%s`") drafts)
 
 # list expired
 complete -c hugo -n "__fish_hugo_using_command list" -f -a expired -d "List all expired posts"
-complete -c hugo -n "__fish_hugo_using_command list expired" -s h -l help -f -d "Help for expired"
+complete -c hugo -n "__fish_hugo_using_command list expired" -s h -l help -f -d (printf (_ "Help for `%s`") expired)
 
 # list future
 complete -c hugo -n "__fish_hugo_using_command list" -f -a future -d "List all posts dated in the future"
-complete -c hugo -n "__fish_hugo_using_command list future" -s h -l help -f -d "Help for future"
+complete -c hugo -n "__fish_hugo_using_command list future" -s h -l help -f -d (printf (_ "Help for `%s`") future)
 
 # new
 complete -c hugo -n "not __fish_hugo_command" -f -a new -d "Create new content"
 complete -c hugo -n "__fish_hugo_using_command new" -l editor -r -d "Editor to use"
-complete -c hugo -n "__fish_hugo_using_command new" -s h -l help -f -d "Help for new"
+complete -c hugo -n "__fish_hugo_using_command new" -s h -l help -f -d (printf (_ "Help for `%s`") new)
 complete -c hugo -n "__fish_hugo_using_command new" -s k -l kind -r -d "Content type to create"
 complete -c hugo -n "__fish_hugo_using_command new" -s s -l source -f -a "(__fish_complete_directories (commandline -ct) 'Source directory')" -d "Source directory"
 
@@ -195,11 +195,11 @@ complete -c hugo -n "__fish_hugo_using_command new" -s s -l source -f -a "(__fis
 complete -c hugo -n "__fish_hugo_using_command new" -f -a site -d "Create a new site"
 complete -c hugo -n "__fish_hugo_using_command new site" -l force -f -d "Create site inside non-empty directory"
 complete -c hugo -n "__fish_hugo_using_command new site" -s f -l format -r -d "Config and front matter format"
-complete -c hugo -n "__fish_hugo_using_command new site" -s h -l help -f -d "Help for site"
+complete -c hugo -n "__fish_hugo_using_command new site" -s h -l help -f -d (printf (_ "Help for `%s`") site)
 
 # new theme
 complete -c hugo -n "__fish_hugo_using_command new" -f -a theme -d "Create a new theme"
-complete -c hugo -n "__fish_hugo_using_command new theme" -s h -l help -f -d "Help for theme"
+complete -c hugo -n "__fish_hugo_using_command new theme" -s h -l help -f -d (printf (_ "Help for `%s`") theme)
 
 # server
 complete -c hugo -n "not __fish_hugo_command" -f -a server -d "Start high performance web server"
@@ -207,7 +207,7 @@ complete -c hugo -n "__fish_hugo_using_command server" -l appendPort -f -d "Appe
 complete -c hugo -n "__fish_hugo_using_command server" -l bind -r -d "Interface to which the server will bind"
 complete -c hugo -n "__fish_hugo_using_command server" -l disableFastRender -f -d "Enable full re-renders on changes"
 complete -c hugo -n "__fish_hugo_using_command server" -l disableLiveReload -f -d "Watch without enabling live browser reload on rebuild"
-complete -c hugo -n "__fish_hugo_using_command server" -s h -l help -f -d "Help for server"
+complete -c hugo -n "__fish_hugo_using_command server" -s h -l help -f -d (printf (_ "Help for `%s`") server)
 complete -c hugo -n "__fish_hugo_using_command server" -l liveReloadPort -r -d "Port for live reloading"
 complete -c hugo -n "__fish_hugo_using_command server" -l meminterval -f -d "Interval to poll memory usage"
 complete -c hugo -n "__fish_hugo_using_command server" -l memstats -f -d "Memory usage log file"
@@ -218,8 +218,8 @@ complete -c hugo -n "__fish_hugo_using_command server" -l renderToDisk -r -d "Re
 
 # undraft
 complete -c hugo -n "not __fish_hugo_command" -f -a undraft -d "Reset the content draft status"
-complete -c hugo -n "__fish_hugo_using_command undraft" -s h -l help -f -d "Help for undraft"
+complete -c hugo -n "__fish_hugo_using_command undraft" -s h -l help -f -d (printf (_ "Help for `%s`") undraft)
 
 # version
 complete -c hugo -n "not __fish_hugo_command" -f -a version -d "Print the version number of Hugo"
-complete -c hugo -n "__fish_hugo_using_command version" -s h -l help -f -d "Help for version"
+complete -c hugo -n "__fish_hugo_using_command version" -s h -l help -f -d (printf (_ "Help for `%s`") version)

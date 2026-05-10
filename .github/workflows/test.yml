@@ -170,5 +170,7 @@ jobs:
       run: |
         cargo build
     - name: tests
+      env:
+        FISH_CHECK_LINT: false
       run: |
         cargo xtask check

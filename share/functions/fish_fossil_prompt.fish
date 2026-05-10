@@ -48,6 +48,8 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
 
     echo -n ' ('
     set_color magenta
+    # Strip control characters to avoid injecting terminal escape sequences into the prompt.
+    set branch (string replace -ra '[[:cntrl:]]' '' -- $branch)
     echo -n "$branch"
     set_color --reset
     echo -n '|'

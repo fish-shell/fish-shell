@@ -2153,8 +2153,8 @@ msgstr "Encore plus d’aide et développement"
 msgid "Getting Help"
 msgstr "Obtenir de l’aide"
 
-msgid "Help for this command"
-msgstr ""
+msgid "Help for `%s`"
+msgstr "Aide sur « %s »"
 
 msgid "Home directory expansion ~USER"
 msgstr "Expansion du dossier principal ~USER"

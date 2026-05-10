@@ -12,7 +12,7 @@ complete -c help -n __fish_is_first_arg -x -a '(
 function __fish_help_describe -a help_item
     switch $help_item
         case 'cmds/*'
-            echo (_ "Help for this command")
+            printf (_ "Help for `%s`") (string sub --start 6 -- $help_item)
         case commands
             return
         case commands#helper-commands

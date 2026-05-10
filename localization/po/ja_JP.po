@@ -2024,8 +2024,8 @@ msgstr "さらなるヘルプと開発"
 msgid "Getting Help"
 msgstr "ヘルプの参照"
 
-msgid "Help for this command"
-msgstr "このコマンドのヘルプ"
+msgid "Help for `%s`"
+msgstr "`%s` のヘルプ"
 
 msgid "Home directory expansion ~USER"
 msgstr "ホームディレクトリ展開 ~USER"

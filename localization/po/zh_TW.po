@@ -2020,8 +2020,8 @@ msgstr "更多幫助和開發"
 msgid "Getting Help"
 msgstr "取得幫助"
 
-msgid "Help for this command"
-msgstr "此命令的說明"
+msgid "Help for `%s`"
+msgstr ""
 
 msgid "Home directory expansion ~USER"
 msgstr "家目錄展開 ~使用者"

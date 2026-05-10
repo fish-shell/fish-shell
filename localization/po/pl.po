@@ -2020,7 +2020,7 @@ msgstr ""
 msgid "Getting Help"
 msgstr ""
 
-msgid "Help for this command"
+msgid "Help for `%s`"
 msgstr ""
 
 msgid "Home directory expansion ~USER"

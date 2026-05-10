@@ -2045,8 +2045,8 @@ msgstr "进一步的帮助和开发"
 msgid "Getting Help"
 msgstr "获取帮助"
 
-msgid "Help for this command"
-msgstr "此命令的帮助"
+msgid "Help for `%s`"
+msgstr "显示 %s 的帮助信息"
 
 msgid "Home directory expansion ~USER"
 msgstr "主目录展开 ~USER"

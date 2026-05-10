@@ -31,7 +31,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
     or return 1
 
     # Read branch and bookmark.
-    # Strip control characters since these files are attacker-controllable
+    # Strip control characters before showing branch/bookmark names in the prompt.
     # (they live under .hg/ and are not validated by hg itself in this code path).
     set -l branch (cat $root/branch 2>/dev/null; or echo default)
     set branch (string replace -ra '[[:cntrl:]]' '' -- $branch)

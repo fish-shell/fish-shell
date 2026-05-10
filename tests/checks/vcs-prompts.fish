@@ -1,8 +1,8 @@
 #RUN: %fish %s
 #REQUIRES: command -v git
 
-# Verify VCS prompts strip control characters from attacker-controllable
-# state files (same class as prompt_pwd / #12629).
+# Verify VCS prompts strip control characters from
+# state files before showing them (same class as prompt_pwd / #12629).
 
 set -l tmp (mktemp -d)
 

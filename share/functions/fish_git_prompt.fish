@@ -475,7 +475,7 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
     set -l step
     set -l total
 
-    # Strip control characters from these dot-files since they are attacker-controllable
+    # Strip control characters from these dot-files before showing them in the prompt.
     # (git itself does not validate the contents of rebase-merge/rebase-apply state files).
     if test -d $git_dir/rebase-merge
         set branch (cat $git_dir/rebase-merge/head-name 2>/dev/null | string replace -ra '[[:cntrl:]]' '')

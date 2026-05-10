@@ -1684,6 +1684,18 @@ complete -f -c git -n '__fish_git_using_command grep' -l untracked -d 'Search in
 complete -f -c git -n '__fish_git_using_command grep' -l no-index -d 'Search files in current directory that is not managed by Git'
 complete -f -c git -n '__fish_git_using_command grep' -l recurse-submodules -d 'Recursively search in each submodule'
 
+### history
+set -l git_history_commands reword split
+complete -f -c git -n __fish_git_needs_command -a history -d 'Rewrite history'
+complete -f -c git -n "__fish_git_using_command history" -n "not __fish_seen_subcommand_from $git_history_commands" -a reword -d 'Rewrite a commit message'
+complete -f -c git -n "__fish_git_using_command history" -n "not __fish_seen_subcommand_from $git_history_commands" -a split -d 'Split up a commit'
+
+complete -f -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from reword split' -l dry-run -d 'Do not update references'
+complete -x -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from reword split' -l update-refs -a 'branches head'
+complete -x -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from reword' -ka '(__fish_git_recent_commits)'
+complete -x -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from split' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_recent_commits)'
+complete -F -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from split' -n 'contains -- -- (commandline -xpc)'
+
 ### init
 complete -f -c git -n __fish_git_needs_command -a init -d 'Create an empty git repository'
 complete -f -c git -n '__fish_git_using_command init' -s q -l quiet -d 'Only print error and warning messages'

@@ -9,6 +9,7 @@ repository.workspace = true
 anstyle.workspace = true
 anyhow.workspace = true
 clap.workspace = true
+clap_complete.workspace = true
 fish-build-helper.workspace = true
 fish-common.workspace = true
 fish-tempfile.workspace = true

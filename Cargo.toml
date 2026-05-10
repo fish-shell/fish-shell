@@ -18,6 +18,7 @@ bitflags = "2.5.0"
 cc = "1.0.94"
 cfg-if = "1.0.3"
 clap = { version = "4.5.54", features = ["derive"] }
+clap_complete = { version = "4.6.4", features = ["unstable-dynamic"] }
 errno = "0.3.0"
 fish-build-helper = { path = "crates/build-helper" }
 fish-build-man-pages = { path = "crates/build-man-pages" }

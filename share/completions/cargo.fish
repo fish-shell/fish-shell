@@ -850,3 +850,16 @@ if command -q cargo-asm
         complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(__fish_cargo asm)"
     end
 end
+
+# Determine whether the working directory is in a fish workspace.
+function __fish_is_in_fish_workspace
+    cargo metadata --offline --no-deps --format-version=1 2>/dev/null |
+        jq --exit-status -r '.packages | map(select(.name == "fish" and .homepage == "https://fishshell.com")) | any' >/dev/null
+end
+
+# The sed command is a hack to only activate the conditions in fish workspaces.
+# Ideally, this would be handled by the completion generator,
+# but `clap_complete` does not have this capability.
+COMPLETE=fish cargo xtask 2>/dev/null |
+    sed 's/^complete /complete --condition "__fish_is_in_fish_workspace "/' |
+    source

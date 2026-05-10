@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
-use clap::{Parser, Subcommand};
+use clap::{CommandFactory, Parser, Subcommand};
+use clap_complete::CompleteEnv;
 use fish_build_helper::as_os_strs;
 use std::{path::PathBuf, process::Command};
 use xtask::{CommandExt, cargo, format::FormatArgs, gettext::GettextArgs, shellcheck::shellcheck};
@@ -36,7 +37,29 @@ enum Task {
     ShellCheck,
 }
 
+/// Only used to enable completion generation.
+/// [`clap_complete`] is not built to account for the situation we have here, where the CLI does not
+/// correspond to a top-level shell command.
+/// We work around this here by pretending that we are building a CLI for the `cargo` command, which
+/// only has the single subcommand `xtask`.
+/// These completions can then be combined with the regular cargo completions.
+#[derive(Parser)]
+#[command(name = "cargo")]
+struct FakeCargoWrapperForCompletion {
+    #[command(subcommand)]
+    xtask: FakeCliForCompletion,
+}
+
+#[derive(Subcommand)]
+enum FakeCliForCompletion {
+    /// Run fish's xtasks
+    #[command(subcommand)]
+    Xtask(Task),
+}
+
 fn main() -> Result<()> {
+    CompleteEnv::with_factory(FakeCargoWrapperForCompletion::command).complete();
+
     let cli = Cli::parse();
     match cli.task {
         Task::Check => run_checks(),

@@ -218,7 +218,7 @@ latex_engine = "xelatex"
 
 def get_command_description(path, name):
     """Return the description for a command, by parsing its synopsis line"""
-    with open(path) as opened:
+    with open(path, encoding="utf8") as opened:
         for line in opened:
             if line.startswith(name + " - "):
                 _, desc = line.split(" - ", 1)

@@ -1047,6 +1047,9 @@ complete -x -c git -n '__fish_git_using_command diff log show range-diff' -l ws-
 complete -f -c git -n '__fish_git_using_command fetch pull' -l unshallow -d 'Convert a shallow repository to a complete one'
 complete -f -c git -n '__fish_git_using_command fetch pull' -l set-upstream -d 'Add upstream (tracking) reference'
 
+complete -x -c git -n '__fish_git_using_command fetch pull' -l recurse-submodules -a 'yes on-demand no' -d 'Recursively fetch submodules'
+complete -f -c git -n '__fish_git_using_command fetch pull' -l no-recurse-submodules -d 'Do not recursively fetch submodules'
+
 #### fetch
 complete -f -c git -n __fish_git_needs_command -a fetch -d 'Download objects from another repo'
 # Suggest "repository", then "refspec" - this also applies to e.g. push/pull

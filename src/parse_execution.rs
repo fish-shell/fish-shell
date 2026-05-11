@@ -1509,7 +1509,7 @@ impl ExecutionContext {
                     ctx,
                     STATUS_INVALID_ARGS,
                     redir_node,
-                    "Requested redirection to '%s', which is not a valid file descriptor",
+                    "Requested redirection to “%s”, which is not a valid file descriptor",
                     &spec.target
                 );
             }

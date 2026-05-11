@@ -22,9 +22,9 @@ umask -S
 umask 1234
 umask 228
 umask 0282
-#CHECKERR: umask: Invalid mask '1234'
-#CHECKERR: umask: Invalid mask '228'
-#CHECKERR: umask: Invalid mask '0282'
+#CHECKERR: umask: Invalid mask “1234”
+#CHECKERR: umask: Invalid mask “228”
+#CHECKERR: umask: Invalid mask “0282”
 
 # Verify that symbolic modifications and output is correct.
 #

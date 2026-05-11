@@ -125,10 +125,10 @@ bind ctrl-#
 bind alt-\#
 bind super-ctrl-~
 bind super-alt-\~
-# CHECKERR: bind: No binding found for key 'ctrl-#'
-# CHECKERR: bind: No binding found for key 'alt-#'
-# CHECKERR: bind: No binding found for key 'super-ctrl-~'
-# CHECKERR: bind: No binding found for key 'super-alt-~'
+# CHECKERR: bind: No binding found for key “ctrl-#”
+# CHECKERR: bind: No binding found for key “alt-#”
+# CHECKERR: bind: No binding found for key “super-ctrl-~”
+# CHECKERR: bind: No binding found for key “super-alt-~”
 
 # Legacy
 bind \cx\cax 'echo foo'
@@ -145,7 +145,7 @@ bind tab 'echo wurst'
 # CHECK: bind --preset tab complete
 bind --erase --user --preset tab
 bind tab
-# CHECKERR: bind: No binding found for key 'tab'
+# CHECKERR: bind: No binding found for key “tab”
 
 bind ctrl-\b
 # CHECKERR: bind: Cannot add control modifier to control character 'ctrl-h'
@@ -158,25 +158,25 @@ bind \r
 # CHECK: bind --preset enter execute
 # Never Return, probably always ctrl-j.
 bind \n 2>&1
-# CHECK: bind: No binding found for key 'ctrl-j'
+# CHECK: bind: No binding found for key “ctrl-j”
 
 bind _\cx_\ci_\ei_\\_\'_ 'echo foo'
 # CHECKERR: bind: cannot parse key '_\cx_\t_\ei_\\_'_'
 
 bind A
-# CHECKERR: bind: No binding found for key 'A'
+# CHECKERR: bind: No binding found for key “A”
 
 bind shift-a
-# CHECKERR: bind: No binding found for key 'shift-a'
+# CHECKERR: bind: No binding found for key “shift-a”
 
 bind shift-A
-# CHECKERR: bind: No binding found for key 'shift-A'
+# CHECKERR: bind: No binding found for key “shift-A”
 
 bind ctrl-shift-a
-# CHECKERR: bind: No binding found for key 'ctrl-shift-a'
+# CHECKERR: bind: No binding found for key “ctrl-shift-a”
 
 bind ctrl-shift-ä
-# CHECKERR: bind: No binding found for key 'ctrl-shift-ä'
+# CHECKERR: bind: No binding found for key “ctrl-shift-ä”
 
 bind '\n'
 # CHECKERR: bind: No binding found for key sequence '\\n'

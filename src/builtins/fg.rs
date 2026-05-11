@@ -60,7 +60,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
         let err = if found_job {
             err_str!("Ambiguous job")
         } else {
-            err_fmt!("'%s' is not a job", argv[optind])
+            err_fmt!("“%s” is not a job", argv[optind])
         };
         err.cmd(cmd).full_trailer(parser).finish(streams);
 
@@ -82,7 +82,7 @@ pub fn fg(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Built
                     let (pos, j) = j.unwrap();
                     job_pos = Some(pos);
                     job = if !j.wants_job_control() {
-                        err_fmt!("Can't put job %d, '%s' to foreground because it is not under job control",
+                        err_fmt!("Can't put job %d, “%s” to foreground because it is not under job control",
                                         pid,
                                         j.command()
                                     )

@@ -462,7 +462,7 @@ pub const FISH_MAX_EVAL_DEPTH: isize = 500;
 localizable_consts!(
     /// Error message on a function that calls itself immediately.
     pub INFINITE_FUNC_RECURSION_ERR_MSG
-    "The function '%s' calls itself immediately, which would result in an infinite loop."
+    "The function “%s” calls itself immediately, which would result in an infinite loop."
 
     /// Error message on reaching maximum call stack depth.
     pub CALL_STACK_LIMIT_EXCEEDED_ERR_MSG
@@ -470,15 +470,15 @@ localizable_consts!(
 
     /// Error message when encountering an unknown builtin name.
     pub UNKNOWN_BUILTIN_ERR_MSG
-    "Unknown builtin '%s'"
+    "Unknown builtin “%s”"
 
     /// Error message when encountering a failed expansion, e.g. for the variable name in for loops.
     pub FAILED_EXPANSION_VARIABLE_NAME_ERR_MSG
-    "Unable to expand variable name '%s'"
+    "Unable to expand variable name “%s”"
 
     /// Error message when encountering an illegal file descriptor.
     pub ILLEGAL_FD_ERR_MSG
-    "Illegal file descriptor in redirection '%s'"
+    "Illegal file descriptor in redirection “%s”"
 
     /// Error message for wildcards with no matches.
     pub WILDCARD_ERR_MSG
@@ -494,7 +494,7 @@ localizable_consts!(
 
     /// Error message when a command may not be in a pipeline.
     pub INVALID_PIPELINE_CMD_ERR_MSG
-    "The '%s' command can not be used in a pipeline"
+    "The “%s” command can not be used in a pipeline"
 
     // Error messages. The number is a reminder of how many format specifiers are contained.
 

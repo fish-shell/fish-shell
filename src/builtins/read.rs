@@ -132,7 +132,7 @@ fn parse_cmd_opts(
                 opts.nchars = match fish_wcstoi(w.woptarg.unwrap()) {
                     Ok(n) if n >= 0 => NonZeroUsize::new(n.try_into().unwrap()),
                     Err(wutil::Error::Overflow) => {
-                        err_fmt!("Argument '%s' is out of range", w.woptarg.unwrap())
+                        err_fmt!("Argument “%s” is out of range", w.woptarg.unwrap())
                             .cmd(cmd)
                             .full_trailer(parser)
                             .finish(streams);

@@ -86,7 +86,7 @@ count < $tmp/nostartup.prof
 # CHECK: 2
 
 $fish --no-config -c 'echo notprinted; echo foo | exec true; echo banana'
-# CHECKERR: fish: The 'exec' command can not be used in a pipeline
+# CHECKERR: fish: The “exec” command can not be used in a pipeline
 # CHECKERR: echo notprinted; echo foo | exec true; echo banana
 # CHECKERR:                             ^~~~~~~~^
 
@@ -107,7 +107,7 @@ $fish --no-config -c 'echo notprinted; echo foo; a=b'
 # CHECKERR:                            ^~^
 
 $fish --no-config -c 'echo notprinted | and true'
-# CHECKERR: fish: The 'and' command can not be used in a pipeline
+# CHECKERR: fish: The “and” command can not be used in a pipeline
 # CHECKERR: echo notprinted | and true
 # CHECKERR:                   ^~^
 

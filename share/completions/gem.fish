@@ -17,7 +17,7 @@ complete -c gem -n __fish_use_subcommand -xa contents -d "Display the contents o
 complete -c gem -n __fish_use_subcommand -xa dependency -d "Show the dependencies of an installed gem"
 complete -c gem -n __fish_use_subcommand -xa environment -d "Display RubyGems environmental information"
 complete -c gem -n __fish_use_subcommand -xa fetch -d "Download a gem into current directory"
-complete -c gem -n __fish_use_subcommand -xa help -d "Provide help on the 'gem' command"
+complete -c gem -n __fish_use_subcommand -xa help -d "Provide help on the “gem” command"
 complete -c gem -n __fish_use_subcommand -xa install -d "Install a gem into the local repository"
 complete -c gem -n __fish_use_subcommand -xa list -d "Display all gems whose name starts with STRING"
 complete -c gem -n __fish_use_subcommand -xa query -d "Query gem information in local or remote repositories"
@@ -57,7 +57,7 @@ complete $cert_opt -s s -l sign -d "Sign a certificate with my key and certifica
 # check
 set -l check_opt -c gem -n 'contains check (commandline -pxc)'
 complete $check_opt -s v -l verify -d "Verify gem file against its internal checksum" -x
-complete $check_opt -s a -l alien -d "Report 'unmanaged' or rogue files in the gem repository"
+complete $check_opt -s a -l alien -d "Report “unmanaged” or rogue files in the gem repository"
 complete $check_opt -s t -l test -d "Run unit tests for gem"
 complete $check_opt -s V -l version -d "Specify version for which to run unit tests"
 

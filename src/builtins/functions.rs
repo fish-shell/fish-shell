@@ -126,7 +126,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     localizable_consts! {
         FUNCTION_DOES_NOT_EXIST
-        "Function '%s' does not exist"
+        "Function “%s” does not exist"
     }
 
     let mut opts = FunctionsCmdOpts::default();
@@ -341,7 +341,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         }
 
         if !valid_func_name(new_func) || parser_keywords_is_reserved(new_func) {
-            err_fmt!("Illegal function name '%s'", new_func)
+            err_fmt!("Illegal function name “%s”", new_func)
                 .cmd(cmd)
                 .full_trailer(parser)
                 .finish(streams);

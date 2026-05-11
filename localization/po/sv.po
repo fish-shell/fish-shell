@@ -233,14 +233,6 @@ msgid "'%s' is a broken symbolic link to '%s'"
 msgstr ""
 
 #, c-format
-msgid "'%s' is not a directory"
-msgstr "'%s' är inte en katalog"
-
-#, c-format
-msgid "'%s' is not a job"
-msgstr "'%s' är inte ett jobb"
-
-#, c-format
 msgid "'%s' is not a valid job ID"
 msgstr ""
 
@@ -250,9 +242,6 @@ msgstr ""
 
 msgid "'break' while not inside of loop"
 msgstr ""
-
-msgid "'case' builtin not inside of switch block"
-msgstr "Det inbyggda kommandot 'case' får bara användas i ett 'switch'-block."
 
 msgid "'continue' while not inside of loop"
 msgstr ""
@@ -371,11 +360,11 @@ msgid "An option spec must have at least a short or a long flag"
 msgstr ""
 
 #, c-format
-msgid "Argument '%s' is out of range"
+msgid "Argument is not a number: '%s'"
 msgstr ""
 
 #, c-format
-msgid "Argument is not a number: '%s'"
+msgid "Argument “%s” is out of range"
 msgstr ""
 
 msgid "Await background process completion"
@@ -418,7 +407,7 @@ msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "no-execute läget kan inte användas i en interaktiv session"
 
 #, c-format
-msgid "Can't put job %d, '%s' to foreground because it is not under job control"
+msgid "Can't put job %d, “%s” to foreground because it is not under job control"
 msgstr "Kan inte skicka jobb %d, '%s' till förgrunden eftersom det inte använder jobbkontroll"
 
 #, c-format
@@ -562,7 +551,7 @@ msgid "End a block of commands"
 msgstr "Avsluta ett block av kommandon"
 
 #, c-format
-msgid "Error encountered while sourcing file '%s':"
+msgid "Error encountered while sourcing file “%s”:"
 msgstr "Ett fel uppstod medan filen '%s' lästes in"
 
 #, c-format
@@ -578,7 +567,7 @@ msgid "Error while reading file %s"
 msgstr "Ett fel uppstod medan filen '%s' lästes"
 
 #, c-format
-msgid "Error while reading file '%s'"
+msgid "Error while reading file “%s”"
 msgstr "Ett fel uppstod medan filen '%s' lästes"
 
 #, c-format
@@ -692,7 +681,7 @@ msgid "Function '%s' already exists. Cannot create copy of '%s'"
 msgstr ""
 
 #, c-format
-msgid "Function '%s' does not exist"
+msgid "Function “%s” does not exist"
 msgstr "Funktionen '%s' existerar inte"
 
 msgid "Generate random number"
@@ -737,11 +726,11 @@ msgid "I/O on asynchronous file descriptor is possible"
 msgstr "Läsning/skrivning på asynkron filidentifierare möjligt"
 
 #, c-format
-msgid "Illegal file descriptor in redirection '%s'"
+msgid "Illegal file descriptor in redirection “%s”"
 msgstr ""
 
 #, c-format
-msgid "Illegal function name '%s'"
+msgid "Illegal function name “%s”"
 msgstr "Ogiltigt funktionsnamn '%s'"
 
 msgid "Illegal instruction"
@@ -816,7 +805,7 @@ msgid "Invalid function name: %s"
 msgstr ""
 
 #, c-format
-msgid "Invalid index starting at '%s'"
+msgid "Invalid index starting at “%s”"
 msgstr "Ogiltigt index vid '%s'"
 
 msgid "Invalid index value"
@@ -1000,11 +989,11 @@ msgid "No abbreviation named %s with the specified command restrictions"
 msgstr ""
 
 #, c-format
-msgid "No binding found for key '%s'"
+msgid "No binding found for key sequence '%s'"
 msgstr ""
 
 #, c-format
-msgid "No binding found for key sequence '%s'"
+msgid "No binding found for key “%s”"
 msgstr ""
 
 msgid "No blocks defined"
@@ -1079,7 +1068,7 @@ msgid "Permission denied when changing resource of type '%s'"
 msgstr ""
 
 #, c-format
-msgid "Permission denied: '%s'"
+msgid "Permission denied: “%s”"
 msgstr "Åtkomst nekad till katalogen '%s'"
 
 #, c-format
@@ -1164,7 +1153,7 @@ msgid "Rendering the command line"
 msgstr ""
 
 #, c-format
-msgid "Requested redirection to '%s', which is not a valid file descriptor"
+msgid "Requested redirection to “%s”, which is not a valid file descriptor"
 msgstr ""
 
 msgid "Requires at least two arguments"
@@ -1300,14 +1289,6 @@ msgstr ""
 msgid "Test a condition"
 msgstr ""
 
-#, c-format
-msgid "The '%s' command can not be used immediately after a backgrounded job"
-msgstr ""
-
-#, c-format
-msgid "The '%s' command can not be used in a pipeline"
-msgstr ""
-
 msgid "The 'time' command may only be at the beginning of a pipeline"
 msgstr ""
 
@@ -1318,7 +1299,7 @@ msgid "The completion system"
 msgstr ""
 
 #, c-format
-msgid "The directory '%s' does not exist"
+msgid "The directory “%s” does not exist"
 msgstr "Katalogen '%s' existerar inte"
 
 #, c-format
@@ -1332,10 +1313,18 @@ msgid "The expanded command was empty."
 msgstr ""
 
 #, c-format
-msgid "The function '%s' calls itself immediately, which would result in an infinite loop."
+msgid "The function “%s” calls itself immediately, which would result in an infinite loop."
 msgstr ""
 
 msgid "The interactive reader/input system"
+msgstr ""
+
+#, c-format
+msgid "The “%s” command can not be used immediately after a backgrounded job"
+msgstr ""
+
+#, c-format
+msgid "The “%s” command can not be used in a pipeline"
 msgstr ""
 
 msgid "There are no suitable jobs"
@@ -1382,7 +1371,7 @@ msgid "Translate a string"
 msgstr ""
 
 #, c-format
-msgid "Tried to change the read-only variable '%s'"
+msgid "Tried to change the read-only variable “%s”"
 msgstr "Försökte ändra den skrivskyddade variablen '%s'"
 
 #, c-format
@@ -1404,7 +1393,7 @@ msgid "Unable to evaluate string substitution"
 msgstr ""
 
 #, c-format
-msgid "Unable to expand variable name '%s'"
+msgid "Unable to expand variable name “%s”"
 msgstr ""
 
 #, c-format
@@ -1460,11 +1449,11 @@ msgid "Unknown"
 msgstr "Okänd"
 
 #, c-format
-msgid "Unknown builtin '%s'"
+msgid "Unknown builtin “%s”"
 msgstr "Okänt inbyggt kommando '%s'"
 
 #, c-format
-msgid "Unknown color '%s'"
+msgid "Unknown color “%s”"
 msgstr ""
 
 msgid "Unknown command"
@@ -1486,7 +1475,7 @@ msgid "Unknown command:"
 msgstr ""
 
 #, c-format
-msgid "Unknown error trying to locate directory '%s'"
+msgid "Unknown error trying to locate directory “%s”"
 msgstr "Okänd fel inträffade under lokalisering av katalogen '%s'"
 
 msgid "Unknown error while evaluating command substitution"
@@ -1496,7 +1485,7 @@ msgid "Unknown function"
 msgstr ""
 
 #, c-format
-msgid "Unknown function '%s'"
+msgid "Unknown function “%s”"
 msgstr "Okänd funktion '%s'"
 
 #, c-format
@@ -1828,6 +1817,17 @@ msgstr ""
 msgid "with definition"
 msgstr ""
 
+#, c-format
+msgid "“%s” is not a directory"
+msgstr "'%s' är inte en katalog"
+
+#, c-format
+msgid "“%s” is not a job"
+msgstr "'%s' är inte ett jobb"
+
+msgid "“case” builtin not inside of switch block"
+msgstr "Det inbyggda kommandot 'case' får bara användas i ett 'switch'-block."
+
 #, fuzzy, c-format
 msgid "…and %u more rows"
 msgstr "…och %u rader till"
@@ -1868,7 +1868,7 @@ msgstr ""
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
 msgstr "%s: Förväntade exakt ett argument, fick %s\\n\\nSynopsis:\\n\\t%svared%s VARIABEL\\n"
 
-msgid "%s: Invalid mask '%s'\\n"
+msgid "%s: Invalid mask “%s”\\n"
 msgstr "%s: Ogiltigt mask '%s'\\n"
 
 msgid "%s: Not inside of command substitution"
@@ -1880,7 +1880,7 @@ msgstr "%s: Antalet positioner att hoppa över måste vara ett positivt heltal\\
 msgid "%s: Too many arguments"
 msgstr "%s: För många argument"
 
-msgid "%s: Unknown function '%s'\\n"
+msgid "%s: Unknown function “%s”\\n"
 msgstr "%s: Okänd funktion '%s'\\n"
 
 msgid "%s: Unknown option %s\\n"
@@ -6329,15 +6329,6 @@ msgstr ""
 msgid "Alias environment to save URL and CA certificate"
 msgstr ""
 
-msgid "Alias for 'get'"
-msgstr "Alias för 'get'"
-
-msgid "Alias for 'move delete packages'"
-msgstr "Alias för 'move delete packages'"
-
-msgid "Alias for 'update'"
-msgstr "Alias för 'update'"
-
 msgid "Alias for --cache-max-age 1"
 msgstr ""
 
@@ -6415,6 +6406,15 @@ msgstr ""
 
 msgid "Alias for upgrade"
 msgstr ""
+
+msgid "Alias for “get”"
+msgstr "Alias för 'get'"
+
+msgid "Alias for “move delete packages”"
+msgstr "Alias för 'move delete packages'"
+
+msgid "Alias for “update”"
+msgstr "Alias för 'update'"
 
 msgid "Alias of --hash-info"
 msgstr ""
@@ -11246,9 +11246,6 @@ msgstr ""
 msgid "Clear temporary files; will not change deployments"
 msgstr ""
 
-msgid "Clear the 'for your eyes only' flag in the message"
-msgstr "Töm 'for your eyes only'-flaggan i meddelandet"
-
 msgid "Clear the UUID tree"
 msgstr ""
 
@@ -11290,6 +11287,9 @@ msgstr ""
 
 msgid "Clear the tree log. Usable if it's corrupted and prevents mount."
 msgstr ""
+
+msgid "Clear the “for your eyes only” flag in the message"
+msgstr "Töm 'for your eyes only'-flaggan i meddelandet"
 
 msgid "Clear/List local NuGet resources"
 msgstr ""
@@ -14750,7 +14750,7 @@ msgstr ""
 msgid "Delay interval for lines sent"
 msgstr ""
 
-msgid "Delay opening files until a command containing the related 'w' function is applied"
+msgid "Delay opening files until a command containing the related “w” function is applied"
 msgstr "Fördröj filöppnande till ett kommando inehållande den relaterade 'w' functionen appliceras"
 
 msgid "Delay-sign the assembly using only the public portion of the strong name key"
@@ -22256,7 +22256,7 @@ msgstr ""
 msgid "Don't treat C1 control characters as printable"
 msgstr ""
 
-msgid "Don't treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
+msgid "Don't treat input files as text and store them in the OpenPGP canonical text form with standard “CRLF” line endings"
 msgstr "Behandla inte indatafiler som text och lagra dem inte i det kanoniska OpenPGP-textformatet med standard 'CRLF' radavslut"
 
 msgid "Don't treat warning level issues as fatal. (default on)"
@@ -30794,17 +30794,17 @@ msgstr ""
 msgid "Id of window to capture"
 msgstr ""
 
-msgid "Identical to '--multifile --encrypt'"
-msgstr "Identiskt med '--multifile --encrypt'"
-
-msgid "Identical to '--multifile --verify'"
-msgstr "Identiskt med '--multifile --verify'"
-
 msgid "Identical to --files but filenames terminate with \\0"
 msgstr ""
 
 msgid "Identical to --multifile --decrypt"
 msgstr "Identiskt med --multifile --decrypt"
+
+msgid "Identical to “--multifile --encrypt”"
+msgstr "Identiskt med '--multifile --encrypt'"
+
+msgid "Identical to “--multifile --verify”"
+msgstr "Identiskt med '--multifile --verify'"
 
 msgid "Identifier to be renamed"
 msgstr ""
@@ -30919,9 +30919,6 @@ msgstr ""
 
 msgid "Ignore $STY"
 msgstr ""
-
-msgid "Ignore 'Content-Length' header"
-msgstr "Ignorera 'Content-Length' huvud"
 
 msgid "Ignore CD/DVD repositories"
 msgstr ""
@@ -31220,7 +31217,7 @@ msgstr ""
 msgid "Ignore option '--read-alias'"
 msgstr "Ignorera flaggan '--read-alias'"
 
-msgid "Ignore option '--read-functions'"
+msgid "Ignore option “--read-functions”"
 msgstr "Ignorera flaggan '--read-functions'"
 
 msgid "Ignore outstanding file operations"
@@ -31369,6 +31366,9 @@ msgstr ""
 
 msgid "Ignore zero block in archive"
 msgstr "Ignorera nollblock i arkiv"
+
+msgid "Ignore “Content-Length” header"
+msgstr "Ignorera 'Content-Length' huvud"
 
 msgid "Ignore/don't save file attributes or permissions"
 msgstr ""
@@ -42272,7 +42272,7 @@ msgstr ""
 msgid "Pass the given arguments to the debugger"
 msgstr ""
 
-msgid "Pass the output through 'pr'"
+msgid "Pass the output through “pr”"
 msgstr "Skicka utdata genom 'pr'"
 
 msgid "Pass these flags to the dpkg installer"
@@ -47195,7 +47195,7 @@ msgstr ""
 msgid "Provide extra information"
 msgstr ""
 
-msgid "Provide help on the 'gem' command"
+msgid "Provide help on the “gem” command"
 msgstr ""
 
 msgid "Provide home host identity"
@@ -50399,7 +50399,7 @@ msgstr ""
 msgid "Replace include directories"
 msgstr "Ersätt inkluderingskataloger"
 
-msgid "Replace non-graphic characters with '?'"
+msgid "Replace non-graphic characters with “?”"
 msgstr "Ersätt ickegrafiska tecken med '?'"
 
 msgid "Replace only the last occurrence"
@@ -50470,9 +50470,6 @@ msgstr ""
 
 msgid "Reply to email-based patch using FROM address"
 msgstr "Svara på e-postbaserad fix från adress"
-
-msgid "Report 'unmanaged' or rogue files in the gem repository"
-msgstr ""
 
 msgid "Report RAID devices"
 msgstr ""
@@ -50664,6 +50661,9 @@ msgid "Report what will be pruned but do not actually prune it"
 msgstr ""
 
 msgid "Report when two files are same"
+msgstr ""
+
+msgid "Report “unmanaged” or rogue files in the gem repository"
 msgstr ""
 
 msgid "Reports interface existence via return code"
@@ -56414,9 +56414,6 @@ msgstr ""
 msgid "Set the \"fsmonitor valid\" bit"
 msgstr ""
 
-msgid "Set the 'for your eyes only' flag in the message"
-msgstr "Sätt 'for your eyes only'-flaggan i meddelandet"
-
 msgid "Set the ACL of file(s), replacing the current ACL"
 msgstr ""
 
@@ -57103,6 +57100,9 @@ msgstr ""
 
 msgid "Set the working directory"
 msgstr ""
+
+msgid "Set the “for your eyes only” flag in the message"
+msgstr "Sätt 'for your eyes only'-flaggan i meddelandet"
 
 msgid "Set this app as the default browser"
 msgstr ""
@@ -65330,14 +65330,14 @@ msgstr "Visa inte initialt copyrightmeddelande"
 msgid "Suppress the prefixing filename on output"
 msgstr ""
 
-msgid "Suppress the warning about 'using insecure memory'"
-msgstr "Undertryck varningen om 'använder osäkert minne'"
-
 msgid "Suppress the warning about missing MDC integrity protection"
 msgstr "Undertryck varningen om saknat MDCintegritetsskydd"
 
 msgid "Suppress the warning about unsafe file and home directory (--homedir) permissions"
 msgstr "Undertryck varningen om osäkra fil- och hemkatalogrättigheter (--homedir) "
+
+msgid "Suppress the warning about “using insecure memory”"
+msgstr "Undertryck varningen om 'använder osäkert minne'"
 
 msgid "Suppress thermal information"
 msgstr ""
@@ -67478,7 +67478,7 @@ msgstr ""
 msgid "Treat input as binary"
 msgstr ""
 
-msgid "Treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
+msgid "Treat input files as text and store them in the OpenPGP canonical text form with standard “CRLF” line endings"
 msgstr "Behandla indatafiler som text och lagra dem i det kanoniska OpenPGP-textformatet med standard 'CRLF' radavslut"
 
 msgid "Treat input or output as raw samples"

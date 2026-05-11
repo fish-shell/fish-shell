@@ -66,7 +66,7 @@ complete -c wget -l no-cookies -d "Disable the use of cookies"
 complete -c wget -l load-cookies -d "Load cookies from file" -r
 complete -c wget -l save-cookies -d "Save cookies to file"
 complete -c wget -l keep-session-cookies -d "Save session cookies"
-complete -c wget -l ignore-length -d "Ignore 'Content-Length' header"
+complete -c wget -l ignore-length -d "Ignore “Content-Length” header"
 complete -c wget -l header -d "Define an additional-header to be passed to the HTTP servers" -x
 complete -c wget -l proxy-user -d "Specify the proxy username" -xa "(__fish_complete_users)"
 complete -c wget -l proxy-password -d "Specify the proxy password" -x

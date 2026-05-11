@@ -19,7 +19,7 @@ string escape (set_color --foreground red)
 string escape (set_color --foreground normal)
 # CHECK: \e\[39m
 string escape (set_color --foreground reset)
-# CHECKERR: set_color: Unknown color 'reset'
+# CHECKERR: set_color: Unknown color “reset”
 
 string escape (set_color --foreground=f00 --foreground=green --foreground=00f)
 # CHECK: \e\[38\;2\;255\;0\;0m
@@ -32,7 +32,7 @@ string escape (set_color --foreground red --print-colors)
 # CHECKERR: set_color: --foreground --print-colors: options cannot be used together
 
 string escape (set_color --background=reset)
-# CHECKERR: set_color: Unknown color 'reset'
+# CHECKERR: set_color: Unknown color “reset”
 
 string escape (set_color --bold=red)
 # CHECKERR: set_color: --bold=red: option does not take an argument

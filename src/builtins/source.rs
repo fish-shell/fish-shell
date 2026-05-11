@@ -53,7 +53,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             }
             Err(_) => {
                 let esc = escape(args[optind]);
-                err_fmt!("Error encountered while sourcing file '%s':", &esc)
+                err_fmt!("Error encountered while sourcing file “%s”:", &esc)
                     .append_to_msg('\n')
                     .append_to_msg(&err_raw!(&builtin_strerror()).cmd(cmd).to_string())
                     .cmd(cmd)
@@ -91,7 +91,7 @@ pub fn source(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         Err(err) => {
             let esc = escape(&func_filename);
             err_fmt!(
-                "Error while reading file '%s'",
+                "Error while reading file “%s”",
                 if esc == "-" { L!("<stdin>") } else { &esc }
             )
             .cmd(cmd)

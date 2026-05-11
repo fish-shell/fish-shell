@@ -155,7 +155,7 @@ echo $status
 set -l old_cdpath $CDPATH
 set -l old_path $PWD
 cd nonexistent
-#CHECKERR: cd: The directory 'nonexistent' does not exist
+#CHECKERR: cd: The directory “nonexistent” does not exist
 #CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
@@ -164,7 +164,7 @@ cd nonexistent
 
 touch file
 cd file
-#CHECKERR: cd: 'file' is not a directory
+#CHECKERR: cd: “file” is not a directory
 #CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
@@ -173,7 +173,7 @@ cd file
 
 # a directory that isn't executable
 if cygwin_noacl ./
-    echo "cd: Permission denied: 'bad-perms'" >&2
+    echo "cd: Permission denied: “bad-perms”" >&2
     echo "fake/cd.fish (line 123):" >&2
     echo "builtin cd \$argv" >&2
     echo "^" >&2
@@ -184,7 +184,7 @@ else
     chmod -x bad-perms
     cd bad-perms
 end
-#CHECKERR: cd: Permission denied: 'bad-perms'
+#CHECKERR: cd: Permission denied: “bad-perms”
 #CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
@@ -217,7 +217,7 @@ set CDPATH $old_cdpath $PWD/cdpath-dir
 cd nonexistent
 cd $old_path
 if cygwin_noacl ./
-    echo "cd: Permission denied: 'bad-perms'" >&2
+    echo "cd: Permission denied: “bad-perms”" >&2
     echo "fake/cd.fish (line 123):" >&2
     echo "builtin cd \$argv" >&2
     echo "^" >&2
@@ -227,7 +227,7 @@ else
     cd bad-perms
 end
 # Permission errors are still a problem!
-#CHECKERR: cd: Permission denied: 'bad-perms'
+#CHECKERR: cd: Permission denied: “bad-perms”
 #CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 #CHECKERR: builtin cd $argv
 #CHECKERR: ^
@@ -401,7 +401,7 @@ end
 # the longest filename supported is with Reiser4 (3976 bytes)
 cd (string repeat 4096 a)
 # CHECKERR: cd: {{.+}}
-# CHECKERR: cd: Unknown error trying to locate directory '{{.*}}'
+# CHECKERR: cd: Unknown error trying to locate directory “{{.*}}”
 # CHECKERR: {{.*}}/cd.fish (line {{\d+}}):
 # CHECKERR: builtin cd $argv
 # CHECKERR: ^

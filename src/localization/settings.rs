@@ -227,6 +227,20 @@ impl LocalizationState {
         } else {
             (LanguagePrecedenceOrigin::Default, vec![])
         };
+        // We always have our messages available in English, so there is no point in adding
+        // additional fallback options after English.
+        // Note that this logic breaks when catalogs for different variants of English are added.
+        // If that ever happens, we would need somewhat more complex filtering to ensure that the
+        // non-default variants of English are kept if they precede the default variant in the list.
+        let language_list: Vec<String> = language_list
+            .into_iter()
+            .take_while(|lang| {
+                !(lang == "en"
+                    || lang.starts_with("en_")
+                    || lang.starts_with("C")
+                    || lang.starts_with("POSIX"))
+            })
+            .collect();
         fn update_precedence<'a, 'b: 'a, LocalizationLanguage: Copy + 'a>(
             language_list: &[String],
             get_available_languages: fn() -> &'a HashMap<&'b str, LocalizationLanguage>,

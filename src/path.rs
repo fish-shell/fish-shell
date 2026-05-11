@@ -3,13 +3,13 @@
 //! path-related issues.
 
 use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment, FALLBACK_PATH};
-use crate::expand::{HOME_DIRECTORY, expand_tilde};
+use crate::expand::expand_tilde;
 use crate::flog::{flog, flogf};
 use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use cfg_if::cfg_if;
 use errno::{Errno, errno, set_errno};
-use fish_wcstringutil::{wcs2osstring, wcs2zstring};
+use fish_widestring::{HOME_DIRECTORY, wcs2osstring, wcs2zstring};
 use libc::{EACCES, ENOENT, ENOTDIR, X_OK};
 use nix::unistd::AccessFlags;
 use std::ffi::OsStr;
@@ -358,7 +358,14 @@ pub fn path_apply_cdpath(dir: &wstr, wd: &wstr, env_vars: &dyn Environment) -> V
             // We want to return an absolute path (see issue 6220)
             if ![Some('/'), Some('~')].contains(&path.chars().next()) {
                 abspath = wd.to_owned();
-                abspath.push('/');
+
+                // Do not add a second slash if `wd` already ends with one
+                // (typically, when it's the root directory).
+                // This could result in unwanted paths (e.g. `//<path>`, which
+                // on Windows, is a remote directory).
+                if abspath.chars().next_back() != Some('/') {
+                    abspath.push('/');
+                }
             }
             abspath.push_utfstr(&path);
 
@@ -560,7 +567,8 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
     // the actual $HOME or $XDG_XXX directories. This prevents the tests from failing and/or stops
     // the tests polluting the user's actual $HOME if a sandbox environment has not been set up.
     {
-        use crate::common::{BUILD_DIR, osstr2wcstring};
+        use crate::common::BUILD_DIR;
+        use fish_widestring::osstr2wcstring;
         use std::path::PathBuf;
 
         let mut build_dir = PathBuf::from(BUILD_DIR);

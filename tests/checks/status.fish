@@ -31,7 +31,7 @@ status -b is-interactive
 
 # Try to set the job control to an invalid mode.
 status job-control full1
-#CHECKERR: status: Invalid job control mode 'full1'
+#CHECKERR: status job-control: Invalid job control mode 'full1'
 status --job-control=1none
 #CHECKERR: status: Invalid job control mode '1none'
 
@@ -131,10 +131,10 @@ printf "%s\n" (test-stack-trace-copy | string replace \t '<TAB>')[1..4]
 
 status test-terminal-feature
 and should have failed on missing arg
-# CHECKERR: status: test-terminal-feature: expected 1 arguments; got 0
+# CHECKERR: status test-terminal-feature: expected 1 arguments; got 0
 status test-terminal-feature 1 2
 and should have failed on too many args
-# CHECKERR: status: test-terminal-feature: expected 1 arguments; got 2
+# CHECKERR: status test-terminal-feature: expected 1 arguments; got 2
 status test-terminal-feature unrecognized-feature
 and should have failed on unrecognized feature
 # CHECKERR: status test-terminal-feature: unrecognized feature 'unrecognized-feature'
@@ -147,20 +147,20 @@ status -L 9999999999999999999999
 # CHECKERR: status: Invalid level value '9999999999999999999999'
 
 status unknown-subcmd
-# CHECKERR: status: unknown-subcmd: invalid subcommand
+# CHECKERR: status unknown-subcmd: invalid subcommand
 
 status job-control abc cdf
-# CHECKERR: status: job-control: expected 1 arguments; got 2
+# CHECKERR: status job-control: expected 1 arguments; got 2
 
 status test-feature
-# CHECKERR: status: test-feature: expected 1 arguments; got 0
+# CHECKERR: status test-feature: expected 1 arguments; got 0
 status test-feature one two
-# CHECKERR: status: test-feature: expected 1 arguments; got 2
+# CHECKERR: status test-feature: expected 1 arguments; got 2
 
 status get-file
-# CHECKERR: status: get-file: expected 1 arguments; got 0
+# CHECKERR: status get-file: expected 1 arguments; got 0
 status get-file one two
-# CHECKERR: status: get-file: expected 1 arguments; got 2
+# CHECKERR: status get-file: expected 1 arguments; got 2
 
 if status buildinfo | string match -q "*localize-messages*"
     echo Skipped
@@ -187,4 +187,4 @@ end
 # CHECK: {{Skipped|Success}}
 
 status build-info other-arg
-# CHECKERR: status: build-info: expected 0 arguments; got 1
+# CHECKERR: status build-info: expected 0 arguments; got 1

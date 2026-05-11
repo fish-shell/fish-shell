@@ -30,5 +30,5 @@ max_line_length = unset
 [{COMMIT_EDITMSG,git-revise-todo,*.jjdescription}]
 max_line_length = 72
 
-[*.yml]
+[*.{toml,yml}]
 indent_size = 2

@@ -1,4 +1,5 @@
 use anstyle::{AnsiColor, Style};
+use anyhow::{Context, Result, bail};
 use clap::Args;
 use std::{
     io::{ErrorKind, Write},
@@ -25,12 +26,12 @@ pub struct FormatArgs {
     paths: Vec<PathBuf>,
 }
 
-pub fn format(args: FormatArgs) {
+pub fn format(args: FormatArgs) -> Result<()> {
     if !args.all && args.paths.is_empty() {
         println!(
             "{YELLOW}warning: No paths specified. Nothing to do. Use the \"--all\" flag to consider all eligible files.{YELLOW:#}"
         );
-        return;
+        return Ok(());
     }
     if !args.force && !args.check {
         match Command::new("git")
@@ -39,16 +40,22 @@ pub fn format(args: FormatArgs) {
         {
             Ok(output) => {
                 if !output.stdout.is_empty() {
-                    std::io::stdout().write_all(&output.stdout).unwrap();
+                    std::io::stdout()
+                        .write_all(&output.stdout)
+                        .context("Could not write to stdout.")?;
                     print!(
                         "You have uncommitted changes (listed above). Are you sure you want to format? (y/N): "
                     );
-                    std::io::stdout().flush().unwrap();
+                    std::io::stdout()
+                        .flush()
+                        .context("Could not flush stdout.")?;
                     let mut response = String::new();
-                    std::io::stdin().read_line(&mut response).unwrap();
+                    std::io::stdin()
+                        .read_line(&mut response)
+                        .context("Could not read from stdin.")?;
                     if response.trim_end() != "y" {
                         println!("Exiting without formatting.");
-                        return;
+                        return Ok(());
                     }
                 }
             }
@@ -58,22 +65,25 @@ pub fn format(args: FormatArgs) {
                         "{YELLOW}warning: Did not find git, will proceed without checking for unstaged changes.{YELLOW:#}"
                     )
                 } else {
-                    fail!("Failed to run git status:\n{e}")
+                    bail!("Failed to run git status:\n{e}");
                 }
             }
         }
     }
-    format_fish(&args);
-    format_python(&args);
-    format_rust(&args);
+    format_fish(&args)?;
+    format_python(&args)?;
+    format_rust(&args)?;
+    Ok(())
 }
 
-fn run_formatter(formatter: &mut Command, name: &str) {
+fn run_formatter(formatter: &mut Command, name: &str) -> Result<()> {
     println!("=== Running {GREEN}{name}{GREEN:#}");
     match formatter.status() {
         Ok(exit_status) => {
-            if !exit_status.success() {
-                fail!("{name:?}: Files are not formatted correctly.");
+            if exit_status.success() {
+                Ok(())
+            } else {
+                bail!("{name:?}: Files are not formatted correctly.");
             }
         }
         Err(e) => {
@@ -81,15 +91,16 @@ fn run_formatter(formatter: &mut Command, name: &str) {
                 eprintln!(
                     "{YELLOW}Formatter not found: {name:?}. Skipping associated files.{YELLOW:#}"
                 );
+                Ok(())
             } else {
-                fail!("Error occurred while running {name:?}:\n{e}")
+                Err(e).with_context(|| format!("Error occurred while running {name:?}"))
             }
         }
     }
 }
 
-fn format_fish(args: &FormatArgs) {
-    let mut fish_paths = files_with_extension(&args.paths, "fish");
+fn format_fish(args: &FormatArgs) -> Result<()> {
+    let mut fish_paths = files_with_extension(&args.paths, "fish")?;
     if args.all {
         let workspace_root = fish_build_helper::workspace_root();
         let fish_formatting_dirs = ["benchmarks", "build_tools", "etc", "share"];
@@ -98,10 +109,10 @@ fn format_fish(args: &FormatArgs) {
                 .iter()
                 .map(|dir_name| workspace_root.join(dir_name)),
             "fish",
-        ));
+        )?);
     };
     if fish_paths.is_empty() {
-        return;
+        return Ok(());
     }
     // TODO: make `fish_indent` available as a Rust library function, to avoid needing a
     // `fish_indent` binary in `$PATH`.
@@ -113,40 +124,40 @@ fn format_fish(args: &FormatArgs) {
     }
     formatter.arg("--");
     formatter.args(fish_paths);
-    run_formatter(&mut formatter, "fish_indent");
+    run_formatter(&mut formatter, "fish_indent")
 }
 
-fn format_python(args: &FormatArgs) {
+fn format_python(args: &FormatArgs) -> Result<()> {
     let mut formatter = Command::new("ruff");
     formatter.arg("format");
     if args.check {
         formatter.arg("--check");
     }
-    let mut python_files = files_with_extension(&args.paths, "py");
+    let mut python_files = files_with_extension(&args.paths, "py")?;
 
     if args.all {
         python_files.push(fish_build_helper::workspace_root().to_owned());
     };
     if python_files.is_empty() {
-        return;
+        return Ok(());
     }
     formatter.args(python_files);
-    run_formatter(&mut formatter, "ruff format");
+    run_formatter(&mut formatter, "ruff format")
 }
 
-fn format_rust(args: &FormatArgs) {
+fn format_rust(args: &FormatArgs) -> Result<()> {
     let rustfmt_status = Command::new("cargo")
         .arg("fmt")
         .arg("--version")
         .stdout(Stdio::null())
         .status()
-        .unwrap();
+        .context("Failed to run cargo")?;
     if !rustfmt_status.success() {
         eprintln!(
             "{YELLOW}Please install \"rustfmt\" to format Rust, e.g. via:\n\
             rustup component add rustfmt{YELLOW:#}"
         );
-        return;
+        return Ok(());
     }
     if args.all {
         let mut formatter = Command::new("cargo");
@@ -155,16 +166,17 @@ fn format_rust(args: &FormatArgs) {
         if args.check {
             formatter.arg("--check");
         }
-        run_formatter(&mut formatter, "cargo fmt");
+        run_formatter(&mut formatter, "cargo fmt")?;
     }
-    let rust_files = files_with_extension(&args.paths, "rs");
-    if !rust_files.is_empty() {
-        let mut formatter = Command::new("rustfmt");
-        if args.check {
-            formatter.arg("--check");
-            formatter.arg("--files-with-diff");
-        }
-        formatter.args(rust_files);
-        run_formatter(&mut formatter, "rustfmt");
+    let rust_files = files_with_extension(&args.paths, "rs")?;
+    if rust_files.is_empty() {
+        return Ok(());
     }
+    let mut formatter = Command::new("rustfmt");
+    if args.check {
+        formatter.arg("--check");
+        formatter.arg("--files-with-diff");
+    }
+    formatter.args(rust_files);
+    run_formatter(&mut formatter, "rustfmt")
 }

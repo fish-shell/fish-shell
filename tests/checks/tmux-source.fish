@@ -3,6 +3,7 @@
 
 isolated-tmux-start
 isolated-tmux send-keys source Enter
+tmux-sleep
 isolated-tmux send-keys 'source -' Enter
 
 tmux-sleep

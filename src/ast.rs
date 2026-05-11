@@ -9,19 +9,21 @@
  *
  * Most clients will be interested in visiting the nodes of an ast.
  */
-use crate::common::{UnescapeStringStyle, unescape_string};
-use crate::flog::{flog, flogf};
-use crate::parse_constants::{
-    ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode,
-    ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags, SOURCE_OFFSET_INVALID,
-    SourceRange, StatementDecoration, token_type_user_presentable_description,
+use crate::{
+    flog::{flog, flogf},
+    parse_constants::{
+        ERROR_BAD_COMMAND_ASSIGN_ERR_MSG, INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode,
+        ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags, SOURCE_OFFSET_INVALID,
+        SourceRange, StatementDecoration, token_type_user_presentable_description,
+    },
+    parse_tree::ParseToken,
+    prelude::*,
+    tokenizer::{
+        TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
+        TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos,
+    },
 };
-use crate::parse_tree::ParseToken;
-use crate::prelude::*;
-use crate::tokenizer::{
-    TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
-    TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos,
-};
+use fish_common::{UnescapeStringStyle, unescape_string};
 use macro_rules_attribute::derive;
 use std::borrow::Cow;
 use std::convert::AsMut;
@@ -1963,11 +1965,11 @@ impl<'s> Populator<'s> {
     /// Return the parser's status.
     fn status(&mut self) -> ParserStatus {
         if self.unwinding {
-            ParserStatus::unwinding
+            ParserStatus::Unwinding
         } else if self.flags.leave_unterminated && self.peek_type(0) == ParseTokenType::Terminate {
-            ParserStatus::unsourcing
+            ParserStatus::Unsourcing
         } else {
-            ParserStatus::ok
+            ParserStatus::Ok
         }
     }
 
@@ -1975,7 +1977,7 @@ impl<'s> Populator<'s> {
     fn unsource_leaves(&mut self) -> bool {
         matches!(
             self.status(),
-            ParserStatus::unsourcing | ParserStatus::unwinding
+            ParserStatus::Unsourcing | ParserStatus::Unwinding
         )
     }
 
@@ -2732,15 +2734,15 @@ impl<'s> Populator<'s> {
 /// The status of our parser.
 enum ParserStatus {
     /// Parsing is going just fine, thanks for asking.
-    ok,
+    Ok,
 
     /// We have exhausted the token stream, but the caller was OK with an incomplete parse tree.
     /// All further leaf nodes should have the unsourced flag set.
-    unsourcing,
+    Unsourcing,
 
     /// We encountered an parse error and are "unwinding."
     /// Do not consume any tokens until we get back to a list type which stops unwinding.
-    unwinding,
+    Unwinding,
 }
 
 /// Return tokenizer flags corresponding to parse tree flags.
@@ -2830,7 +2832,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_ast_parse() {
-        let _cleanup = test_init();
+        test_init();
         let src = L!("echo");
         let ast = ast::parse(src, ParseTreeFlags::default(), None);
         assert!(!ast.any_error);
@@ -2887,7 +2889,7 @@ end
 }
 
 // Run with cargo +nightly bench --features=benchmark
-#[cfg(feature = "benchmark")]
+#[cfg(all(nightly, feature = "benchmark"))]
 #[cfg(test)]
 mod bench {
     extern crate test;

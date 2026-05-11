@@ -1065,16 +1065,16 @@ echo Still here
 # CHECK: Still here
 
 set -o xtrace
-# CHECKERR: Fish does not have shell options. See `help fish_for_bash_users`.
+# CHECKERR: fish does not have shell options. See `help fish_for_bash_users`.
 # CHECKERR: set: -o: unknown option
 
 set -o vi
-# CHECKERR: Fish does not have shell options. See `help fish_for_bash_users`.
+# CHECKERR: fish does not have shell options. See `help fish_for_bash_users`.
 # CHECKERR: To enable vi-mode, run `fish_vi_key_bindings`.
 # CHECKERR: set: -o: unknown option
 
 set -o ed
-# CHECKERR: Fish does not have shell options. See `help fish_for_bash_users`.
+# CHECKERR: fish does not have shell options. See `help fish_for_bash_users`.
 # CHECKERR: ?
 # CHECKERR: ?
 # CHECKERR: ?

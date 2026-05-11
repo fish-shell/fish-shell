@@ -20,6 +20,7 @@ isolated-tmux-start -C '
     bind ctrl-g,E "set -g fish_color_command 333"
     bind ctrl-g,F "set -U fish_color_param 444"
     bind ctrl-g,G "set -eg fish_color_command"
+    bind ctrl-g,R repaint
 '
 
 isolated-tmux capture-pane -p
@@ -45,3 +46,14 @@ isolated-tmux send-keys C-g G
 tmux-sleep
 isolated-tmux capture-pane -p
 # CHECK: 5>
+
+isolated-tmux send-keys status Space Tab C-g R Tab
+tmux-sleep
+isolated-tmux capture-pane -p | sed 2q
+# CHECK: 6> status
+# CHECK: basename  (Print the file name (without the path) of the currently running scr…)
+isolated-tmux send-keys C-g R Tab
+tmux-sleep
+isolated-tmux capture-pane -p | sed 2q
+# CHECK: 7> status basename
+# CHECK: basename  (Print the file name (without the path) of the currently running scr…)

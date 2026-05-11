@@ -28,12 +28,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("c:lrq");
 
-    fn parse_opt(
-        &mut self,
-        _n: &wstr,
-        c: char,
-        arg: Option<&'args wstr>,
-    ) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&'args wstr>) -> Result<(), StringError<'_>> {
         match c {
             'c' => self.chars_to_trim = arg.unwrap(),
             'l' => self.left = true,
@@ -46,7 +41,7 @@ impl<'args> StringSubCommand<'args> for Trim<'args> {
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
@@ -110,7 +105,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "trim"], STATUS_CMD_ERROR, "");
         validate!(["string", "trim", ""], STATUS_CMD_ERROR, "\n");
         validate!(["string", "trim", " "], STATUS_CMD_OK, "\n");

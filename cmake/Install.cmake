@@ -104,20 +104,12 @@ fish_create_dirs(${sysconfdir}/fish/conf.d ${sysconfdir}/fish/completions
 install(FILES etc/config.fish DESTINATION ${sysconfdir}/fish/)
 
 fish_create_dirs(
-    ${rel_datadir}/fish ${rel_datadir}/fish/completions
-    ${rel_datadir}/fish/functions
-    ${rel_datadir}/fish/man/man1 ${rel_datadir}/fish/tools
-    ${rel_datadir}/fish/tools/web_config
-    ${rel_datadir}/fish/tools/web_config/js
-    ${rel_datadir}/fish/prompts
-    ${rel_datadir}/fish/themes
+    ${rel_datadir}/fish
+    ${rel_datadir}/fish/man/man1
 )
 
+# This file is embedded in the executable by rust-embed and never read from the filesystem
 configure_file(share/__fish_build_paths.fish.in share/__fish_build_paths.fish)
-install(FILES share/config.fish
-    ${CMAKE_CURRENT_BINARY_DIR}/share/__fish_build_paths.fish
-    DESTINATION ${rel_datadir}/fish
-)
 
 # Create only the vendor directories inside the prefix (#5029 / #6508)
 fish_create_dirs(
@@ -145,30 +137,6 @@ install(
     DESTINATION ${rel_datadir}/pkgconfig
 )
 
-install(
-    DIRECTORY share/completions/
-    DESTINATION ${rel_datadir}/fish/completions
-    FILES_MATCHING PATTERN "*.fish"
-)
-
-install(
-    DIRECTORY share/functions/
-    DESTINATION ${rel_datadir}/fish/functions
-    FILES_MATCHING PATTERN "*.fish"
-)
-
-install(
-    DIRECTORY share/prompts/
-    DESTINATION ${rel_datadir}/fish/prompts
-    FILES_MATCHING PATTERN "*.fish"
-)
-
-install(
-    DIRECTORY share/themes/
-    DESTINATION ${rel_datadir}/fish/themes
-    FILES_MATCHING PATTERN "*.theme"
-)
-
 # CONDEMNED_PAGE is managed by the conditional above
 # Building the man pages is optional: if sphinx isn't installed, they're not built
 install(
@@ -177,22 +145,6 @@ install(
     FILES_MATCHING
     PATTERN "*.1"
     PATTERN ${CONDEMNED_PAGE} EXCLUDE
-)
-
-install(
-    PROGRAMS share/tools/create_manpage_completions.py
-    DESTINATION ${rel_datadir}/fish/tools/
-)
-
-install(
-    DIRECTORY share/tools/web_config
-    DESTINATION ${rel_datadir}/fish/tools/
-    FILES_MATCHING
-    PATTERN "*.png"
-    PATTERN "*.css"
-    PATTERN "*.html"
-    PATTERN "*.py"
-    PATTERN "*.js"
 )
 
 # Building the man pages is optional: if Sphinx isn't installed, they're not built

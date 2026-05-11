@@ -237,7 +237,7 @@ Optional Commands
        ``\e]0; Pt \e\\``
      - ts
      - Set terminal window title (OSC 0). Used in :doc:`fish_title <cmds/fish_title>`.
-   * - ``\e]2; Pt \e\\``
+   * - ``\e]1; Pt \e\\``
      - ts
      - Set terminal tab title (OSC 1). Used in :doc:`fish_tab_title <cmds/fish_tab_title>`.
    * - ``\e]7;file:// Pt / Pt \e\\``

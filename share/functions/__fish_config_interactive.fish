@@ -29,14 +29,14 @@ function __fish_config_interactive -d "Initializations that should be performed 
     # The default just prints a variable of the same name.
     #
     # NOTE: This status check is necessary to not print the greeting when `read`ing in scripts. See #7080.
-    if status --is-interactive
+    if not status is-interactive-read
         and functions -q fish_greeting
         fish_greeting
     end
 
     # Display SHELL_WELCOME if set. This is a standard environment variable (introduced by
     # systemd v257) intended for shells to display when they first initialize.
-    if status --is-interactive
+    if not status is-interactive-read
         and set -q SHELL_WELCOME[1]
         string join -- ' ' $SHELL_WELCOME
     end

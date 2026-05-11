@@ -4,7 +4,7 @@ use fish_build_helper::workspace_root;
 use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt as _;
 use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use std::sync::LazyLock;
 
 /// A struct of configuration directories, determined in main() that fish will optionally pass to
 /// env_init.
@@ -22,7 +22,6 @@ const DATADIR: Option<&str> = option_env!("DATADIR");
 
 impl ConfigPaths {
     pub fn new() -> Self {
-        FISH_PATH.get_or_init(compute_fish_path);
         let exec_path = get_fish_path();
         flog!(
             config,
@@ -167,11 +166,11 @@ pub enum FishPath {
     LookUpInPath,
 }
 
-static FISH_PATH: OnceLock<FishPath> = OnceLock::new();
+static FISH_PATH: LazyLock<FishPath> = LazyLock::new(compute_fish_path);
 
 /// Get the absolute path to the fish executable itself
 pub fn get_fish_path() -> &'static FishPath {
-    FISH_PATH.get().unwrap()
+    &FISH_PATH
 }
 
 fn compute_fish_path() -> FishPath {

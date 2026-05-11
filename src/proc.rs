@@ -2,25 +2,28 @@
 //! functions for tracking children. These functions do not themselves launch new processes,
 //! the exec library will call proc to create representations of the running jobs as needed.
 
-use crate::ast;
-use crate::common::{Timepoint, WSL, escape, is_windows_subsystem_for_linux, timef};
-use crate::env::Statuses;
-use crate::event::{self, Event};
-use crate::flog::{flog, flogf};
-use crate::global_safety::RelaxedAtomicBool;
-use crate::io::IoChain;
-use crate::job_group::{JobGroup, MaybeJobId};
-use crate::parse_tree::NodeRef;
-use crate::parser::{Block, Parser};
-use crate::portable_atomic::AtomicU64;
-use crate::prelude::*;
-use crate::reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint};
-use crate::redirection::RedirectionSpecList;
-use crate::signal::{Signal, signal_set_handlers_once};
-use crate::topic_monitor::{GenerationsList, Topic, topic_monitor_principal};
-use crate::wait_handle::{InternalJobId, WaitHandle, WaitHandleRef, WaitHandleStore};
-use crate::wutil::{perror_nix, wbasename};
+use crate::{
+    ast,
+    common::{WSL, is_windows_subsystem_for_linux},
+    env::Statuses,
+    event::{self, Event},
+    flog::{flog, flogf},
+    global_safety::RelaxedAtomicBool,
+    io::IoChain,
+    job_group::{JobGroup, MaybeJobId},
+    parse_tree::NodeRef,
+    parser::{Block, Parser},
+    portable_atomic::AtomicU64,
+    prelude::*,
+    reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint},
+    redirection::RedirectionSpecList,
+    signal::{Signal, signal_set_handlers_once},
+    topic_monitor::{GenerationsList, Topic, topic_monitor_principal},
+    wait_handle::{WaitHandle, WaitHandleRef, WaitHandleStore},
+    wutil::{perror_nix, wbasename},
+};
 use cfg_if::cfg_if;
+use fish_common::{Timepoint, escape, timef};
 use fish_widestring::ToWString;
 use libc::{
     _SC_CLK_TCK, EXIT_SUCCESS, SIG_IGN, SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGINT, SIGPIPE, SIGQUIT,
@@ -34,14 +37,18 @@ use nix::{
     },
     unistd::getpgrp,
 };
-use std::cell::{Cell, Ref, RefCell, RefMut};
-use std::fs;
-use std::io::{Read as _, Write as _};
-use std::num::NonZeroU32;
-use std::os::fd::RawFd;
-use std::rc::Rc;
-use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::{Arc, LazyLock, Mutex, OnceLock};
+use std::{
+    cell::{Cell, Ref, RefCell, RefMut},
+    fs,
+    io::Write as _,
+    num::NonZeroU32,
+    os::fd::RawFd,
+    rc::Rc,
+    sync::{
+        Arc, LazyLock, Mutex, OnceLock,
+        atomic::{AtomicU8, Ordering},
+    },
+};
 
 /// Types of processes.
 #[derive(Default)]
@@ -534,7 +541,7 @@ impl Process {
     }
 
     /// Return the wait handle for the process, if it exists.
-    pub fn get_wait_handle(&self) -> Option<WaitHandleRef> {
+    pub fn wait_handle(&self) -> Option<WaitHandleRef> {
         self.wait_handle.borrow().clone()
     }
 
@@ -558,7 +565,7 @@ impl Process {
                 wbasename(&self.actual_cmd.clone()).to_owned(),
             )));
         }
-        self.get_wait_handle()
+        self.wait_handle()
     }
 }
 
@@ -600,6 +607,11 @@ pub struct JobFlags {
     pub is_group_root: bool,
 }
 
+/// The non user-visible, never-recycled job ID.
+/// Every job has a unique positive value for this.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, PartialOrd, Ord)]
+pub struct InternalJobId(u64);
+
 /// A struct representing a job. A job is a pipeline of one or more processes.
 #[derive(Default)]
 pub struct Job {
@@ -626,11 +638,11 @@ pub struct Job {
 
 impl Job {
     pub fn new(properties: JobProperties, command_str: WString) -> Self {
-        static NEXT_INTERNAL_JOB_ID: AtomicU64 = AtomicU64::new(0);
+        static NEXT_INTERNAL_JOB_ID: AtomicU64 = AtomicU64::new(1);
         Job {
             properties,
             command_str,
-            internal_job_id: NEXT_INTERNAL_JOB_ID.fetch_add(1, Ordering::Relaxed),
+            internal_job_id: InternalJobId(NEXT_INTERNAL_JOB_ID.fetch_add(1, Ordering::Relaxed)),
             ..Default::default()
         }
     }
@@ -670,7 +682,7 @@ impl Job {
             // Can't reap twice.
             p.is_completed() ||
             // Can't reap the group leader in an under-construction job.
-            (!self.is_constructed() && self.get_pgid() == p.pid())
+            (!self.is_constructed() && self.pgid() == p.pid())
         )
     }
 
@@ -691,14 +703,14 @@ impl Job {
 
     /// Return our pgid, or none if we don't have one, or are internal to fish
     /// This never returns fish's own pgroup.
-    pub fn get_pgid(&self) -> Option<Pid> {
-        self.group().get_pgid()
+    pub fn pgid(&self) -> Option<Pid> {
+        self.group().pgid()
     }
 
     /// Return the pid of the last external process in the job.
     /// This may be none if the job consists of just internal fish functions or builtins.
     /// This will never be fish's own pid.
-    pub fn get_last_pid(&self) -> Option<Pid> {
+    pub fn last_pid(&self) -> Option<Pid> {
         self.external_procs().last().and_then(|proc| proc.pid())
     }
 
@@ -714,7 +726,7 @@ impl Job {
     }
 
     /// Access mutable job flags.
-    pub fn mut_flags(&self) -> RefMut<'_, JobFlags> {
+    pub fn flags_mut(&self) -> RefMut<'_, JobFlags> {
         self.job_flags.borrow_mut()
     }
 
@@ -736,7 +748,7 @@ impl Job {
     /// Mark this job as constructed. The job must not have previously been marked as constructed.
     pub fn mark_constructed(&self) {
         assert!(!self.is_constructed(), "Job was already constructed");
-        self.mut_flags().constructed = true;
+        self.flags_mut().constructed = true;
     }
 
     /// Return whether we have internal or external procs, respectively.
@@ -808,7 +820,7 @@ impl Job {
     }
 
     /// Run ourselves. Returning once we complete or stop.
-    pub fn continue_job(&self, parser: &Parser, block_io: Option<&IoChain>) {
+    pub fn continue_job(&self, parser: &mut Parser, block_io: Option<&IoChain>) {
         flogf!(
             proc_job_run,
             "Run job %d (%s), %s, %s",
@@ -836,7 +848,7 @@ impl Job {
             let procs = self.processes();
             let p = procs.last().unwrap();
             if p.status().normal_exited() || p.status().signal_exited() {
-                if let Some(statuses) = self.get_statuses() {
+                if let Some(statuses) = self.statuses() {
                     parser.set_last_statuses(statuses);
                     parser.libdata_mut().status_count += 1;
                 }
@@ -847,7 +859,7 @@ impl Job {
     /// Prepare to resume a stopped job by sending SIGCONT and clearing the stopped flag.
     /// Return true on success, false if we failed to send the signal.
     pub fn resume(&self) -> bool {
-        self.mut_flags().notified_of_stop = false;
+        self.flags_mut().notified_of_stop = false;
         if !self.signal(NixSignal::SIGCONT) {
             flogf!(
                 proc_pgroup,
@@ -867,7 +879,7 @@ impl Job {
     /// Send the specified signal to all processes in this job.
     /// Return true on success, false on failure.
     pub fn signal(&self, signal: NixSignal) -> bool {
-        if let Some(pgid) = self.group().get_pgid() {
+        if let Some(pgid) = self.group().pgid() {
             if let Err(err) = killpg(pgid.as_nix_pid(), signal) {
                 perror_nix(&format!("killpg({pgid}, {})", signal.as_str()), err);
                 return false;
@@ -884,7 +896,7 @@ impl Job {
     }
 
     /// Returns the statuses for this job.
-    pub fn get_statuses(&self) -> Option<Statuses> {
+    pub fn statuses(&self) -> Option<Statuses> {
         let mut st = Statuses::default();
         let mut has_status = false;
         let mut laststatus = 0;
@@ -977,7 +989,7 @@ static JOB_CONTROL_MODE: AtomicU8 = AtomicU8::new(JobControl::Interactive as u8)
 /// Notify the user about stopped or terminated jobs, and delete completed jobs from the job list.
 /// If `interactive` is set, allow removing interactive jobs; otherwise skip them.
 /// Return whether text was printed to stdout.
-pub fn job_reap(parser: &Parser, interactive: bool, block_io: Option<&IoChain>) -> bool {
+pub fn job_reap(parser: &mut Parser, interactive: bool, block_io: Option<&IoChain>) -> bool {
     // Early out for the common case that there are no jobs.
     if parser.jobs().is_empty() {
         return false;
@@ -991,7 +1003,7 @@ pub fn job_reap(parser: &Parser, interactive: bool, block_io: Option<&IoChain>) 
 /// exit. An empty result (common) means no such jobs.
 pub fn jobs_requiring_warning_on_exit(parser: &Parser) -> JobList {
     let mut result = vec![];
-    for job in parser.jobs().iter() {
+    for job in parser.jobs() {
         if !job.is_foreground() && job.is_constructed() && !job.is_completed() {
             result.push(job.clone());
         }
@@ -1032,14 +1044,9 @@ pub fn proc_get_jiffies(inpid: Pid) -> ClockTicks {
     }
 
     let filename = format!("/proc/{}/stat", inpid);
-    let Ok(mut f) = fs::File::open(filename) else {
+    let Ok(buf) = fs::read(filename) else {
         return 0;
     };
-
-    let mut buf = vec![];
-    if f.read_to_end(&mut buf).is_err() {
-        return 0;
-    }
 
     let mut timesstrs = buf.split(|c| *c == b' ').skip(13);
     let mut sum = 0;
@@ -1060,8 +1067,8 @@ pub fn proc_get_jiffies(inpid: Pid) -> ClockTicks {
 
 /// Update process time usage for all processes by calling the proc_get_jiffies function for every
 /// process of every job.
-pub fn proc_update_jiffies(parser: &Parser) {
-    for job in parser.jobs().iter() {
+pub fn proc_update_jiffies(parser: &mut Parser) {
+    for job in parser.jobs() {
         for p in job.external_procs() {
             p.last_times.replace(ProcTimes {
                 time: timef(),
@@ -1114,7 +1121,7 @@ fn handle_child_status(job: &Job, proc: &Process, status: ProcStatus) {
 }
 
 /// Wait for any process finishing, or receipt of a signal.
-pub fn proc_wait_any(parser: &Parser) {
+pub fn proc_wait_any(parser: &mut Parser) {
     process_mark_finished_children(parser, /*block_ok=*/ true, /*block_io=*/ None);
     let is_interactive = parser.scope().is_interactive;
     process_clean_after_marking(parser, is_interactive);
@@ -1125,7 +1132,7 @@ pub fn hup_jobs(jobs: &JobList) {
     let fish_pgrp = getpgrp();
     let mut kill_list = Vec::new();
     for j in jobs {
-        let Some(pgid) = j.get_pgid() else { continue };
+        let Some(pgid) = j.pgid() else { continue };
         if pgid.as_nix_pid() != fish_pgrp && !j.is_completed() {
             j.signal(NixSignal::SIGHUP);
             if j.is_stopped() {
@@ -1192,13 +1199,13 @@ static DISOWNED_PIDS: Mutex<Vec<Pid>> = Mutex::new(Vec::new());
 /// See if any reapable processes have exited, and mark them accordingly.
 /// \param block_ok if no reapable processes have exited, block until one is (or until we receive a
 /// signal).
-fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Option<&IoChain>) {
+fn process_mark_finished_children(parser: &mut Parser, block_ok: bool, block_io: Option<&IoChain>) {
     // Get the exit and signal generations of all reapable processes.
     // The exit generation tells us if we have an exit; the signal generation allows for detecting
     // SIGHUP and SIGINT.
     // Go through each process and figure out if and how it wants to be reaped.
     let mut reapgens = GenerationsList::invalid();
-    for j in parser.jobs().iter() {
+    for j in parser.jobs() {
         for proc in j.processes().iter() {
             if !j.can_reap(proc) {
                 continue;
@@ -1207,12 +1214,12 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Opt
             if proc.has_pid() {
                 // Reaps with a pid.
                 reapgens.set_min_from(Topic::SigChld, &proc.gens);
-                reapgens.set_min_from(Topic::SigHupInt, &proc.gens);
+                reapgens.set_min_from(Topic::SigHupIntTerm, &proc.gens);
             }
             if proc.internal_proc.borrow().is_some() {
                 // Reaps with an internal process.
                 reapgens.set_min_from(Topic::InternalExit, &proc.gens);
-                reapgens.set_min_from(Topic::SigHupInt, &proc.gens);
+                reapgens.set_min_from(Topic::SigHupIntTerm, &proc.gens);
             }
         }
     }
@@ -1227,7 +1234,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Opt
     // Update the hup/int generations and reap any reapable processes.
     // We structure this as two loops for some simplicity.
     // First reap all pids.
-    for j in parser.jobs().iter() {
+    for j in parser.jobs() {
         for proc in j.external_procs() {
             // It's an external proc so it has a pid, but is it reapable?
             if !j.can_reap(proc) {
@@ -1235,7 +1242,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Opt
             }
 
             // Always update the signal hup/int gen.
-            proc.gens.sighupint.set(reapgens.sighupint.get());
+            proc.gens.sighupintterm.set(reapgens.sighupintterm.get());
 
             // Nothing to do if we did not get a new sigchld.
             if proc.gens.sigchld == reapgens.sigchld {
@@ -1265,7 +1272,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Opt
                 j.group().set_is_foreground(false);
             }
             if status.continued() {
-                j.mut_flags().notified_of_stop = false;
+                j.flags_mut().notified_of_stop = false;
             }
             if status.normal_exited() || status.signal_exited() {
                 flogf!(
@@ -1296,7 +1303,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Opt
 
     // We are done reaping pids.
     // Reap internal processes.
-    for j in parser.jobs().iter() {
+    for j in parser.jobs() {
         for proc in j.processes.iter() {
             // Does this proc have an internal process that is reapable?
             if proc.internal_proc.borrow().is_none() || !j.can_reap(proc) {
@@ -1304,7 +1311,7 @@ fn process_mark_finished_children(parser: &Parser, block_ok: bool, block_io: Opt
             }
 
             // Always update the signal hup/int gen.
-            proc.gens.sighupint.set(reapgens.sighupint.get());
+            proc.gens.sighupintterm.set(reapgens.sighupintterm.get());
 
             // Nothing to do if we did not get a new internal exit.
             if proc.gens.internal_exit == reapgens.internal_exit {
@@ -1371,7 +1378,7 @@ fn generate_job_exit_events(j: &Job, out_evts: &mut Vec<Event>) {
     if !j.from_event_handler() || !j.is_foreground() {
         // job_exit events.
         if j.posts_job_exit_events() {
-            if let Some(last_pid) = j.get_last_pid() {
+            if let Some(last_pid) = j.last_pid() {
                 out_evts.push(Event::job_exit(last_pid, j.internal_job_id));
             }
         }
@@ -1431,10 +1438,10 @@ fn job_or_proc_wants_summary(j: &Job) -> bool {
 }
 
 /// Invoke the fish_job_summary function by executing the given command.
-fn call_job_summary(parser: &Parser, cmd: &wstr) {
+fn call_job_summary(parser: &mut Parser, cmd: &wstr) {
     let event = Event::generic(L!("fish_job_summary").to_owned());
     let b = parser.push_block(Block::event_block(event));
-    let saved_status = parser.get_last_statuses();
+    let saved_status = parser.last_statuses();
     parser.eval(cmd, &IoChain::new());
     parser.set_last_statuses(saved_status);
     parser.pop_block(b);
@@ -1493,7 +1500,7 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
 // Summarize a list of jobs, by emitting calls to fish_job_summary.
 // Note the given list must NOT be the parser's own job list, since the call to fish_job_summary
 // could modify it.
-fn summarize_jobs(parser: &Parser, jobs: &[JobRef]) -> bool {
+fn summarize_jobs(parser: &mut Parser, jobs: &[JobRef]) -> bool {
     if jobs.is_empty() {
         return false;
     }
@@ -1539,7 +1546,7 @@ fn save_wait_handle_for_completed_job(job: &Job, store: &mut WaitHandleStore) {
 
     // Mark all wait handles as complete (but don't create just for this).
     for proc in job.processes().iter() {
-        if let Some(wh) = proc.get_wait_handle() {
+        if let Some(wh) = proc.wait_handle() {
             wh.set_status_and_complete(proc.status().status_value());
         }
     }
@@ -1547,7 +1554,7 @@ fn save_wait_handle_for_completed_job(job: &Job, store: &mut WaitHandleStore) {
 
 /// Remove completed jobs from the job list, printing status messages as appropriate.
 /// Return whether something was printed.
-fn process_clean_after_marking(parser: &Parser, interactive: bool) -> bool {
+fn process_clean_after_marking(parser: &mut Parser, interactive: bool) -> bool {
     // This function may fire an event handler, we do not want to call ourselves recursively (to
     // avoid infinite recursion).
     if parser.scope().is_cleaning_procs {
@@ -1557,7 +1564,7 @@ fn process_clean_after_marking(parser: &Parser, interactive: bool) -> bool {
     let _cleaning = parser.push_scope(|s| s.is_cleaning_procs = true);
 
     // Remove all disowned jobs.
-    remove_disowned_jobs(&mut parser.jobs_mut());
+    remove_disowned_jobs(parser.jobs_mut());
 
     // Accumulate exit events into a new list, which we fire after the list manipulation is
     // complete.
@@ -1577,19 +1584,19 @@ fn process_clean_after_marking(parser: &Parser, interactive: bool) -> bool {
     let mut jobs_to_summarize = vec![];
 
     // Handle stopped jobs. These stay in our list.
-    for j in parser.jobs().iter() {
+    for j in parser.jobs() {
         if j.is_stopped()
             && !j.flags().notified_of_stop
             && should_process_job(j)
             && job_wants_summary(j)
         {
-            j.mut_flags().notified_of_stop = true;
+            j.flags_mut().notified_of_stop = true;
             jobs_to_summarize.push(j.clone());
         }
     }
 
     // Generate process_exit events for finished processes.
-    for j in parser.jobs().iter() {
+    for j in parser.jobs() {
         generate_process_exit_events(j, &mut exit_events);
     }
 
@@ -1610,7 +1617,7 @@ fn process_clean_after_marking(parser: &Parser, interactive: bool) -> bool {
         false
     });
     for j in completed_jobs {
-        save_wait_handle_for_completed_job(&j, &mut parser.mut_wait_handles());
+        save_wait_handle_for_completed_job(&j, parser.mut_wait_handles());
     }
 
     // Emit calls to fish_job_summary.

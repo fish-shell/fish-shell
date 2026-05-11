@@ -63,14 +63,23 @@ pub fn wcsfilecmp(a: &wstr, b: &wstr) -> Ordering {
             continue;
         }
 
-        // Sort dashes after Z - see #5634
-        let mut acl = if ac == '-' { '[' } else { ac };
-        let mut bcl = if bc == '-' { '[' } else { bc };
+        let transform = |c| {
+            // Sort dashes after Z - see #5634
+            if c == '-' {
+                return '[';
+            }
+            if c == '/' {
+                return '\0';
+            }
+            c
+        };
+        let ac = transform(ac);
+        let bc = transform(bc);
         // TODO Compare the tail (enabled by Rust's Unicode support).
-        acl = acl.to_uppercase().next().unwrap();
-        bcl = bcl.to_uppercase().next().unwrap();
+        let ac = ac.to_uppercase().next().unwrap();
+        let bc = bc.to_uppercase().next().unwrap();
 
-        match acl.cmp(&bcl) {
+        match ac.cmp(&bc) {
             Ordering::Equal => {
                 ai += 1;
                 bi += 1;
@@ -133,9 +142,9 @@ pub fn wcsfilecmp_glob(a: &wstr, b: &wstr) -> Ordering {
         }
 
         // TODO Compare the tail (enabled by Rust's Unicode support).
-        let acl = ac.to_lowercase().next().unwrap();
-        let bcl = bc.to_lowercase().next().unwrap();
-        match acl.cmp(&bcl) {
+        let ac = ac.to_lowercase().next().unwrap();
+        let bc = bc.to_lowercase().next().unwrap();
+        match ac.cmp(&bc) {
             Ordering::Equal => {
                 ai += 1;
                 bi += 1;
@@ -314,5 +323,8 @@ mod tests {
         validate!("a00b", "a0b", Ordering::Less);
         validate!("a0b", "a00b", Ordering::Greater);
         validate!("a-b", "azb", Ordering::Greater);
+        validate!("a", "a b", Ordering::Less);
+        validate!("a/", "a b/", Ordering::Less);
+        validate!("a/b", "a b", Ordering::Less); // Note this is arbitrary.
     }
 }

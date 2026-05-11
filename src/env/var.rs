@@ -130,13 +130,12 @@ pub struct EnvVar {
 
 impl Default for EnvVar {
     fn default() -> Self {
-        use std::sync::OnceLock;
+        use std::sync::LazyLock;
         /// A shared read-only empty list.
-        static EMPTY_LIST: OnceLock<Arc<[WString]>> = OnceLock::new();
-        let empty_list = EMPTY_LIST.get_or_init(|| Arc::new([]));
+        static EMPTY_LIST: LazyLock<Arc<[WString]>> = LazyLock::new(|| Arc::new([]));
 
         EnvVar {
-            values: Arc::clone(empty_list),
+            values: Arc::clone(&*EMPTY_LIST),
             flags: EnvVarFlags::empty(),
         }
     }
@@ -187,13 +186,13 @@ impl EnvVar {
     }
 
     /// Returns the variable's flags.
-    pub fn get_flags(&self) -> EnvVarFlags {
+    pub fn flags(&self) -> EnvVarFlags {
         self.flags
     }
 
     /// Returns the variable's value as a string.
     pub fn as_string(&self) -> WString {
-        join_strings(&self.values, self.get_delimiter())
+        join_strings(&self.values, self.delimiter())
     }
 
     /// Returns the variable's values.
@@ -202,7 +201,7 @@ impl EnvVar {
     }
 
     /// Returns the delimiter character used when converting from a list to a string.
-    pub fn get_delimiter(&self) -> char {
+    pub fn delimiter(&self) -> char {
         if self.is_pathvar() {
             PATH_ARRAY_SEP
         } else {
@@ -369,7 +368,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_env_vars() {
-        let _cleanup = test_init();
+        test_init();
         test_timezone_env_vars();
         // TODO: Add tests for the locale vars.
 

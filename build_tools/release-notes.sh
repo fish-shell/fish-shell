@@ -48,7 +48,7 @@ if test -z "$CI" || [ "$(git -C "$workspace_root" tag | wc -l)" -gt 1 ]; then {
             num_new_authors=$(wc -l <"$relnotes_tmp/committers-new")
             printf %s \
                 "This release brings $num_commits new commits since $previous_version," \
-                " contributed by $num_authors authors, $num_new_authors of which are new committers."
+                " contributed by $num_authors authors, $num_new_authors of which are new faces."
             echo
             echo
         )
@@ -86,10 +86,13 @@ if test -z "$CI" || [ "$(git -C "$workspace_root" tag | wc -l)" -gt 1 ]; then {
     echo
     echo 'Download links:'
     echo 'To download the source code for fish, we suggest the file named ``fish-'"$version"'.tar.xz``.'
+    # shellcheck disable=2016
     echo 'The file downloaded from ``Source code (tar.gz)`` will not build correctly.'
+    # shellcheck disable=2016
     echo 'A GPG signature using `this key <'"${FISH_GPG_PUBLIC_KEY_URL:-???}"'>`__ is available as ``fish-'"$version"'.tar.xz.asc``.'
     echo
     echo 'The files called ``fish-'"$version"'-linux-*.tar.xz`` contain'
+    # shellcheck disable=2016
     echo '`standalone fish binaries <https://github.com/fish-shell/fish-shell/?tab=readme-ov-file#building-fish-with-cargo>`__'
     echo 'for any Linux with the given CPU architecture.'
 } >"$relnotes_tmp/fake-workspace"/CHANGELOG.rst

@@ -50,25 +50,3 @@ Or the simple default handler::
     function fish_command_not_found
         __fish_default_command_not_found_handler $argv
     end
-
-Backwards compatibility
------------------------
-
-This command was introduced in fish 3.2.0. Previous versions of fish used the "fish_command_not_found" :ref:`event <event>` instead.
-
-To define a handler that works in older versions of fish as well, define it the old way::
-
-  function __fish_command_not_found_handler --on-event fish_command_not_found
-       echo COMMAND WAS NOT FOUND MY FRIEND $argv[1]
-  end
-
-in which case fish will define a ``fish_command_not_found`` that calls it,
-or define a wrapper::
-
-  function fish_command_not_found
-       echo "G'day mate, could not find your command: $argv"
-  end
-
-  function __fish_command_not_found_handler --on-event fish_command_not_found
-       fish_command_not_found $argv
-  end

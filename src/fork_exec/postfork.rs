@@ -5,7 +5,8 @@ use super::flog_safe::flog_safe;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
-use crate::{common::exit_without_destructors, wutil::fstat};
+use crate::wutil::fstat;
+use fish_common::exit_without_destructors;
 use libc::{O_RDONLY, pid_t};
 use nix::unistd::getpid;
 use std::ffi::CStr;
@@ -224,7 +225,7 @@ pub fn execute_fork() -> pid_t {
     exit_without_destructors(1)
 }
 
-pub(crate) fn safe_report_exec_error(
+pub(crate) fn signal_safe_report_exec_error(
     err: i32,
     actual_cmd: &CStr,
     argvv: &OwningNullTerminatedArray,

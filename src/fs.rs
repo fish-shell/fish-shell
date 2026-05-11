@@ -1,5 +1,4 @@
 use crate::{
-    common::osstr2wcstring,
     fds::wopen_cloexec,
     flog, flogf,
     path::{DirRemoteness, path_remoteness},
@@ -7,7 +6,7 @@ use crate::{
     wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, wdirname, wunlink},
 };
 use fish_tempfile::random_filename;
-use fish_wcstringutil::{wcs2bytes, wcs2osstring};
+use fish_widestring::{osstr2wcstring, wcs2bytes, wcs2osstring};
 use libc::{LOCK_EX, LOCK_SH, c_int};
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::{
@@ -127,9 +126,10 @@ impl LockedFile {
         {
             // Cygwin's `flock` is currently not thread safe (#11933)
             #[cfg(cygwin)]
-            static FLOCK_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
-            #[cfg(cygwin)]
-            let _lock = FLOCK_LOCK.lock().unwrap();
+            let _lock = {
+                static FLOCK_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+                FLOCK_LOCK.lock().unwrap()
+            };
 
             // Try locking the directory. Retry if locking was interrupted.
             while unsafe { libc::flock(dir_fd.as_raw_fd(), locking_mode.flock_op()) } == -1 {

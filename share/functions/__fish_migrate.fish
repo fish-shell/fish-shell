@@ -55,7 +55,7 @@ end" >$__fish_config_dir/config.fish
         __fish_backup_config_files $relative_filename
         mkdir -p -- (path dirname -- $filename)
         echo >$filename "\
-# This file was created by fish when upgrading to version 4.3, to migrate
+# This file was created by fish when upgrading to version >= 4.3, to migrate
 # the 'fish_key_bindings' variable from its old default scope (universal)
 # to its new default scope (global).  We recommend you delete this file
 # and configure key bindings in ~/.config/fish/config.fish if needed.
@@ -83,9 +83,9 @@ set --erase --universal fish_key_bindings"
     end
     $mark_migration_done
     if $removing_uvars
-        echo -s (set_color --bold) 'fish:' (set_color --reset) " upgraded to version 4.3:"
+        echo -s (set_color --bold) 'fish:' (set_color --reset) " upgraded to version >= 4.3.0:"
         string join \n -- $msg
-        echo 'See also the release notes (type `help relnotes`).'
+        echo 'See also the release notes for 4.3.0 (type `help relnotes`).'
         set -Ue fish_key_bindings $theme_uvars
         set -l sh (__fish_posix_shell)
         eval "$sh -c 'sleep 7 # Please read above notice about universal variables' </dev/null &>/dev/null &"
@@ -107,7 +107,7 @@ function __fish_config_theme_uvars_subset_of_historical_default
     set -l matches __fish_config_theme_matches
     $matches fish_color_keyword "$fish_color_command"
     and $matches fish_color_option "$fish_color_param"
-    and $matches fish_color_autosuggestion brblack
+    and $matches fish_color_autosuggestion brblack "555 brblack"
     and $matches fish_color_cancel -r
     and $matches fish_color_command normal blue --reset
     and $matches fish_color_comment red
@@ -125,19 +125,26 @@ function __fish_config_theme_uvars_subset_of_historical_default
     and $matches fish_color_quote yellow
     and $matches fish_color_redirection "cyan --bold"
     and $matches fish_color_search_match \
+        "--background=111" \
+        "--background=brblack" \
         "bryellow --background=brblack" \
         "bryellow --background=brblack --bold" \
         "white --background=brblack" \
         "white --background=brblack --bold"
-    and $matches fish_color_selection "white --background=brblack --bold"
+    and $matches fish_color_selection \
+        "white --background=brblack --bold" \
+        "white --bold --background=brblack"
     and $matches fish_color_status red
     and $matches fish_color_user brgreen
     and $matches fish_color_valid_path --underline
     and $matches fish_color_background
     and $matches fish_pager_color_background
     and $matches fish_pager_color_completion
-    and $matches fish_pager_color_description "yellow -i" "yellow --italics"
-    and $matches fish_pager_color_prefix "normal --bold --underline" "--bold --underline"
+    and $matches fish_pager_color_description "B3A06D yellow -i" "yellow -i" "yellow --italics"
+    and $matches fish_pager_color_prefix \
+        "normal --bold --underline" \
+        "cyan --bold --underline" \
+        "--bold --underline"
     and $matches fish_pager_color_progress \
         "brwhite --background=cyan" \
         "brwhite --background=cyan --bold"
@@ -149,6 +156,7 @@ function __fish_config_theme_uvars_subset_of_historical_default
     and $matches fish_pager_color_selected_completion
     and $matches fish_pager_color_selected_description
     and $matches fish_pager_color_selected_prefix
+    and $matches fish_color_match --background=brblue
     and for uvar in $argv
         contains $uvar $checked_varnames
         or test -z "$$uvar"

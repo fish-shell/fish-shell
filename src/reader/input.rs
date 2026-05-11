@@ -1,13 +1,15 @@
 //! Reader implementation of InputEventQueuer.
-use std::os::fd::RawFd;
-
-use crate::common::{bytes2wcstring, escape};
-use crate::event;
-use crate::input_common::{CharEvent, InputData, InputEventQueuer, ReadlineCmd};
-use crate::proc::job_reap;
-use crate::signal::signal_clear_cancel;
-
 use super::{Reader, reader_reading_interrupted, reader_schedule_prompt_repaint};
+use crate::{
+    event,
+    input::input_get_bind_mode,
+    input_common::{CharEvent, InputData, InputEventQueuer, ReadlineCmd},
+    proc::job_reap,
+    signal::signal_clear_cancel,
+};
+use fish_common::escape;
+use fish_widestring::{WString, bytes2wcstring};
+use std::os::fd::RawFd;
 
 impl<'a> InputEventQueuer for Reader<'a> {
     fn get_input_data(&self) -> &InputData {
@@ -36,7 +38,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
         signal_clear_cancel();
 
         // Fire any pending events and reap stray processes, including printing exit status messages.
-        let parser = self.parser;
+        let parser = &mut *self.parser;
         event::fire_delayed(parser);
         if job_reap(parser, true, None) {
             reader_schedule_prompt_repaint();
@@ -74,5 +76,9 @@ impl<'a> InputEventQueuer for Reader<'a> {
             "__fish_paste %s",
             escape(&bytes2wcstring(&buffer))
         )));
+    }
+
+    fn get_bind_mode(&self) -> WString {
+        input_get_bind_mode(self.parser.vars())
     }
 }

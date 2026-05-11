@@ -1,20 +1,20 @@
-use crate::flog::flog;
-use crate::prelude::*;
-use crate::signal::signal_check_cancel;
-use crate::wutil::perror_nix;
+use crate::{flog::flog, prelude::*, signal::signal_check_cancel, wutil::perror_nix};
 use cfg_if::cfg_if;
 use fish_util::perror;
-use fish_wcstringutil::wcs2zstring;
+use fish_widestring::wcs2zstring;
 use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
-use nix::fcntl::FcntlArg;
-use nix::fcntl::OFlag;
-use std::ffi::CStr;
-use std::fs::File;
-use std::io;
-use std::mem::ManuallyDrop;
-use std::ops::{Deref, DerefMut};
-use std::os::fd::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd};
-use std::os::unix::prelude::*;
+use nix::fcntl::{FcntlArg, OFlag};
+use std::{
+    ffi::CStr,
+    fs::File,
+    io,
+    mem::ManuallyDrop,
+    ops::{Deref, DerefMut},
+    os::{
+        fd::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd},
+        unix::prelude::*,
+    },
+};
 
 localizable_consts!(
     pub PIPE_ERROR
@@ -86,7 +86,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
 /// setting it again.
 /// Return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
 /// which case an error will have been printed, and the input fd closed.
-fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> {
+pub fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> {
     let raw_fd = fd.as_raw_fd();
 
     if raw_fd >= FIRST_HIGH_FD {
@@ -145,7 +145,7 @@ pub fn open_cloexec(path: &CStr, flags: OFlag, mode: nix::sys::stat::Mode) -> ni
     // If it is that's our cancel signal, so we abort.
     loop {
         let ret = nix::fcntl::open(path, flags | OFlag::O_CLOEXEC, mode);
-        let ret = ret.map(File::from);
+        let ret = ret.and_then(|fd| heightenize_fd(fd, true)).map(File::from);
         match ret {
             Ok(file) => {
                 return Ok(file);
@@ -323,7 +323,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_pipes() {
-        let _cleanup = test_init();
+        test_init();
         // Here we just test that each pipe has CLOEXEC set and is in the high range.
         // Note pipe creation may fail due to fd exhaustion; don't fail in that case.
         let mut pipes = vec![];

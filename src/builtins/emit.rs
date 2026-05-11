@@ -1,7 +1,7 @@
 use super::prelude::*;
-use crate::event;
+use crate::{err_str, event};
 
-pub fn emit(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn emit(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let Some(&cmd) = argv.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
@@ -14,9 +14,7 @@ pub fn emit(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> Bui
     }
 
     let Some(event_name) = argv.get(opts.optind) else {
-        streams
-            .err
-            .append(&sprintf!(L!("%s: expected event name\n"), cmd));
+        err_str!("expected event name").cmd(cmd).finish(streams);
         return Err(STATUS_INVALID_ARGS);
     };
 

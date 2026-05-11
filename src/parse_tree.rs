@@ -6,13 +6,13 @@ use std::ptr::NonNull;
 use std::sync::Arc;
 
 use crate::ast::{self, Ast, JobList, Node};
-use crate::common::{assert_send, assert_sync};
 use crate::parse_constants::{
     ParseErrorCode, ParseErrorList, ParseKeyword, ParseTokenType, ParseTreeFlags,
     SOURCE_OFFSET_INVALID, SourceOffset, SourceRange, token_type_user_presentable_description,
 };
 use crate::prelude::*;
 use crate::tokenizer::TokenizerError;
+use fish_common::{assert_send, assert_sync};
 use fish_wcstringutil::count_newlines;
 
 /// A struct representing the token type that we use internally.
@@ -103,10 +103,6 @@ pub struct ParsedSource {
     pub src: WString,
     pub ast: Ast,
 }
-
-// Safety: this can be derived once the src_ffi field is removed.
-unsafe impl Send for ParsedSource {}
-unsafe impl Sync for ParsedSource {}
 
 const _: () = assert_send::<ParsedSource>();
 const _: () = assert_sync::<ParsedSource>();

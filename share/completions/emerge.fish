@@ -1,5 +1,5 @@
 #function __fish_emerge_print_all_pkgs_with_version_compare -d 'Print completions for all packages including the version compare if that is already typed'
-#    set -l version_comparator (commandline -t | string match -r '^[\'"]*[<>]\?=\?' | \
+#    set -l version_comparator (commandline -t | string match -r '^[\'"]*[<>]\?=\?' |
 #                               sed -r 's/^[\'"]*(.*)/\1/g')
 #    set -l sedstring
 #

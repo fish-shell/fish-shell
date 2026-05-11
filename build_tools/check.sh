@@ -8,10 +8,28 @@ if [ "$FISH_CHECK_LINT" = false ]; then
     lint=false
 fi
 
+case "$(uname)" in
+    MSYS*)
+        is_cygwin=true
+        cygwin_var=MSYS
+        ;;
+    CYGWIN*)
+        is_cygwin=true
+        cygwin_var=CYGWIN
+        ;;
+    *)
+        is_cygwin=false
+        ;;
+esac
+
 check_dependency_versions=false
 if [ "${FISH_CHECK_DEPENDENCY_VERSIONS:-false}" != false ]; then
     check_dependency_versions=true
 fi
+
+green='\e[0;32m'
+yellow='\e[1;33m'
+reset='\e[m'
 
 if $check_dependency_versions; then
     command -v curl
@@ -42,6 +60,7 @@ cargo() {
     fi
 }
 
+# shellcheck disable=2317,2329
 cleanup () {
     if [ -n "$gettext_template_dir" ] && [ -e "$gettext_template_dir" ]; then
         rm -r "$gettext_template_dir"
@@ -71,6 +90,7 @@ fi
 
 gettext_template_dir=$(mktemp -d)
 (
+    # shellcheck disable=2030
     export FISH_GETTEXT_EXTRACTION_DIR="$gettext_template_dir"
     cargo build --workspace --all-targets --features=gettext-extract
 )
@@ -78,17 +98,65 @@ if $lint; then
     if command -v cargo-deny >/dev/null; then
         cargo deny --all-features --locked --exclude-dev check licenses
     fi
+
+    if command -v shellcheck >/dev/null || { test -n "$CI" && ! $is_cygwin; }; then
+        cargo xtask shellcheck
+    fi
+
     PATH="$build_dir:$PATH" cargo xtask format --all --check
-    for features in "" --no-default-features; do
+    for features in "" --no-default-features --all-features; do
         cargo clippy --workspace --all-targets $features
     done
+
+    cargo xtask gettext --rust-extraction-dir="$gettext_template_dir" check
 fi
-cargo test --no-default-features --workspace --all-targets
+
+# When running `cargo test`, some binaries (e.g. `fish_gettext_extraction`)
+# are dynamically linked against Rust's `std-xxx.dll` instead of being
+# statically link as they usually are.
+# On Cygwin, `PATH`is not properly updated to point to the `std-xxx.dll`
+# location, so we have to do it manually.
+# See:
+# - https://github.com/rust-lang/rust/issues/149050
+# - https://github.com/msys2/MSYS2-packages/issues/5784
+(
+    if $is_cygwin; then
+        PATH="$PATH:$(rustc --print target-libdir)"
+        export PATH
+    fi
+    cargo test --no-default-features --workspace --all-targets
+)
 cargo test --doc --workspace
+
 if $lint; then
     cargo doc --workspace --no-deps
 fi
-FISH_GETTEXT_EXTRACTION_DIR=$gettext_template_dir "$workspace_root/tests/test_driver.py" "$build_dir"
+
+system_tests() {
+    "$workspace_root/tests/test_driver.py" "$build_dir" "$@"
+}
+
+if $is_cygwin; then
+    # shellcheck disable=2059
+    printf "=== Running ${green}integration tests ${yellow}with${green} symlinks${reset}\n"
+    (
+        export "$cygwin_var"=winsymlinks
+        system_tests
+    )
+
+    # shellcheck disable=2059
+    printf "=== Running ${green}integration tests ${yellow}without${green} symlinks${reset}\n"
+    (
+        # Only redo the tests that use `ln` to saves some time
+        export "$cygwin_var"=
+        # shellcheck disable=2046
+        system_tests $(grep -l -E '\bln\b' -r tests/checks/)
+    )
+else
+    # shellcheck disable=2059
+    printf "=== Running ${green}integration tests${reset}\n"
+    system_tests
+fi
 
 exit
 }

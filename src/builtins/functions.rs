@@ -1,16 +1,17 @@
 use super::prelude::*;
-use crate::common::bytes2wcstring;
-use crate::common::escape_string;
-use crate::common::reformat_for_screen;
-use crate::common::valid_func_name;
-use crate::common::{EscapeFlags, EscapeStringStyle};
-use crate::event::{self};
-use crate::function;
-use crate::highlight::highlight_and_colorize;
-use crate::parse_util::apply_indents;
-use crate::parse_util::compute_indents;
-use crate::parser_keywords::parser_keywords_is_reserved;
-use crate::termsize::termsize_last;
+use crate::{
+    builtins::error::Error,
+    common::{reformat_for_screen, valid_func_name},
+    err_fmt, err_str,
+    event::{self},
+    function,
+    highlight::highlight_and_colorize,
+    parse_util::{apply_indents, compute_indents},
+    parser_keywords::parser_keywords_is_reserved,
+    termsize::termsize_last,
+};
+use fish_common::{EscapeFlags, EscapeStringStyle, escape_string};
+use fish_widestring::bytes2wcstring;
 
 #[derive(Default)]
 struct FunctionsCmdOpts<'args> {
@@ -55,7 +56,7 @@ fn parse_cmd_opts<'args>(
     opts: &mut FunctionsCmdOpts<'args>,
     optind: &mut usize,
     argv: &mut [&'args wstr],
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     let cmd = L!("functions");
@@ -84,7 +85,14 @@ fn parse_cmd_opts<'args>(
                 opts.color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    None,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -111,14 +119,18 @@ fn parse_cmd_opts<'args>(
     Ok(SUCCESS)
 }
 
-pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn functions(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> BuiltinResult {
     let Some(&cmd) = args.first() else {
         return Err(STATUS_INVALID_ARGS);
     };
 
     localizable_consts! {
         FUNCTION_DOES_NOT_EXIST
-        "%s: Function '%s' does not exist"
+        "Function '%s' does not exist"
     }
 
     let mut opts = FunctionsCmdOpts::default();
@@ -141,14 +153,18 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         .count()
         > 1
     {
-        streams.err.appendln(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!(Error::INVALID_OPT_COMBO)
+            .cmd(cmd)
+            .full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
     if opts.report_metadata && opts.no_metadata {
-        streams.err.appendln(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
-        builtin_print_error_trailer(parser, streams.err, cmd);
+        err_str!(Error::INVALID_OPT_COMBO)
+            .cmd(cmd)
+            .full_trailer(parser)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -162,20 +178,19 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if let Some(desc) = opts.description {
         if args.len() != 1 {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Expected exactly one function name",
-                cmd
-            ));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!("Expected exactly one function name")
+                .cmd(cmd)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
         let current_func = args[0];
 
         if !function::exists(current_func, parser) {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(FUNCTION_DOES_NOT_EXIST, cmd, current_func));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_fmt!(FUNCTION_DOES_NOT_EXIST, current_func)
+                .cmd(cmd)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
 
@@ -185,9 +200,8 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if opts.report_metadata {
         if args.len() != 1 {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_ARG_COUNT2,
-                cmd,
+            err_fmt!(
+                Error::UNPEXP_ARG_COUNT_WITH_CTX,
                 // This error is
                 // functions: --details: expected 1 arguments; got 2
                 // The "--details" was "argv[optind - 1]" in the C++
@@ -196,7 +210,9 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
                 "--details",
                 1,
                 args.len()
-            ));
+            )
+            .cmd(cmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
         let props = function::get_props_autoload(args[0], parser);
@@ -268,12 +284,13 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         if !opts.handlers_type.unwrap_or(L!("")).is_empty()
             && !event::EVENT_FILTER_NAMES.contains(&opts.handlers_type.unwrap())
         {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Expected %s for %s",
-                cmd,
+            err_fmt!(
+                "Expected %s for %s",
                 "generic | variable | signal | exit | job-id",
                 "--handlers-type",
-            ));
+            )
+            .cmd(cmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
         event::print(streams, opts.handlers_type.unwrap_or(L!("")));
@@ -310,42 +327,40 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
 
     if opts.copy {
         if args.len() != 2 {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Expected exactly two names (current function name, and new function name)",
-                cmd
-            ));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_str!("Expected exactly two names (current function name, and new function name)")
+                .cmd(cmd)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
         let current_func = args[0];
         let new_func = args[1];
 
         if !function::exists(current_func, parser) {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(FUNCTION_DOES_NOT_EXIST, cmd, current_func));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_fmt!(FUNCTION_DOES_NOT_EXIST, current_func)
+                .cmd(cmd)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
 
         if !valid_func_name(new_func) || parser_keywords_is_reserved(new_func) {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Illegal function name '%s'",
-                cmd,
-                new_func
-            ));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            err_fmt!("Illegal function name '%s'", new_func)
+                .cmd(cmd)
+                .full_trailer(parser)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         if function::exists(new_func, parser) {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Function '%s' already exists. Cannot create copy of '%s'",
-                cmd,
+            err_fmt!(
+                "Function '%s' already exists. Cannot create copy of '%s'",
                 new_func,
                 current_func
-            ));
-            builtin_print_error_trailer(parser, streams.err, cmd);
+            )
+            .cmd(cmd)
+            .full_trailer(parser)
+            .finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
         if function::copy(current_func, new_func.into(), parser) {
@@ -424,8 +439,7 @@ pub fn functions(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -
         if opts.color.enabled(streams) {
             streams.out.append(&bytes2wcstring(&highlight_and_colorize(
                 &def,
-                &parser.context(),
-                parser.vars(),
+                &mut parser.context(),
             )));
         } else {
             streams.out.append(&def);

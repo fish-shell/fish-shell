@@ -1,8 +1,10 @@
 use crate::wutil::wstr;
-use fish_wcstringutil::wcs2zstring;
-use std::ffi::{CStr, OsStr};
-use std::fs::{self, File, Metadata};
-use std::os::unix::prelude::*;
+use fish_widestring::wcs2zstring;
+use std::{
+    ffi::{CStr, OsStr},
+    fs::{self, File, Metadata},
+    os::unix::prelude::*,
+};
 
 /// Struct for representing a file's inode. We use this to detect and avoid symlink loops, among
 /// other things.

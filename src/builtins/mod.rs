@@ -66,3 +66,5 @@ mod prelude {
         NON_OPTION_CHAR, WGetopter, WOption, wopt,
     };
 }
+
+pub use shared::*;

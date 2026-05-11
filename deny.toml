@@ -3,22 +3,22 @@
 confidence-threshold = 0.93
 unused-allowed-license = "allow" # don't warn for unused licenses in this list
 allow = [
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "BSL-1.0",
-    "CC0-1.0",
-    "GPL-2.0",
-    "GPL-2.0-only",
-    "ISC",
-    "LGPL-2.0",
-    "LGPL-2.0-or-later",
-    "MIT",
-    "MPL-2.0",
-    "PSF-2.0",
-    "Unicode-DFS-2016",
-    "Unicode-3.0",
-    "WTFPL",
-    "Zlib",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "BSL-1.0",
+  "CC0-1.0",
+  "GPL-2.0",
+  "GPL-2.0-only",
+  "ISC",
+  "LGPL-2.0",
+  "LGPL-2.0-or-later",
+  "MIT",
+  "MPL-2.0",
+  "PSF-2.0",
+  "Unicode-DFS-2016",
+  "Unicode-3.0",
+  "WTFPL",
+  "Zlib",
 ]
 
 [sources.allow-org]

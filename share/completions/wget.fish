@@ -11,7 +11,7 @@ complete -c wget -s a -l append-output -d "Append all messages to logfile"
 complete -c wget -s d -l debug -d "Turn on debug output"
 complete -c wget -s q -l quiet -d "Quiet mode"
 complete -c wget -s v -l verbose -d "Verbose mode"
-complete -c wget -l non-verbose -d "Turn off verbose without being completely quiet"
+complete -c wget -l no-verbose -d "Turn off verbose without being completely quiet"
 complete -c wget -o nv -d "Turn off verbose without being completely quiet"
 complete -c wget -s i -l input-file -d "Read URLs from file" -r
 complete -c wget -s F -l force-html -d "Force input to be treated as HTML"

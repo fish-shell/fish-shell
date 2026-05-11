@@ -1,11 +1,12 @@
 use crate::env_universal_common::default_vars_path;
+use crate::fds::heightenize_fd;
 use crate::prelude::*;
 use crate::universal_notifier::UniversalNotifier;
 use crate::wutil::{wbasename, wdirname};
-use fish_wcstringutil::wcs2osstring;
+use fish_widestring::wcs2osstring;
 use nix::sys::inotify::{AddWatchFlags, InitFlags, Inotify};
 use std::ffi::OsString;
-use std::os::fd::{AsFd as _, AsRawFd as _, RawFd};
+use std::os::fd::{AsFd as _, AsRawFd as _, OwnedFd, RawFd};
 
 /// A notifier based on inotify.
 pub struct InotifyNotifier {
@@ -30,6 +31,9 @@ impl InotifyNotifier {
         let dirname = wdirname(path);
         let basename = wbasename(path);
         let inotify = Inotify::init(InitFlags::IN_CLOEXEC | InitFlags::IN_NONBLOCK).ok()?;
+        let inotify = heightenize_fd(OwnedFd::from(inotify), true).ok()?;
+        // SAFETY: We pass a valid inotify fd.
+        let inotify = unsafe { Inotify::from_owned_fd(inotify) };
         inotify
             .add_watch(
                 wcs2osstring(dirname).as_os_str(),

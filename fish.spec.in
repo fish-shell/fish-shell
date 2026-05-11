@@ -17,6 +17,9 @@ BuildRequires:          /usr/bin/sphinx-build
 # OBS: add eg "FileProvides: /usr/bin/sphinx-build python3-sphinx python3-Sphinx" to project config
 BuildRequires:          /usr/bin/man
 # OBS: add eg "FileProvides: /usr/bin/man man-db man" to project config
+# pkg-config is needed for the pcre2 crate to find the pcre2 system librar
+BuildRequires:          /usr/bin/pkg-config
+# OBS: add eg "FileProvides: /usr/bin/pkg-config pkgconf-pkg-config pkg-config" to project config
 BuildRequires: cmake >= 3.15
 
 # for tests

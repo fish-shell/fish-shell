@@ -14,3 +14,7 @@ prompt_pwd -D 0 /usr/share/fish/prompts
 
 prompt_pwd -d1 -D 3 /usr/local/share/fish/prompts
 # CHECK: /u/l/share/fish/prompts
+
+# Ensure control characters in paths are stripped
+prompt_pwd -d 0 /foo/(printf '\e]0;OHNO\a')bar
+# CHECK: /foo/]0;OHNObar

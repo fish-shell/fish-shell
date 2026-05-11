@@ -1,10 +1,10 @@
 // Support for exposing the terminal size.
-use crate::common::assert_sync;
 use crate::env::{EnvMode, EnvVar, Environment};
 use crate::flog::flog;
 use crate::parser::{Parser, ParserEnvSetMode};
 use crate::prelude::*;
 use crate::wutil::fish_wcstoi;
+use fish_common::assert_sync;
 use std::mem::MaybeUninit;
 use std::num::NonZeroU16;
 use std::sync::Mutex;
@@ -167,7 +167,7 @@ impl TermsizeContainer {
     /// registered for COLUMNS and LINES.
     /// This requires a shared reference so it can work from a static.
     /// Return the updated termsize.
-    fn updating(&self, parser: &Parser) -> Termsize {
+    fn updating(&self, parser: &mut Parser) -> Termsize {
         let new_size;
         let prev_size;
 
@@ -196,7 +196,7 @@ impl TermsizeContainer {
         new_size
     }
 
-    fn set_columns_lines_vars(&self, val: Termsize, parser: &Parser) {
+    fn set_columns_lines_vars(&self, val: Termsize, parser: &mut Parser) {
         let saved = self.setting_env_vars.swap(true, Ordering::Relaxed);
         parser.set_var_and_fire(
             L!("COLUMNS"),
@@ -251,12 +251,12 @@ pub fn handle_columns_lines_var_change(vars: &dyn Environment) {
     SHARED_CONTAINER.handle_columns_lines_var_change(vars);
 }
 
-pub fn termsize_update(parser: &Parser) -> Termsize {
+pub fn termsize_update(parser: &mut Parser) -> Termsize {
     SHARED_CONTAINER.updating(parser)
 }
 
 /// May be called form a signal handler (WINCH).
-pub fn safe_termsize_invalidate_tty() {
+pub fn signal_safe_termsize_invalidate_tty() {
     TTY_TERMSIZE_GEN_COUNT.fetch_add(1, Ordering::Relaxed);
 }
 
@@ -271,10 +271,9 @@ mod tests {
     #[test]
     #[serial]
     fn test_termsize() {
-        let _cleanup = test_init();
+        test_init();
         let env_global = EnvSetMode::new(EnvMode::GLOBAL, false);
-        let parser = TestParser::new();
-        let vars = parser.vars();
+        let parser = &mut TestParser::new();
 
         // Use a static variable so we can pretend we're the kernel exposing a terminal size.
         static STUBBY_TERMSIZE: Mutex<Option<Termsize>> = Mutex::new(None);
@@ -298,7 +297,7 @@ mod tests {
         assert_eq!(ts.last(), Termsize::defaults());
 
         // Ok let's tell it. But it still doesn't update right away.
-        let handle_winch = safe_termsize_invalidate_tty;
+        let handle_winch = signal_safe_termsize_invalidate_tty;
         handle_winch();
         assert_eq!(ts.last(), Termsize::defaults());
 
@@ -310,16 +309,18 @@ mod tests {
         };
 
         // Ok now we tell it to update.
-        ts.updating(&parser);
+        ts.updating(parser);
         assert_eq!(ts.last(), new_test_termsize(42, 84));
+        let vars = parser.vars();
         assert_eq!(vars.get(L!("COLUMNS")).unwrap().as_string(), "42");
         assert_eq!(vars.get(L!("LINES")).unwrap().as_string(), "84");
 
         // Wow someone set COLUMNS and LINES to a weird value.
         // Now the tty's termsize doesn't matter.
+        let vars = parser.vars();
         vars.set_one(L!("COLUMNS"), env_global, L!("75").to_owned());
         vars.set_one(L!("LINES"), env_global, L!("150").to_owned());
-        ts.handle_columns_lines_var_change(parser.vars());
+        ts.handle_columns_lines_var_change(vars);
         assert_eq!(ts.last(), new_test_termsize(75, 150));
         assert_eq!(vars.get(L!("COLUMNS")).unwrap().as_string(), "75");
         assert_eq!(vars.get(L!("LINES")).unwrap().as_string(), "150");
@@ -331,7 +332,8 @@ mod tests {
         // Oh it got SIGWINCH, now the tty matters again.
         handle_winch();
         assert_eq!(ts.last(), new_test_termsize(33, 150));
-        assert_eq!(ts.updating(&parser), stubby_termsize().unwrap());
+        assert_eq!(ts.updating(parser), stubby_termsize().unwrap());
+        let vars = parser.vars();
         assert_eq!(vars.get(L!("COLUMNS")).unwrap().as_string(), "42");
         assert_eq!(vars.get(L!("LINES")).unwrap().as_string(), "84");
 
@@ -348,9 +350,9 @@ mod tests {
             tty_size_reader: stubby_termsize,
         };
         ts.initialize(parser.vars());
-        ts2.updating(&parser);
+        ts2.updating(parser);
         assert_eq!(ts.last(), new_test_termsize(83, 38));
         handle_winch();
-        assert_eq!(ts2.updating(&parser), stubby_termsize().unwrap());
+        assert_eq!(ts2.updating(parser), stubby_termsize().unwrap());
     }
 }

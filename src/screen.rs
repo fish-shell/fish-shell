@@ -7,7 +7,7 @@
 //! The current implementation is less smart than ncurses allows and can not for example move blocks
 //! of text around to handle text insertion.
 
-use crate::common::{get_omitted_newline_str, has_working_tty_timestamps, shell_modes, write_loop};
+use crate::common::{get_omitted_newline_str, has_working_tty_timestamps, shell_modes};
 use crate::editable_line::line_at_cursor;
 use crate::env::Environment;
 use crate::flog::{flog, flogf};
@@ -24,9 +24,10 @@ use crate::terminal::TerminalCommand::{
 use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
 use crate::termsize::Termsize;
 use crate::wutil::fstat;
+use fish_common::write_loop;
 use fish_fallback::{fish_wcswidth_canonicalizing, fish_wcwidth};
-use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string, wcs2bytes};
-use fish_widestring::ELLIPSIS_CHAR;
+use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
+use fish_widestring::{ELLIPSIS_CHAR, wcs2bytes};
 use libc::{STDERR_FILENO, STDOUT_FILENO};
 use nix::sys::termios;
 use std::cell::RefCell;
@@ -465,7 +466,7 @@ impl Screen {
                         && self.desired.line_datas[y]
                             .color_at(self.desired.line_datas[y].len() - 1)
                             .foreground
-                            == HighlightRole::autosuggestion
+                            == HighlightRole::Autosuggestion
                 })
             {
                 1
@@ -2085,7 +2086,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_escape_code_length() {
-        let _cleanup = test_init();
+        test_init();
         let mut lc = LayoutCache::new();
         assert_eq!(lc.escape_code_length(L!("")), 0);
         assert_eq!(lc.escape_code_length(L!("abcd")), 0);
@@ -2120,7 +2121,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_layout_cache() {
-        let _cleanup = test_init();
+        test_init();
         let mut seqs = LayoutCache::new();
 
         // Verify escape code cache.
@@ -2192,7 +2193,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_prompt_truncation() {
-        let _cleanup = test_init();
+        test_init();
         let mut cache = LayoutCache::new();
         let mut trunc = WString::new();
 

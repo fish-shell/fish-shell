@@ -25,7 +25,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("qn");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, _arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, _arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'q' => self.quiet = true,
             'n' => self.no_empty = true,
@@ -44,8 +44,13 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
             return Ok(());
         }
 
+        let cmd = L!("string");
+        let subcmd = args[0];
+
         let Some(arg) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, args[0]);
+            err_str!(Error::MISSING_ARG)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
@@ -56,7 +61,7 @@ impl<'args> StringSubCommand<'args> for Join<'args> {
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
@@ -108,7 +113,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "join"], STATUS_INVALID_ARGS, "");
         validate!(["string", "join", ""], STATUS_CMD_ERROR, "");
         validate!(["string", "join", "", "", "", ""], STATUS_CMD_OK, "\n");

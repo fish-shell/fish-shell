@@ -2,13 +2,13 @@
 
 use std::{collections::HashSet, rc::Rc};
 
-use crate::proc::Pid;
+use crate::{builtins::error::Error, err_fmt, err_str, proc::Pid};
 
 use super::prelude::*;
 
 /// Helper function for builtin_bg().
 fn send_to_bg(
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
     cmd: &wstr,
     job_pos: usize,
@@ -17,12 +17,13 @@ fn send_to_bg(
         let jobs = parser.jobs();
         if !jobs[job_pos].wants_job_control() {
             let job = &jobs[job_pos];
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Can't put job %s, '%s' to background because it is not under job control",
-                cmd,
+            err_fmt!(
+                "Can't put job %s, '%s' to background because it is not under job control",
                 job.job_id().to_wstring(),
                 job.command()
-            ));
+            )
+            .cmd(cmd)
+            .finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
 
@@ -45,7 +46,7 @@ fn send_to_bg(
 }
 
 /// Builtin for putting a job in the background.
-pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn bg(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let opts = HelpOnlyCmdOpts::parse(args, parser, streams)?;
 
     let Some(&cmd) = args.first() else {
@@ -66,9 +67,7 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
         };
 
         let Some(job_pos) = job_pos else {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_NO_SUITABLE_JOBS, cmd));
+            err_str!(Error::NO_SUITABLE_JOBS).cmd(cmd).finish(streams);
             return Err(STATUS_CMD_ERROR);
         };
 
@@ -101,9 +100,9 @@ pub fn bg(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Built
                 send_to_bg(parser, streams, cmd, job_pos)?;
             }
         } else {
-            streams
-                .err
-                .appendln(&wgettext_fmt!(BUILTIN_ERR_COULD_NOT_FIND_JOB, cmd, pid));
+            err_fmt!(Error::COULD_NOT_FIND_JOB, pid)
+                .cmd(cmd)
+                .finish(streams);
         }
     }
 

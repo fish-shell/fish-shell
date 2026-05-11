@@ -1,19 +1,22 @@
+use crate::global_safety::RelaxedAtomicBool;
 // Generic output functions.
-use crate::common::{self, EscapeStringStyle, escape_string};
-use crate::future_feature_flags::{self, FeatureFlag};
 use crate::prelude::*;
-use crate::screen::{is_dumb, only_grayscale};
-use crate::text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle};
-use crate::threads::MainThread;
+use crate::{
+    screen::{is_dumb, only_grayscale},
+    text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle},
+    threads::MainThread,
+};
 use bitflags::bitflags;
 use fish_color::{Color, Color24};
-use fish_wcstringutil::{wcs2bytes, wcs2bytes_appending};
-use std::cell::{RefCell, RefMut};
-use std::ops::{Deref, DerefMut};
-use std::os::fd::RawFd;
-use std::os::unix::ffi::OsStrExt as _;
-use std::sync::OnceLock;
-use std::sync::atomic::{AtomicU8, Ordering};
+use fish_common::{EscapeStringStyle, escape_string, write_loop};
+use fish_feature_flags::FeatureFlag;
+use fish_widestring::{wcs2bytes, wcs2bytes_appending};
+use std::{
+    cell::{RefCell, RefMut},
+    ops::{Deref, DerefMut},
+    os::{fd::RawFd, unix::ffi::OsStrExt as _},
+    sync::atomic::{AtomicU8, Ordering},
+};
 
 bitflags! {
     #[derive(Copy, Clone, Default)]
@@ -181,11 +184,11 @@ fn osc_0_or_1_terminal_title(out: &mut Outputter, is_1: bool, title: &[WString])
 }
 
 fn osc_133_prompt_start(out: &mut Outputter) -> bool {
-    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
+    if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
-    static TEST_BALLOON: OnceLock<()> = OnceLock::new();
-    if TEST_BALLOON.set(()).is_ok() {
+    static TEST_BALLOON: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+    if !TEST_BALLOON.swap(true) {
         write_to_output!(out, "\x1b]133;A;click_events=1\x1b\\");
     } else {
         write_to_output!(out, "\x1b]133;A;click_events=1\x07");
@@ -194,7 +197,7 @@ fn osc_133_prompt_start(out: &mut Outputter) -> bool {
 }
 
 fn osc_133_prompt_end(out: &mut Outputter) -> bool {
-    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
+    if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
     write_to_output!(out, "\x1b]133;B\x07");
@@ -202,7 +205,7 @@ fn osc_133_prompt_end(out: &mut Outputter) -> bool {
 }
 
 fn osc_133_command_start(out: &mut Outputter, command: &wstr) -> bool {
-    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
+    if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
     write_to_output!(
@@ -214,7 +217,7 @@ fn osc_133_command_start(out: &mut Outputter, command: &wstr) -> bool {
 }
 
 fn osc_133_command_finished(out: &mut Outputter, exit_status: libc::c_int) -> bool {
-    if !future_feature_flags::test(FeatureFlag::MarkPrompt) {
+    if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
     write_to_output!(out, "\x1b]133;D;{}\x07", exit_status);
@@ -545,7 +548,7 @@ impl Outputter {
     /// Output any buffered data to the given `fd`.
     fn flush_to(&mut self, fd: RawFd) {
         if fd >= 0 && !self.contents.is_empty() {
-            let _ = common::write_loop(&fd, &self.contents);
+            let _ = write_loop(&fd, &self.contents);
             self.contents.clear();
         }
     }

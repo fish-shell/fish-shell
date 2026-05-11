@@ -4,18 +4,22 @@
 //! defined when these functions produce output or perform memory allocations, since such functions
 //! may not be safely called by signal handlers.
 
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::sync::{Arc, Mutex};
-
-use crate::common::{ScopeGuard, escape, str2wcstring};
-use crate::flog::flog;
-use crate::io::{IoChain, IoStreams};
-use crate::job_group::MaybeJobId;
-use crate::parser::{Block, Parser};
-use crate::prelude::*;
-use crate::proc::Pid;
-use crate::reader::reader_update_termsize;
-use crate::signal::{Signal, signal_check_cancel, signal_handle};
+use crate::{
+    flog::flog,
+    io::{IoChain, IoStreams},
+    job_group::MaybeJobId,
+    parser::{Block, Parser},
+    prelude::*,
+    proc::{InternalJobId, Pid},
+    reader::reader_update_termsize,
+    signal::{Signal, signal_check_cancel, signal_handle},
+};
+use fish_common::{ScopeGuard, escape};
+use fish_widestring::str2wcstring;
+use std::sync::{
+    Arc, Mutex,
+    atomic::{AtomicBool, AtomicU32, Ordering},
+};
 
 pub enum EventType {
     Any,
@@ -47,12 +51,12 @@ pub enum EventDescription {
         pid: Option<Pid>,
         /// `internal_job_id` of the job to match.
         /// If this is 0, we match either all jobs (`pid == ANY_PID`) or no jobs (otherwise).
-        internal_job_id: u64,
+        internal_job_id: InternalJobId,
     },
     /// An event triggered by a job exit, triggering the 'caller'-style events only.
     CallerExit {
         /// Internal job ID.
-        caller_id: u64,
+        caller_id: InternalJobId,
     },
     /// A generic event.
     Generic {
@@ -235,7 +239,7 @@ impl Event {
         }
     }
 
-    pub fn job_exit(pgid: Pid, jid: u64) -> Self {
+    pub fn job_exit(pgid: Pid, jid: InternalJobId) -> Self {
         Self {
             desc: EventDescription::JobExit {
                 pid: Some(pgid),
@@ -249,7 +253,7 @@ impl Event {
         }
     }
 
-    pub fn caller_exit(internal_job_id: u64, job_id: MaybeJobId) -> Self {
+    pub fn caller_exit(internal_job_id: InternalJobId, job_id: MaybeJobId) -> Self {
         Self {
             desc: EventDescription::CallerExit {
                 caller_id: internal_job_id,
@@ -270,7 +274,7 @@ impl Event {
             }
         }
 
-        parser.global_event_blocks.load(Ordering::Relaxed) != 0
+        parser.global_event_blocks != 0
     }
 }
 
@@ -459,7 +463,7 @@ pub fn get_function_handlers(name: &wstr) -> EventHandlerList {
 /// Perform the specified event. Since almost all event firings will not be matched by even a single
 /// event handler, we make sure to optimize the 'no matches' path. This means that nothing is
 /// allocated/initialized unless needed.
-fn fire_internal(parser: &Parser, event: &Event) {
+fn fire_internal(parser: &mut Parser, event: &Event) {
     // Suppress fish_trace during events.
     let _saved = parser.push_scope(|s| {
         s.is_event = true;
@@ -494,8 +498,8 @@ fn fire_internal(parser: &Parser, event: &Event) {
         // Event handlers are not part of the main flow of code, so they are marked as
         // non-interactive.
         let _non_interactive = parser.push_scope(|s| s.is_interactive = false);
-        let saved_statuses = parser.get_last_statuses();
-        let _cleanup = ScopeGuard::new((), |()| {
+        let saved_statuses = parser.last_statuses();
+        let parser = &mut **ScopeGuard::new(&mut *parser, |parser| {
             parser.set_last_statuses(saved_statuses);
         });
 
@@ -522,7 +526,7 @@ fn fire_internal(parser: &Parser, event: &Event) {
 }
 
 /// Fire all delayed events attached to the given parser.
-pub fn fire_delayed(parser: &Parser) {
+pub fn fire_delayed(parser: &mut Parser) {
     // Do not invoke new event handlers from within event handlers.
     if parser.scope().is_event {
         return;
@@ -581,7 +585,7 @@ pub fn enqueue_signal(signal: libc::c_int) {
 }
 
 /// Fire the specified event event, executing it on `parser`.
-pub fn fire(parser: &Parser, event: Event) {
+pub fn fire(parser: &mut Parser, event: Event) {
     // Fire events triggered by signals.
     fire_delayed(parser);
 
@@ -657,7 +661,7 @@ pub fn print(streams: &mut IoStreams, type_filter: &wstr) {
 }
 
 /// Fire a generic event with the specified name.
-pub fn fire_generic(parser: &Parser, name: WString, arguments: Vec<WString>) {
+pub fn fire_generic(parser: &mut Parser, name: WString, arguments: Vec<WString>) {
     fire(
         parser,
         Event {

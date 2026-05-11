@@ -299,6 +299,7 @@ functions --no-details --color=never test_color_option
 # CHECK:     echo hello
 # CHECK: end
 
+fish_config theme choose default
 string escape (functions --no-details --color=always test_color_option)
 # CHECK: function\ \e\[36mtest_color_option\e\[32m
 # CHECK: \e\[39m\ \ \ \ echo\ \e\[36mhello\e\[32m

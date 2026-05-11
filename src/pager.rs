@@ -1,19 +1,21 @@
 //! Pager support.
 
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::collections::hash_map::Entry;
-
-use crate::common::{EscapeFlags, EscapeStringStyle, escape_string};
-use crate::complete::{CompleteFlags, Completion};
-use crate::editable_line::EditableLine;
-use crate::highlight::{HighlightRole, HighlightSpec, highlight_shell};
-use crate::operation_context::OperationContext;
-use crate::prelude::*;
-use crate::screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered};
-use crate::termsize::Termsize;
+use crate::{
+    complete::{CompleteFlags, Completion},
+    editable_line::EditableLine,
+    highlight::{HighlightRole, HighlightSpec, highlight_shell},
+    operation_context::OperationContext,
+    prelude::*,
+    screen::{CharOffset, Line, ScreenData, wcswidth_rendered, wcwidth_rendered},
+    termsize::Termsize,
+};
+use fish_common::{EscapeFlags, EscapeStringStyle, escape_string};
 use fish_wcstringutil::string_fuzzy_match_string;
 use fish_widestring::{ELLIPSIS_CHAR, decoded_width};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, hash_map::Entry},
+};
 
 /// Represents rendering from the pager.
 #[derive(Default)]
@@ -291,7 +293,7 @@ impl Pager {
 
         if !progress_text.is_empty() {
             let line = rendering.screen_data.add_line();
-            let spec = HighlightSpec::with_both(HighlightRole::pager_progress);
+            let spec = HighlightSpec::with_both(HighlightRole::PagerProgress);
             print_max(
                 CharOffset::None,
                 progress_text.chars(),
@@ -503,29 +505,29 @@ impl Pager {
         let modify_role = |role: HighlightRole| {
             let mut base = role as u8;
             if selected {
-                base += HighlightRole::pager_selected_background as u8
-                    - HighlightRole::pager_background as u8;
+                base += HighlightRole::PagerSelectedBackground as u8
+                    - HighlightRole::PagerBackground as u8;
             } else if secondary {
-                base += HighlightRole::pager_secondary_background as u8
-                    - HighlightRole::pager_background as u8;
+                base += HighlightRole::PagerSecondaryBackground as u8
+                    - HighlightRole::PagerBackground as u8;
             }
             unsafe { std::mem::transmute(base) }
         };
 
-        let bg_role = modify_role(HighlightRole::pager_background);
+        let bg_role = modify_role(HighlightRole::PagerBackground);
         let bg = HighlightSpec::with_bg(bg_role);
         let prefix_col = HighlightSpec::with_fg_bg(
             modify_role(if self.highlight_prefix {
-                HighlightRole::pager_prefix
+                HighlightRole::PagerPrefix
             } else {
-                HighlightRole::pager_completion
+                HighlightRole::PagerCompletion
             }),
             bg_role,
         );
         let comp_col =
-            HighlightSpec::with_fg_bg(modify_role(HighlightRole::pager_completion), bg_role);
+            HighlightSpec::with_fg_bg(modify_role(HighlightRole::PagerCompletion), bg_role);
         let desc_col =
-            HighlightSpec::with_fg_bg(modify_role(HighlightRole::pager_description), bg_role);
+            HighlightSpec::with_fg_bg(modify_role(HighlightRole::PagerDescription), bg_role);
 
         // Print the completion part
         let mut comp_remaining = comp_width;
@@ -603,9 +605,9 @@ impl Pager {
             assert!(desc_remaining >= 2);
             let paren_col = HighlightSpec::with_fg_bg(
                 if selected {
-                    HighlightRole::pager_selected_completion
+                    HighlightRole::PagerSelectedCompletion
                 } else {
-                    HighlightRole::pager_completion
+                    HighlightRole::PagerCompletion
                 },
                 bg_role,
             );
@@ -1289,7 +1291,7 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
             highlight_shell(
                 &comp.completion,
                 &mut comp_info.colors,
-                &OperationContext::empty(),
+                &mut OperationContext::empty(),
                 false,
                 None,
             );
@@ -1320,7 +1322,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_pager_navigation() {
-        let _cleanup = test_init();
+        test_init();
         // Generate 19 strings of width 10. There's 2 spaces between completions, and our term size is
         // 80; these can therefore fit into 6 columns (6 * 12 - 2 = 70) or 5 columns (58) but not 7
         // columns (7 * 12 - 2 = 82).
@@ -1410,7 +1412,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_pager_layout() {
-        let _cleanup = test_init();
+        test_init();
         // These tests are woefully incomplete
 
         let rendered_lines = |pager: &mut Pager, width: u16| {

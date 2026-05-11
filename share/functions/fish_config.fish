@@ -382,7 +382,6 @@ function __fish_config_theme_choose
         end
     end
     if not $need_hook || test -n "$fish_terminal_color_theme" ||
-            # comment to work around fish_indent bug
             {
                 $theme_is_color_theme_aware && test -z "$fish_terminal_color_theme"
             }

@@ -1,17 +1,20 @@
 //! Implementation of the bind builtin.
 
 use super::prelude::*;
-use crate::common::{
-    EscapeFlags, EscapeStringStyle, bytes2wcstring, escape, escape_string, valid_var_name,
+use crate::{
+    builtins::error::Error,
+    common::valid_var_name,
+    err_fmt, err_raw, err_str,
+    highlight::highlight_and_colorize,
+    input::{
+        InputMapping, InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings,
+    },
+    key::{
+        self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
+    },
 };
-use crate::highlight::highlight_and_colorize;
-use crate::input::{
-    InputMapping, InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings,
-};
-use crate::key::{
-    self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
-};
-use fish_common::help_section;
+use fish_common::{EscapeFlags, EscapeStringStyle, escape, escape_string, help_section};
+use fish_widestring::bytes2wcstring;
 use std::sync::MutexGuard;
 
 const DEFAULT_BIND_MODE: &wstr = L!("default");
@@ -114,7 +117,7 @@ impl BuiltinBind {
                     if key.modifiers == Modifiers::ALT {
                         out.push_utfstr(&char_to_symbol('\x1b', i == 0));
                         out.push_utfstr(&char_to_symbol(
-                            if key.codepoint == key::Escape {
+                            if key.codepoint == key::ESCAPE {
                                 '\x1b'
                             } else {
                                 key.codepoint
@@ -148,7 +151,7 @@ impl BuiltinBind {
         seq: &[Key],
         bind_mode: Option<&wstr>,
         user: bool,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
     ) -> bool {
         let results = self.input_mappings.get(seq, bind_mode, user);
@@ -164,8 +167,7 @@ impl BuiltinBind {
             if self.opts.color.enabled(streams) {
                 streams.out.append(&bytes2wcstring(&highlight_and_colorize(
                     &out,
-                    &parser.context(),
-                    parser.vars(),
+                    &mut parser.context(),
                 )));
             } else {
                 streams.out.append(&out);
@@ -185,7 +187,7 @@ impl BuiltinBind {
         bind_mode: Option<&wstr>,
         user: bool,
         preset: bool,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
     ) -> bool {
         let mut retval = false;
@@ -199,7 +201,13 @@ impl BuiltinBind {
     }
 
     /// List all current key bindings.
-    fn list(&self, bind_mode: Option<&wstr>, user: bool, parser: &Parser, streams: &mut IoStreams) {
+    fn list(
+        &self,
+        bind_mode: Option<&wstr>,
+        user: bool,
+        parser: &mut Parser,
+        streams: &mut IoStreams,
+    ) {
         let lst = self.input_mappings.get_names(user);
         for binding in lst {
             if bind_mode.is_some_and(|m| m != binding.mode) {
@@ -263,7 +271,7 @@ impl BuiltinBind {
         match parse_keys(seq) {
             Ok(keys) => Some(keys),
             Err(err) => {
-                streams.err.append(&sprintf!("bind: %s\n", err));
+                err_raw!(err).cmd(L!("bind")).finish(streams);
                 None
             }
         }
@@ -299,7 +307,7 @@ impl BuiltinBind {
         &mut self,
         optind: usize,
         argv: &[&wstr],
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
     ) -> bool {
         let argc = argv.len();
@@ -314,12 +322,9 @@ impl BuiltinBind {
         } else {
             // Inserting both on the other hand makes no sense.
             if self.opts.have_preset && self.opts.have_user {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_COMBO2_EXCLUSIVE,
-                    cmd,
-                    "--preset",
-                    "--user"
-                ));
+                err_fmt!(Error::COMBO_EXCLUSIVE, "--preset", "--user")
+                    .cmd(cmd)
+                    .finish(streams);
                 return true;
             }
         }
@@ -355,17 +360,13 @@ impl BuiltinBind {
                 );
                 if !self.opts.silent {
                     if seq.len() == 1 {
-                        streams.err.appendln(&wgettext_fmt!(
-                            "%s: No binding found for key '%s'",
-                            cmd,
-                            seq[0]
-                        ));
+                        err_fmt!("No binding found for key '%s'", seq[0])
+                            .cmd(cmd)
+                            .finish(streams);
                     } else {
-                        streams.err.appendln(&wgettext_fmt!(
-                            "%s: No binding found for key sequence '%s'",
-                            cmd,
-                            eseq
-                        ));
+                        err_fmt!("No binding found for key sequence '%s'", eseq)
+                            .cmd(cmd)
+                            .finish(streams);
                     }
                 }
                 return true;
@@ -412,7 +413,7 @@ fn parse_cmd_opts(
     opts: &mut Options,
     optind: &mut usize,
     argv: &mut [&wstr],
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
 ) -> BuiltinResult {
     let cmd = argv[0];
@@ -435,12 +436,13 @@ fn parse_cmd_opts(
 
     let check_mode_name = |streams: &mut IoStreams, mode_name: &wstr| -> Result<(), ErrorCode> {
         if !valid_var_name(mode_name) {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_BIND_MODE,
-                cmd,
+            err_fmt!(
+                Error::BIND_MODE,
                 mode_name,
                 help_section!("language#shell-variable-and-function-names")
-            ));
+            )
+            .cmd(cmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
         Ok(())
@@ -454,10 +456,11 @@ fn parse_cmd_opts(
             'f' => opts.mode = BindMode::FunctionNames,
             'h' => opts.print_help = true,
             'k' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`",
-                    cmd,
-                ));
+                err_str!(
+                    "the -k/--key syntax is no longer supported. See `bind --help` and `bind --key-names`"
+                )
+                .cmd(cmd)
+                .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             'K' => opts.mode = BindMode::KeyNames,
@@ -485,7 +488,7 @@ fn parse_cmd_opts(
                 opts.user = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], true);
+                builtin_missing_argument(parser, streams, cmd, None, argv[w.wopt_index - 1], true);
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -512,7 +515,7 @@ impl BuiltinBind {
     /// The bind builtin, used for setting character sequences.
     pub fn bind(
         &mut self,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
         argv: &mut [&wstr],
     ) -> BuiltinResult {
@@ -571,6 +574,6 @@ impl BuiltinBind {
     }
 }
 
-pub fn bind(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn bind(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     BuiltinBind::new().bind(parser, streams, args)
 }

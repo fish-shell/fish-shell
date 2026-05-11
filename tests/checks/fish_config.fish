@@ -1,6 +1,8 @@
 # RUN: %fish %s
 # REQUIRES: command -v diff
 
+fish_config theme choose default
+
 set -g fish (status fish-path)
 
 fish_config prompt list | string match -r '^(?:acidhub|disco|nim)$'

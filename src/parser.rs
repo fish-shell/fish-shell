@@ -1,50 +1,43 @@
 // The fish parser. Contains functions for parsing and evaluating code.
 
-use crate::ast::{self, Node};
-use crate::builtins::shared::STATUS_ILLEGAL_CMD;
-use crate::common::{
-    CancelChecker, EscapeFlags, EscapeStringStyle, FilenameRef, PROFILING_ACTIVE, ScopeGuarding,
-    ScopedCell, ScopedRefCell, escape_string,
+use crate::{
+    ast::{self, Node},
+    builtins::shared::STATUS_ILLEGAL_CMD,
+    common::{CancelChecker, PROFILING_ACTIVE},
+    complete::CompletionList,
+    env::{
+        EnvMode, EnvSetMode, EnvStack, EnvStackSetResult, Environment,
+        FISH_TERMINAL_COLOR_THEME_VAR, Statuses,
+    },
+    event::{self, Event},
+    expand::{ExpandFlags, ExpandResultCode, expand_string, replace_home_directory_with_tilde},
+    flog, flogf, function,
+    io::IoChain,
+    job_group::MaybeJobId,
+    operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext},
+    parse_constants::{
+        FISH_MAX_EVAL_DEPTH, FISH_MAX_STACK_DEPTH, ParseError, ParseErrorList, ParseTreeFlags,
+        SOURCE_LOCATION_UNKNOWN,
+    },
+    parse_execution::{EndExecutionReason, ExecutionContext},
+    parse_tree::{NodeRef, ParsedSourceRef, SourceLineCache, parse_source},
+    prelude::*,
+    proc::{InternalJobId, JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap},
+    signal::{Signal, signal_check_cancel, signal_clear_cancel},
+    wait_handle::WaitHandleStore,
 };
-use crate::complete::CompletionList;
-use crate::env::{
-    EnvMode, EnvSetMode, EnvStack, EnvStackSetResult, Environment, FISH_TERMINAL_COLOR_THEME_VAR,
-    Statuses,
-};
-use crate::event::{self, Event};
-use crate::expand::{
-    ExpandFlags, ExpandResultCode, expand_string, replace_home_directory_with_tilde,
-};
-use crate::fds::{BEST_O_SEARCH, open_dir};
-use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::TerminalQuery;
-use crate::io::IoChain;
-use crate::job_group::MaybeJobId;
-use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext};
-use crate::parse_constants::{
-    FISH_MAX_EVAL_DEPTH, FISH_MAX_STACK_DEPTH, ParseError, ParseErrorList, ParseTreeFlags,
-    SOURCE_LOCATION_UNKNOWN,
-};
-use crate::parse_execution::{EndExecutionReason, ExecutionContext};
-use crate::parse_tree::{NodeRef, ParsedSourceRef, SourceLineCache, parse_source};
-use crate::portable_atomic::AtomicU64;
-use crate::prelude::*;
-use crate::proc::{JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap};
-use crate::signal::{Signal, signal_check_cancel, signal_clear_cancel};
-use crate::wait_handle::WaitHandleStore;
-use crate::wutil::perror_nix;
-use crate::{flog, flogf, function};
 use assert_matches::assert_matches;
+use fish_common::{
+    EscapeFlags, EscapeStringStyle, FilenameRef, ScopedCell, ScopedRefCell, escape_string,
+};
 use fish_util::get_time;
-use fish_wcstringutil::wcs2bytes;
-use fish_widestring::WExt as _;
+use fish_widestring::{WExt as _, wcs2bytes};
 use libc::c_int;
-use std::cell::{Ref, RefCell, RefMut};
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::Write as _;
 use std::num::NonZeroU32;
-use std::os::fd::OwnedFd;
+use std::ops::DerefMut;
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Duration;
@@ -93,7 +86,7 @@ impl Block {
 
     #[inline(always)]
     pub fn wants_pop_env(&self) -> bool {
-        self.typ() != BlockType::top
+        self.typ() != BlockType::Top
     }
 
     /// Return the 1-based line number of this block, using a cache.
@@ -114,18 +107,18 @@ impl Block {
     /// Description of the block, for debugging.
     pub fn description(&self) -> WString {
         let mut result = match self.typ() {
-            BlockType::while_block => L!("while"),
-            BlockType::for_block => L!("for"),
-            BlockType::if_block => L!("if"),
-            BlockType::function_call { .. } => L!("function_call"),
-            BlockType::switch_block => L!("switch"),
-            BlockType::subst => L!("substitution"),
-            BlockType::top => L!("top"),
-            BlockType::begin => L!("begin"),
-            BlockType::source => L!("source"),
-            BlockType::event => L!("event"),
-            BlockType::breakpoint => L!("breakpoint"),
-            BlockType::variable_assignment => L!("variable_assignment"),
+            BlockType::WhileBlock => L!("while"),
+            BlockType::ForBlock => L!("for"),
+            BlockType::IfBlock => L!("if"),
+            BlockType::FunctionCall { .. } => L!("function_call"),
+            BlockType::SwitchBlock => L!("switch"),
+            BlockType::Subst => L!("substitution"),
+            BlockType::Top => L!("top"),
+            BlockType::Begin => L!("begin"),
+            BlockType::Source => L!("source"),
+            BlockType::Event => L!("event"),
+            BlockType::Breakpoint => L!("breakpoint"),
+            BlockType::VariableAssignment => L!("variable_assignment"),
         }
         .to_owned();
 
@@ -144,49 +137,49 @@ impl Block {
 
     /// Return if we are a function call (with or without shadowing).
     pub fn is_function_call(&self) -> bool {
-        matches!(self.typ(), BlockType::function_call { .. })
+        matches!(self.typ(), BlockType::FunctionCall { .. })
     }
 
     /// Entry points for creating blocks.
     pub fn if_block() -> Block {
-        Block::new(BlockType::if_block)
+        Block::new(BlockType::IfBlock)
     }
     pub fn event_block(event: Event) -> Block {
-        let mut b = Block::new(BlockType::event);
+        let mut b = Block::new(BlockType::Event);
         b.data = Some(Box::new(BlockData::Event(Rc::new(event))));
         b
     }
     pub fn function_block(name: WString, args: Vec<WString>, shadows: bool) -> Block {
-        let mut b = Block::new(BlockType::function_call { shadows });
+        let mut b = Block::new(BlockType::FunctionCall { shadows });
         b.data = Some(Box::new(BlockData::Function { name, args }));
         b
     }
     pub fn source_block(src: FilenameRef) -> Block {
-        let mut b = Block::new(BlockType::source);
+        let mut b = Block::new(BlockType::Source);
         b.data = Some(Box::new(BlockData::Source { file: src }));
         b
     }
     pub fn for_block() -> Block {
-        Block::new(BlockType::for_block)
+        Block::new(BlockType::ForBlock)
     }
     pub fn while_block() -> Block {
-        Block::new(BlockType::while_block)
+        Block::new(BlockType::WhileBlock)
     }
     pub fn switch_block() -> Block {
-        Block::new(BlockType::switch_block)
+        Block::new(BlockType::SwitchBlock)
     }
     pub fn scope_block(typ: BlockType) -> Block {
         assert!(
-            [BlockType::begin, BlockType::top, BlockType::subst].contains(&typ),
+            [BlockType::Begin, BlockType::Top, BlockType::Subst].contains(&typ),
             "Invalid scope type"
         );
         Block::new(typ)
     }
     pub fn breakpoint_block() -> Block {
-        Block::new(BlockType::breakpoint)
+        Block::new(BlockType::Breakpoint)
     }
     pub fn variable_assignment_block() -> Block {
-        Block::new(BlockType::variable_assignment)
+        Block::new(BlockType::VariableAssignment)
     }
 }
 
@@ -251,7 +244,7 @@ pub struct ScopedData {
 
     /// The internal job ID of the job being populated, or 0 if none.
     /// This supports the '--on-job-exit caller' feature.
-    pub caller_id: u64, // TODO should be InternalJobId
+    pub caller_id: InternalJobId,
 }
 
 impl Default for ScopedData {
@@ -265,25 +258,18 @@ impl Default for ScopedData {
             suppress_fish_trace: false,
             read_limit: 0,
             is_cleaning_procs: false,
-            caller_id: 0,
+            caller_id: InternalJobId::default(),
         }
     }
 }
 
-/// Miscellaneous data used to avoid recursion and others.
+/// Miscellaneous data.
 #[derive(Default)]
 pub struct LibraryData {
-    /// The current filename we are evaluating, either from builtin source or on the command line.
-    pub current_filename: Option<FilenameRef>,
-
     /// A fake value to be returned by builtin_commandline. This is used by the completion
     /// machinery when wrapping: e.g. if `tig` wraps `git` then git completions need to see git on
     /// the command line.
-    pub transient_commandline: Option<WString>,
-
-    /// A file descriptor holding the current working directory, for use in openat().
-    /// This is never null and never invalid.
-    pub cwd_fd: Option<Arc<OwnedFd>>,
+    pub transient_commandline: ScopedRefCell<Option<WString>>,
 
     /// Variables supporting the "status" builtin.
     pub status_vars: StatusVars,
@@ -371,12 +357,6 @@ impl EvalRes {
     }
 }
 
-pub enum ParserStatusVar {
-    current_command,
-    current_commandline,
-    count_,
-}
-
 /// A newtype for the block index.
 /// This is the naive position in the block list.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -395,22 +375,25 @@ pub enum CancelBehavior {
 }
 
 pub struct Parser {
-    pub interactive_initialized: RelaxedAtomicBool,
+    pub interactive_initialized: bool,
+
+    /// The current filename we are evaluating, either from builtin source or on the command line.
+    pub current_filename: ScopedRefCell<Option<FilenameRef>>,
 
     /// The currently executing Node.
     current_node: ScopedRefCell<Option<NodeRef<ast::JobPipeline>>>,
 
     /// The jobs associated with this parser.
-    job_list: RefCell<JobList>,
+    job_list: JobList,
 
     /// Our store of recorded wait-handles. These are jobs that finished in the background,
     /// and have been reaped, but may still be wait'ed on.
-    wait_handles: RefCell<WaitHandleStore>,
+    wait_handles: WaitHandleStore,
 
     /// The list of blocks.
     /// This is a stack; the topmost block is at the end. This is to avoid invalidating block
     /// indexes during recursive evaluation.
-    block_list: RefCell<Vec<Block>>,
+    block_list: Vec<Block>,
 
     /// Set of variables for the parser.
     pub variables: EnvStack,
@@ -419,25 +402,23 @@ pub struct Parser {
     scoped_data: ScopedCell<ScopedData>,
 
     /// Miscellaneous library data.
-    pub library_data: ScopedRefCell<LibraryData>,
+    pub library_data: LibraryData,
 
     /// If set, we synchronize universal variables after external commands,
     /// including sending on-variable change events.
-    syncs_uvars: RelaxedAtomicBool,
+    syncs_uvars: bool,
 
     /// The behavior when fish itself receives a signal and there are no blocks on the stack.
     cancel_behavior: CancelBehavior,
 
     /// List of profile items.
-    profile_items: RefCell<Vec<ProfileItem>>,
+    profile_items: Vec<ProfileItem>,
 
     /// Global event blocks.
-    pub global_event_blocks: AtomicU64,
-
-    pub blocking_query: RefCell<Option<TerminalQuery>>,
+    pub global_event_blocks: u64,
 
     // Timeout for blocking terminal queries.
-    pub blocking_query_timeout: RefCell<Option<Duration>>,
+    pub blocking_query_timeout: Option<Duration>,
 }
 
 #[derive(Copy, Clone, Default)]
@@ -459,36 +440,27 @@ impl Parser {
     /// Create a parser.
     pub fn new(variables: EnvStack, cancel_behavior: CancelBehavior) -> Parser {
         let result = Self {
-            interactive_initialized: RelaxedAtomicBool::new(false),
+            interactive_initialized: false,
             current_node: ScopedRefCell::new(None),
-            job_list: RefCell::default(),
-            wait_handles: RefCell::default(),
-            block_list: RefCell::default(),
+            current_filename: ScopedRefCell::new(None),
+            job_list: Default::default(),
+            wait_handles: Default::default(),
+            block_list: Default::default(),
             variables,
             scoped_data: ScopedCell::new(ScopedData::default()),
-            library_data: ScopedRefCell::new(LibraryData::new()),
-            syncs_uvars: RelaxedAtomicBool::new(false),
+            library_data: LibraryData::new(),
+            syncs_uvars: false,
             cancel_behavior,
-            profile_items: RefCell::default(),
-            global_event_blocks: AtomicU64::new(0),
-            blocking_query: RefCell::new(None),
-            blocking_query_timeout: RefCell::new(None),
+            profile_items: Default::default(),
+            global_event_blocks: 0,
+            blocking_query_timeout: None,
         };
-
-        match open_dir(c".", BEST_O_SEARCH) {
-            Ok(fd) => {
-                result.libdata_mut().cwd_fd = Some(Arc::new(fd));
-            }
-            Err(err) => {
-                perror_nix("Unable to open the current working directory", err);
-            }
-        }
 
         result
     }
 
     /// Adds a job to the beginning of the job list.
-    pub fn job_add(&self, job: JobRef) {
+    pub fn job_add(&mut self, job: JobRef) {
         assert!(!job.processes().is_empty());
         self.jobs_mut().insert(0, job);
     }
@@ -497,7 +469,7 @@ impl Parser {
     pub fn is_function(&self) -> bool {
         self.blocks_iter_rev()
             // If a function sources a file, don't descend further.
-            .take_while(|b| b.typ() != BlockType::source)
+            .take_while(|b| b.typ() != BlockType::Source)
             .any(|b| b.is_function_call())
     }
 
@@ -505,12 +477,12 @@ impl Parser {
     pub fn is_command_substitution(&self) -> bool {
         self.blocks_iter_rev()
             // If a function sources a file, don't descend further.
-            .take_while(|b| b.typ() != BlockType::source)
-            .any(|b| b.typ() == BlockType::subst)
+            .take_while(|b| b.typ() != BlockType::Source)
+            .any(|b| b.typ() == BlockType::Subst)
     }
 
-    pub fn eval(&self, cmd: &wstr, io: &IoChain) -> EvalRes {
-        self.eval_with(cmd, io, None, BlockType::top, false)
+    pub fn eval(&mut self, cmd: &wstr, io: &IoChain) -> EvalRes {
+        self.eval_with(cmd, io, None, BlockType::Top, false)
     }
 
     /// Evaluate the expressions contained in cmd.
@@ -522,7 +494,7 @@ impl Parser {
     /// or 'subst'.
     /// Return the result of evaluation.
     pub fn eval_with(
-        &self,
+        &mut self,
         cmd: &wstr,
         io: &IoChain,
         job_group: Option<&JobGroupRef>,
@@ -566,14 +538,14 @@ impl Parser {
     /// Evaluate the parsed source ps.
     /// Because the source has been parsed, a syntax error is impossible.
     pub fn eval_parsed_source(
-        &self,
+        &mut self,
         ps: &ParsedSourceRef,
         io: &IoChain,
         job_group: Option<&JobGroupRef>,
         block_type: BlockType,
         test_only_suppress_stderr: bool,
     ) -> EvalRes {
-        assert_matches!(block_type, BlockType::top | BlockType::subst);
+        assert_matches!(block_type, BlockType::Top | BlockType::Subst);
         let job_list = ps.top_job_list();
         if !job_list.is_empty() {
             // Execute the top job list.
@@ -585,7 +557,7 @@ impl Parser {
                 test_only_suppress_stderr,
             )
         } else {
-            let status = ProcStatus::from_exit_code(self.get_last_status());
+            let status = ProcStatus::from_exit_code(self.last_status());
             EvalRes {
                 status,
                 break_expand: false,
@@ -596,7 +568,7 @@ impl Parser {
     }
 
     pub fn eval_wstr(
-        &self,
+        &mut self,
         src: WString,
         io: &IoChain,
         job_group: Option<&JobGroupRef>,
@@ -622,7 +594,7 @@ impl Parser {
     }
 
     pub fn eval_file_wstr(
-        &self,
+        &mut self,
         src: WString,
         filename: Arc<WString>,
         io: &IoChain,
@@ -630,11 +602,9 @@ impl Parser {
     ) -> Result<EvalRes, WString> {
         let _interactive_push = self.push_scope(|s| s.is_interactive = false);
         let sb = self.push_block(Block::source_block(filename.clone()));
-        let _filename_push = self
-            .library_data
-            .scoped_set(Some(filename), |s| &mut s.current_filename);
+        let _filename_push = self.current_filename.scoped_replace(Some(filename));
 
-        let ret = self.eval_wstr(src, io, job_group, BlockType::top);
+        let ret = self.eval_wstr(src, io, job_group, BlockType::Top);
 
         self.pop_block(sb);
         self.libdata_mut().exit_current_script = false;
@@ -644,7 +614,7 @@ impl Parser {
     /// Evaluates a node.
     /// The node type must be ast::Statement or ast::JobList.
     pub fn eval_node<T: Node>(
-        &self,
+        &mut self,
         node: &NodeRef<T>,
         block_io: &IoChain,
         job_group: Option<&JobGroupRef>,
@@ -654,7 +624,7 @@ impl Parser {
         // Only certain blocks are allowed.
         assert_matches!(
             block_type,
-            BlockType::top | BlockType::subst,
+            BlockType::Top | BlockType::Subst,
             "Invalid block type"
         );
 
@@ -664,8 +634,7 @@ impl Parser {
         // cause fish to exit.
         let sig = signal_check_cancel();
         if sig != 0 {
-            if self.cancel_behavior == CancelBehavior::Clear && self.block_list.borrow().is_empty()
-            {
+            if self.cancel_behavior == CancelBehavior::Clear && self.block_list.is_empty() {
                 signal_clear_cancel();
             } else {
                 return EvalRes::new(ProcStatus::from_signal(Signal::new(sig)));
@@ -694,35 +663,35 @@ impl Parser {
         job_reap(self, false, Some(block_io)); // not sure why we reap jobs here
 
         // Start it up
-        let mut op_ctx = self.context();
         let scope_block = self.push_block(Block::scope_block(block_type));
-
-        // Propagate our job group.
-        op_ctx.job_group = job_group.cloned();
-
-        // Replace the context's cancel checker with one that checks the job group's signal.
-        let cancel_checker: CancelChecker = Box::new(move || check_cancel_signal().is_some());
-        op_ctx.cancel_checker = cancel_checker;
 
         // Restore the current pipeline node.
         let restore_current_node = self.current_node.scoped_replace(None);
+
+        let op_ctx = &mut self.context();
+        // Propagate our job group.
+        op_ctx.job_group = job_group.cloned();
+        // Replace the context's cancel checker with one that checks the job group's signal.
+        let cancel_checker: CancelChecker = Box::new(move || check_cancel_signal().is_some());
+        op_ctx.cancel_checker = cancel_checker;
 
         // Create a new execution context.
         let mut execution_context = ExecutionContext::new(
             node.parsed_source_ref(),
             block_io.clone(),
-            &self.current_node,
             test_only_suppress_stderr,
         );
 
         // Check the exec count so we know if anything got executed.
-        let prev_exec_count = self.libdata().exec_count;
-        let prev_status_count = self.libdata().status_count;
-        let reason = execution_context.eval_node(&op_ctx, &**node, Some(scope_block));
-        let new_exec_count = self.libdata().exec_count;
-        let new_status_count = self.libdata().status_count;
+        let exec_counts = |ctx: &mut OperationContext<'_>| {
+            let ld = ctx.parser().libdata();
+            (ld.exec_count, ld.status_count)
+        };
+        let (prev_exec_count, prev_status_count) = exec_counts(op_ctx);
+        let reason = execution_context.eval_node(op_ctx, &**node, Some(scope_block));
+        let (new_exec_count, new_status_count) = exec_counts(op_ctx);
 
-        ScopeGuarding::commit(restore_current_node);
+        drop(restore_current_node);
         self.pop_block(scope_block);
 
         job_reap(self, false, Some(block_io)); // reap again
@@ -731,7 +700,7 @@ impl Parser {
         if sig != 0 {
             EvalRes::new(ProcStatus::from_signal(Signal::new(sig)))
         } else {
-            let status = ProcStatus::from_exit_code(self.get_last_status());
+            let status = ProcStatus::from_exit_code(self.last_status());
             let break_expand = reason == EndExecutionReason::Error;
             EvalRes {
                 status,
@@ -748,7 +717,7 @@ impl Parser {
     pub fn expand_argument_list(
         arg_list_src: &wstr,
         flags: ExpandFlags,
-        ctx: &OperationContext<'_>,
+        ctx: &mut OperationContext<'_>,
     ) -> CompletionList {
         // Parse the string as an argument list.
         let ast = ast::parse_argument_list(arg_list_src, ParseTreeFlags::default(), None);
@@ -776,14 +745,7 @@ impl Parser {
     ///
     /// init.fish (line 127): ls|grep pancake
     pub fn current_line(&self) -> WString {
-        let Some(node_ref) = self.current_node.borrow().clone() else {
-            return WString::new();
-        };
-        let Some(source_offset) = node_ref.source_offset() else {
-            return WString::new();
-        };
-
-        let lineno = self.get_lineno_for_display();
+        let lineno = self.lineno_for_display();
         let file = self.current_filename();
 
         let mut prefix = WString::new();
@@ -806,17 +768,26 @@ impl Parser {
         let skip_caret = self.is_interactive() && !self.is_function();
 
         // Use an error with empty text.
-        let empty_error = ParseError {
-            source_start: source_offset,
-            ..Default::default()
-        };
+        let mut line_info = {
+            let node_ref = self.current_node.borrow();
+            let Some(node_ref) = node_ref.as_ref() else {
+                return WString::new();
+            };
+            let Some(source_offset) = node_ref.source_offset() else {
+                return WString::new();
+            };
+            let empty_error = ParseError {
+                source_start: source_offset,
+                ..Default::default()
+            };
 
-        let mut line_info = empty_error.describe_with_prefix(
-            node_ref.source_str(),
-            &prefix,
-            self.is_interactive(),
-            skip_caret,
-        );
+            empty_error.describe_with_prefix(
+                node_ref.source_str(),
+                &prefix,
+                self.is_interactive(),
+                skip_caret,
+            )
+        };
         if !line_info.is_empty() {
             line_info.push('\n');
         }
@@ -826,19 +797,19 @@ impl Parser {
     }
 
     /// Returns the current line number, indexed from 1.
-    pub fn get_lineno(&self) -> Option<NonZeroU32> {
+    pub fn lineno(&self) -> Option<NonZeroU32> {
         self.current_node.borrow().as_ref().and_then(|n| n.lineno())
     }
 
     /// Returns the current line number, indexed from 1, or zero if not sourced.
-    pub fn get_lineno_for_display(&self) -> u32 {
-        self.get_lineno().map_or(0, |n| n.get())
+    pub fn lineno_for_display(&self) -> u32 {
+        self.lineno().map_or(0, |n| n.get())
     }
 
     /// Returns a NodeRef to the current node being executed, if any.
     /// This can be used for lazy line number computation.
-    pub fn current_node_ref(&self) -> Option<NodeRef<ast::JobPipeline>> {
-        self.current_node.borrow().clone()
+    pub fn current_node(&mut self) -> &ScopedRefCell<Option<NodeRef<ast::JobPipeline>>> {
+        &self.current_node
     }
 
     /// Return whether we are currently evaluating a "block" such as an if statement.
@@ -847,9 +818,9 @@ impl Parser {
         // Note historically this has descended into 'source', unlike 'is_function'.
         self.blocks_iter_rev().any(|b| {
             ![
-                BlockType::top,
-                BlockType::subst,
-                BlockType::variable_assignment,
+                BlockType::Top,
+                BlockType::Subst,
+                BlockType::VariableAssignment,
             ]
             .contains(&b.typ())
         })
@@ -858,60 +829,52 @@ impl Parser {
     /// Return whether we have a breakpoint block.
     pub fn is_breakpoint(&self) -> bool {
         self.blocks_iter_rev()
-            .any(|b| b.typ() == BlockType::breakpoint)
+            .any(|b| b.typ() == BlockType::Breakpoint)
     }
 
     // Return an iterator over the blocks, in reverse order.
     // That is, the first block is the innermost block.
-    pub fn blocks_iter_rev<'a>(&'a self) -> impl Iterator<Item = Ref<'a, Block>> {
-        let blocks = self.block_list.borrow();
-        let mut indices = (0..blocks.len()).rev();
-        std::iter::from_fn(move || {
-            let last = indices.next()?;
-            // note this clone is cheap
-            Some(Ref::map(Ref::clone(&blocks), |bl| &bl[last]))
-        })
+    pub fn blocks_iter_rev<'a>(&'a self) -> impl Iterator<Item = &'a Block> {
+        self.block_list.iter().rev()
     }
 
     // Return the block at a given index, where 0 is the innermost block.
-    pub fn block_at_index(&self, index: usize) -> Option<Ref<'_, Block>> {
-        let block_list = self.block_list.borrow();
+    pub fn block_at_index(&self, index: usize) -> Option<&Block> {
+        let block_list = &self.block_list;
         let block_count = block_list.len();
         if index >= block_count {
             None
         } else {
-            Some(Ref::map(block_list, |bl| &bl[block_count - 1 - index]))
+            Some(&block_list[block_count - 1 - index])
         }
     }
 
     // Return the block at a given index, where 0 is the innermost block.
-    pub fn block_at_index_mut(&self, index: usize) -> Option<RefMut<'_, Block>> {
-        let block_list = self.block_list.borrow_mut();
+    pub fn block_at_index_mut(&mut self, index: usize) -> Option<&mut Block> {
+        let block_list = &mut self.block_list;
         let block_count = block_list.len();
         if index >= block_count {
             None
         } else {
-            Some(RefMut::map(block_list, |bl| {
-                &mut bl[block_count - 1 - index]
-            }))
+            Some(&mut block_list[block_count - 1 - index])
         }
     }
 
     // Return the block with the given id, asserting it exists. Note ids are recycled.
-    pub fn block_with_id(&self, id: BlockId) -> Ref<'_, Block> {
-        Ref::map(self.block_list.borrow(), |bl| &bl[id.0])
+    pub fn block_with_id(&self, id: BlockId) -> &Block {
+        &self.block_list[id.0]
     }
 
     pub fn blocks_size(&self) -> usize {
-        self.block_list.borrow().len()
+        self.block_list.len()
     }
 
     /// Get the list of jobs.
-    pub fn jobs(&self) -> Ref<'_, JobList> {
-        self.job_list.borrow()
+    pub fn jobs(&self) -> &JobList {
+        &self.job_list
     }
-    pub fn jobs_mut(&self) -> RefMut<'_, JobList> {
-        self.job_list.borrow_mut()
+    pub fn jobs_mut(&mut self) -> &mut JobList {
+        &mut self.job_list
     }
 
     /// Get the variables.
@@ -928,37 +891,34 @@ impl Parser {
     /// Modify the scoped values for the duration of the caller's scope (or whenever the ParserScope is dropped).
     /// This accepts a closure which modifies the ScopedData, and returns a ParserScope which restores the
     /// data when dropped.
-    pub fn push_scope<'a, F: FnOnce(&mut ScopedData)>(
-        &'a self,
-        modifier: F,
-    ) -> impl ScopeGuarding + 'a {
+    pub fn push_scope<F: FnOnce(&mut ScopedData)>(&self, modifier: F) -> impl DerefMut + use<F> {
         self.scoped_data.scoped_mod(modifier)
     }
 
     /// Get the library data.
-    pub fn libdata(&self) -> Ref<'_, LibraryData> {
-        self.library_data.borrow()
+    pub fn libdata(&self) -> &LibraryData {
+        &self.library_data
     }
 
     /// Get the library data, mutably.
-    pub fn libdata_mut(&self) -> RefMut<'_, LibraryData> {
-        self.library_data.borrow_mut()
+    pub fn libdata_mut(&mut self) -> &mut LibraryData {
+        &mut self.library_data
     }
 
     /// Get our wait handle store.
-    pub fn get_wait_handles(&self) -> Ref<'_, WaitHandleStore> {
-        self.wait_handles.borrow()
+    pub fn wait_handles(&self) -> &WaitHandleStore {
+        &self.wait_handles
     }
-    pub fn mut_wait_handles(&self) -> RefMut<'_, WaitHandleStore> {
-        self.wait_handles.borrow_mut()
+    pub fn mut_wait_handles(&mut self) -> &mut WaitHandleStore {
+        &mut self.wait_handles
     }
 
     /// Get and set the last proc statuses.
-    pub fn get_last_status(&self) -> c_int {
-        self.vars().get_last_status()
+    pub fn last_status(&self) -> c_int {
+        self.vars().last_status()
     }
-    pub fn get_last_statuses(&self) -> Statuses {
-        self.vars().get_last_statuses()
+    pub fn last_statuses(&self) -> Statuses {
+        self.vars().last_statuses()
     }
     pub fn set_last_statuses(&self, s: Statuses) {
         self.vars().set_last_statuses(s);
@@ -966,7 +926,7 @@ impl Parser {
 
     /// Cover of vars().set(), which also fires any returned event handlers.
     pub fn set_var_and_fire(
-        &self,
+        &mut self,
         key: &wstr,
         mode: ParserEnvSetMode,
         vals: Vec<WString>,
@@ -988,7 +948,7 @@ impl Parser {
 
     /// Cover of vars().set(), without firing events
     pub fn set_var(
-        &self,
+        &mut self,
         key: &wstr,
         mode: ParserEnvSetMode,
         vals: Vec<WString>,
@@ -998,19 +958,24 @@ impl Parser {
     }
 
     /// Cover of vars().set_one(), without firing events
-    pub fn set_one(&self, key: &wstr, mode: ParserEnvSetMode, val: WString) -> EnvStackSetResult {
+    pub fn set_one(
+        &mut self,
+        key: &wstr,
+        mode: ParserEnvSetMode,
+        val: WString,
+    ) -> EnvStackSetResult {
         let mode = self.convert_env_set_mode(mode);
         self.vars().set_one(key, mode, val)
     }
 
     /// Cover of vars().set_empty(), without firing events
-    pub fn set_empty(&self, key: &wstr, mode: ParserEnvSetMode) -> EnvStackSetResult {
+    pub fn set_empty(&mut self, key: &wstr, mode: ParserEnvSetMode) -> EnvStackSetResult {
         let mode = self.convert_env_set_mode(mode);
         self.vars().set_empty(key, mode)
     }
 
     /// Cover of vars().remove(), without firing events
-    pub fn remove_var(&self, key: &wstr, mode: ParserEnvSetMode) -> EnvStackSetResult {
+    pub fn remove_var(&mut self, key: &wstr, mode: ParserEnvSetMode) -> EnvStackSetResult {
         let mode = self.convert_env_set_mode(mode);
         self.vars().remove(key, mode)
     }
@@ -1018,8 +983,8 @@ impl Parser {
     /// Update any universal variables and send event handlers.
     /// If `always` is set, then do it even if we have no pending changes (that is, look for
     /// changes from other fish instances); otherwise only sync if this instance has changed uvars.
-    pub fn sync_uvars_and_fire(&self, always: bool) {
-        if self.syncs_uvars.load() {
+    pub fn sync_uvars_and_fire(&mut self, always: bool) {
+        if self.syncs_uvars {
             let evts = self.vars().universal_sync(always, self.is_repainting());
             for evt in evts {
                 event::fire(self, evt);
@@ -1028,23 +993,23 @@ impl Parser {
     }
 
     /// Pushes a new block. Returns an id (index) of the block, which is stored in the parser.
-    pub fn push_block(&self, mut block: Block) -> BlockId {
+    pub fn push_block(&mut self, mut block: Block) -> BlockId {
         block.src_filename = self.current_filename();
         block.src_node.clone_from(&self.current_node.borrow());
-        if block.typ() != BlockType::top {
-            let new_scope = block.typ() == BlockType::function_call { shadows: true };
+        if block.typ() != BlockType::Top {
+            let new_scope = block.typ() == BlockType::FunctionCall { shadows: true };
             self.vars().push(new_scope);
         }
 
-        let mut block_list = self.block_list.borrow_mut();
+        let block_list = &mut self.block_list;
         block_list.push(block);
         BlockId(block_list.len() - 1)
     }
 
     /// Remove the outermost block, asserting it's the given one.
-    pub fn pop_block(&self, expected: BlockId) {
+    pub fn pop_block(&mut self, expected: BlockId) {
         let block = {
-            let mut block_list = self.block_list.borrow_mut();
+            let block_list = &mut self.block_list;
             assert_eq!(expected.0, block_list.len() - 1);
             block_list.pop().unwrap()
         };
@@ -1061,7 +1026,7 @@ impl Parser {
             // Walk until we find a breakpoint, then take the next function.
             return self
                 .blocks_iter_rev()
-                .skip_while(|b| b.typ() != BlockType::breakpoint)
+                .skip_while(|b| b.typ() != BlockType::Breakpoint)
                 .find_map(|b| match b.data() {
                     Some(BlockData::Function { name, .. }) => Some(name.clone()),
                     _ => None,
@@ -1071,7 +1036,7 @@ impl Parser {
         self.blocks_iter_rev()
             // Historical: If we want the topmost function, but we are really in a file sourced by a
             // function, don't consider ourselves to be in a function.
-            .take_while(|b| !(level == 1 && b.typ() == BlockType::source))
+            .take_while(|b| !(level == 1 && b.typ() == BlockType::Source))
             .map(|b| (b, 0))
             .map(|(b, level)| {
                 if b.is_function_call() {
@@ -1092,14 +1057,14 @@ impl Parser {
     }
 
     /// Promotes a job to the front of the list.
-    pub fn job_promote_at(&self, job_pos: usize) {
+    pub fn job_promote_at(&mut self, job_pos: usize) {
         // Move the job to the beginning.
         self.jobs_mut().rotate_left(job_pos);
     }
 
     /// Return the job with the specified job ID. If id is 0 or less, return the last job used.
     pub fn job_with_id(&self, job_id: MaybeJobId) -> Option<JobRef> {
-        for job in self.jobs().iter() {
+        for job in self.jobs() {
             if job_id.is_none() || job_id == job.job_id() {
                 return Some(job.clone());
             }
@@ -1128,26 +1093,21 @@ impl Parser {
     /// Returns a new profile item if profiling is active. The caller should fill it in.
     /// The Parser will deallocate it.
     /// If profiling is not active, this returns None.
-    pub fn create_profile_item(&self) -> Option<usize> {
+    pub fn create_profile_item(&mut self) -> Option<usize> {
         if PROFILING_ACTIVE.load() {
-            let mut profile_items = self.profile_items.borrow_mut();
+            let profile_items = &mut self.profile_items;
             profile_items.push(ProfileItem::new());
             return Some(profile_items.len() - 1);
         }
         None
     }
 
-    pub fn profile_items_mut(&self) -> RefMut<'_, Vec<ProfileItem>> {
-        self.profile_items.borrow_mut()
+    pub fn profile_items_mut(&mut self) -> &mut Vec<ProfileItem> {
+        &mut self.profile_items
     }
 
-    /// Remove the profiling items.
-    pub fn clear_profiling(&self) {
-        self.profile_items.borrow_mut().clear();
-    }
-
-    /// Output profiling data to the given filename.
-    pub fn emit_profiling(&self, path: &OsStr) {
+    /// Flush profiling data to the given filename.
+    pub fn flush_profiling(&mut self, path: &OsStr) {
         // Save profiling information. OK to not use CLO_EXEC here because this is called while fish is
         // exiting (and hence will not fork).
         let mut f = match std::fs::File::create(path) {
@@ -1164,7 +1124,9 @@ impl Parser {
                 return;
             }
         };
-        print_profile(&self.profile_items.borrow(), &mut f);
+        let profile_items = &mut self.profile_items;
+        print_profile(&*profile_items, &mut f);
+        profile_items.clear();
     }
 
     pub fn get_backtrace(&self, src: &wstr, errors: &ParseErrorList) -> WString {
@@ -1223,7 +1185,7 @@ impl Parser {
                 Some(BlockData::Source { file, .. }) => Some(file.clone()),
                 _ => None,
             })
-            .or_else(|| self.libdata().current_filename.clone())
+            .or_else(|| self.current_filename.borrow().clone())
     }
 
     /// Return if we are interactive, which means we are executing a command that the user typed in
@@ -1240,9 +1202,9 @@ impl Parser {
             // It might make sense in the future to continue printing the stack trace of the code
             // that invoked the event, if this is a programmatic event, but we can't currently
             // detect that.
-            .take_while(|b| b.typ() != BlockType::event)
+            .take_while(|b| b.typ() != BlockType::Event)
             .fold(WString::new(), |mut trace, b| {
-                append_block_description_to_stack_trace(self, &b, &mut trace, &mut line_cache);
+                append_block_description_to_stack_trace(self, b, &mut trace, &mut line_cache);
                 trace
             })
     }
@@ -1264,12 +1226,12 @@ impl Parser {
     }
 
     /// Mark whether we should sync universal variables.
-    pub fn set_syncs_uvars(&self, flag: bool) {
-        self.syncs_uvars.store(flag);
+    pub fn set_syncs_uvars(&mut self, flag: bool) {
+        self.syncs_uvars = flag;
     }
 
     /// Return the operation context for this parser.
-    pub fn context(&self) -> OperationContext<'_> {
+    pub fn context(&mut self) -> OperationContext<'_> {
         OperationContext::foreground(
             self,
             Box::new(|| signal_check_cancel() != 0),
@@ -1282,7 +1244,7 @@ impl Parser {
         self.scope().eval_level >= FISH_MAX_EVAL_DEPTH
     }
 
-    pub fn set_color_theme(&self, background_color: Option<&xterm_color::Color>) {
+    pub fn set_color_theme(&mut self, background_color: Option<&xterm_color::Color>) {
         let color_theme = match background_color.map(|c| c.perceived_lightness()) {
             Some(x) if x < 0.5 => L!("dark"),
             Some(_) => L!("light"),
@@ -1377,7 +1339,7 @@ fn append_block_description_to_stack_trace(
 ) {
     let mut print_source_location = false;
     match b.typ() {
-        BlockType::function_call { .. } => {
+        BlockType::FunctionCall { .. } => {
             let Some(BlockData::Function { name, args, .. }) = b.data() else {
                 unreachable!()
             };
@@ -1407,12 +1369,12 @@ fn append_block_description_to_stack_trace(
             trace.push('\n');
             print_source_location = true;
         }
-        BlockType::subst => {
+        BlockType::Subst => {
             trace.push_utfstr(&wgettext!("in command substitution"));
             trace.push('\n');
             print_source_location = true;
         }
-        BlockType::source => {
+        BlockType::Source => {
             let Some(BlockData::Source { file, .. }) = b.data() else {
                 unreachable!()
             };
@@ -1424,7 +1386,7 @@ fn append_block_description_to_stack_trace(
             trace.push('\n');
             print_source_location = true;
         }
-        BlockType::event => {
+        BlockType::Event => {
             let Some(BlockData::Event(event)) = b.data() else {
                 unreachable!()
             };
@@ -1433,14 +1395,14 @@ fn append_block_description_to_stack_trace(
             trace.push('\n');
             print_source_location = true;
         }
-        BlockType::top
-        | BlockType::begin
-        | BlockType::switch_block
-        | BlockType::while_block
-        | BlockType::for_block
-        | BlockType::if_block
-        | BlockType::breakpoint
-        | BlockType::variable_assignment => {}
+        BlockType::Top
+        | BlockType::Begin
+        | BlockType::SwitchBlock
+        | BlockType::WhileBlock
+        | BlockType::ForBlock
+        | BlockType::IfBlock
+        | BlockType::Breakpoint
+        | BlockType::VariableAssignment => {}
     }
 
     if print_source_location {
@@ -1460,30 +1422,30 @@ fn append_block_description_to_stack_trace(
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum BlockType {
     /// While loop block
-    while_block,
+    WhileBlock,
     /// For loop block
-    for_block,
+    ForBlock,
     /// If block
-    if_block,
+    IfBlock,
     /// Function invocation block
-    function_call { shadows: bool },
+    FunctionCall { shadows: bool },
     /// Switch block
-    switch_block,
+    SwitchBlock,
     /// Command substitution scope
-    subst,
+    Subst,
     /// Outermost block
     #[default]
-    top,
+    Top,
     /// Unconditional block
-    begin,
+    Begin,
     /// Block created by the . (source) builtin
-    source,
+    Source,
     /// Block created on event notifier invocation
-    event,
+    Event,
     /// Breakpoint block
-    breakpoint,
+    Breakpoint,
     /// Variable assignment before a command
-    variable_assignment,
+    VariableAssignment,
 }
 
 /// Possible states for a loop.
@@ -1491,36 +1453,38 @@ pub enum BlockType {
 pub enum LoopStatus {
     /// current loop block executed as normal
     #[default]
-    normals,
+    Normals,
     /// current loop block should be removed
-    breaks,
+    Breaks,
     /// current loop block should be skipped
-    continues,
+    Continues,
 }
 
 #[cfg(test)]
 mod tests {
     use super::{CancelBehavior, Parser};
-    use crate::ast::{self, Ast, JobList, Kind, Node, Traversal, is_same_node};
-    use crate::common::str2wcstring;
-    use crate::env::EnvStack;
-    use crate::expand::ExpandFlags;
-    use crate::io::{IoBufferfill, IoChain};
-    use crate::parse_constants::{
-        ParseErrorCode, ParseIssue, ParseTokenType, ParseTreeFlags, StatementDecoration,
+    use crate::{
+        ast::{self, Ast, JobList, Kind, Node, Traversal, is_same_node},
+        env::EnvStack,
+        expand::ExpandFlags,
+        io::{IoBufferfill, IoChain},
+        parse_constants::{
+            ParseErrorCode, ParseIssue, ParseTokenType, ParseTreeFlags, StatementDecoration,
+        },
+        parse_util::{detect_errors_in_argument, detect_parse_errors},
+        prelude::*,
+        reader::{fake_scoped_reader, reader_reset_interrupted},
+        signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers},
+        tests::prelude::*,
     };
-    use crate::parse_util::{detect_errors_in_argument, detect_parse_errors};
-    use crate::prelude::*;
-    use crate::reader::{fake_scoped_reader, reader_reset_interrupted};
-    use crate::signal::{signal_clear_cancel, signal_reset_handlers, signal_set_handlers};
-    use crate::tests::prelude::*;
     use fish_wcstringutil::join_strings;
+    use fish_widestring::str2wcstring;
     use libc::SIGINT;
     use std::time::Duration;
     #[test]
     #[serial]
     fn test_parser() {
-        let _cleanup = test_init();
+        test_init();
         macro_rules! detect_errors {
             ($src:literal) => {
                 detect_parse_errors(L!($src), None, true /* accept incomplete */)
@@ -1823,7 +1787,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_new_parser_correctness() {
-        let _cleanup = test_init();
+        test_init();
         macro_rules! validate {
             ($src:expr, $ok:expr) => {
                 let ast = ast::parse(L!($src), ParseTreeFlags::default(), None);
@@ -1853,7 +1817,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_new_parser_correctness_by_fuzzing() {
-        let _cleanup = test_init();
+        test_init();
         let fuzzes = [
             L!("if"),
             L!("else"),
@@ -1919,7 +1883,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_new_parser_ll2() {
-        let _cleanup = test_init();
+        test_init();
         // Parse a statement, returning the command, args (joined by spaces), and the decoration. Returns
         // true if successful.
         fn test_1_parse_ll2(src: &wstr) -> Option<(WString, WString, StatementDecoration)> {
@@ -2040,7 +2004,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_new_parser_ad_hoc() {
-        let _cleanup = test_init();
+        test_init();
         // Very ad-hoc tests for issues encountered.
 
         // Ensure that 'case' terminates a job list.
@@ -2100,7 +2064,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_new_parser_errors() {
-        let _cleanup = test_init();
+        test_init();
         macro_rules! validate {
             ($src:expr, $expected_code:expr) => {
                 let mut errors = vec![];
@@ -2136,9 +2100,9 @@ mod tests {
     #[test]
     #[serial]
     fn test_eval_recursion_detection() {
-        let _cleanup = test_init();
+        test_init();
         // Ensure that we don't crash on infinite self recursion and mutual recursion.
-        let parser = TestParser::new();
+        let parser = &mut TestParser::new();
         parser.eval(
             L!("function recursive ; recursive ; end ; recursive; "),
             &IoChain::new(),
@@ -2156,34 +2120,37 @@ mod tests {
     #[test]
     #[serial]
     fn test_eval_illegal_exit_code() {
-        let _cleanup = test_init();
-        let parser = TestParser::new();
+        test_init();
+        let TestParser {
+            ref mut parser,
+            ref mut pushed_dirs,
+        } = TestParser::new();
         macro_rules! validate {
             ($cmd:expr, $result:expr) => {
                 parser.eval($cmd, &IoChain::new());
-                let exit_status = parser.get_last_status();
-                assert_eq!(exit_status, parser.get_last_status());
+                let exit_status = parser.last_status();
+                assert_eq!(exit_status, parser.last_status());
             };
         }
 
         // We need to be in an empty directory so that none of the wildcards match a file that might be
         // in the fish source tree. In particular we need to ensure that "?" doesn't match a file
         // named by a single character. See issue #3852.
-        parser.pushd("test/temp");
+        parser.pushd(pushed_dirs, "test/temp");
         validate!(L!("echo -n"), STATUS_CMD_OK.unwrap());
         validate!(L!("pwd"), STATUS_CMD_OK.unwrap());
         validate!(L!("UNMATCHABLE_WILDCARD*"), STATUS_UNMATCHED_WILDCARD);
         validate!(L!("UNMATCHABLE_WILDCARD**"), STATUS_UNMATCHED_WILDCARD);
         validate!(L!("?"), STATUS_UNMATCHED_WILDCARD);
         validate!(L!("abc?def"), STATUS_UNMATCHED_WILDCARD);
-        parser.popd();
+        parser.popd(pushed_dirs);
     }
 
     #[test]
     #[serial]
     fn test_eval_empty_function_name() {
-        let _cleanup = test_init();
-        let parser = TestParser::new();
+        test_init();
+        let parser = &mut TestParser::new();
         parser.eval(
             L!("function '' ; echo fail; exit 42 ; end ; ''"),
             &IoChain::new(),
@@ -2193,12 +2160,12 @@ mod tests {
     #[test]
     #[serial]
     fn test_expand_argument_list() {
-        let _cleanup = test_init();
-        let parser = TestParser::new();
+        test_init();
+        let parser = &mut TestParser::new();
         let comps: Vec<WString> = Parser::expand_argument_list(
             L!("alpha 'beta gamma' delta"),
             ExpandFlags::default(),
-            &parser.context(),
+            &mut parser.context(),
         )
         .into_iter()
         .map(|c| c.completion)
@@ -2206,7 +2173,7 @@ mod tests {
         assert_eq!(comps, &[L!("alpha"), L!("beta gamma"), L!("delta"),]);
     }
 
-    fn test_1_cancellation(parser: &Parser, src: &wstr) {
+    fn test_1_cancellation(parser: &mut Parser, src: &wstr) {
         let filler = IoBufferfill::create().unwrap();
         let delay = Duration::from_millis(100);
         #[allow(clippy::unnecessary_cast)]
@@ -2235,9 +2202,10 @@ mod tests {
     #[test]
     #[serial]
     fn test_cancellation() {
-        let _cleanup = test_init();
-        let parser = Parser::new(EnvStack::new(), CancelBehavior::Clear);
-        let _pop = fake_scoped_reader(&parser);
+        test_init();
+        let parser = &mut Parser::new(EnvStack::new(), CancelBehavior::Clear);
+        let mut reader = fake_scoped_reader(parser);
+        let parser = &mut *reader.parser;
 
         printf!("Testing Ctrl-C cancellation. If this hangs, that's a bug!\n");
 
@@ -2249,16 +2217,16 @@ mod tests {
 
         // Here the command substitution is an infinite loop. echo never even gets its argument, so when
         // we cancel we expect no output.
-        test_1_cancellation(&parser, L!("echo (while true ; echo blah ; end)"));
+        test_1_cancellation(parser, L!("echo (while true ; echo blah ; end)"));
 
         // Nasty infinite loop that doesn't actually execute anything.
         test_1_cancellation(
-            &parser,
+            parser,
             L!("echo (while true ; end) (while true ; end) (while true ; end)"),
         );
-        test_1_cancellation(&parser, L!("while true ; end"));
-        test_1_cancellation(&parser, L!("while true ; echo nothing > /dev/null; end"));
-        test_1_cancellation(&parser, L!("for i in (while true ; end) ; end"));
+        test_1_cancellation(parser, L!("while true ; end"));
+        test_1_cancellation(parser, L!("while true ; echo nothing > /dev/null; end"));
+        test_1_cancellation(parser, L!("for i in (while true ; end) ; end"));
 
         signal_reset_handlers();
 

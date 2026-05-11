@@ -37,22 +37,18 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("c:m:Nlq");
 
-    fn parse_opt(
-        &mut self,
-        name: &wstr,
-        c: char,
-        arg: Option<&'args wstr>,
-    ) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&'args wstr>) -> Result<(), StringError<'_>> {
         match c {
             'c' => {
                 self.ellipsis = arg.unwrap();
                 self.ellipsis_width = width_without_escapes(self.ellipsis, 0);
             }
             'm' => {
+                let arg = arg.unwrap();
                 self.max = Some(
-                    fish_wcstol(arg.unwrap())?
+                    Self::parse_arg_number(arg)?
                         .try_into()
-                        .map_err(|_| invalid_args!(BUILTIN_ERR_INVALID_MAX_VALUE, name, arg))?,
+                        .map_err(|_| err_fmt!(Error::INVALID_MAX_VALUE, arg))?,
                 );
             }
             'N' => self.no_newline = true,
@@ -65,7 +61,7 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
 
     fn handle(
         &mut self,
-        _parser: &Parser,
+        _parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
@@ -170,8 +166,11 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
 
                     pos += skip_escapes(&line, pos).max(1);
                 }
-                if self.quiet && pos != 0 {
-                    return Ok(());
+                if self.quiet {
+                    if pos != 0 {
+                        return Ok(());
+                    }
+                    continue;
                 }
 
                 let output = match pos {
@@ -219,8 +218,11 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                 }
             }
 
-            if self.quiet && pos != line.len() {
-                return Ok(());
+            if self.quiet {
+                if pos != line.len() {
+                    return Ok(());
+                }
+                continue;
             }
 
             if pos == line.len() {

@@ -5,13 +5,13 @@ use crate::complete::complete_add_wrapper;
 use crate::env::environment::Environment as _;
 use crate::env::is_read_only;
 use crate::event::{self, EventDescription, EventHandler};
-use crate::function;
 use crate::global_safety::RelaxedAtomicBool;
 use crate::parse_execution::varname_error;
 use crate::parse_tree::NodeRef;
 use crate::parser_keywords::parser_keywords_is_reserved;
-use crate::proc::Pid;
+use crate::proc::{InternalJobId, Pid};
 use crate::signal::Signal;
+use crate::{err_fmt, err_str, function};
 use nix::unistd::getpid;
 use std::sync::Arc;
 
@@ -59,12 +59,12 @@ const LONG_OPTIONS: &[WOption] = &[
 
 /// Return the internal_job_id for a pid, or None if none.
 /// This looks through both active and finished jobs.
-fn job_id_for_pid(pid: Pid, parser: &Parser) -> Option<u64> {
+fn job_id_for_pid(pid: Pid, parser: &Parser) -> Option<InternalJobId> {
     if let Some(job) = parser.job_get_from_pid(pid) {
         Some(job.internal_job_id)
     } else {
         parser
-            .get_wait_handles()
+            .wait_handles()
             .get_by_pid(pid)
             .map(|h| h.internal_job_id)
     }
@@ -86,15 +86,13 @@ fn parse_cmd_opts(
     let mut validate_variable_name =
         |streams: &mut IoStreams, varname: &wstr, read_only_ok: bool| {
             if !valid_var_name(varname) {
-                streams.err.append(&varname_error(cmd, varname));
+                varname_error(cmd, varname).finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             if !read_only_ok && is_read_only(varname) {
-                streams.err.appendln(&wgettext_fmt!(
-                    "%s: variable '%s' is read-only",
-                    cmd,
-                    varname
-                ));
+                err_fmt!("variable '%s' is read-only", varname)
+                    .cmd(cmd)
+                    .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
             Ok(())
@@ -122,11 +120,9 @@ fn parse_cmd_opts(
                 if handling_named_arguments {
                     add_named_argument(&mut validate_variable_name, streams, opts, woptarg)?;
                 } else {
-                    streams.err.append(&wgettext_fmt!(
-                        "%s: %s: unexpected positional argument",
-                        cmd,
-                        woptarg
-                    ));
+                    err_fmt!("%s: unexpected positional argument", woptarg)
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 }
             }
@@ -135,11 +131,9 @@ fn parse_cmd_opts(
             }
             's' => {
                 let Some(signal) = Signal::parse(w.woptarg.unwrap()) else {
-                    streams.err.append(&wgettext_fmt!(
-                        "%s: Unknown signal '%s'",
-                        cmd,
-                        w.woptarg.unwrap()
-                    ));
+                    err_fmt!("Unknown signal '%s'", w.woptarg.unwrap())
+                        .cmd(cmd)
+                        .finish(streams);
                     return Err(STATUS_INVALID_ARGS);
                 };
                 opts.events.push(EventDescription::Signal { signal });
@@ -160,13 +154,12 @@ fn parse_cmd_opts(
                     let caller_id = if parser.scope().is_subshell {
                         parser.scope().caller_id
                     } else {
-                        0
+                        InternalJobId::default()
                     };
-                    if caller_id == 0 {
-                        streams.err.append(&wgettext_fmt!(
-                            "%s: calling job for event handler not found",
-                            cmd
-                        ));
+                    if caller_id == InternalJobId::default() {
+                        err_str!("calling job for event handler not found")
+                            .cmd(cmd)
+                            .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
                     }
                     e = EventDescription::CallerExit { caller_id };
@@ -214,7 +207,14 @@ fn parse_cmd_opts(
                 opts.print_help = true;
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    None,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -245,11 +245,9 @@ fn parse_cmd_opts(
                 add_named_argument(&mut validate_variable_name, streams, opts, arg)?;
             }
         } else {
-            streams.err.append(&wgettext_fmt!(
-                "%s: %s: unexpected positional argument",
-                cmd,
-                argv[optind],
-            ));
+            err_fmt!("%s: unexpected positional argument", argv[optind],)
+                .cmd(cmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
     }
@@ -271,19 +269,18 @@ fn validate_function_name(
     }
     *function_name = argv[1].to_owned();
     if !valid_func_name(function_name) {
-        streams.err.append(&wgettext_fmt!(
-            "%s: %s: invalid function name",
-            cmd,
-            function_name,
-        ));
+        err_fmt!("%s: invalid function name", function_name,)
+            .cmd(cmd)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
     if parser_keywords_is_reserved(function_name) {
-        streams.err.append(&wgettext_fmt!(
-            "%s: %s: cannot use reserved keyword as function name",
-            cmd,
+        err_fmt!(
+            "%s: cannot use reserved keyword as function name",
             function_name
-        ));
+        )
+        .cmd(cmd)
+        .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
     Ok(SUCCESS)
@@ -293,7 +290,7 @@ fn validate_function_name(
 /// function. Note this isn't strictly a "builtin": it is called directly from parse_execution.
 /// That is why its signature is different from the other builtins.
 pub fn function(
-    parser: &Parser,
+    parser: &mut Parser,
     streams: &mut IoStreams,
     c_args: &mut [&wstr],
     func_node: NodeRef<BlockStatement>,
@@ -320,7 +317,7 @@ pub fn function(
     }
 
     // Extract the current filename.
-    let definition_file = parser.libdata().current_filename.clone();
+    let definition_file = parser.current_filename.borrow().clone();
 
     // Ensure inherit_vars is unique and then populate it.
     opts.inherit_vars.sort_unstable();
@@ -340,7 +337,7 @@ pub fn function(
         func_node,
         named_arguments: opts.named_arguments,
         // Function descriptions are extracted from scripts in `share` via
-        // `build_tools/fish_xgettext.fish`.
+        // `cargo xtask gettext update`.
         description: LocalizableString::from_external_source(opts.description),
         inherit_vars: inherit_vars.into_boxed_slice(),
         shadow_scope: opts.shadow_scope,
@@ -369,13 +366,13 @@ pub fn function(
     for ed in &opts.events {
         match *ed {
             EventDescription::ProcessExit { pid: Some(pid) } => {
-                let wh = parser.get_wait_handles().get_by_pid(pid);
+                let wh = parser.wait_handles().get_by_pid(pid);
                 if let Some(status) = wh.and_then(|wh| wh.status()) {
                     event::fire(parser, event::Event::process_exit(pid, status));
                 }
             }
             EventDescription::JobExit { pid: Some(pid), .. } => {
-                let wh = parser.get_wait_handles().get_by_pid(pid);
+                let wh = parser.wait_handles().get_by_pid(pid);
                 if let Some(wh) = wh {
                     if wh.is_completed() {
                         event::fire(parser, event::Event::job_exit(pid, wh.internal_job_id));

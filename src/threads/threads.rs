@@ -6,10 +6,14 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ThreadId(usize);
+
+impl FloggableDebug for ThreadId {}
 impl FloggableDebug for std::thread::ThreadId {}
 
 /// The thread id of the main thread, as set by [`init()`] at startup.
-static MAIN_THREAD_ID: OnceLock<usize> = OnceLock::new();
+static MAIN_THREAD_ID: OnceLock<ThreadId> = OnceLock::new();
 /// Used to bypass thread assertions when testing.
 const THREAD_ASSERTS_CFG_FOR_TESTING: bool = cfg!(test);
 /// This allows us to notice when we've forked.
@@ -26,6 +30,7 @@ type WorkItem = Box<dyn FnOnce() + 'static + Send>;
 pub fn init() {
     MAIN_THREAD_ID
         .set(thread_id())
+        .map_err(|_| ())
         .expect("threads::init() must only be called once (at startup)!");
 
     extern "C" fn child_post_fork() {
@@ -38,7 +43,7 @@ pub fn init() {
 }
 
 #[inline(always)]
-fn main_thread_id() -> usize {
+fn main_thread_id() -> ThreadId {
     #[cold]
     fn init_not_called() -> ! {
         panic!("threads::init() was not called at startup!");
@@ -59,19 +64,19 @@ fn main_thread_id() -> usize {
 /// We use our own implementation because Rust's own `Thread::id()` allocates via `Arc`, is fairly
 /// slow, and uses a `Mutex` on 32-bit platforms (or anywhere without an atomic 64-bit CAS).
 #[inline(always)]
-fn thread_id() -> usize {
+fn thread_id() -> ThreadId {
     static THREAD_COUNTER: AtomicUsize = AtomicUsize::new(1);
     // It would be faster and much nicer to use #[thread_local] here, but that's nightly only.
     // This is still faster than going through Thread::thread_id(); it's something like 15ns
     // for each `Thread::thread_id()` call vs 1-2 ns with `#[thread_local]` and 2-4ns with
     // `thread_local!`.
     thread_local! {
-        static THREAD_ID: usize = THREAD_COUNTER.fetch_add(1, Ordering::Relaxed);
+        static THREAD_ID: ThreadId = ThreadId(THREAD_COUNTER.fetch_add(1, Ordering::Relaxed));
     }
     let id = THREAD_ID.with(|id| *id);
     // This assertion is only here to reduce hair loss in case someone runs into a known linker bug;
     // as it's not here to catch logic errors in our own code, it can be elided in release mode.
-    debug_assert_ne!(id, 0, "TLS storage not initialized!");
+    debug_assert_ne!(id, ThreadId(0), "TLS storage not initialized!");
     id
 }
 

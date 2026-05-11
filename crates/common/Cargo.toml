@@ -8,6 +8,7 @@ license.workspace = true
 
 [dependencies]
 bitflags.workspace = true
+fish-feature-flags.workspace = true
 fish-widestring.workspace = true
 libc.workspace = true
 nix.workspace = true

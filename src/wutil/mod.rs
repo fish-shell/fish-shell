@@ -7,20 +7,21 @@ pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
 
-use crate::common::{bytes2wcstring, fish_reserved_codepoint, osstr2wcstring};
-use crate::fds::BorrowedFdFile;
-use crate::flog;
-use crate::signal::SigChecker;
-use crate::topic_monitor::Topic;
+use crate::{fds::BorrowedFdFile, flog, signal::SigChecker};
 use errno::{Errno, set_errno};
 use fish_util::{perror, write_to_fd};
-use fish_wcstringutil::{join_strings, str2bytes_callback, wcs2osstring, wcs2zstring};
-use fish_widestring::{IntoCharIter, L, WExt as _, WString, wstr};
+use fish_wcstringutil::join_strings;
+use fish_widestring::{
+    IntoCharIter, L, WExt as _, WString, bytes2wcstring, fish_reserved_codepoint, osstr2wcstring,
+    str2bytes_callback, wcs2osstring, wcs2zstring, wstr,
+};
 use nix::unistd::AccessFlags;
-use std::ffi::OsStr;
-use std::fs::{self, canonicalize};
-use std::io;
-use std::os::unix::prelude::*;
+use std::{
+    ffi::OsStr,
+    fs::{self, canonicalize},
+    io,
+    os::unix::prelude::*,
+};
 
 pub use crate::wutil::printf::{eprintf, fprintf, printf, sprintf};
 
@@ -391,7 +392,7 @@ pub fn unescape_bytes_and_write_to_fd(input: impl IntoCharIter, fd: RawFd) -> Op
         true
     };
 
-    let mut sigcheck = SigChecker::new(Topic::SigHupInt);
+    let mut sigcheck = SigChecker::new_sighupintterm();
     let mut success = str2bytes_callback(input, |buff: &[u8]| {
         if buff.len() + accumlen > accum_capacity {
             // We have to flush.
@@ -458,9 +459,8 @@ mod tests {
     use super::{
         normalize_path, unescape_bytes_and_write_to_fd, wbasename, wdirname, wstr_offset_in,
     };
-    use crate::common::bytes2wcstring;
-    use crate::prelude::*;
-    use crate::tests::prelude::*;
+    use crate::{prelude::*, tests::prelude::*};
+    use fish_widestring::bytes2wcstring;
     use rand::Rng as _;
     use std::{
         fs::OpenOptions,
@@ -641,7 +641,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_wwrite_to_fd() {
-        let _cleanup = test_init();
+        test_init();
         let temp_file = fish_tempfile::new_file().unwrap();
         let mut rng = rand::rng();
         let sizes = [1, 2, 3, 5, 13, 23, 64, 128, 255, 4096, 4096 * 2];

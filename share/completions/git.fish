@@ -2161,6 +2161,7 @@ complete -x -c git -n '__fish_git_using_command push' -l exec -d 'Same as --rece
 ### rebase
 complete -f -c git -n __fish_git_needs_command -a rebase -d 'Reapply commit sequence on a new base'
 __fish_git_add_revision_completion -n '__fish_git_using_command rebase'
+complete -f -c git -n '__fish_git_using_command rebase' -n 'string match -rq -- "^-i|^--interactive" (commandline -xpc)' -ka '(__fish_git_recent_commits)'
 complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l continue -d 'Restart the rebasing process'
 complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l abort -d 'Abort the rebase operation'
 complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l edit-todo -d 'Edit the todo list'

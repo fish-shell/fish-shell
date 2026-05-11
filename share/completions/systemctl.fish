@@ -1,17 +1,24 @@
 set -l systemd_version (systemctl --version | string match "systemd*" | string replace -r "\D*(\d+)\D.*"  '$1')
 set -l commands list-units list-sockets start stop reload restart try-restart reload-or-restart reload-or-try-restart \
     isolate kill is-active is-failed status show get-cgroup-attr set-cgroup-attr unset-cgroup-attr set-cgroup help \
-    reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link load list-jobs cancel dump \
-    list-dependencies snapshot delete daemon-reload daemon-reexec show-environment set-environment unset-environment \
+    reset-failed list-unit-files enable disable is-enabled reenable preset mask unmask link list-jobs cancel \
+    list-dependencies daemon-reload daemon-reexec show-environment set-environment unset-environment \
     default rescue emergency halt poweroff reboot kexec exit suspend suspend-then-hibernate hibernate hybrid-sleep switch-root \
     list-timers set-property import-environment get-default list-automounts is-system-running try-reload-or-restart freeze \
-    thaw mount-image bind clean
-if test $systemd_version -gt 208 2>/dev/null
-    set commands $commands cat
-    if test $systemd_version -gt 217 2>/dev/null
-        set commands $commands edit
-    end
+    thaw mount-image bind clean set-default cat list-machines preset-all add-wants add-requires edit
+if test $systemd_version -gt 243 2>/dev/null
+    set commands $commands log-level log-target service-watchdogs
 end
+if test $systemd_version -gt 246 2>/dev/null
+    set commands $commands service-log-level service-log-target
+end
+if test $systemd_version -gt 253 2>/dev/null
+    set commands $commands list-paths soft-reboot whoami
+end
+if test $systemd_version -gt 255 2>/dev/null
+    set commands $commands sleep
+end
+
 set -l types services sockets mounts service_paths targets automounts timers
 
 function __fish_systemd_properties
@@ -28,23 +35,51 @@ end
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a "$commands"
 
 #### Units commands
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a start -d 'Start one or more units'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a stop -d 'Stop one or more units'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a restart -d 'Restart one or more units'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a reload-or-restart -d 'Reload units if supported or restart them'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a try-reload-or-restart -d 'Reload units if supported or restart them, if running'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a status -d 'Runtime status about one or more units'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a enable -d 'Enable one or more units'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a disable -d 'Disable one or more units'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a isolate -d 'Start a unit and dependencies and disable all others'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-default -d 'Set the default target to boot into'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a get-default -d 'Show the default target to boot into'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-property -d 'Sets one or more properties of a unit'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a list-automounts -d 'List automount units'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a is-system-running -d 'Return if system is running/starting/degraded'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a freeze -d 'Freeze units with the cgroup freezer'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a thaw -d 'Unfreeze frozen units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a add-requires -d 'Add Requires dependencies to a target unit'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a add-wants -d 'Add Wants dependencies to a target unit'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a bind -d 'Bind mount a path into the mount namespace of a unit'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a cancel -d 'Cancel one or more jobs'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a cat -d 'Show the backing files of one or more units'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a clean -d 'Remove config/state/logs for the given units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a daemon-reload -d 'Reload the configuration of the system manager'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a default -d 'Enter and isolate the default mode'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a disable -d 'Disable one or more units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a edit -d 'Edit a unit file or drop-in snippet'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a enable -d 'Enable one or more units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a emergency -d 'Enter and isolate emergency mode'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a exit -d 'Ask the service manager to exit'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a freeze -d 'Freeze units with the cgroup freezer'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a get-default -d 'Show the default target to boot into'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a help -d 'Show the manual page for a unit'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a import-environment -d 'Import environment variables into the service manager'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a isolate -d 'Start a unit and dependencies and disable all others'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a is-system-running -d 'Return if system is running/starting/degraded'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a kexec -d 'Reboot via kexec'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a kill -d 'Kill one or more units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a link -d 'Link a unit file into the unit search path'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a list-automounts -d 'List automount units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a list-machines -d 'List the host and all running local containers'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a mask -d 'Prevent one or more units from starting'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a mount-image -d 'Mount an image into the mount namespace of a unit'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a preset -d 'Enable/disable a unit depending on preset configuration'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a preset-all -d 'Enable/disable all units depending on preset configuration'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a reenable -d 'Disable the enable one or more units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a reload -d 'Request a unit reload its configuration'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a reload-or-restart -d 'Reload units if supported or restart them'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a rescue -d 'Enter and isolate rescue mode'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a restart -d 'Restart one or more units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-default -d 'Set the default target to boot into'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a set-property -d 'Sets one or more properties of a unit'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a show -d 'Show properties of one or more units, jobs, or the manager itself'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a show-environment -d 'Dump the systemd manager environment block'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a soft-reboot -d 'Reboot userspace'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a start -d 'Start one or more units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a status -d 'Runtime status about one or more units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a stop -d 'Stop one or more units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a thaw -d 'Unfreeze frozen units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a try-reload-or-restart -d 'Reload units if supported or restart them, if running'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a unmask -d 'Stop preventing one or more units from starting'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a whoami -d 'Query the unit that owns a process'
 
 # Command completion done via argparse.
 complete -c systemctl -a '(__fish_systemctl)' -f
@@ -87,13 +122,9 @@ complete -x -c systemctl -s M -l machine -d 'Execute operation on a VM or contai
 complete -f -c systemctl -s h -l help -d 'Print a short help and exit'
 complete -f -c systemctl -l version -d 'Print a short version and exit'
 complete -f -c systemctl -l no-pager -d 'Do not pipe output into a pager'
-
-# New options since systemd 220
-if test $systemd_version -gt 219 2>/dev/null
-    complete -f -c systemctl -l firmware-setup -n "__fish_seen_subcommand_from reboot" -d "Reboot to EFI setup"
-    complete -f -c systemctl -l now -n "__fish_seen_subcommand_from enable" -d "Also start unit"
-    complete -f -c systemctl -l now -n "__fish_seen_subcommand_from disable mask" -d "Also stop unit"
-end
+complete -f -c systemctl -l firmware-setup -n "__fish_seen_subcommand_from reboot" -d "Reboot to EFI setup"
+complete -f -c systemctl -l now -n "__fish_seen_subcommand_from enable" -d "Also start unit"
+complete -f -c systemctl -l now -n "__fish_seen_subcommand_from disable mask" -d "Also stop unit"
 
 # New options since systemd 242
 if test $systemd_version -ge 242 2>/dev/null

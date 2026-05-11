@@ -60,6 +60,8 @@ The event handler switches (``on-event``, ``on-variable``, ``on-job-exit``, ``on
 
 Functions names cannot be reserved words. These are elements of fish syntax or builtin commands which are essential for the operations of the shell. Current reserved words are ``[``, ``_``, ``and``, ``argparse``, ``begin``, ``break``, ``builtin``, ``case``, ``command``, ``continue``, ``else``, ``end``, ``eval``, ``exec``, ``for``, ``function``, ``if``, ``not``, ``or``, ``read``, ``return``, ``set``, ``status``, ``string``, ``switch``, ``test``, ``time``, and ``while``.
 
+Care should be taken when creating a function of the same name as an existing shell builtin or common program. If the function behaves differently, it is very common for problems to occur within fish or in scripts written by others. Consider writing an :doc:`abbreviation <abbr>` if you are wanting to replace one tool with another for interactive use.
+
 Example
 -------
 

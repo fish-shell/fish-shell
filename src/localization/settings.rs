@@ -87,7 +87,7 @@ fn append_space_separated_list<S: AsRef<str>>(
 ) {
     for lang in list {
         string.push(' ');
-        string.push_utfstr(&crate::common::escape(
+        string.push_utfstr(&fish_common::escape(
             // lang is already PUA-encoded at this point. The reason we convert the PUA-encoded
             // WString into a String is to enable comparison with the language names we have
             // available. We could use WString for lang, but that would require converting our

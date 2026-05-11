@@ -7,9 +7,6 @@ use crate::builtins::shared::{
     ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH,
     builtin_run,
 };
-use crate::common::{
-    ScopeGuard, bytes2wcstring, exit_without_destructors, truncate_at_nul, write_loop,
-};
 use crate::env::{EnvMode, EnvSetMode, EnvStack, Environment as _, READ_BYTE_LIMIT, Statuses};
 #[cfg(have_posix_spawn)]
 use crate::env_dispatch::use_posix_spawn;
@@ -23,7 +20,7 @@ use crate::fork_exec::{
     PATH_BSHELL, blocked_signals_for_job,
     postfork::{
         child_setup_process, execute_fork, execute_setpgid, report_setpgid_error,
-        safe_report_exec_error,
+        signal_safe_report_exec_error,
     },
 };
 use crate::function::{self, FunctionProperties};
@@ -39,15 +36,15 @@ use crate::proc::{
     InternalProc, Job, JobGroupRef, Pid, ProcStatus, Process, ProcessType, hup_jobs,
     is_interactive_session, jobs_requiring_warning_on_exit, no_exec, print_exit_warning_for_jobs,
 };
-use crate::reader::{reader_run_count, safe_restore_term_mode};
+use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{Dup2List, dup2_list_resolve_chain};
 use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
 use crate::wutil::{fish_wcstol, perror_io};
 use errno::{errno, set_errno};
-use fish_wcstringutil::{wcs2bytes, wcs2zstring};
-use fish_widestring::ToWString as _;
+use fish_common::{ScopeGuard, exit_without_destructors, truncate_at_nul, write_loop};
+use fish_widestring::{ToWString as _, bytes2wcstring, wcs2bytes, wcs2zstring};
 use libc::{
     EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO,
@@ -57,6 +54,7 @@ use nix::{
     sys::stat,
     unistd::{getpgrp, getpid},
 };
+use std::sync::LazyLock;
 use std::{
     ffi::CStr,
     io::{Read as _, Write as _},
@@ -65,7 +63,7 @@ use std::{
     os::fd::{AsRawFd as _, FromRawFd as _, OwnedFd, RawFd},
     slice,
     sync::{
-        Arc, OnceLock,
+        Arc,
         atomic::{AtomicUsize, Ordering},
     },
 };
@@ -75,16 +73,17 @@ use std::{
 /// to their target fds.
 /// TODO: this IO could be multiplexed using FdMonitor.
 fn exec_thread_pool() -> &'static Arc<ThreadPool> {
-    static EXEC_THREAD_POOL: OnceLock<Arc<ThreadPool>> = OnceLock::new();
     // Use an unbounded queue because otherwise we risk deadlock.
-    EXEC_THREAD_POOL.get_or_init(|| ThreadPool::new(1, usize::MAX))
+    static EXEC_THREAD_POOL: LazyLock<Arc<ThreadPool>> =
+        LazyLock::new(|| ThreadPool::new(1, usize::MAX));
+    &EXEC_THREAD_POOL
 }
 
 /// Execute the processes specified by `j` in the parser \p.
 /// On a true return, the job was successfully launched and the parser will take responsibility for
 /// cleaning it up. On a false return, the job could not be launched and the caller must clean it
 /// up.
-pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
+pub fn exec_job(parser: &mut Parser, job: &Job, block_io: IoChain) -> bool {
     // If fish was invoked with -n or --no-execute, then no_exec will be set and we do nothing.
     if no_exec() {
         return true;
@@ -239,7 +238,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
     // If exec_error then a backgrounded job would have been terminated before it was ever assigned
     // a pgroup, so error out before setting last_pid.
     if !job.is_foreground() {
-        if let Some(last_pid) = job.get_last_pid() {
+        if let Some(last_pid) = job.last_pid() {
             parser.set_one(
                 L!("last_pid"),
                 ParserEnvSetMode::new(EnvMode::GLOBAL),
@@ -270,7 +269,7 @@ pub fn exec_job(parser: &Parser, job: &Job, block_io: IoChain) -> bool {
 /// Return a value appropriate for populating $status.
 pub fn exec_subshell(
     cmd: &wstr,
-    parser: &Parser,
+    parser: &mut Parser,
     outputs: Option<&mut Vec<WString>>,
     apply_exit_status: bool,
 ) -> Result<(), ErrorCode> {
@@ -292,7 +291,7 @@ pub fn exec_subshell(
 /// pgroup.
 pub fn exec_subshell_for_expand(
     cmd: &wstr,
-    parser: &Parser,
+    parser: &mut Parser,
     job_group: Option<&JobGroupRef>,
     outputs: &mut Vec<WString>,
 ) -> Result<(), ErrorCode> {
@@ -396,7 +395,7 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
 /// This function is executed by the child process created by a call to fork(). It should be called
 /// after \c child_setup_process. It calls execve to replace the fish process image with the command
 /// specified in \c p. It never returns. Called in a forked child! Do not allocate memory, etc.
-fn safe_launch_process(
+fn signal_safe_launch_process(
     _p: &Process,
     actual_cmd: &CStr,
     argv: &OwningNullTerminatedArray,
@@ -434,7 +433,7 @@ fn safe_launch_process(
     }
 
     set_errno(err);
-    safe_report_exec_error(errno().0, actual_cmd, argv, envv);
+    signal_safe_report_exec_error(errno().0, actual_cmd, argv, envv);
     exit_without_destructors(exit_code_from_exec_error(err.0));
 }
 
@@ -452,9 +451,9 @@ fn launch_process_nofork(vars: &EnvStack, p: &Process) -> ! {
     let actual_cmd = wcs2zstring(&p.actual_cmd);
 
     // Ensure the terminal modes are what they were before we changed them.
-    safe_restore_term_mode();
+    restore_term_mode();
     // Bounce to launch_process. This never returns.
-    safe_launch_process(p, &actual_cmd, &argv, &envp);
+    signal_safe_launch_process(p, &actual_cmd, &argv, &envp);
 }
 
 // Returns whether we can use posix spawn for a given process in a given job.
@@ -653,7 +652,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
 /// If `outdata` or `errdata` are both empty, then mark the process as completed immediately.
 /// Otherwise, run an internal process.
 fn run_internal_process_or_short_circuit(
-    parser: &Parser,
+    parser: &mut Parser,
     j: &Job,
     p: &Process,
     outdata: Vec<u8>,
@@ -670,14 +669,14 @@ fn run_internal_process_or_short_circuit(
                 j.preview(),
                 p.status().status_value()
             );
-            if let Some(statuses) = j.get_statuses() {
+            if let Some(statuses) = j.statuses() {
                 parser.set_last_statuses(statuses);
                 parser.libdata_mut().status_count += 1;
             } else if j.flags().negate {
                 // Special handling for `not set var (substitution)`.
                 // If there is no status, but negation was requested,
                 // take the last status and negate it.
-                let mut last_statuses = parser.get_last_statuses();
+                let mut last_statuses = parser.last_statuses();
                 last_statuses.status = if last_statuses.status == 0 { 1 } else { 0 };
                 parser.set_last_statuses(last_statuses);
             }
@@ -839,7 +838,7 @@ fn create_output_stream_for_builtin(
 /// Handle output from a builtin, by printing the contents of builtin_io_streams to the redirections
 /// given in io_chain.
 fn handle_builtin_output(
-    parser: &Parser,
+    parser: &mut Parser,
     j: &Job,
     p: &Process,
     io_chain: &IoChain,
@@ -868,7 +867,7 @@ fn handle_builtin_output(
 /// An error return here indicates that the process failed to launch, and the rest of
 /// the pipeline should be cancelled.
 fn exec_external_command(
-    parser: &Parser,
+    parser: &mut Parser,
     j: &Job,
     p: &Process,
     proc_io_chain: &IoChain,
@@ -885,7 +884,7 @@ fn exec_external_command(
     // or we become the leader.
     let pgroup_policy = if p.leads_pgrp {
         PgroupPolicy::Lead
-    } else if let Some(pgid) = j.group().get_pgid() {
+    } else if let Some(pgid) = j.group().pgid() {
         PgroupPolicy::Join(pgid.as_pid_t())
     } else {
         PgroupPolicy::Inherit
@@ -902,7 +901,7 @@ fn exec_external_command(
     #[cfg(have_posix_spawn)]
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
     if can_use_posix_spawn_for_job(j, &dup2s) {
-        let file = &parser.libdata().current_filename;
+        let file = parser.current_filename.borrow();
         let count = FORK_COUNT.fetch_add(1, Ordering::Relaxed) + 1; // spawn counts as a fork+exec
 
         let pid = PosixSpawner::new(j, pgroup_policy, &dup2s).and_then(|mut spawner| {
@@ -911,7 +910,7 @@ fn exec_external_command(
         let pid = match pid {
             Ok(pid) => pid,
             Err(err) => {
-                safe_report_exec_error(err.0, &actual_cmd, &argv, &envv);
+                signal_safe_report_exec_error(err.0, &actual_cmd, &argv, &envv);
                 p.status
                     .set(ProcStatus::from_exit_code(exit_code_from_exec_error(err.0)));
                 return Err(());
@@ -943,14 +942,14 @@ fn exec_external_command(
     }
 
     fork_child_for_process(j, p, &dup2s, pgroup_policy, |p| {
-        safe_launch_process(p, &actual_cmd, &argv, &envv)
+        signal_safe_launch_process(p, &actual_cmd, &argv, &envv)
     })
 }
 
 // Given that we are about to execute a function, push a function block and set up the
 // variable environment.
 fn function_prepare_environment(
-    parser: &Parser,
+    parser: &mut Parser,
     mut argv: Vec<WString>,
     props: &FunctionProperties,
 ) -> BlockId {
@@ -1001,7 +1000,7 @@ fn function_prepare_environment(
 }
 
 // Given that we are done executing a function, restore the environment.
-fn function_restore_environment(parser: &Parser, block: BlockId) {
+fn function_restore_environment(parser: &mut Parser, block: BlockId) {
     parser.pop_block(block);
 
     // If we returned due to a return statement, then stop returning now.
@@ -1012,7 +1011,7 @@ fn function_restore_environment(parser: &Parser, block: BlockId) {
 // This accepts a place to execute as `parser` and then executes the result, returning a status.
 // This is factored out in this funny way in preparation for concurrent execution.
 type ProcPerformer =
-    dyn FnOnce(&Parser, Option<&mut OutputStream>, Option<&mut OutputStream>) -> ProcStatus;
+    dyn FnOnce(&mut Parser, Option<&mut OutputStream>, Option<&mut OutputStream>) -> ProcStatus;
 
 // Return a function which may be to run the given block node process 'p'.
 fn get_performer_for_block_node(p: &Process, job: &Job, io_chain: &IoChain) -> Box<ProcPerformer> {
@@ -1024,9 +1023,9 @@ fn get_performer_for_block_node(p: &Process, job: &Job, io_chain: &IoChain) -> B
     let job_group = job.group.clone();
     let io_chain = io_chain.clone();
     let node = node.clone();
-    Box::new(move |parser: &Parser, _out, _err| {
+    Box::new(move |parser: &mut Parser, _out, _err| {
         parser
-            .eval_node(&node, &io_chain, job_group.as_ref(), BlockType::top, false)
+            .eval_node(&node, &io_chain, job_group.as_ref(), BlockType::Top, false)
             .status
     })
 }
@@ -1058,7 +1057,7 @@ fn get_performer_for_function(
         return Err(());
     };
     let argv = p.argv().clone();
-    Ok(Box::new(move |parser: &Parser, _out, _err| {
+    Ok(Box::new(move |parser: &mut Parser, _out, _err| {
         // Pull out the job list from the function.
         let fb = function_prepare_environment(parser, argv, &props);
         let body_node = props.func_node.child_ref(|n| &n.jobs);
@@ -1066,7 +1065,7 @@ fn get_performer_for_function(
             &body_node,
             &io_chain,
             job_group.as_ref(),
-            BlockType::top,
+            BlockType::Top,
             false,
         );
         function_restore_environment(parser, fb);
@@ -1082,7 +1081,7 @@ fn get_performer_for_function(
 /// Execute a block node or function "process".
 /// `piped_output_needs_buffering` if true, buffer the output.
 fn exec_block_or_func_process(
-    parser: &Parser,
+    parser: &mut Parser,
     j: &Job,
     p: &Process,
     mut io_chain: IoChain,
@@ -1160,7 +1159,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
     // thread.
     let argv = p.argv().clone();
     Box::new(
-        move |parser: &Parser,
+        move |parser: &mut Parser,
               output_stream: Option<&mut OutputStream>,
               errput_stream: Option<&mut OutputStream>| {
             let output_stream = output_stream.unwrap();
@@ -1208,7 +1207,7 @@ fn get_performer_for_builtin(p: &Process, j: &Job, io_chain: &IoChain) -> Box<Pr
 
 /// Executes a builtin "process".
 fn exec_builtin_process(
-    parser: &Parser,
+    parser: &mut Parser,
     j: &Job,
     p: &Process,
     io_chain: &IoChain,
@@ -1243,7 +1242,7 @@ struct PartialPipes {
 /// An error return here indicates that the process failed to launch, and the rest of
 /// the pipeline should be cancelled.
 fn exec_process_in_job(
-    parser: &Parser,
+    parser: &mut Parser,
     p: &Process,
     j: &Job,
     block_io: IoChain,
@@ -1325,7 +1324,7 @@ fn exec_process_in_job(
     if !p.variable_assignments.is_empty() {
         block_id = Some(parser.push_block(Block::variable_assignment_block()));
     }
-    let _pop_block = ScopeGuard::new((), |()| {
+    let parser = &mut **ScopeGuard::new(parser, |parser| {
         if let Some(block_id) = block_id {
             parser.pop_block(block_id);
         }
@@ -1420,7 +1419,7 @@ fn abort_pipeline_from(job: &Job, offset: usize) {
 // Given that we are about to execute an exec() call, check if the parser is interactive and there
 // are extant background jobs. If so, warn the user and do not exec().
 // Return true if we should allow exec, false to disallow it.
-fn allow_exec_with_background_jobs(parser: &Parser) -> bool {
+fn allow_exec_with_background_jobs(parser: &mut Parser) -> bool {
     // If we're not interactive, we cannot warn.
     if !parser.is_interactive() {
         return true;
@@ -1440,7 +1439,7 @@ fn allow_exec_with_background_jobs(parser: &Parser) -> bool {
         *last_exec_run_count = current_run_count;
         false
     } else {
-        hup_jobs(&parser.jobs());
+        hup_jobs(parser.jobs());
         true
     }
 }
@@ -1493,14 +1492,14 @@ fn populate_subshell_output(lst: &mut Vec<WString>, buffer: &SeparatedBuffer, sp
 /// of $status.
 fn exec_subshell_internal(
     cmd: &wstr,
-    parser: &Parser,
+    parser: &mut Parser,
     job_group: Option<&JobGroupRef>,
     lst: Option<&mut Vec<WString>>,
     break_expand: &mut bool,
     apply_exit_status: bool,
     is_subcmd: bool,
 ) -> Result<(), ErrorCode> {
-    let _scoped = parser.push_scope(|s| {
+    let _scoped = parser.push_scope(move |s| {
         s.is_subshell = true;
         s.read_limit = if is_subcmd {
             READ_BYTE_LIMIT.load(Ordering::Relaxed)
@@ -1509,8 +1508,8 @@ fn exec_subshell_internal(
         };
     });
 
-    let prev_statuses = parser.get_last_statuses();
-    let _put_back = ScopeGuard::new((), |()| {
+    let prev_statuses = parser.last_statuses();
+    let parser = &mut **ScopeGuard::new(parser, |parser| {
         if !apply_exit_status {
             parser.set_last_statuses(prev_statuses);
         }
@@ -1527,7 +1526,7 @@ fn exec_subshell_internal(
 
     let mut io_chain = IoChain::new();
     io_chain.push(bufferfill.clone());
-    let eval_res = parser.eval_with(cmd, &io_chain, job_group, BlockType::subst, false);
+    let eval_res = parser.eval_with(cmd, &io_chain, job_group, BlockType::Subst, false);
     let buffer = IoBufferfill::finish(bufferfill);
     if buffer.discarded() {
         *break_expand = true;

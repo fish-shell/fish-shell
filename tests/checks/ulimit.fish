@@ -26,6 +26,9 @@ for ulimit_opt in $ulimit_opts
     set found true
     echo "Using $ulimit_opt to increase hard limit" >&2
     ulimit -H $ulimit_opt (math $max + 1) >/dev/null
+    and if __fish_is_cygwin
+        echo "ulimit: Permission denied when changing resource of type 'Fake result for  Cygwin'" >&2
+    end
     break
 end
 if not set -q found

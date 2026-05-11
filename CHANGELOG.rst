@@ -1,11 +1,22 @@
 fish ?.?.? (released ???)
 =========================
 
-Notable improvements and fixes
-------------------------------
+Interactive improvements
+------------------------
+- On the first run after upgrading from an older version, fish will try harder to check if the current theme matches a historical default, in which case fish won't create ``~/.config/fish/conf.d/fish_frozen_theme.fish``.
+  This means that on systems where fish version 3.x was installed originally, the update will avoid creating that file (:issue:`12725`).
+
+fish 4.7.1 (released May 08, 2026)
+==================================
+
+This release fixes a regression in 4.7.0 that caused the web config (``fish_config``) to fail to start (:issue:`12717`).
+
+fish 4.7.0 (released May 05, 2026)
+==================================
 
 Deprecations and removed features
 ---------------------------------
+- The default theme (i.e. the ``fish_color_*`` variables) is no longer set in non-interactive shells.
 
 Interactive improvements
 ------------------------
@@ -16,14 +27,25 @@ Improved terminal support
 
 Other improvements
 ------------------
-- ``fish_update_completions`` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).
+- History is no longer corrupted with NUL bytes when fish receives SIGTERM or SIGHUP (:issue:`10300`).
+- :doc:`fish_update_completions <cmds/fish_update_completions>` now handles groff ``\X'...'`` device control escapes, fixing completion generation for man pages produced by help2man 1.50 and later (such as coreutils 9.10).
+- Removing history entries via the :doc:`web-based config <cmds/fish_config>` is more intuitive.
+- If :envvar:`XDG_DATA_DIRS` is empty, the default value is assumed, which means that fish will now also use configuration from paths like ``$PREFIX/share/fish/vendor_completions.d`` (:issue:`11349`).
+- Some internal file descriptors were moved to number 10 or higher, to reduce risk of clashes with those used by the user in scripts.
+- The wording of error messages has been made consistent, especially for builtin subcommands (:issue:`12556`).
 
 For distributors and developers
 -------------------------------
-- When the default global config directory (``$PREFIX/etc/fish``) exists but has been overridden with ``-DCMAKE_INSTALL_SYSCONFDIR``, fish will now respect that override (:issue:`10748`).
+- When the default global config directory (``$PREFIX/etc/fish``) exists but has been overridden via ``-DCMAKE_INSTALL_SYSCONFDIR``, fish will now respect that override (:issue:`10748`).
+- ``build_tools/update_translations.fish`` has been replaced by ``cargo xtask gettext {check,new,update}`` (:issue:`12676`).
+- ``cargo xtask shellcheck`` to lint shell-scripts.
 
 Regression fixes:
 -----------------
+- (from 4.6) Vi mode ``dl`` (:issue:`12461`).
+- (from 4.6) Backspace after newline (:issue:`12583`).
+- (from 4.3.3) Long options were spuriously completed after typing short options (85e76ba3561).
+- (from 3.2) ``nosuchcommand || echo hello`` executes the right hand side again (:issue:`12654`).
 
 fish 4.6.0 (released March 28, 2026)
 ====================================

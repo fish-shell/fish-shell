@@ -1,20 +1,23 @@
-use crate::common::{Named, escape, get_by_sorted_name};
-use crate::env::Environment;
-use crate::flog::flog;
-use crate::global_safety::RelaxedAtomicBool;
-use crate::input_common::{
-    CharEvent, CharInputStyle, ImplicitEvent, InputEventQueuer, KeyMatchQuality,
-    R_END_INPUT_FUNCTIONS, ReadlineCmd, match_key_event_to_key,
+use crate::{
+    env::Environment,
+    flog::flog,
+    global_safety::RelaxedAtomicBool,
+    input_common::{
+        CharEvent, CharInputStyle, ImplicitEvent, InputEventQueuer, KeyMatchQuality,
+        R_END_INPUT_FUNCTIONS, ReadlineCmd, match_key_event_to_key,
+    },
+    key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl},
+    prelude::*,
+    reader::{Reader, reader_reset_interrupted},
+    threads::assert_is_main_thread,
 };
-use crate::key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl};
-use crate::prelude::*;
-use crate::reader::{Reader, reader_reset_interrupted};
-use crate::threads::assert_is_main_thread;
-use fish_common::assert_sorted_by_name;
-use std::mem;
-use std::sync::{
-    Mutex, MutexGuard,
-    atomic::{AtomicU32, Ordering},
+use fish_common::{Named, assert_sorted_by_name, escape, get_by_sorted_name};
+use std::{
+    mem,
+    sync::{
+        Mutex, MutexGuard,
+        atomic::{AtomicU32, Ordering},
+    },
 };
 
 pub const FISH_BIND_MODE_VAR: &wstr = L!("fish_bind_mode");
@@ -255,7 +258,7 @@ pub fn input_mappings() -> MutexGuard<'static, InputMappingSet> {
 }
 
 /// Return the current bind mode.
-fn input_get_bind_mode(vars: &dyn Environment) -> WString {
+pub fn input_get_bind_mode(vars: &dyn Environment) -> WString {
     if let Some(mode) = vars.get(FISH_BIND_MODE_VAR) {
         mode.as_string()
     } else {
@@ -358,19 +361,19 @@ pub fn init_input() {
         };
 
         add(vec![], "self-insert");
-        add(vec![Key::from_raw(key::Enter)], "execute");
-        add(vec![Key::from_raw(key::Tab)], "complete");
+        add(vec![Key::from_raw(key::ENTER)], "execute");
+        add(vec![Key::from_raw(key::TAB)], "complete");
         add(vec![ctrl('c')], "cancel-commandline");
         add(vec![ctrl('d')], "exit");
         add(vec![ctrl('e')], "bind");
         add(vec![ctrl('s')], "pager-toggle-search");
         add(vec![ctrl('u')], "backward-kill-line");
-        add(vec![Key::from_raw(key::Backspace)], "backward-delete-char");
+        add(vec![Key::from_raw(key::BACKSPACE)], "backward-delete-char");
         // Arrows - can't have functions, so *-or-search isn't available.
-        add(vec![Key::from_raw(key::Up)], "up-line");
-        add(vec![Key::from_raw(key::Down)], "down-line");
-        add(vec![Key::from_raw(key::Right)], "forward-char");
-        add(vec![Key::from_raw(key::Left)], "backward-char");
+        add(vec![Key::from_raw(key::UP)], "up-line");
+        add(vec![Key::from_raw(key::DOWN)], "down-line");
+        add(vec![Key::from_raw(key::RIGHT)], "forward-char");
+        add(vec![Key::from_raw(key::LEFT)], "backward-char");
         // Emacs style
         add(vec![ctrl('p')], "up-line");
         add(vec![ctrl('n')], "down-line");
@@ -582,11 +585,11 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             !seq.is_empty(),
             "Empty sequence passed to try_peek_sequence"
         );
-        let mut prev = Key::from_raw(key::Invalid);
+        let mut prev = Key::from_raw(key::INVALID);
         for key in seq {
             // If we just read an escape, we need to add a timeout for the next char,
             // to distinguish between the actual escape key and an "alt"-modifier.
-            let escaped = *style != KeyNameStyle::Plain && prev == Key::from_raw(key::Escape);
+            let escaped = *style != KeyNameStyle::Plain && prev == Key::from_raw(key::ESCAPE);
             let Some(spec) = self.next_is_char(style, *key, escaped) else {
                 return false;
             };
@@ -607,12 +610,8 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
     /// user's mapping list, then the preset list.
     /// Return none if nothing matches, or if we may have matched a longer sequence but it was
     /// interrupted by a readline event.
-    pub fn find_mapping<'a>(
-        &mut self,
-        vars: &dyn Environment,
-        ip: &'a InputMappingSet,
-    ) -> Option<InputMapping> {
-        let bind_mode = input_get_bind_mode(vars);
+    pub fn find_mapping<'a>(&mut self, ip: &'a InputMappingSet) -> Option<InputMapping> {
+        let bind_mode = self.event_queue.get_bind_mode();
 
         struct MatchedMapping<'a> {
             mapping: &'a InputMapping,
@@ -647,7 +646,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             if self.try_peek_sequence(&m.key_name_style, &m.seq, &mut quality) {
                 // // A binding for just escape should also be deferred
                 // // so escape sequences take precedence.
-                let is_escape = m.seq == vec![Key::from_raw(key::Escape)];
+                let is_escape = m.seq == vec![Key::from_raw(key::ESCAPE)];
                 let is_perfect_match = quality
                     .iter()
                     .all(|key_match| *key_match == KeyMatchQuality::Exact);
@@ -750,7 +749,7 @@ impl<'a> Reader<'a> {
                     }
                     ReadlineCmd::FuncAnd | ReadlineCmd::FuncOr => {
                         // If previous function has bad status, skip all functions that follow us.
-                        let fs = self.get_function_status();
+                        let fs = self.function_status();
                         if (!fs && readline_event.cmd == ReadlineCmd::FuncAnd)
                             || (fs && readline_event.cmd == ReadlineCmd::FuncOr)
                         {
@@ -786,11 +785,10 @@ impl<'a> Reader<'a> {
     }
 
     fn mapping_execute_matching_or_generic(&mut self) {
-        let vars = self.parser.vars();
         let mut peeker = EventQueuePeeker::new(self);
         // Check for ordinary mappings.
         let ip = input_mappings();
-        if let Some(mapping) = peeker.find_mapping(vars, &ip) {
+        if let Some(mapping) = peeker.find_mapping(&ip) {
             flog!(
                 reader,
                 format!("Found mapping {:?} from {:?}", &mapping, &peeker.peeked)
@@ -1006,8 +1004,7 @@ pub fn input_function_get_code(name: &wstr) -> Option<ReadlineCmd> {
 
 #[cfg(test)]
 mod tests {
-    use super::{DEFAULT_BIND_MODE, EventQueuePeeker, InputMappingSet, KeyNameStyle};
-    use crate::env::EnvStack;
+    use super::{EventQueuePeeker, InputMappingSet, KeyNameStyle};
     use crate::input_common::{CharEvent, InputData, InputEventQueuer, KeyEvent};
     use crate::key::Key;
     use crate::prelude::*;
@@ -1027,7 +1024,6 @@ mod tests {
 
     #[test]
     fn test_input() {
-        let vars = EnvStack::new();
         let mut input = TestInputEventQueuer {
             input_data: InputData::new(i32::MAX, None), // value doesn't matter since we don't read from it
         };
@@ -1038,14 +1034,14 @@ mod tests {
         let mut desired_binding = prefix_binding.clone();
         desired_binding.push(Key::from_raw('a'));
 
-        let default_mode = || DEFAULT_BIND_MODE.to_owned();
+        let bind_mode = || input.get_bind_mode();
 
         let mut input_mappings = InputMappingSet::default();
         input_mappings.add1(
             prefix_binding,
             KeyNameStyle::Plain,
             L!("up-line").to_owned(),
-            default_mode(),
+            bind_mode(),
             None,
             true,
         );
@@ -1053,7 +1049,7 @@ mod tests {
             desired_binding.clone(),
             KeyNameStyle::Plain,
             L!("down-line").to_owned(),
-            default_mode(),
+            bind_mode(),
             None,
             true,
         );
@@ -1066,7 +1062,7 @@ mod tests {
         }
 
         let mut peeker = EventQueuePeeker::new(&mut input);
-        let mapping = peeker.find_mapping(&vars, &input_mappings);
+        let mapping = peeker.find_mapping(&input_mappings);
         assert!(mapping.is_some());
         assert_eq!(mapping.unwrap().commands, ["down-line"]);
         peeker.restart();

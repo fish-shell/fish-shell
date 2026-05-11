@@ -153,7 +153,7 @@ impl JobGroup {
     }
 
     /// Returns the value of [`JobGroup::pgid`]. This is never fish's own pgid!
-    pub fn get_pgid(&self) -> Option<Pid> {
+    pub fn pgid(&self) -> Option<Pid> {
         self.pgid.get().copied()
     }
 }

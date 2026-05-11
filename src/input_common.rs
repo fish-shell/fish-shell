@@ -1,30 +1,31 @@
-use crate::common::{
-    WSL, bytes2wcstring, fish_reserved_codepoint, is_windows_subsystem_for_linux, read_blocked,
-    shell_modes,
+use crate::{
+    common::{WSL, is_windows_subsystem_for_linux, shell_modes},
+    env::{EnvStack, Environment as _},
+    fd_readable_set::{FdReadableSet, Timeout},
+    flog::{FloggableDebug, FloggableDisplay, flog},
+    key::{
+        self, Key, Modifiers, ViewportPosition, alt, canonicalize_control_char,
+        canonicalize_keyed_control_char, char_to_symbol, function_key, shift,
+    },
+    prelude::*,
+    reader::reader_test_and_clear_interrupted,
+    tty_handoff::{
+        SCROLL_CONTENT_UP_TERMINFO_CODE, TERMINAL_OS_NAME, XTGETTCAP_QUERY_OS_NAME, XTVERSION,
+        maybe_set_kitty_keyboard_capability, maybe_set_scroll_content_up_capability,
+    },
+    universal_notifier::default_notifier,
+    wutil::{fish_is_pua, fish_wcstol},
 };
-use crate::env::{EnvStack, Environment as _};
-use crate::fd_readable_set::{FdReadableSet, Timeout};
-use crate::flog::{FloggableDebug, FloggableDisplay, flog};
-use crate::future_feature_flags::{FeatureFlag, test as feature_test};
-use crate::key::{
-    self, Key, Modifiers, ViewportPosition, alt, canonicalize_control_char,
-    canonicalize_keyed_control_char, char_to_symbol, function_key, shift,
-};
-use crate::prelude::*;
-use crate::reader::reader_test_and_clear_interrupted;
-use crate::tty_handoff::{
-    SCROLL_CONTENT_UP_TERMINFO_CODE, TERMINAL_OS_NAME, XTGETTCAP_QUERY_OS_NAME, XTVERSION,
-    maybe_set_kitty_keyboard_capability, maybe_set_scroll_content_up_capability,
-};
-use crate::universal_notifier::default_notifier;
-use crate::wutil::{fish_is_pua, fish_wcstol};
-use fish_widestring::encode_byte_to_char;
+use fish_common::read_blocked;
+use fish_feature_flags::{FeatureFlag, feature_test};
+use fish_widestring::{bytes2wcstring, encode_byte_to_char, fish_reserved_codepoint};
 use nix::sys::{select::FdSet, signal::SigSet, time::TimeSpec};
-use std::cell::{RefCell, RefMut};
-use std::collections::VecDeque;
-use std::os::fd::{BorrowedFd, RawFd};
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::time::Duration;
+use std::{
+    collections::VecDeque,
+    os::fd::{BorrowedFd, RawFd},
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Duration,
+};
 
 // The range of key codes for inputrc-style keyboard functions.
 pub const R_END_INPUT_FUNCTIONS: usize = (ReadlineCmd::ReverseRepeatJump as usize) + 1;
@@ -198,13 +199,13 @@ impl KeyEvent {
         if modifiers.is_some() {
             return None;
         }
-        if c == key::Space {
+        if c == key::SPACE {
             return Some(' ');
         }
-        if c == key::Enter {
+        if c == key::ENTER {
             return Some('\n');
         }
-        if c == key::Tab {
+        if c == key::TAB {
             return Some('\t');
         }
         if fish_is_pua(c) || u32::from(c) <= 27 {
@@ -669,7 +670,7 @@ pub struct InputData {
     pub blocking_query_timeout: Option<Duration>,
 
     // If set, events will be buffered until the query finishes.
-    pub blocking_query: RefCell<Option<TerminalQuery>>,
+    pub blocking_query: Option<TerminalQuery>,
 }
 
 impl InputData {
@@ -683,7 +684,7 @@ impl InputData {
             function_status: false,
             event_storage: Vec::new(),
             blocking_query_timeout,
-            blocking_query: RefCell::new(None),
+            blocking_query: None,
         }
     }
 
@@ -815,15 +816,15 @@ pub trait InputEventQueuer {
                         continue;
                     }
                     let mut seq = WString::new();
-                    if key.is_some_and(|key| key.key == Key::from_raw(key::Invalid)) {
+                    if key.is_some_and(|key| key.key == Key::from_raw(key::INVALID)) {
                         continue;
                     }
-                    assert!(key.is_none_or(|key| key.codepoint != key::Invalid));
+                    assert!(key.is_none_or(|key| key.codepoint != key::INVALID));
                     // At this point, the bytes in `buffer` should be parsed as a UTF-8 sequence,
                     // or, if they are not valid UTF-8, ignored. On incomplete sequences, another
                     // byte is read and decoding is tried again in the next iteration.
                     let ok = loop {
-                        match decode_one_codepoint_utf8(&mut seq, InvalidPolicy::Error, &buffer) {
+                        match decode_utf8(&mut seq, InvalidPolicy::Error, &buffer) {
                             DecodeState::Incomplete => {
                                 buffer.push(
                                     match next_input_event(
@@ -886,7 +887,7 @@ pub trait InputEventQueuer {
                                 reader,
                                 "Received interrupt key, giving up waiting for response from terminal"
                             );
-                            let ok = stop_query(self.blocking_query());
+                            let ok = stop_query(self.blocking_query_mut());
                             assert!(ok);
                             self.get_input_data_mut().queue.clear();
                             self.push_front(CharEvent::QueryResult(QueryResultEvent::Interrupted));
@@ -951,15 +952,15 @@ pub trait InputEventQueuer {
         assert!(buffer.len() <= 2);
         let recursive_invocation = buffer.len() == 2;
         let Some(next) = self.read_sequence_byte(buffer) else {
-            return Some(KeyEvent::from_raw(key::Escape));
+            return Some(KeyEvent::from_raw(key::ESCAPE));
         };
-        let invalid = KeyEvent::from_raw(key::Invalid);
+        let invalid = KeyEvent::from_raw(key::INVALID);
         if recursive_invocation && next == b'\x1b' {
             return Some(
                 match self.parse_escape_sequence(buffer, have_escape_prefix) {
                     Some(mut nested_sequence) => {
                         if nested_sequence.key == invalid.key {
-                            return Some(KeyEvent::from_raw(key::Escape));
+                            return Some(KeyEvent::from_raw(key::ESCAPE));
                         }
                         nested_sequence.modifiers.alt = true;
                         nested_sequence
@@ -1083,13 +1084,13 @@ pub trait InputEventQueuer {
                     _ => return None,
                 }
             }
-            b'A' => masked_key(key::Up),
-            b'B' => masked_key(key::Down),
-            b'C' => masked_key(key::Right),
-            b'D' => masked_key(key::Left),
+            b'A' => masked_key(key::UP),
+            b'B' => masked_key(key::DOWN),
+            b'C' => masked_key(key::RIGHT),
+            b'D' => masked_key(key::LEFT),
             b'E' => masked_key('5'),       // Numeric keypad
-            b'F' => masked_key(key::End),  // PC/xterm style
-            b'H' => masked_key(key::Home), // PC/xterm style
+            b'F' => masked_key(key::END),  // PC/xterm style
+            b'H' => masked_key(key::HOME), // PC/xterm style
             b'M' | b'm' => {
                 flog!(reader, "mouse event");
                 // Generic X10 or modified VT200 sequence, or extended (SGR/1006) mouse
@@ -1167,14 +1168,14 @@ pub trait InputEventQueuer {
             }
             b'S' => masked_key(function_key(4)),
             b'~' => match params[0][0] {
-                1 => masked_key(key::Home), // VT220/tmux style
-                2 => masked_key(key::Insert),
-                3 => masked_key(key::Delete),
-                4 => masked_key(key::End), // VT220/tmux style
-                5 => masked_key(key::PageUp),
-                6 => masked_key(key::PageDown),
-                7 => masked_key(key::Home), // rxvt style
-                8 => masked_key(key::End),  // rxvt style
+                1 => masked_key(key::HOME), // VT220/tmux style
+                2 => masked_key(key::INSERT),
+                3 => masked_key(key::DELETE),
+                4 => masked_key(key::END), // VT220/tmux style
+                5 => masked_key(key::PAGE_UP),
+                6 => masked_key(key::PAGE_DOWN),
+                7 => masked_key(key::HOME), // rxvt style
+                8 => masked_key(key::END),  // rxvt style
                 11..=15 => masked_key(
                     char::from_u32(u32::from(function_key(1)) + params[0][0] - 11).unwrap(),
                 ),
@@ -1234,8 +1235,8 @@ pub trait InputEventQueuer {
 
                 // Treat numpad keys the same as their non-numpad counterparts. Could add a numpad modifier here.
                 let key = match params[0][0] {
-                    57361 => key::PrintScreen,
-                    57363 => key::Menu,
+                    57361 => key::PRINT_SCREEN,
+                    57363 => key::MENU,
                     57399 => '0',
                     57400 => '1',
                     57401 => '2',
@@ -1251,18 +1252,18 @@ pub trait InputEventQueuer {
                     57411 => '*',
                     57412 => '-',
                     57413 => '+',
-                    57414 => key::Enter,
+                    57414 => key::ENTER,
                     57415 => '=',
-                    57417 => key::Left,
-                    57418 => key::Right,
-                    57419 => key::Up,
-                    57420 => key::Down,
-                    57421 => key::PageUp,
-                    57422 => key::PageDown,
-                    57423 => key::Home,
-                    57424 => key::End,
-                    57425 => key::Insert,
-                    57426 => key::Delete,
+                    57417 => key::LEFT,
+                    57418 => key::RIGHT,
+                    57419 => key::UP,
+                    57420 => key::DOWN,
+                    57421 => key::PAGE_UP,
+                    57422 => key::PAGE_DOWN,
+                    57423 => key::HOME,
+                    57424 => key::END,
+                    57425 => key::INSERT,
+                    57426 => key::DELETE,
                     cp => {
                         let Some(key) = char::from_u32(cp) else {
                             return invalid_sequence(buffer);
@@ -1282,7 +1283,7 @@ pub trait InputEventQueuer {
                     Some(base_layout_key),
                 )
             }
-            b'Z' => KeyEvent::from(shift(key::Tab)),
+            b'Z' => KeyEvent::from(shift(key::TAB)),
             b'I' => {
                 self.push_front(CharEvent::Implicit(ImplicitEvent::FocusIn));
                 return None;
@@ -1308,15 +1309,15 @@ pub trait InputEventQueuer {
         let (modifiers, _caps_lock) = parse_mask(raw_mask.saturating_sub(1));
         #[rustfmt::skip]
         let key = match code {
-            b' ' => KeyEvent::new(modifiers, key::Space),
-            b'A' => KeyEvent::new(modifiers, key::Up),
-            b'B' => KeyEvent::new(modifiers, key::Down),
-            b'C' => KeyEvent::new(modifiers, key::Right),
-            b'D' => KeyEvent::new(modifiers, key::Left),
-            b'F' => KeyEvent::new(modifiers, key::End),
-            b'H' => KeyEvent::new(modifiers, key::Home),
-            b'I' => KeyEvent::new(modifiers, key::Tab),
-            b'M' => KeyEvent::new(modifiers, key::Enter),
+            b' ' => KeyEvent::new(modifiers, key::SPACE),
+            b'A' => KeyEvent::new(modifiers, key::UP),
+            b'B' => KeyEvent::new(modifiers, key::DOWN),
+            b'C' => KeyEvent::new(modifiers, key::RIGHT),
+            b'D' => KeyEvent::new(modifiers, key::LEFT),
+            b'F' => KeyEvent::new(modifiers, key::END),
+            b'H' => KeyEvent::new(modifiers, key::HOME),
+            b'I' => KeyEvent::new(modifiers, key::TAB),
+            b'M' => KeyEvent::new(modifiers, key::ENTER),
             b'P' => KeyEvent::new(modifiers, function_key(1)),
             b'Q' => KeyEvent::new(modifiers, function_key(2)),
             b'R' => KeyEvent::new(modifiers, function_key(3)),
@@ -1601,8 +1602,11 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn blocking_query(&self) -> RefMut<'_, Option<TerminalQuery>> {
-        self.get_input_data().blocking_query.borrow_mut()
+    fn blocking_query(&self) -> &Option<TerminalQuery> {
+        &self.get_input_data().blocking_query
+    }
+    fn blocking_query_mut(&mut self) -> &mut Option<TerminalQuery> {
+        &mut self.get_input_data_mut().blocking_query
     }
     fn is_blocked_querying(&self) -> bool {
         self.blocking_query().is_some()
@@ -1619,7 +1623,7 @@ pub trait InputEventQueuer {
         let vintr = shell_modes().control_chars[libc::VINTR];
         if vintr != 0 {
             let interrupt_evt = CharEvent::from_key(KeyEvent::from_single_byte(vintr));
-            if stop_query(self.blocking_query()) {
+            if stop_query(self.blocking_query_mut()) {
                 flog!(
                     reader,
                     "Received interrupt, giving up on waiting for terminal response"
@@ -1640,14 +1644,22 @@ pub trait InputEventQueuer {
     /// The default does nothing.
     fn ioport_notified(&mut self) {}
 
-    /// Reset the function status.
-    fn get_function_status(&self) -> bool {
+    /// Get the function status.
+    fn function_status(&self) -> bool {
         self.get_input_data().function_status
     }
 
     /// Return if we have any lookahead.
     fn has_lookahead(&self) -> bool {
         !self.get_input_data().queue.is_empty()
+    }
+
+    fn get_bind_mode(&self) -> WString {
+        #[allow(clippy::assertions_on_constants)]
+        {
+            assert!(cfg!(test));
+        }
+        WString::from("test-bind-mode")
     }
 }
 
@@ -1663,7 +1675,20 @@ pub(crate) enum InvalidPolicy {
     Passthrough,
 }
 
-pub(crate) fn decode_one_codepoint_utf8(
+/// Decode the UTF-8-encoded `buffer`.
+/// On success, the result is appended to `out_seq` and [`DecodeState::Complete`] is returned.
+/// [`DecodeState::Incomplete`] is returned if the buffer contains valid UTF-8
+/// with the exception of the last bytes,
+/// where the last 1 to 3 bytes are a prefix of the encoding of a valid char,
+/// which can happen if input is read incrementally.
+/// In this case `out_seq` will not be modified.
+/// If other errors occur, the behavior depends on `invalid_policy`.
+/// For [`InvalidPolicy::Error`], [`DecodeState::Error`] will be returned, without modifying
+/// `out_seq`.
+/// For [`InvalidPolicy::Passthrough`], [`DecodeState::Complete`] will be returned
+/// and `out_seq` will have the individual bytes of `buffer` appended to it, each encoded using our
+/// PUA encoding scheme.
+pub(crate) fn decode_utf8(
     out_seq: &mut WString,
     invalid_policy: InvalidPolicy,
     buffer: &[u8],
@@ -1696,7 +1721,7 @@ pub(crate) fn decode_one_codepoint_utf8(
     }
 }
 
-pub(crate) fn stop_query(mut query: RefMut<'_, Option<TerminalQuery>>) -> bool {
+pub(crate) fn stop_query(query: &mut Option<TerminalQuery>) -> bool {
     query.take().is_some()
 }
 

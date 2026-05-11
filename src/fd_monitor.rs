@@ -1,4 +1,3 @@
-use crate::common::exit_without_destructors;
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::flog::flog;
 use crate::portable_atomic::AtomicU64;
@@ -6,12 +5,13 @@ use crate::threads::assert_is_background_thread;
 use crate::wutil::perror_nix;
 use cfg_if::cfg_if;
 use errno::errno;
+use fish_common::exit_without_destructors;
 use fish_util::perror;
 use libc::{EAGAIN, EINTR, EWOULDBLOCK};
 use std::collections::HashMap;
 use std::os::unix::prelude::*;
 use std::sync::atomic::Ordering;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
 cfg_if!(
@@ -49,8 +49,13 @@ impl FdEventSignaller {
                     perror("eventfd");
                     exit_without_destructors(1);
                 }
+                use crate::fds::heightenize_fd;
+                let Ok(fd) = heightenize_fd(unsafe { OwnedFd::from_raw_fd(fd) }, true) else {
+                    perror("eventfd");
+                    exit_without_destructors(1);
+                };
                 Self {
-                    fd: unsafe { OwnedFd::from_raw_fd(fd) },
+                    fd
                 }
             } else {
                 // Implementation using pipes.
@@ -135,6 +140,7 @@ impl FdEventSignaller {
     /// If `wait` is set, wait until it is readable; this does not consume the event
     /// but guarantees that the next call to wait() will not block.
     /// Return true if readable, false if not readable, or not interrupted by a signal.
+    #[cfg(test)]
     pub fn poll(&self, wait: bool /* = false */) -> bool {
         let timeout = if wait {
             Timeout::Forever
@@ -202,7 +208,7 @@ pub struct FdMonitor {
     /// Our self-signaller, used to wake up the background thread out of select().
     change_signaller: Arc<FdEventSignaller>,
     /// The data shared between the background thread and the `FdMonitor` instance.
-    data: Arc<Mutex<SharedData>>,
+    data: Arc<SharedData>,
     /// The last ID assigned or `0` if none.
     last_id: AtomicU64,
 }
@@ -217,13 +223,25 @@ const _: () = {
 };
 
 /// Data shared between the `FdMonitor` instance and its associated `BackgroundFdMonitor`.
-struct SharedData {
+struct LockedSharedData {
     /// The map of items. This may be modified by the main thread with the mutex locked.
     items: HashMap<FdMonitorItemId, FdMonitorItem>,
     /// Whether the background thread is running.
     running: bool,
     /// Used to signal that the background thread should terminate.
     terminate: bool,
+}
+struct SharedData {
+    /// Note the locking here is very coarse and the lock is held while servicing items.
+    /// This means that an item which reads a lot of data may prevent adding other items.
+    /// When we do true multithreaded execution, we may want to make the locking more fine-grained (per-item).
+    locked: Mutex<LockedSharedData>,
+
+    /// Used to know when the monitor thread is done with an item, in particular, when
+    /// it's safe to close its fd.
+    /// Modification and reading a baseline value must be done within the `locked` context.
+    /// Checking for changes against the baseline can be done without acquiring `locked`.
+    select_generation: (Mutex<usize>, Condvar),
 }
 
 /// The background half of the fd monitor, running on its own thread.
@@ -232,10 +250,7 @@ struct BackgroundFdMonitor {
     /// in the poke list, or terminate has been set.
     change_signaller: Arc<FdEventSignaller>,
     /// The data shared between the background thread and the `FdMonitor` instance.
-    /// Note the locking here is very coarse and the lock is held while servicing items.
-    /// This means that an item which reads a lot of data may prevent adding other items.
-    /// When we do true multithreaded execution, we may want to make the locking more fine-grained (per-item).
-    data: Arc<Mutex<SharedData>>,
+    data: Arc<SharedData>,
 }
 
 impl FdMonitor {
@@ -249,7 +264,7 @@ impl FdMonitor {
         };
         let start_thread = {
             // Lock around a local region
-            let mut data = self.data.lock().expect("Mutex poisoned!");
+            let mut data = self.data.locked.lock().expect("Mutex poisoned!");
 
             // Assign an id and add the item.
             let old_value = data.items.insert(item_id, item);
@@ -279,7 +294,7 @@ impl FdMonitor {
     }
 
     pub fn with_fd(&self, item_id: FdMonitorItemId, cb: impl FnOnce(BorrowedFd)) {
-        let data = self.data.lock().expect("Mutex poisoned!");
+        let data = self.data.locked.lock().expect("Mutex poisoned!");
         if let Some(fd) = &data.items.get(&item_id).unwrap().fd {
             cb(fd.as_fd());
         }
@@ -291,21 +306,38 @@ impl FdMonitor {
     /// callback will not be invoked.
     pub fn remove_item(&self, item_id: FdMonitorItemId) -> Option<OwnedFd> {
         assert!(item_id.0 > 0, "Invalid item id!");
-        let mut data = self.data.lock().expect("Mutex poisoned!");
+
+        let (gen_lock, gen_cond) = &self.data.select_generation;
+
+        let mut data = self.data.locked.lock().expect("Mutex poisoned!");
         let removed = data.items.remove(&item_id).expect("Item ID not found");
+        let generation = *gen_lock.lock().expect("Mutex poisoned!");
         drop(data);
+
         // Allow it to recompute the wait set.
         self.change_signaller.post();
+
+        // Wait for select() to return since we do not know when the caller will close
+        // the descriptor and doing so has unspecified results (e.g. occasionally
+        // Cygwin returns EFAULT)
+        {
+            let lock = gen_lock.lock().expect("Mutex poisoned!");
+            drop(gen_cond.wait_while(lock, |val| *val == generation));
+        }
+
         removed.fd
     }
 
     pub fn new() -> Self {
         Self {
-            data: Arc::new(Mutex::new(SharedData {
-                items: HashMap::new(),
-                running: false,
-                terminate: false,
-            })),
+            data: Arc::new(SharedData {
+                locked: Mutex::new(LockedSharedData {
+                    items: HashMap::new(),
+                    running: false,
+                    terminate: false,
+                }),
+                select_generation: Default::default(),
+            }),
             change_signaller: Arc::new(FdEventSignaller::new()),
             last_id: AtomicU64::new(0),
         }
@@ -364,7 +396,7 @@ impl BackgroundFdMonitor {
             fds.add(change_signal_fd);
 
             // Grab the lock and snapshot the item_ids. Skip items with invalid fds.
-            let mut data = self.data.lock().expect("Mutex poisoned!");
+            let mut data = self.data.locked.lock().expect("Mutex poisoned!");
             item_ids.clear();
             item_ids.reserve(data.items.len());
             for (item_id, item) in &data.items {
@@ -398,18 +430,21 @@ impl BackgroundFdMonitor {
             // Note that WSLv1 doesn't throw EBADF if the fd is closed is mid-select.
             drop(data);
             let ret = fds.check_readable(timeout.map_or(Timeout::Forever, Timeout::Duration));
-            // Cygwin reports ret < 0 && errno == 0 as success.
+            // TODO Cygwin reports ret < 0 && errno == 0 as success. Remove the workaround for msys2-runtime>=3.6.9, see https://github.com/msys2/msys2-runtime/issues/308#issuecomment-4301066343
             let err = errno().0;
-            if ret < 0
-                && !matches!(err, libc::EINTR | libc::EBADF | libc::EAGAIN)
-                && !(cfg!(cygwin) && err == 0)
+            if ret < 0 && !matches!(err, libc::EINTR | libc::EAGAIN) && !(cfg!(cygwin) && err == 0)
             {
                 // Surprising error
                 perror("select");
             }
 
             // Re-acquire the lock.
-            data = self.data.lock().expect("Mutex poisoned!");
+            data = self.data.locked.lock().expect("Mutex poisoned!");
+
+            // Signal any thread waiting to remove an item
+            let (gen_lock, gen_cond) = &self.data.select_generation;
+            *gen_lock.lock().expect("Mutex poisoned!") += 1;
+            gen_cond.notify_all();
 
             // For each item id that we snapshotted, if the corresponding item is still in our
             // set of active items and its fd was readable, then service it.
@@ -452,11 +487,15 @@ impl BackgroundFdMonitor {
 /// fds arounds; this is why it's very hacky!
 impl Drop for FdMonitor {
     fn drop(&mut self) {
-        self.data.lock().expect("Mutex poisoned!").terminate = true;
+        #[allow(clippy::assertions_on_constants)]
+        {
+            assert!(cfg!(test));
+        }
+        self.data.locked.lock().expect("Mutex poisoned!").terminate = true;
         self.change_signaller.post();
 
         // Safety: see note above.
-        while self.data.lock().expect("Mutex poisoned!").running {
+        while self.data.locked.lock().expect("Mutex poisoned!").running {
             std::thread::sleep(Duration::from_millis(5));
         }
     }
@@ -467,18 +506,13 @@ mod tests {
     use crate::portable_atomic::AtomicU64;
     use std::fs::File;
     use std::io::Write as _;
-    use std::os::fd::{AsRawFd as _, OwnedFd};
+    use std::os::fd::OwnedFd;
     use std::sync::atomic::{AtomicUsize, Ordering};
-    use std::sync::{Arc, Barrier, Mutex};
-    use std::thread;
+    use std::sync::{Arc, Mutex};
     use std::time::Duration;
 
-    use assert_matches::assert_matches;
-    use errno::errno;
-
     use crate::fd_monitor::{FdEventSignaller, FdMonitor};
-    use crate::fd_readable_set::{FdReadableSet, Timeout};
-    use crate::fds::{AutoClosePipes, make_autoclose_pipes};
+    use crate::fds::make_autoclose_pipes;
     use crate::tests::prelude::*;
 
     /// Helper to make an item which counts how many times its callback was invoked.
@@ -551,7 +585,7 @@ mod tests {
     #[test]
     #[serial]
     fn fd_monitor_items() {
-        let _cleanup = test_init();
+        test_init();
         let monitor = FdMonitor::new();
 
         // Item which will never receive data or be called.
@@ -617,91 +651,5 @@ mod tests {
         assert!(sema.try_consume());
         assert!(!sema.poll(false));
         assert!(!sema.try_consume());
-    }
-
-    // A helper function which calls poll() or selects() on a file descriptor in the background,
-    // and then invokes the `bad_action` function on the file descriptor while the poll/select is
-    // waiting. The function returns Result<i32, i32>: either the number of readable file descriptors
-    // or the error code from poll/select.
-    #[cfg(test)]
-    fn do_something_bad_during_select<F>(bad_action: F) -> Result<i32, i32>
-    where
-        F: FnOnce(OwnedFd) -> Option<OwnedFd>,
-    {
-        let AutoClosePipes {
-            read: read_fd,
-            write: write_fd,
-        } = make_autoclose_pipes().expect("Failed to create pipe");
-        let raw_read_fd = read_fd.as_raw_fd();
-
-        // Try to ensure that the thread will be scheduled by waiting until it is.
-        let barrier = Arc::new(Barrier::new(2));
-        let barrier_clone = Arc::clone(&barrier);
-
-        let select_thread = thread::spawn(move || -> Result<i32, i32> {
-            let mut fd_set = FdReadableSet::new();
-            fd_set.add(raw_read_fd);
-
-            barrier_clone.wait();
-
-            // Timeout after 500 msec.
-            // macOS will eagerly return EBADF if the fd is closed; Linux will hit the timeout.
-            let timeout = Timeout::Duration(Duration::from_millis(500));
-            let ret = fd_set.check_readable(timeout);
-            if ret < 0 { Err(errno().0) } else { Ok(ret) }
-        });
-
-        barrier.wait();
-        thread::sleep(Duration::from_millis(100));
-        let read_fd = bad_action(read_fd);
-
-        let result = select_thread.join().expect("Select thread panicked");
-        // Ensure these stay alive until after thread is joined.
-        drop(read_fd);
-        drop(write_fd);
-        result
-    }
-
-    #[test]
-    fn test_close_during_select_ebadf() {
-        use crate::common::{WSL, is_windows_subsystem_for_linux as is_wsl};
-        let close_it = |read_fd: OwnedFd| {
-            drop(read_fd);
-            None
-        };
-        let result = do_something_bad_during_select(close_it);
-
-        // WSLv1 does not error out with EBADF if the fd is closed mid-select.
-        // This is OK because we do not _depend_ on this behavior; the only
-        // true requirement is that we don't panic in the handling code above.
-        assert!(
-            is_wsl(WSL::V1) || matches!(result, Err(libc::EBADF) | Ok(0 | 1)),
-            "select/poll should have failed with EBADF or timed out or the fd should be ready"
-        );
-    }
-
-    #[test]
-    fn test_dup2_during_select_ebadf() {
-        // Make a random file descriptor that we can dup2 stdin to.
-        let AutoClosePipes {
-            read: pipe_read,
-            write: pipe_write,
-        } = make_autoclose_pipes().expect("Failed to create pipe");
-
-        let dup2_it = |read_fd: OwnedFd| {
-            // We are going to dup2 stdin to this fd, which should cause select/poll to fail.
-            assert!(read_fd.as_raw_fd() > 0, "fd should be valid and not stdin");
-            unsafe { libc::dup2(pipe_read.as_raw_fd(), read_fd.as_raw_fd()) };
-            Some(read_fd)
-        };
-        let result = do_something_bad_during_select(dup2_it);
-        assert_matches!(
-            result,
-            Err(libc::EBADF) | Ok(0 | 1),
-            "select/poll should have failed with EBADF or timed out or the fd should be ready"
-        );
-        // Ensure these stay alive until after thread is joined.
-        drop(pipe_read);
-        drop(pipe_write);
     }
 }

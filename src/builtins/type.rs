@@ -1,9 +1,12 @@
 use super::prelude::*;
-use crate::common::bytes2wcstring;
-use crate::function;
-use crate::highlight::highlight_and_colorize;
-use crate::parse_util::{apply_indents, compute_indents};
-use crate::path::{path_get_path, path_get_paths};
+use crate::{
+    builtins::error::Error,
+    err_fmt, err_str, function,
+    highlight::highlight_and_colorize,
+    parse_util::{apply_indents, compute_indents},
+    path::{path_get_path, path_get_paths},
+};
+use fish_widestring::bytes2wcstring;
 
 #[derive(Default)]
 struct type_cmd_opts_t {
@@ -17,7 +20,7 @@ struct type_cmd_opts_t {
     color: ColorEnabled,
 }
 
-pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
@@ -52,7 +55,14 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                 return Ok(SUCCESS);
             }
             ':' => {
-                builtin_missing_argument(parser, streams, cmd, argv[w.wopt_index - 1], print_hints);
+                builtin_missing_argument(
+                    parser,
+                    streams,
+                    cmd,
+                    None,
+                    argv[w.wopt_index - 1],
+                    print_hints,
+                );
                 return Err(STATUS_INVALID_ARGS);
             }
             ';' => {
@@ -84,7 +94,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         .count()
         > 1
     {
-        streams.err.appendln(&wgettext_fmt!(BUILTIN_ERR_COMBO, cmd));
+        err_str!(Error::INVALID_OPT_COMBO).cmd(cmd).finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -158,8 +168,7 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
                         if opts.color.enabled(streams) {
                             streams.out.append(&bytes2wcstring(&highlight_and_colorize(
                                 &def,
-                                &parser.context(),
-                                parser.vars(),
+                                &mut parser.context(),
                             )));
                         } else {
                             streams.out.append(&def);
@@ -229,9 +238,9 @@ pub fn r#type(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         }
 
         if found == 0 && !opts.query && !opts.path {
-            streams
-                .err
-                .appendln(&wgettext_fmt!("%s: Could not find '%s'", L!("type"), arg));
+            err_fmt!("Could not find '%s'", arg)
+                .cmd(cmd)
+                .finish(streams);
         }
     }
 

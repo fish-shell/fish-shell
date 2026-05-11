@@ -10,10 +10,12 @@ Build-Depends: debhelper-compat (= 13),
  gettext,
  libpcre2-dev,
  rustc (>= 1.85) | rustc-web (>= 1.85) | rustc-1.85,
+# pkg-config is needed for the pcre2 crate to find the pcre2 system library
+ pkgconf | pkg-config,
  python3-sphinx,
 # Test dependencies
  locales-all,
- man-db | mandoc | man,
+ man-db | man,
  python3
 # 4.6.2 is Debian 12/Ubuntu Noble 24.04; Ubuntu Jammy is 4.6.0.1
 Standards-Version: 4.6.2
@@ -27,7 +29,7 @@ Architecture: any
 Depends: bsdextrautils,
  file,
 # for showing built-in help pages
- man-db | mandoc | man,
+ man-db | man,
 # for kill
  procps,
  python3 (>=3.5),

@@ -78,6 +78,7 @@ echo no default universal variables
 # Labeled color variables may be updated by fish.
 {
     $fish -c '
+        fish_config theme choose default
         set -g fish_color_autosuggestion red
         set -g fish_color_command green --theme=default
         __fish_migrate
@@ -104,6 +105,29 @@ echo no default universal variables
     # CHECK: Migrated {{.*}} {{\S*}}/xdg_config_home/fish/conf.d/fish_frozen_key_bindings.fish{{\x1b\[m}}
     # CHECK: {{.*help relnotes.*}}
     path is $__fish_config_dir/conf.d/fish_frozen_key_bindings.fish
+    and echo ok
+    # CHECK: ok
+    set -U
+    # CHECK: __fish_initialized 4300
+}
+
+# Test some historical values for __fish_config_theme_uvars_subset_of_historical_default.
+{
+    provoke-migration
+    echo >$__fish_config_dir/fish_variables \
+'# VERSION: 3.0
+SETUVAR __fish_initialized:0
+SETUVAR fish_color_autosuggestion:555\x1ebrblack
+SETUVAR fish_color_search_match:\x2d\x2dbackground\x3d111
+SETUVAR fish_color_selection:white\x1e\x2d\x2dbold\x1e\x2d\x2dbackground\x3dbrblack
+SETUVAR fish_pager_color_description:B3A06D\x1eyellow\x1e\x2di
+SETUVAR fish_pager_color_prefix:cyan\x1e\x2d\x2dbold\x1e\x2d\x2dunderline'
+    $fish -c __fish_migrate
+    # CHECK: {{\x1b\[1m}}fish:{{\x1b\[m}} {{upgraded.*}}
+    # CHECK: * Color variables are no longer set in universal scope.
+    # CHECK:   To restore syntax highlighting in other fish sessions, please restart them.
+    # CHECK: {{.*help relnotes.*}}
+    not path is $__fish_config_dir/conf.d/fish_frozen_theme.fish
     and echo ok
     # CHECK: ok
     set -U

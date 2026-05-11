@@ -100,13 +100,14 @@ def is_chromeos_garcon():
         return False
 
 
-def run_fish_cmd(text, strict=False):
+def run_fish_cmd(text, strict=False, env=None):
     print("$ " + text)
     p = subprocess.Popen(
         [FISH_BIN_PATH],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        env=env,
     )
     out, err = p.communicate(text.encode("utf-8"))
     out = out.decode("utf-8", "replace")
@@ -811,7 +812,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 TERMINAL_COLOR_THEME
             )
             + "or __fish_color_theme=unknown __fish_apply_theme\n"
-            + "__fish_theme_export_for_webconfig"
+            + "__fish_theme_export_for_webconfig",
+            env=os.environ | {"__fish_force_load_default_theme": "1"},
         )
         assert err == ""
 

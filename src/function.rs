@@ -2,23 +2,28 @@
 // autoloading functions in the $fish_function_path. Actual function evaluation is taken care of by
 // the parser and to some degree the builtin handling library.
 
-use crate::ast::{self, Node as _};
-use crate::autoload::{Autoload, AutoloadResult};
-use crate::common::{FilenameRef, assert_sync, escape, valid_func_name};
-use crate::complete::complete_wrap_map;
-use crate::env::{EnvStack, Environment};
-use crate::event::{self, EventDescription};
-use crate::global_safety::RelaxedAtomicBool;
-use crate::parse_tree::NodeRef;
-use crate::parser::Parser;
-use crate::parser_keywords::parser_keywords_is_reserved;
-use crate::prelude::*;
-use crate::proc::Pid;
-use crate::wutil::dir_iter::DirIter;
-use fish_wcstringutil::wcs2bytes;
-use std::collections::{HashMap, HashSet};
-use std::num::NonZeroU32;
-use std::sync::{Arc, LazyLock, Mutex};
+use crate::{
+    ast::{self, Node as _},
+    autoload::{Autoload, AutoloadResult},
+    common::valid_func_name,
+    complete::complete_wrap_map,
+    env::{EnvStack, Environment},
+    event::{self, EventDescription},
+    global_safety::RelaxedAtomicBool,
+    parse_tree::NodeRef,
+    parser::Parser,
+    parser_keywords::parser_keywords_is_reserved,
+    prelude::*,
+    proc::Pid,
+    wutil::dir_iter::DirIter,
+};
+use fish_common::{FilenameRef, assert_sync, escape};
+use fish_widestring::wcs2bytes;
+use std::{
+    collections::{HashMap, HashSet},
+    num::NonZeroU32,
+    sync::{Arc, LazyLock, Mutex},
+};
 
 #[derive(Clone)]
 pub struct FunctionProperties {
@@ -111,7 +116,7 @@ static FUNCTION_SET: LazyLock<Mutex<FunctionSet>> = LazyLock::new(|| {
 
 /// Make sure that if the specified function is a dynamically loaded function, it has been fully
 /// loaded. Note this executes fish script code.
-pub fn load(name: &wstr, parser: &Parser) -> bool {
+pub fn load(name: &wstr, parser: &mut Parser) -> bool {
     let mut path_to_autoload: Option<_> = None;
     // Note we can't autoload while holding the funcset lock.
     // Lock around a local region.
@@ -208,7 +213,7 @@ pub fn get_props(name: &wstr) -> Option<Arc<FunctionProperties>> {
 }
 
 /// Return the properties for a function, or None, perhaps triggering autoloading.
-pub fn get_props_autoload(name: &wstr, parser: &Parser) -> Option<Arc<FunctionProperties>> {
+pub fn get_props_autoload(name: &wstr, parser: &mut Parser) -> Option<Arc<FunctionProperties>> {
     if parser_keywords_is_reserved(name) {
         return None;
     }
@@ -218,7 +223,7 @@ pub fn get_props_autoload(name: &wstr, parser: &Parser) -> Option<Arc<FunctionPr
 
 /// Returns true if the function named `cmd` exists.
 /// This may autoload.
-pub fn exists(cmd: &wstr, parser: &Parser) -> bool {
+pub fn exists(cmd: &wstr, parser: &mut Parser) -> bool {
     if !valid_func_name(cmd) {
         return false;
     }
@@ -284,7 +289,7 @@ fn get_function_body_source(props: &FunctionProperties) -> &wstr {
 
 /// Sets the description of the function with the name \c name.
 /// This triggers autoloading.
-pub(crate) fn set_desc(name: &wstr, desc: WString, parser: &Parser) {
+pub(crate) fn set_desc(name: &wstr, desc: WString, parser: &mut Parser) {
     load(name, parser);
     let mut funcset = FUNCTION_SET.lock().unwrap();
     if let Some(props) = funcset.funcs.get(name) {
@@ -302,7 +307,7 @@ pub(crate) fn set_desc(name: &wstr, desc: WString, parser: &Parser) {
 /// is successful.
 pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
     let filename = parser.current_filename();
-    let lineno = parser.get_lineno();
+    let lineno = parser.lineno();
 
     let mut funcset = FUNCTION_SET.lock().unwrap();
     let Some(props) = funcset.get_props(name) else {

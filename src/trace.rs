@@ -1,6 +1,7 @@
-use crate::flog::log_extra_to_flog_file;
-use crate::parser::Parser;
-use crate::{common::escape, global_safety::RelaxedAtomicBool, prelude::*};
+use crate::{
+    flog::log_extra_to_flog_file, global_safety::RelaxedAtomicBool, parser::Parser, prelude::*,
+};
+use fish_common::escape;
 
 static DO_TRACE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 static DO_TRACE_ALL: RelaxedAtomicBool = RelaxedAtomicBool::new(false);

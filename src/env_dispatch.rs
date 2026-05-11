@@ -231,8 +231,8 @@ fn handle_term_size_change(vars: &EnvStack) {
 }
 
 fn handle_fish_history_change(vars: &EnvStack) {
-    let session_id = crate::history::history_session_id(vars);
-    reader_change_history(&session_id);
+    let history_id = crate::history::history_id(vars);
+    reader_change_history(history_id);
 }
 
 fn handle_fish_cursor_selection_mode_change(vars: &EnvStack) {
@@ -374,9 +374,11 @@ fn update_fish_color_support(vars: &EnvStack) {
     // Detect or infer term256 support. If fish_term256 is set, we respect it. Otherwise, infer it
     // from $TERM.
 
-    let term = vars.get_unless_empty(L!("TERM"));
-    let term = term.as_ref().map_or(L!(""), |term| &term.as_list()[0]);
-    let is_xterm_16color = term == "xterm-16color";
+    let is_xterm_16color = {
+        let term = vars.get_unless_empty(L!("TERM"));
+        let term = term.as_ref().map_or(L!(""), |term| &term.as_list()[0]);
+        term == "xterm-16color"
+    };
 
     let supports_256color = if let Some(fish_term256) = vars.get(L!("fish_term256")) {
         let ok = bool_from_string(&fish_term256.as_string());

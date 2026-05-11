@@ -251,7 +251,7 @@ Some *OPTION_SPEC* examples:
 
 - ``n/name=?`` means that both ``-n`` and ``--name`` are valid. It accepts an optional value and can be used at most once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the value associated with the flag if one was provided else it will be set with no values.
 
-- ``n/name=*`` is similar, but the flag can be used more than once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the values associated with each occurence. Each value will be the value given to the option, or the empty string if no value was given.
+- ``n/name=*`` is similar, but the flag can be used more than once. If the flag is seen then ``_flag_n`` and ``_flag_name`` will be set with the values associated with each occurrence. Each value will be the value given to the option, or the empty string if no value was given.
 
 - ``name=+`` means that only ``--name`` is valid. It requires a value and can be used more than once. If the flag is seen then ``_flag_name`` will be set with the values associated with each occurrence.
 

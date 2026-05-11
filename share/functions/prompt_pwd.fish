@@ -26,7 +26,8 @@ function prompt_pwd --description 'short CWD for the prompt'
     or set -l fish_prompt_pwd_full_dirs 1
 
     for path in $argv
-        set -l tmp (__fish_unexpand_tilde $path)
+        # Strip control characters to avoid injecting terminal escape sequences into the prompt.
+        set -l tmp (__fish_unexpand_tilde $path | string replace -ra '[[:cntrl:]]' '')
 
         if test "$fish_prompt_pwd_dir_length" -eq 0
             echo $tmp

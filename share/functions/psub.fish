@@ -13,7 +13,7 @@ function psub --description "Read from stdin into a file and output the filename
     set -l filename
     set -l funcname
 
-    if not status --is-command-substitution
+    if not status is-command-substitution
         {
             printf (_ "%s: Not inside of command substitution") psub
             echo

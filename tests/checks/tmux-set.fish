@@ -3,6 +3,7 @@
 
 isolated-tmux-start
 isolated-tmux send-keys 'set -g g_u_var foobar' Enter
+tmux-sleep
 isolated-tmux send-keys 'set -U g_u_var barfoo' Enter
 
 tmux-sleep

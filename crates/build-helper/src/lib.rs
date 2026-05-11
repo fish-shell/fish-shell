@@ -98,14 +98,14 @@ pub fn target_os_is_cygwin() -> bool {
 
 #[macro_export]
 macro_rules! as_os_strs {
-    [ $( $x:expr, )* ] => {
+    [ $( $x:expr ),* $(,)? ] => {
         {
             use std::ffi::OsStr;
             fn as_os_str<S: AsRef<OsStr> + ?Sized>(s: &S) -> &OsStr {
                 s.as_ref()
             }
-            &[
-                $( as_os_str($x), )*
+            [
+                $( as_os_str($x) ),*
             ]
         }
     }

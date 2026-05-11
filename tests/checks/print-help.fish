@@ -11,6 +11,6 @@ function __fish_print_help
     return 2
 end
 builtin and --help
-# CHECKERR: fish: and: missing man page
+# CHECKERR: and: missing man page
 # CHECKERR: Documentation may not be installed.
 # CHECKERR: `help and` will show an online version

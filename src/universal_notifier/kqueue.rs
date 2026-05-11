@@ -1,12 +1,13 @@
 use crate::env_universal_common::default_vars_path;
+use crate::fds::heightenize_fd;
 use crate::flogf;
 use crate::prelude::*;
 use crate::universal_notifier::UniversalNotifier;
 use crate::wutil::wdirname;
-use fish_wcstringutil::wcs2osstring;
+use fish_widestring::wcs2osstring;
 use nix::sys::event::{EvFlags, EventFilter, FilterFlag, KEvent, Kqueue};
 use std::fs::File;
-use std::os::fd::AsFd;
+use std::os::fd::{AsFd, OwnedFd};
 use std::os::unix::fs::MetadataExt;
 use std::os::unix::io::{AsRawFd, RawFd};
 use std::path::PathBuf;
@@ -48,6 +49,7 @@ impl KqueueNotifier {
 
         // Open the directory to get a valid file descriptor or bail if it doesn't exist
         let dir_fd = File::open(dir.as_os_str()).ok()?;
+        let dir_fd = File::from(heightenize_fd(OwnedFd::from(dir_fd), true).ok()?);
 
         // Add a watch for EVFILT_VNODE events
         let change_event = KEvent::new(

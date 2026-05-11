@@ -1,60 +1,77 @@
 use libc::VERASE;
 
 use crate::{
-    common::{EscapeFlags, EscapeStringStyle, escape_string},
-    flog::FloggableDebug,
-    future_feature_flags::{FeatureFlag, test as feature_test},
-    prelude::*,
-    reader::safe_get_terminal_mode_on_startup,
+    flog::FloggableDebug, localizable_string, reader::get_terminal_mode_on_startup, wgettext_fmt,
     wutil::fish_wcstoul,
 };
+use fish_common::{EscapeFlags, EscapeStringStyle, escape_string};
 use fish_fallback::fish_wcwidth;
-use fish_widestring::decode_byte_from_char;
+use fish_feature_flags::{FeatureFlag, feature_test};
+use fish_widestring::{
+    L, SPECIAL_KEY_ENCODE_BASE, WExt as _, WString, char_offset, decode_byte_from_char, wstr,
+};
 
-pub(crate) const Backspace: char = '\u{F500}'; // below ENCODE_DIRECT_BASE
-pub(crate) const Delete: char = '\u{F501}';
-pub(crate) const Escape: char = '\u{F502}';
-pub(crate) const Enter: char = '\u{F503}';
-pub(crate) const Up: char = '\u{F504}';
-pub(crate) const Down: char = '\u{F505}';
-pub(crate) const Left: char = '\u{F506}';
-pub(crate) const Right: char = '\u{F507}';
-pub(crate) const PageUp: char = '\u{F508}';
-pub(crate) const PageDown: char = '\u{F509}';
-pub(crate) const Home: char = '\u{F50A}';
-pub(crate) const End: char = '\u{F50B}';
-pub(crate) const Insert: char = '\u{F50C}';
-pub(crate) const Tab: char = '\u{F50D}';
-pub(crate) const Space: char = '\u{F50E}';
-pub(crate) const Menu: char = '\u{F50F}';
-pub(crate) const PrintScreen: char = '\u{F510}';
-pub(crate) const MAX_FUNCTION_KEY: u32 = 12;
-pub(crate) fn function_key(n: u32) -> char {
-    assert!((1..=MAX_FUNCTION_KEY).contains(&n));
-    char::from_u32(u32::from('\u{F5FF}') - MAX_FUNCTION_KEY + (n - 1)).unwrap()
+const fn special_key_char(offset: u8) -> char {
+    // TODO: use `u32::from(offset)` once that's available in const fn
+    char_offset(SPECIAL_KEY_ENCODE_BASE, offset as u32)
 }
-pub(crate) const Invalid: char = '\u{F5FF}';
+
+macro_rules! define_special_keys {
+    ($($key_name:ident: $offset:expr)*) => {
+        $(
+            pub(crate) const $key_name: char = special_key_char($offset);
+        )*
+    };
+}
+
+define_special_keys! {
+    BACKSPACE: 0
+    DELETE: 1
+    ESCAPE: 2
+    ENTER: 3
+    UP: 4
+    DOWN: 5
+    LEFT: 6
+    RIGHT: 7
+    PAGE_UP: 8
+    PAGE_DOWN: 9
+    HOME: 10
+    END: 11
+    INSERT: 12
+    TAB: 13
+    SPACE: 14
+    MENU: 15
+    PRINT_SCREEN: 16
+
+    INVALID: 255
+}
+
+pub(crate) const MAX_FUNCTION_KEY: u8 = 12;
+pub(crate) fn function_key(n: u8) -> char {
+    assert!((1..=MAX_FUNCTION_KEY).contains(&n));
+    special_key_char(254 - MAX_FUNCTION_KEY + n)
+}
 
 pub(crate) const KEY_NAMES: &[(char, &wstr)] = &[
     ('-', L!("minus")),
     (',', L!("comma")),
-    (Backspace, L!("backspace")),
-    (Delete, L!("delete")),
-    (Escape, L!("escape")),
-    (Enter, L!("enter")),
-    (Up, L!("up")),
-    (Down, L!("down")),
-    (Left, L!("left")),
-    (Right, L!("right")),
-    (PageUp, L!("pageup")),
-    (PageDown, L!("pagedown")),
-    (Home, L!("home")),
-    (End, L!("end")),
-    (Insert, L!("insert")),
-    (Tab, L!("tab")),
-    (Space, L!("space")),
-    (Menu, L!("menu")),
-    (PrintScreen, L!("printscreen")),
+    (BACKSPACE, L!("backspace")),
+    (DELETE, L!("delete")),
+    (ESCAPE, L!("escape")),
+    (ENTER, L!("enter")),
+    (UP, L!("up")),
+    (DOWN, L!("down")),
+    (LEFT, L!("left")),
+    (RIGHT, L!("right")),
+    (PAGE_UP, L!("pageup")),
+    (PAGE_DOWN, L!("pagedown")),
+    (HOME, L!("home")),
+    (END, L!("end")),
+    (INSERT, L!("insert")),
+    (TAB, L!("tab")),
+    (SPACE, L!("space")),
+    (MENU, L!("menu")),
+    (PRINT_SCREEN, L!("printscreen")),
 ];
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -170,25 +187,25 @@ fn ascii_control(c: char) -> char {
 
 pub(crate) fn canonicalize_keyed_control_char(c: char) -> char {
     if c == ascii_control('m') {
-        return Enter;
+        return ENTER;
     }
     if c == ascii_control('i') {
-        return Tab;
+        return TAB;
     }
     if c == ' ' {
-        return Space;
+        return SPACE;
     }
-    if let Some(tm) = safe_get_terminal_mode_on_startup() {
+    if let Some(tm) = get_terminal_mode_on_startup() {
         if c == char::from(tm.c_cc[VERASE]) {
-            return Backspace;
+            return BACKSPACE;
         }
     }
     if c == char::from(127) {
         // when it's not backspace
-        return Delete;
+        return DELETE;
     }
     if c == '\x1b' {
-        return Escape;
+        return ESCAPE;
     }
     c
 }
@@ -197,7 +214,7 @@ pub(crate) fn canonicalize_unkeyed_control_char(c: u8) -> char {
     if c == 0 {
         // For legacy terminals we have to make a decision here; they send NUL on Ctrl-2,
         // Ctrl-Shift-2 or Ctrl-Backtick, but the most straightforward way is Ctrl-Space.
-        return Space;
+        return SPACE;
     }
     // Represent Ctrl-letter combinations in lower-case, to be clear
     // that Shift is not involved.
@@ -299,7 +316,7 @@ pub(crate) fn parse_keys(value: &wstr) -> Result<Vec<Key>, WString> {
                 let num = key_name.strip_prefix('f').unwrap();
                 let codepoint = match fish_wcstoul(num) {
                     Ok(n) if (1..=u64::from(MAX_FUNCTION_KEY)).contains(&n) => {
-                        function_key(u32::try_from(n).unwrap())
+                        function_key(u8::try_from(n).unwrap())
                     }
                     _ => {
                         return Err(wgettext_fmt!(
@@ -333,11 +350,11 @@ pub(crate) fn canonicalize_raw_escapes(keys: Vec<Key>) -> Vec<Key> {
         if had_literal_escape {
             had_literal_escape = false;
             if key.modifiers.alt {
-                canonical.push(Key::from_raw(Escape));
+                canonical.push(Key::from_raw(ESCAPE));
             } else {
                 key.modifiers.alt = true;
                 if key.codepoint == '\x1b' {
-                    key.codepoint = Escape;
+                    key.codepoint = ESCAPE;
                 }
             }
         } else if key.codepoint == '\x1b' {
@@ -347,7 +364,7 @@ pub(crate) fn canonicalize_raw_escapes(keys: Vec<Key>) -> Vec<Key> {
         canonical.push(key);
     }
     if had_literal_escape {
-        canonical.push(Key::from_raw(Escape));
+        canonical.push(Key::from_raw(ESCAPE));
     }
     canonical
 }
@@ -465,9 +482,9 @@ mod tests {
     fn test_parse_key() {
         assert_eq!(
             parse_keys(L!("escape")),
-            Ok(vec![Key::from_raw(key::Escape)])
+            Ok(vec![Key::from_raw(key::ESCAPE)])
         );
-        assert_eq!(parse_keys(L!("\x1b")), Ok(vec![Key::from_raw(key::Escape)]));
+        assert_eq!(parse_keys(L!("\x1b")), Ok(vec![Key::from_raw(key::ESCAPE)]));
         assert_eq!(parse_keys(L!("ctrl-a")), Ok(vec![ctrl('a')]));
         assert_eq!(parse_keys(L!("\x01")), Ok(vec![ctrl('a')]));
         assert!(parse_keys(L!("f0")).is_err());

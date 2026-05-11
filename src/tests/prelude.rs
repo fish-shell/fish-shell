@@ -1,25 +1,22 @@
-use crate::common::{BUILD_DIR, ScopeGuard, ScopeGuarding};
+use crate::common::BUILD_DIR;
 use crate::env::env_init;
 use crate::env::{EnvMode, EnvVar, EnvVarFlags, Environment};
 use crate::locale::set_libc_locales;
 use crate::parser::{CancelBehavior, Parser};
 use crate::prelude::*;
-use crate::reader::{reader_deinit, reader_init};
 use crate::signal::signal_reset_handlers;
 use crate::topic_monitor::topic_monitor_init;
 use crate::wutil::wgetcwd;
 use crate::{env::EnvStack, proc::proc_init};
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::env::set_current_dir;
 use std::path::PathBuf;
-use std::sync::OnceLock;
 
 pub use serial_test::serial;
 
-pub fn test_init() -> impl ScopeGuarding<Target = ()> {
-    static DONE: OnceLock<()> = OnceLock::new();
-    DONE.get_or_init(|| {
+pub fn test_init() {
+    static DONE: std::sync::Once = std::sync::Once::new();
+    DONE.call_once(|| {
         // If we are building with `cargo build` and have build w/ `cmake`, this might not
         // yet exist.
         let mut test_dir = PathBuf::from(BUILD_DIR);
@@ -41,10 +38,6 @@ pub fn test_init() -> impl ScopeGuarding<Target = ()> {
         // Set PWD from getcwd - fixes #5599
         EnvStack::globals().set_pwd_from_getcwd();
     });
-    reader_init(false);
-    ScopeGuard::new((), |()| {
-        reader_deinit(false);
-    })
 }
 
 /// An environment built around an std::map.
@@ -99,35 +92,42 @@ impl Environment for PwdEnvironment {
 
 /// A wrapper around a Parser with some test helpers.
 pub struct TestParser {
-    parser: Parser,
-    pushed_dirs: RefCell<Vec<String>>,
+    pub parser: Parser,
+    pub pushed_dirs: Vec<String>,
 }
 
 impl TestParser {
     pub fn new() -> TestParser {
         TestParser {
             parser: Parser::new(EnvStack::new(), CancelBehavior::default()),
-            pushed_dirs: RefCell::new(Vec::new()),
+            pushed_dirs: Vec::new(),
         }
     }
+}
 
+pub trait ParserExt {
     /// Helper to chdir and then update $PWD.
-    pub fn pushd(&self, path: &str) {
+    fn pushd(&self, pushed_dirs: &mut Vec<String>, path: &str);
+    fn popd(&self, pushed_dirs: &mut Vec<String>);
+}
+
+impl ParserExt for Parser {
+    fn pushd(&self, pushed_dirs: &mut Vec<String>, path: &str) {
         let cwd = wgetcwd();
-        self.pushed_dirs.borrow_mut().push(cwd.to_string());
+        pushed_dirs.push(cwd.to_string());
 
         // We might need to create the directory. We don't care if this fails due to the directory
         // already being present.
         std::fs::create_dir_all(path).unwrap();
 
         std::env::set_current_dir(path).unwrap();
-        self.parser.vars().set_pwd_from_getcwd();
+        self.vars().set_pwd_from_getcwd();
     }
 
-    pub fn popd(&self) {
-        let old_cwd = self.pushed_dirs.borrow_mut().pop().unwrap();
+    fn popd(&self, pushed_dirs: &mut Vec<String>) {
+        let old_cwd = pushed_dirs.pop().unwrap();
         std::env::set_current_dir(old_cwd).unwrap();
-        self.parser.vars().set_pwd_from_getcwd();
+        self.vars().set_pwd_from_getcwd();
     }
 }
 
@@ -135,5 +135,11 @@ impl std::ops::Deref for TestParser {
     type Target = Parser;
     fn deref(&self) -> &Self::Target {
         &self.parser
+    }
+}
+
+impl std::ops::DerefMut for TestParser {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.parser
     }
 }

@@ -32,14 +32,6 @@ jobs:
     - name: make fish_run_tests
       run: |
         make -C build VERBOSE=1 fish_run_tests
-    - name: translation updates
-      run: |
-        # Generate PO files. This should not result it a change in the repo if all translations are
-        # up to date.
-        # Ensure that fish is available as an executable.
-        PATH="$PWD/build:$PATH" build_tools/update_translations.fish
-        # Show diff output. Fail if there is any.
-        git --no-pager diff --exit-code || { echo 'There are uncommitted changes after regenerating the gettext PO files. Make sure to update them via `build_tools/update_translations.fish` after changing source files.'; exit 1; }
 
   ubuntu-32bit-static-pcre2:
     runs-on: ubuntu-latest
@@ -167,7 +159,7 @@ jobs:
     - name: Install deps
       # Not using setup-msys2 `install` option to make it easier to copy/paste
       run: |
-        pacman --noconfirm -S --needed git rust
+        pacman --noconfirm -S --needed git rust python3 diffutils tmux
     - name: rebase
       env:
         MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
@@ -177,10 +169,8 @@ jobs:
     - name: cargo build
       run: |
         cargo build
-    - name: smoketest
-      # We can't run `build_tools/check.sh` yet, there are just too many failures
-      # so this is just a quick check to make sure that fish can swim
+    - name: tests
+      env:
+        FISH_CHECK_LINT: false
       run: |
-        set -x
-        [ "$(target/debug/fish.exe -c 'echo (math 1 + 1)')" = 2 ]
-        cargo test
+        cargo xtask check

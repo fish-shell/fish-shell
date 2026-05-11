@@ -1,4 +1,8 @@
-#![cfg_attr(feature = "benchmark", feature(test))]
+#![cfg_attr(
+    all(nightly, feature = "benchmark"),
+    feature(test),
+    allow(unused_features)
+)]
 #![allow(non_camel_case_types)]
 
 pub const BUILD_VERSION: &str = env!("FISH_BUILD_VERSION");
@@ -28,7 +32,6 @@ pub mod flog;
 pub mod fork_exec;
 pub mod fs;
 pub mod function;
-pub mod future_feature_flags;
 pub mod global_safety;
 pub mod highlight;
 pub mod history;

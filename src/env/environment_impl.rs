@@ -5,7 +5,7 @@ use crate::env::{
 use crate::env_universal_common::EnvUniversal;
 use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::history::{History, history_session_id_from_var};
+use crate::history::{History, history_id_from_var};
 use crate::kill::kill_entries;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::portable_atomic::AtomicU64;
@@ -13,7 +13,7 @@ use crate::prelude::*;
 use crate::reader::{commandline_get_state, reader_status_count};
 use crate::threads::{is_forked_child, is_main_thread};
 use crate::wutil::fish_wcstol_radix;
-use fish_wcstringutil::wcs2zstring;
+use fish_widestring::wcs2zstring;
 use nix::sys::stat::{Mode, umask};
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashSet;
@@ -27,13 +27,10 @@ use std::sync::{Arc, Mutex, MutexGuard, atomic::Ordering};
 /// Getter for universal variables.
 /// This is typically initialized in env_init(), and is considered empty before then.
 pub fn uvars() -> MutexGuard<'static, EnvUniversal> {
-    use std::sync::OnceLock;
+    use std::sync::LazyLock;
     /// Universal variables instance.
-    static UVARS: OnceLock<Mutex<EnvUniversal>> = OnceLock::new();
-    UVARS
-        .get_or_init(|| Mutex::new(EnvUniversal::new()))
-        .lock()
-        .unwrap()
+    static UVARS: LazyLock<Mutex<EnvUniversal>> = LazyLock::new(|| Mutex::new(EnvUniversal::new()));
+    UVARS.lock().unwrap()
 }
 
 /// Whether we were launched with no_config; in this case setting a uvar instead sets a global.
@@ -346,7 +343,7 @@ impl EnvScopedImpl {
         }
     }
 
-    pub fn get_last_statuses(&self) -> &Statuses {
+    pub fn last_statuses(&self) -> &Statuses {
         &self.perproc_data.statuses
     }
 
@@ -373,8 +370,8 @@ impl EnvScopedImpl {
             }
             let history = commandline_get_state(true).history.unwrap_or_else(|| {
                 let fish_history_var = self.getf(L!("fish_history"), EnvMode::default());
-                let session_id = history_session_id_from_var(fish_history_var);
-                History::with_name(&session_id)
+                let history_id = history_id_from_var(fish_history_var);
+                History::new(history_id)
             });
             Some(EnvVar::new_from_name_vec(
                 L!("history"),

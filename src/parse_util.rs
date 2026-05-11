@@ -1,38 +1,38 @@
 //! Various mostly unrelated utility functions related to parsing, loading and evaluating fish code.
-use crate::ast::{
-    self, Ast, Keyword as _, Kind, Leaf as _, Node, NodeVisitor, Token as _, Traversal,
-    is_same_node,
+use crate::{
+    ast::{
+        self, Ast, Keyword as _, Kind, Leaf as _, Node, NodeVisitor, Token as _, Traversal,
+        is_same_node,
+    },
+    builtins::shared::builtin_exists,
+    common::{valid_var_name, valid_var_name_char},
+    expand::{ExpandFlags, ExpandResultCode, expand_one, expand_to_command_and_args},
+    operation_context::OperationContext,
+    parse_constants::{
+        ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
+        ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
+        ERROR_NOT_PID, ERROR_NOT_STATUS, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
+        INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode, ParseErrorList, ParseIssue,
+        ParseKeyword, ParseTokenType, ParseTreeFlags, PipelinePosition, SourceRange,
+        StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
+    },
+    prelude::*,
+    tokenizer::{
+        TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
+        is_token_delimiter, quote_end,
+    },
 };
-use crate::builtins::shared::builtin_exists;
-use crate::common::{
-    EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, escape_string,
-    unescape_string, valid_var_name, valid_var_name_char,
-};
-use crate::expand::{
-    BRACE_BEGIN, BRACE_END, BRACE_SEP, ExpandFlags, ExpandResultCode, INTERNAL_SEPARATOR,
-    VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, expand_one,
-    expand_to_command_and_args,
-};
-use crate::future_feature_flags::{FeatureFlag, feature_test};
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{
-    ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
-    ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR, ERROR_NOT_PID,
-    ERROR_NOT_STATUS, INVALID_BREAK_ERR_MSG, INVALID_CONTINUE_ERR_MSG,
-    INVALID_PIPELINE_CMD_ERR_MSG, ParseError, ParseErrorCode, ParseErrorList, ParseIssue,
-    ParseKeyword, ParseTokenType, ParseTreeFlags, PipelinePosition, SourceRange,
-    StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
-};
-use crate::prelude::*;
-use crate::tokenizer::{
-    TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
-    is_token_delimiter, quote_end,
-};
-use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use fish_common::help_section;
+use fish_common::{UnescapeFlags, UnescapeStringStyle, help_section, unescape_string};
+use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::{count_newlines, truncate};
-use std::ops::Range;
-use std::{iter, ops};
+use fish_widestring::{
+    ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP,
+    INTERNAL_SEPARATOR, VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE,
+};
+use std::{
+    iter,
+    ops::{self, Range},
+};
 
 /// Handles slices: the square brackets in an expression like $foo[5..4]
 /// Return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.
@@ -694,64 +694,6 @@ fn error_for_character(c: char) -> WString {
     }
 }
 
-/// Attempts to escape the string 'cmd' using the given quote type, as determined by the quote
-/// character. The quote can be a single quote or double quote, or L'\0' to indicate no quoting (and
-/// thus escaping should be with backslashes). Optionally do not escape tildes.
-pub fn escape_string_with_quote(
-    cmd: &wstr,
-    quote: Option<char>,
-    escape_flags: EscapeFlags,
-) -> WString {
-    let Some(quote) = quote else {
-        return escape_string(cmd, EscapeStringStyle::Script(escape_flags));
-    };
-    // Here we are going to escape a string with quotes.
-    // A few characters cannot be represented inside quotes, e.g. newlines. In that case,
-    // terminate the quote and then re-enter it.
-    let mut result = WString::new();
-    result.reserve(cmd.len());
-    for c in cmd.chars() {
-        match c {
-            '\n' => {
-                for c in [quote, '\\', 'n', quote] {
-                    result.push(c);
-                }
-            }
-            '\t' => {
-                for c in [quote, '\\', 't', quote] {
-                    result.push(c);
-                }
-            }
-            '\x08' => {
-                for c in [quote, '\\', 'b', quote] {
-                    result.push(c);
-                }
-            }
-            '\r' => {
-                for c in [quote, '\\', 'r', quote] {
-                    result.push(c);
-                }
-            }
-            '\\' => {
-                result.push_str("\\\\");
-            }
-            '$' => {
-                if quote == '"' {
-                    result.push('\\');
-                }
-                result.push('$');
-            }
-            _ => {
-                if c == quote {
-                    result.push('\\');
-                }
-                result.push(c);
-            }
-        }
-    }
-    result
-}
-
 /// Given a string, parse it as fish code and then return the indents. The return value has the same
 /// size as the string.
 pub fn compute_indents(src: &wstr) -> Vec<i32> {
@@ -1026,17 +968,13 @@ impl<'a> NodeVisitor<'a> for IndentVisitor<'a> {
             //   ....cmd3
             //   end
             // See #7252.
-            Kind::JobContinuation(node) => {
-                if self.has_newline(&node.newlines) {
-                    inc_dec = (1, 1);
-                }
+            Kind::JobContinuation(node) if self.has_newline(&node.newlines) => {
+                inc_dec = (1, 1);
             }
 
             // Likewise for && and ||.
-            Kind::JobConjunctionContinuation(node) => {
-                if self.has_newline(&node.newlines) {
-                    inc_dec = (1, 1);
-                }
+            Kind::JobConjunctionContinuation(node) if self.has_newline(&node.newlines) => {
+                inc_dec = (1, 1);
             }
 
             Kind::CaseItemList(_) => {
@@ -1208,23 +1146,21 @@ pub fn detect_parse_errors_in_ast(
     let mut traversal = ast::Traversal::new(ast.top());
     while let Some(node) = traversal.next() {
         match node.kind() {
-            Kind::JobContinuation(jc) => {
+            Kind::JobContinuation(jc)
                 // Somewhat clumsy way of checking for a statement without source in a pipeline.
                 // See if our pipe has source but our statement does not.
-                if jc.pipe.has_source() && jc.statement.try_source_range().is_none() {
+                if jc.pipe.has_source() && jc.statement.try_source_range().is_none() => {
                     has_unclosed_pipe = true;
                 }
-            }
             Kind::JobConjunction(job_conjunction) => {
                 issue.error |= detect_errors_in_job_conjunction(job_conjunction, &mut out_errors);
             }
-            Kind::JobConjunctionContinuation(jcc) => {
+            Kind::JobConjunctionContinuation(jcc)
                 // Somewhat clumsy way of checking for a job without source in a conjunction.
                 // See if our conjunction operator (&& or ||) has source but our job does not.
-                if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() {
+                if jcc.conjunction.has_source() && jcc.job.try_source_range().is_none() => {
                     has_unclosed_conjunction = true;
                 }
-            }
             Kind::Argument(arg) => {
                 let arg_src = arg.source(buff_src);
                 if let Err(e) = detect_errors_in_argument(arg, arg_src, &mut out_errors) {
@@ -1232,7 +1168,7 @@ pub fn detect_parse_errors_in_ast(
                     issue.incomplete |= e.incomplete;
                 }
             }
-            Kind::JobPipeline(job) => {
+            Kind::JobPipeline(job)
                 // Disallow background in the following cases:
                 //
                 // foo & ; and bar
@@ -1240,11 +1176,10 @@ pub fn detect_parse_errors_in_ast(
                 // if foo & ; end
                 // while foo & ; end
                 // If it's not a background job, nothing to do.
-                if job.bg.is_some() {
+                if job.bg.is_some() => {
                     issue.error |=
                         detect_errors_in_backgrounded_job(&traversal, job, &mut out_errors);
                 }
-            }
             Kind::DecoratedStatement(stmt) => {
                 issue.error |= detect_errors_in_decorated_statement(
                     buff_src,
@@ -1718,7 +1653,7 @@ fn detect_errors_in_decorated_statement(
         if matches!(
             expand_to_command_and_args(
                 unexp_command,
-                &OperationContext::empty(),
+                &mut OperationContext::empty(),
                 &mut command,
                 None,
                 Some(&mut new_errors),
@@ -1794,7 +1729,7 @@ fn detect_errors_in_decorated_statement(
             if expand_one(
                 &mut command,
                 ExpandFlags::FAIL_ON_CMDSUBST,
-                &OperationContext::empty(),
+                &mut OperationContext::empty(),
                 match parse_errors {
                     Some(pe) => Some(pe),
                     None => None,
@@ -1965,10 +1900,9 @@ const VAR_ERR_LEN: usize = 16;
 #[cfg(test)]
 mod tests {
     use super::{
-        BOOL_AFTER_BACKGROUND_ERROR_MSG, compute_indents, detect_parse_errors,
-        escape_string_with_quote, get_cmdsubst_extent, get_process_extent, slice_length,
+        BOOL_AFTER_BACKGROUND_ERROR_MSG, compute_indents, detect_parse_errors, get_cmdsubst_extent,
+        get_process_extent, slice_length,
     };
-    use crate::common::EscapeFlags;
     use crate::parse_constants::{
         ERROR_BAD_VAR_CHAR1, ERROR_BRACKETED_VARIABLE_QUOTED1, ERROR_BRACKETED_VARIABLE1,
         ERROR_NO_VAR_NAME, ERROR_NOT_ARGV_AT, ERROR_NOT_ARGV_COUNT, ERROR_NOT_ARGV_STAR,
@@ -1981,7 +1915,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_error_messages() {
-        let _cleanup = test_init();
+        test_init();
         // Given a format string, returns a list of non-empty strings separated by format specifiers. The
         // format specifiers themselves are omitted.
         fn separate_by_format_specifiers(format: &wstr) -> Vec<&wstr> {
@@ -2073,7 +2007,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_get_cmdsubst_extent() {
-        let _cleanup = test_init();
+        test_init();
         let a = L!("echo (echo (echo hi");
         assert_eq!(get_cmdsubst_extent(a, 0), 0..a.len());
         assert_eq!(get_cmdsubst_extent(a, 1), 0..a.len());
@@ -2089,7 +2023,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_slice_length() {
-        let _cleanup = test_init();
+        test_init();
         assert_eq!(slice_length(L!("[2]")), Some(3));
         assert_eq!(slice_length(L!("[12]")), Some(4));
         assert_eq!(slice_length(L!("[\"foo\"]")), Some(7));
@@ -2098,81 +2032,8 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_escape_quotes() {
-        let _cleanup = test_init();
-        macro_rules! validate {
-            ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
-                assert_eq!(
-                    escape_string_with_quote(
-                        L!($cmd),
-                        $quote,
-                        if $no_tilde {
-                            EscapeFlags::NO_TILDE
-                        } else {
-                            EscapeFlags::empty()
-                        }
-                    ),
-                    L!($expected)
-                );
-            };
-        }
-        macro_rules! validate_no_quoted {
-            ($cmd:expr, $quote:expr, $no_tilde:expr, $expected:expr) => {
-                assert_eq!(
-                    escape_string_with_quote(
-                        L!($cmd),
-                        $quote,
-                        EscapeFlags::NO_QUOTED
-                            | if $no_tilde {
-                                EscapeFlags::NO_TILDE
-                            } else {
-                                EscapeFlags::empty()
-                            }
-                    ),
-                    L!($expected)
-                );
-            };
-        }
-
-        validate!("abc~def", None, false, "'abc~def'");
-        validate!("abc~def", None, true, "abc~def");
-        validate!("~abc", None, false, "'~abc'");
-        validate!("~abc", None, true, "~abc");
-
-        // These are "raw string literals"
-        validate_no_quoted!("abc", None, false, "abc");
-        validate_no_quoted!("abc~def", None, false, "abc\\~def");
-        validate_no_quoted!("abc~def", None, true, "abc~def");
-        validate_no_quoted!("abc\\~def", None, false, "abc\\\\\\~def");
-        validate_no_quoted!("abc\\~def", None, true, "abc\\\\~def");
-        validate_no_quoted!("~abc", None, false, "\\~abc");
-        validate_no_quoted!("~abc", None, true, "~abc");
-        validate_no_quoted!("~abc|def", None, false, "\\~abc\\|def");
-        validate_no_quoted!("|abc~def", None, false, "\\|abc\\~def");
-        validate_no_quoted!("|abc~def", None, true, "\\|abc~def");
-        validate_no_quoted!("foo\nbar", None, false, "foo\\nbar");
-
-        // Note tildes are not expanded inside quotes, so no_tilde is ignored with a quote.
-        validate_no_quoted!("abc", Some('\''), false, "abc");
-        validate_no_quoted!("abc\\def", Some('\''), false, "abc\\\\def");
-        validate_no_quoted!("abc'def", Some('\''), false, "abc\\'def");
-        validate_no_quoted!("~abc'def", Some('\''), false, "~abc\\'def");
-        validate_no_quoted!("~abc'def", Some('\''), true, "~abc\\'def");
-        validate_no_quoted!("foo\nba'r", Some('\''), false, "foo'\\n'ba\\'r");
-        validate_no_quoted!("foo\\\\bar", Some('\''), false, "foo\\\\\\\\bar");
-
-        validate_no_quoted!("abc", Some('"'), false, "abc");
-        validate_no_quoted!("abc\\def", Some('"'), false, "abc\\\\def");
-        validate_no_quoted!("~abc'def", Some('"'), false, "~abc'def");
-        validate_no_quoted!("~abc'def", Some('"'), true, "~abc'def");
-        validate_no_quoted!("foo\nba'r", Some('"'), false, "foo\"\\n\"ba'r");
-        validate_no_quoted!("foo\\\\bar", Some('"'), false, "foo\\\\\\\\bar");
-    }
-
-    #[test]
-    #[serial]
     fn test_indents() {
-        let _cleanup = test_init();
+        test_init();
         // A struct which is either text or a new indent.
         struct Segment {
             // The indent to set

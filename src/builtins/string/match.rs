@@ -3,12 +3,14 @@ use std::collections::HashMap;
 use std::num::NonZeroUsize;
 
 use super::*;
-use crate::common::str2wcstring;
-use crate::env::{EnvVar, EnvVarFlags};
-use crate::flog::flog;
-use crate::parse_util::unescape_wildcards;
-use crate::parser::ParserEnvSetMode;
-use crate::wildcard::{ANY_STRING, wildcard_match};
+use crate::{
+    env::{EnvVar, EnvVarFlags},
+    flog::flog,
+    parse_util::unescape_wildcards,
+    parser::ParserEnvSetMode,
+    wildcard::wildcard_match,
+};
+use fish_widestring::{ANY_STRING, str2wcstring};
 
 #[derive(Default)]
 pub struct Match<'args> {
@@ -38,7 +40,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
     ];
     const SHORT_OPTIONS: &'static wstr = L!("aegivqrnm:");
 
-    fn parse_opt(&mut self, _n: &wstr, c: char, arg: Option<&wstr>) -> Result<(), StringError> {
+    fn parse_opt(&mut self, c: char, arg: Option<&wstr>) -> Result<(), StringError<'_>> {
         match c {
             'a' => self.all = true,
             'e' => self.entire = true,
@@ -55,11 +57,7 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
                         .ok()
                         .and_then(|v| NonZeroUsize::new(v as usize))
                         .ok_or_else(|| {
-                            StringError::InvalidArgs(wgettext_fmt!(
-                                BUILTIN_ERR_INVALID_MAX_MATCHES,
-                                _n,
-                                arg
-                            ))
+                            StringError::InvalidArgs(err_fmt!(Error::INVALID_MAX_MATCHES, arg))
                         })?;
                     Some(max)
                 }
@@ -75,9 +73,12 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
         args: &[&'args wstr],
         streams: &mut IoStreams,
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
         let Some(arg) = args.get(*optind).copied() else {
-            string_error!(streams, BUILTIN_ERR_ARG_COUNT0, cmd);
+            err_fmt!(Error::MISSING_ARG)
+                .subcmd(cmd, subcmd)
+                .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         };
         *optind += 1;
@@ -87,37 +88,41 @@ impl<'args> StringSubCommand<'args> for Match<'args> {
 
     fn handle(
         &mut self,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
         optind: &mut usize,
         args: &[&wstr],
     ) -> Result<(), ErrorCode> {
-        let cmd = args[0];
+        let cmd = L!("string");
+        let subcmd = args[0];
 
         if self.entire && self.index {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 wgettext!("--entire and --index are mutually exclusive")
-            ));
+            )
+            .subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         if self.invert_match && self.groups_only {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 wgettext!("--invert and --groups-only are mutually exclusive")
-            ));
+            )
+            .subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
         if self.entire && self.groups_only {
-            streams.err.appendln(&wgettext_fmt!(
-                BUILTIN_ERR_COMBO2,
-                cmd,
+            err_fmt!(
+                Error::INVALID_OPT_COMBO_WITH_CTX,
                 wgettext!("--entire and --groups-only are mutually exclusive")
-            ));
+            )
+            .subcmd(cmd, subcmd)
+            .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
 
@@ -229,7 +234,10 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
             // the capture group names are valid variable names
             .block_utf_pattern_directive(true)
             .build(pattern.as_char_slice())
-            .map_err(|e| RegexError::Compile(pattern.to_owned(), e))?;
+            .map_err(|error| RegexError::Compile {
+                pattern: pattern.to_owned(),
+                error,
+            })?;
 
         Self::validate_capture_group_names(regex.capture_names())?;
 
@@ -310,7 +318,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
         for name in capture_group_names.iter().filter_map(|n| n.as_ref()) {
             let wname = str2wcstring(name);
             if EnvVar::flags_for(&wname).contains(EnvVarFlags::READ_ONLY) {
-                return Err(RegexError::InvalidCaptureGroupName(wname));
+                return Err(RegexError::InvalidCaptureGroupName { name: wname });
             }
         }
         Ok(())
@@ -414,15 +422,15 @@ impl<'opts, 'args> WildCardMatcher<'opts, 'args> {
 #[cfg(test)]
 mod tests {
     use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
-    use crate::future_feature_flags::{FeatureFlag, scoped_test};
     use crate::tests::prelude::*;
     use crate::validate;
+    use fish_feature_flags::{FeatureFlag, with_overridden_feature};
 
     #[test]
     #[serial]
     #[rustfmt::skip]
     fn plain() {
-        let _cleanup = test_init();
+        test_init();
         validate!(["string", "match"], STATUS_INVALID_ARGS, "");
         validate!(["string", "match", ""], STATUS_CMD_ERROR, "");
         validate!(["string", "match", "", ""], STATUS_CMD_OK, "\n");
@@ -487,7 +495,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn test_qmark_noglob_true() {
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, true, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, true, || {
             validate!(["string", "match", "a*b?c", "axxb?c"], STATUS_CMD_OK, "axxb?c\n");
             validate!(["string", "match", "*?", "a"], STATUS_CMD_ERROR, "");
             validate!(["string", "match", "*?", "ab"], STATUS_CMD_ERROR, "");
@@ -515,7 +523,7 @@ mod tests {
     #[serial]
     #[rustfmt::skip]
     fn test_qmark_glob() {
-        scoped_test(FeatureFlag::QuestionMarkNoGlob, false, || {
+        with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, false, || {
             validate!(["string", "match", "a*b?c", "axxbyc"], STATUS_CMD_OK, "axxbyc\n");
             validate!(["string", "match", "*?", "a"], STATUS_CMD_OK, "a\n");
             validate!(["string", "match", "*?", "ab"], STATUS_CMD_OK, "ab\n");

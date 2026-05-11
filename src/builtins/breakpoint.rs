@@ -1,18 +1,21 @@
 use super::prelude::*;
+use crate::builtins::error::Error;
 use crate::parser::{Block, BlockType};
 use crate::reader::reader_read;
+use crate::{err_fmt, err_str};
 use libc::STDIN_FILENO;
 
 /// Implementation of the builtin breakpoint command, used to launch the interactive debugger.
-pub fn breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
+pub fn breakpoint(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    argv: &mut [&wstr],
+) -> BuiltinResult {
     let cmd = argv[0];
     if argv.len() != 1 {
-        streams.err.appendln(&wgettext_fmt!(
-            BUILTIN_ERR_ARG_COUNT1,
-            cmd,
-            0,
-            argv.len() - 1
-        ));
+        err_fmt!(Error::UNEXP_ARG_COUNT, 0, argv.len() - 1)
+            .cmd(cmd)
+            .finish(streams);
         return Err(STATUS_INVALID_ARGS);
     }
 
@@ -26,12 +29,11 @@ pub fn breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
     {
         if parser
             .block_at_index(1)
-            .is_none_or(|b| b.typ() == BlockType::breakpoint)
+            .is_none_or(|b| b.typ() == BlockType::Breakpoint)
         {
-            streams.err.appendln(&wgettext_fmt!(
-                "%s: Command not valid at an interactive prompt",
-                cmd,
-            ));
+            err_str!("Command not valid at an interactive prompt")
+                .cmd(cmd)
+                .finish(streams);
             return Err(STATUS_ILLEGAL_CMD);
         }
     }
@@ -40,5 +42,5 @@ pub fn breakpoint(parser: &Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
     let io_chain = &streams.io_chain;
     reader_read(parser, STDIN_FILENO, io_chain)?;
     parser.pop_block(bpb);
-    BuiltinResult::from_dynamic(parser.get_last_status())
+    BuiltinResult::from_dynamic(parser.last_status())
 }

@@ -1,41 +1,38 @@
 //! The fish_indent program.
 
-use std::ffi::OsStr;
-use std::fs;
-use std::io::{Read, Write as _};
-use std::os::unix::ffi::OsStrExt as _;
-
-use crate::locale::set_libc_locales;
-use crate::panic::panic_handler;
-
 use super::prelude::*;
-use crate::ast::{
-    self, AsNode as _, Ast, Kind, Leaf as _, Node, NodeVisitor, SourceRangeList, Traversal,
+use crate::{
+    ast::{self, AsNode as _, Ast, Kind, Leaf as _, Node, NodeVisitor, SourceRangeList, Traversal},
+    builtins::error::Error,
+    common::{PROGRAM_NAME, get_program_name},
+    env::{EnvStack, env_init, environment::Environment as _},
+    err_fmt, err_str,
+    global_safety::RelaxedAtomicBool,
+    highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell},
+    locale::set_libc_locales,
+    operation_context::OperationContext,
+    panic::panic_handler,
+    parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange},
+    parse_util::{SPACES_PER_INDENT, apply_indents, compute_indents},
+    prelude::*,
+    print_help::print_help,
+    threads,
+    tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer},
+    topic_monitor::topic_monitor_init,
+    wutil::fish_iswalnum,
 };
-use crate::common::{
-    PROGRAM_NAME, ReadExt as _, UnescapeFlags, UnescapeStringStyle, bytes2wcstring,
-    get_program_name, osstr2wcstring, unescape_string,
-};
-use crate::env::EnvStack;
-use crate::env::env_init;
-use crate::env::environment::Environment as _;
-use crate::expand::INTERNAL_SEPARATOR;
-use crate::future_feature_flags;
-use crate::global_safety::RelaxedAtomicBool;
-use crate::highlight::{HighlightRole, HighlightSpec, colorize, highlight_shell};
-use crate::operation_context::OperationContext;
-use crate::parse_constants::{ParseTokenType, ParseTreeFlags, SourceRange};
-use crate::parse_util::{SPACES_PER_INDENT, apply_indents, compute_indents};
-use crate::prelude::*;
-use crate::print_help::print_help;
-use crate::threads;
-use crate::tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer};
-use crate::topic_monitor::topic_monitor_init;
-use crate::wutil::fish_iswalnum;
 use assert_matches::assert_matches;
-use fish_wcstringutil::{count_preceding_backslashes, wcs2bytes};
+use fish_common::{ReadExt as _, UnescapeFlags, UnescapeStringStyle, unescape_string};
+use fish_wcstringutil::count_preceding_backslashes;
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
-use std::fmt::Write as _;
+use fish_widestring::{INTERNAL_SEPARATOR, bytes2wcstring, osstr2wcstring, wcs2bytes};
+use std::{
+    ffi::OsStr,
+    fmt::Write as _,
+    fs,
+    io::{Read, Write as _},
+    os::unix::ffi::OsStrExt as _,
+};
 
 /// Note: this got somewhat more complicated after introducing the new AST, because that AST no
 /// longer encodes detailed lexical information (e.g. every newline). This feels more complex
@@ -945,7 +942,7 @@ fn throwing_main() -> i32 {
     // Only set these here so you can't set them via the builtin.
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {
         for s in features_var.as_list() {
-            future_feature_flags::set_from_string(s.as_utfstr());
+            fish_feature_flags::set_from_string(s.as_utfstr());
         }
     }
 
@@ -953,13 +950,17 @@ fn throwing_main() -> i32 {
     do_indent(None, &mut streams, args).builtin_status_code()
 }
 
-pub fn fish_indent(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn fish_indent(
+    parser: &mut Parser,
+    streams: &mut IoStreams,
+    args: &mut [&wstr],
+) -> BuiltinResult {
     let args = args.iter_mut().map(|x| x.to_owned()).collect();
     do_indent(Some(parser), streams, args)
 }
 
 fn do_indent(
-    parser: Option<&Parser>,
+    parser: Option<&mut Parser>,
     streams: &mut IoStreams,
     args: Vec<WString>,
 ) -> BuiltinResult {
@@ -1026,19 +1027,15 @@ fn do_indent(
             '\x03' => output_type = OutputType::PygmentsCsv,
             'c' => output_type = OutputType::Check,
             ';' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_UNEXP_OPT_ARG,
-                    "fish_indent",
-                    w.argv[w.wopt_index - 1]
-                ));
+                err_fmt!(Error::UNEXP_OPT_ARG, w.argv[w.wopt_index - 1])
+                    .cmd(L!("fish_indent"))
+                    .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
             '?' => {
-                streams.err.appendln(&wgettext_fmt!(
-                    BUILTIN_ERR_UNKNOWN_OPT,
-                    "fish_indent",
-                    w.argv[w.wopt_index - 1]
-                ));
+                err_fmt!(Error::UNKNOWN_OPT, w.argv[w.wopt_index - 1])
+                    .cmd(L!("fish_indent"))
+                    .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
             _ => panic!(),
@@ -1054,18 +1051,14 @@ fn do_indent(
     while i < args.len() || (args.is_empty() && i == 0) {
         if args.is_empty() && i == 0 {
             if output_type == OutputType::File {
-                streams.err.append(&sprintf!(
-                    "%s\n\n $ %s -w foo.fish\n",
-                    wgettext!("Expected file path to read/write for -w:"),
-                    get_program_name()
-                ));
+                err_str!("Expected file path to read/write for -w:")
+                    .append_to_msg(&sprintf!("\n\n $ %s -w foo.fish\n", get_program_name()))
+                    .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
             let Some(stdin_file) = streams.stdin_file.as_mut() else {
-                let cmd = "fish_indent";
-                streams
-                    .err
-                    .appendln(&wgettext_fmt!(BUILTIN_ERR_STDIN_CLOSED, cmd));
+                let cmd = L!("fish_indent");
+                err_str!(Error::STDIN_CLOSED).cmd(cmd).finish(streams);
                 return Err(STATUS_CMD_ERROR);
             };
             let mut buf = vec![];
@@ -1091,11 +1084,7 @@ fn do_indent(
                     output_location = arg;
                 }
                 Err(err) => {
-                    streams.err.appendln(&wgettext_fmt!(
-                        "Opening \"%s\" failed: %s",
-                        arg,
-                        err.to_string()
-                    ));
+                    err_fmt!("Opening \"%s\" failed: %s", arg, err.to_string()).finish(streams);
                     return Err(STATUS_CMD_ERROR);
                 }
             }
@@ -1154,7 +1143,7 @@ fn do_indent(
             highlight_shell(
                 &output_wtext,
                 &mut colors,
-                &OperationContext::globals(),
+                &mut OperationContext::globals(),
                 false,
                 None,
             );
@@ -1172,11 +1161,12 @@ fn do_indent(
                             let _ = file.write_all(&wcs2bytes(&output_wtext));
                         }
                         Err(err) => {
-                            streams.err.appendln(&wgettext_fmt!(
+                            err_fmt!(
                                 "Opening \"%s\" failed: %s",
                                 output_location,
                                 err.to_string()
-                            ));
+                            )
+                            .finish(streams);
                             return Err(STATUS_CMD_ERROR);
                         }
                     }
@@ -1220,39 +1210,6 @@ fn read_file(mut f: impl Read) -> Result<WString, ()> {
     Ok(bytes2wcstring(&buf))
 }
 
-fn highlight_role_to_string(role: HighlightRole) -> &'static wstr {
-    match role {
-        HighlightRole::normal => L!("normal"),
-        HighlightRole::error => L!("error"),
-        HighlightRole::command => L!("command"),
-        HighlightRole::keyword => L!("keyword"),
-        HighlightRole::statement_terminator => L!("statement_terminator"),
-        HighlightRole::param => L!("param"),
-        HighlightRole::option => L!("option"),
-        HighlightRole::comment => L!("comment"),
-        HighlightRole::search_match => L!("search_match"),
-        HighlightRole::operat => L!("operat"),
-        HighlightRole::escape => L!("escape"),
-        HighlightRole::quote => L!("quote"),
-        HighlightRole::redirection => L!("redirection"),
-        HighlightRole::autosuggestion => L!("autosuggestion"),
-        HighlightRole::selection => L!("selection"),
-        HighlightRole::pager_progress => L!("pager_progress"),
-        HighlightRole::pager_background => L!("pager_background"),
-        HighlightRole::pager_prefix => L!("pager_prefix"),
-        HighlightRole::pager_completion => L!("pager_completion"),
-        HighlightRole::pager_description => L!("pager_description"),
-        HighlightRole::pager_secondary_background => L!("pager_secondary_background"),
-        HighlightRole::pager_secondary_prefix => L!("pager_secondary_prefix"),
-        HighlightRole::pager_secondary_completion => L!("pager_secondary_completion"),
-        HighlightRole::pager_secondary_description => L!("pager_secondary_description"),
-        HighlightRole::pager_selected_background => L!("pager_selected_background"),
-        HighlightRole::pager_selected_prefix => L!("pager_selected_prefix"),
-        HighlightRole::pager_selected_completion => L!("pager_selected_completion"),
-        HighlightRole::pager_selected_description => L!("pager_selected_description"),
-    }
-}
-
 // Entry point for Pygments CSV output.
 // Our output is a newline-separated string.
 // Each line is of the form `start,end,role`
@@ -1261,7 +1218,13 @@ fn highlight_role_to_string(role: HighlightRole) -> &'static wstr {
 // 3,7,command
 fn make_pygments_csv(src: &wstr) -> Vec<u8> {
     let mut colors = vec![];
-    highlight_shell(src, &mut colors, &OperationContext::globals(), false, None);
+    highlight_shell(
+        src,
+        &mut colors,
+        &mut OperationContext::globals(),
+        false,
+        None,
+    );
     assert_eq!(
         colors.len(),
         src.len(),
@@ -1295,14 +1258,7 @@ fn make_pygments_csv(src: &wstr) -> Vec<u8> {
     // Now render these to a string.
     let mut result = String::with_capacity(token_ranges.len() * 32);
     for range in token_ranges {
-        writeln!(
-            result,
-            "{},{},{}",
-            range.start,
-            range.end,
-            highlight_role_to_string(range.role)
-        )
-        .unwrap();
+        writeln!(result, "{},{},{}", range.start, range.end, range.role).unwrap();
     }
     result.into_bytes()
 }
@@ -1334,20 +1290,20 @@ fn prettify(streams: &mut IoStreams, src: &wstr, do_indent: bool) -> WString {
 /// for the various colors.
 fn html_class_name_for_color(spec: HighlightSpec) -> &'static wstr {
     match spec.foreground {
-        HighlightRole::normal => L!("fish_color_normal"),
-        HighlightRole::error => L!("fish_color_error"),
-        HighlightRole::command => L!("fish_color_command"),
-        HighlightRole::statement_terminator => L!("fish_color_statement_terminator"),
-        HighlightRole::param => L!("fish_color_param"),
-        HighlightRole::option => L!("fish_color_option"),
-        HighlightRole::comment => L!("fish_color_comment"),
-        HighlightRole::search_match => L!("fish_color_search_match"),
-        HighlightRole::operat => L!("fish_color_operator"),
-        HighlightRole::escape => L!("fish_color_escape"),
-        HighlightRole::quote => L!("fish_color_quote"),
-        HighlightRole::redirection => L!("fish_color_redirection"),
-        HighlightRole::autosuggestion => L!("fish_color_autosuggestion"),
-        HighlightRole::selection => L!("fish_color_selection"),
+        HighlightRole::Normal => L!("fish_color_normal"),
+        HighlightRole::Error => L!("fish_color_error"),
+        HighlightRole::Command => L!("fish_color_command"),
+        HighlightRole::StatementTerminator => L!("fish_color_statement_terminator"),
+        HighlightRole::Param => L!("fish_color_param"),
+        HighlightRole::Option => L!("fish_color_option"),
+        HighlightRole::Comment => L!("fish_color_comment"),
+        HighlightRole::SearchMatch => L!("fish_color_search_match"),
+        HighlightRole::Operat => L!("fish_color_operator"),
+        HighlightRole::Escape => L!("fish_color_escape"),
+        HighlightRole::Quote => L!("fish_color_quote"),
+        HighlightRole::Redirection => L!("fish_color_redirection"),
+        HighlightRole::Autosuggestion => L!("fish_color_autosuggestion"),
+        HighlightRole::Selection => L!("fish_color_selection"),
         _ => L!("fish_color_other"),
     }
 }

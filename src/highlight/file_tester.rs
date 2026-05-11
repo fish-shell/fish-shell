@@ -2,28 +2,29 @@
 // to support highlighting.
 // Because this may perform blocking I/O, we compute results in a separate thread,
 // and provide them optimistically.
-use crate::common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
-use crate::expand::{
-    BRACE_BEGIN, BRACE_END, BRACE_SEP, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, VARIABLE_EXPAND,
-    VARIABLE_EXPAND_SINGLE, expand_one,
+use crate::{
+    expand::{ExpandFlags, expand_one, expand_tilde},
+    operation_context::OperationContext,
+    path::path_apply_working_directory,
+    redirection::RedirectionMode,
+    threads::assert_is_background_thread,
+    wutil::{dir_iter::DirIter, fish_wcstoi, normalize_path, waccess, wbasename, wdirname, wstat},
 };
-use crate::expand::{ExpandFlags, HOME_DIRECTORY, expand_tilde};
-use crate::operation_context::OperationContext;
-use crate::path::path_apply_working_directory;
-use crate::redirection::RedirectionMode;
-use crate::threads::assert_is_background_thread;
-use crate::wildcard::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
-use crate::wutil::{
-    dir_iter::DirIter, fish_wcstoi, normalize_path, waccess, wbasename, wdirname, wstat,
-};
+use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{
     string_prefixes_string, string_prefixes_string_case_insensitive, string_suffixes_string,
 };
-use fish_widestring::{L, WExt as _, WString, wstr};
+use fish_widestring::{
+    ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP, HOME_DIRECTORY,
+    INTERNAL_SEPARATOR, L, PROCESS_EXPAND_SELF, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, WExt as _,
+    WString, wstr,
+};
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
-use std::collections::{HashMap, HashSet};
-use std::os::fd::RawFd;
+use std::{
+    collections::{HashMap, HashSet},
+    os::fd::RawFd,
+};
 
 // This is used only internally to this file, and is exposed only for testing.
 #[derive(Clone, Copy, Default)]
@@ -47,15 +48,15 @@ pub struct IsErr;
 /// The result of a file test.
 pub type FileTestResult = Result<IsFile, IsErr>;
 
-pub struct FileTester<'s> {
+pub struct FileTester<'src, 'opctx> {
     // The working directory, for resolving paths against.
     working_directory: WString,
     // The operation context.
-    ctx: &'s OperationContext<'s>,
+    pub(super) ctx: &'opctx mut OperationContext<'src>,
 }
 
-impl<'s> FileTester<'s> {
-    pub fn new(working_directory: WString, ctx: &'s OperationContext<'s>) -> Self {
+impl<'src, 'opctx> FileTester<'src, 'opctx> {
+    pub fn new(working_directory: WString, ctx: &'opctx mut OperationContext<'src>) -> Self {
         Self {
             working_directory,
             ctx,
@@ -101,7 +102,7 @@ impl<'s> FileTester<'s> {
     // Test if the string is a prefix of a valid path we could cd into, or is some other token
     // we recognize (primarily --help).
     // If is_prefix is true, we test if the string is a prefix of a valid path we could cd into.
-    pub fn test_cd_path(&self, token: &wstr, is_prefix: bool) -> FileTestResult {
+    pub fn test_cd_path(&mut self, token: &wstr, is_prefix: bool) -> FileTestResult {
         let mut param = token.to_owned();
         if !expand_one(&mut param, ExpandFlags::FAIL_ON_CMDSUBST, self.ctx, None) {
             // Failed expansion (e.g. may contain a command substitution). Ignore it.
@@ -132,7 +133,11 @@ impl<'s> FileTester<'s> {
 
     // Test if a the given string is a valid redirection target, and if so, whether
     // it is a path to an existing file.
-    pub fn test_redirection_target(&self, target: &wstr, mode: RedirectionMode) -> FileTestResult {
+    pub fn test_redirection_target(
+        &mut self,
+        target: &wstr,
+        mode: RedirectionMode,
+    ) -> FileTestResult {
         // Skip targets exceeding PATH_MAX. See #7837.
         if target.len() > (PATH_MAX as usize) {
             return Err(IsErr);
@@ -427,45 +432,46 @@ pub fn fs_is_case_insensitive(
 #[cfg(test)]
 mod tests {
     use super::{FileTester, IsErr, IsFile, PathFlags, is_potential_path};
-    use crate::common::osstr2wcstring;
-    use crate::env::EnvStack;
-    use crate::operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext};
-    use crate::prelude::*;
-    use crate::tests::prelude::*;
+    use crate::{
+        env::EnvStack,
+        operation_context::{EXPANSION_LIMIT_DEFAULT, OperationContext},
+        prelude::*,
+        redirection::RedirectionMode,
+        tests::prelude::*,
+    };
+    use fish_tempfile::TempDir;
+    use fish_widestring::osstr2wcstring;
+    use std::{
+        fs::{self, File, Permissions, create_dir_all},
+        os::unix::fs::PermissionsExt as _,
+        path::PathBuf,
+    };
 
-    use crate::redirection::RedirectionMode;
-    use std::fs::{self, File, Permissions, create_dir_all};
-    use std::os::unix::fs::PermissionsExt as _;
-    use std::path::PathBuf;
-
-    struct TempDirWithCtx {
-        tempdir: fish_tempfile::TempDir,
-        ctx: OperationContext<'static>,
+    fn temp_dir() -> TempDir {
+        fish_tempfile::new_dir().unwrap()
     }
 
-    impl TempDirWithCtx {
-        fn new() -> TempDirWithCtx {
-            TempDirWithCtx {
-                tempdir: fish_tempfile::new_dir().unwrap(),
-                ctx: OperationContext::empty(),
-            }
-        }
+    fn filepath(tempdir: &TempDir, name: &str) -> PathBuf {
+        tempdir.path().join(name)
+    }
 
-        fn filepath(&self, name: &str) -> PathBuf {
-            self.tempdir.path().join(name)
-        }
+    fn op_context() -> OperationContext<'static> {
+        OperationContext::empty()
+    }
 
-        fn file_tester(&self) -> FileTester<'_> {
-            FileTester::new(osstr2wcstring(self.tempdir.path()), &self.ctx)
-        }
+    fn file_tester<'a>(
+        ctx: &'a mut OperationContext<'static>,
+        tempdir: &TempDir,
+    ) -> FileTester<'static, 'a> {
+        FileTester::new(osstr2wcstring(tempdir.path()), ctx)
     }
 
     #[test]
     fn test_ispath() {
-        let temp = TempDirWithCtx::new();
-        let tester = temp.file_tester();
+        let (tempdir, ctx) = (temp_dir(), &mut op_context());
+        let tester = file_tester(ctx, &tempdir);
 
-        let file_path = temp.filepath("file.txt");
+        let file_path = filepath(&tempdir, "file.txt");
         File::create(file_path).unwrap();
 
         let result = tester.test_path(L!("file.txt"), false);
@@ -493,7 +499,7 @@ mod tests {
         assert!(!result);
 
         // Directories are also files.
-        let dir_path = temp.filepath("somedir");
+        let dir_path = filepath(&tempdir, "somedir");
         create_dir_all(dir_path).unwrap();
 
         let result = tester.test_path(L!("somedir"), false);
@@ -511,13 +517,13 @@ mod tests {
 
     #[test]
     fn test_iscdpath() {
-        let temp = TempDirWithCtx::new();
-        let tester = temp.file_tester();
+        let (tempdir, ctx) = (temp_dir(), &mut op_context());
+        let mut tester = file_tester(ctx, &tempdir);
 
         // Note cd (unlike file paths) should report IsErr for invalid cd paths,
         // rather than IsFile(false).
 
-        let dir_path = temp.filepath("somedir");
+        let dir_path = filepath(&tempdir, "somedir");
         create_dir_all(dir_path).unwrap();
 
         let result = tester.test_cd_path(L!("somedir"), false);
@@ -542,12 +548,12 @@ mod tests {
     #[test]
     fn test_redirections() {
         // Note we use is_ok and is_err since we don't care about the IsFile part.
-        let temp = TempDirWithCtx::new();
-        let tester = temp.file_tester();
-        let file_path = temp.filepath("file.txt");
+        let (tempdir, ctx) = (temp_dir(), &mut op_context());
+        let mut tester = file_tester(ctx, &tempdir);
+        let file_path = filepath(&tempdir, "file.txt");
         File::create(&file_path).unwrap();
 
-        let dir_path = temp.filepath("somedir");
+        let dir_path = filepath(&tempdir, "somedir");
         create_dir_all(&dir_path).unwrap();
 
         // Normal redirection.
@@ -729,7 +735,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_is_potential_path() {
-        let _cleanup = test_init();
+        test_init();
         // Directories
         std::fs::create_dir_all("test/is_potential_path_test/alpha/").unwrap();
         std::fs::create_dir_all("test/is_potential_path_test/beta/").unwrap();

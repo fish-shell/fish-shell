@@ -1,26 +1,11 @@
+# localization: tier1
+
 # This file does some internal fish setup.
 # It is not recommended to remove or edit it.
-#
-# Set default field separators
-#
+
 set -g IFS \n\ \t
 set -qg __fish_added_user_paths
 or set -g __fish_added_user_paths
-
-#
-# Create the default command_not_found handler
-#
-function __fish_default_command_not_found_handler
-    printf (_ "fish: Unknown command: %s\n") (string escape -- $argv[1]) >&2
-end
-
-if not status --is-interactive
-    # Hook up the default as the command_not_found handler
-    # if we are not interactive to avoid custom handlers.
-    function fish_command_not_found --on-event fish_command_not_found
-        __fish_default_command_not_found_handler $argv
-    end
-end
 
 #
 # Set default search paths for completions and shellscript functions
@@ -36,8 +21,8 @@ status get-file __fish_build_paths.fish | source
 
 # Compute the directories for vendor configuration.  We want to include
 # all of XDG_DATA_DIRS, as well as the __extra_* dirs defined above.
-set -l xdg_data_dirs
-if set -q XDG_DATA_DIRS
+set -l xdg_data_dirs /usr/local/share/fish /usr/share/fish
+if test -n "$XDG_DATA_DIRS"
     set --path xdg_data_dirs $XDG_DATA_DIRS
     set xdg_data_dirs (string replace -r '([^/])/$' '$1' -- $xdg_data_dirs)/fish
 end
@@ -146,7 +131,7 @@ and __fish_set_locale
 # Some things should only be done for login terminals
 # This used to be in etc/config.fish - keep it here to keep the semantics
 #
-if status --is-login
+if status is-login
     if command -sq /usr/libexec/path_helper
         __fish_macos_set_env PATH /etc/paths '/etc/paths.d'
         if test -n "$MANPATH"
@@ -207,7 +192,9 @@ end
 if status is-interactive
     __fish_migrate
 end
-fish_config theme choose default --no-override
+if status is-interactive || set -qgx __fish_force_load_default_theme
+    fish_config theme choose default --no-override
+end
 
 # As last part of initialization, source the conf directories.
 # Implement precedence (User > Admin > Extra (e.g. vendors) > Fish) by basically doing "basename".

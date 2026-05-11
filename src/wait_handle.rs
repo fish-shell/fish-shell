@@ -1,11 +1,7 @@
 use crate::prelude::*;
-use crate::proc::Pid;
+use crate::proc::{InternalJobId, Pid};
 use std::cell::Cell;
 use std::rc::Rc;
-
-/// The non user-visible, never-recycled job ID.
-/// Every job has a unique positive value for this.
-pub type InternalJobId = u64;
 
 /// The bits of a job necessary to support 'wait' and '--on-process-exit'.
 /// This may outlive the job.
@@ -125,7 +121,7 @@ impl WaitHandleStore {
 mod tests {
     use super::{WaitHandle, WaitHandleStore};
     use crate::prelude::*;
-    use crate::proc::Pid;
+    use crate::proc::{InternalJobId, Pid};
 
     #[test]
     fn test_wait_handles() {
@@ -140,8 +136,17 @@ mod tests {
         assert!(whs.get_by_pid(p(5)).is_none());
 
         // Duplicate pids drop oldest.
-        whs.add(WaitHandle::new(p(5), 0, L!("first").to_owned()));
-        whs.add(WaitHandle::new(p(5), 0, L!("second").to_owned()));
+        let internal_job_id = InternalJobId::default();
+        whs.add(WaitHandle::new(
+            p(5),
+            internal_job_id,
+            L!("first").to_owned(),
+        ));
+        whs.add(WaitHandle::new(
+            p(5),
+            internal_job_id,
+            L!("second").to_owned(),
+        ));
         assert_eq!(whs.size(), 1);
         assert_eq!(whs.get_by_pid(p(5)).unwrap().base_name, "second");
 
@@ -151,11 +156,11 @@ mod tests {
         assert_eq!(whs.size(), 0);
 
         // Test evicting oldest.
-        whs.add(WaitHandle::new(p(1), 0, L!("1").to_owned()));
-        whs.add(WaitHandle::new(p(2), 0, L!("2").to_owned()));
-        whs.add(WaitHandle::new(p(3), 0, L!("3").to_owned()));
-        whs.add(WaitHandle::new(p(4), 0, L!("4").to_owned()));
-        whs.add(WaitHandle::new(p(5), 0, L!("5").to_owned()));
+        whs.add(WaitHandle::new(p(1), internal_job_id, L!("1").to_owned()));
+        whs.add(WaitHandle::new(p(2), internal_job_id, L!("2").to_owned()));
+        whs.add(WaitHandle::new(p(3), internal_job_id, L!("3").to_owned()));
+        whs.add(WaitHandle::new(p(4), internal_job_id, L!("4").to_owned()));
+        whs.add(WaitHandle::new(p(5), internal_job_id, L!("5").to_owned()));
         assert_eq!(whs.size(), 4);
 
         let entries = whs.get_list();

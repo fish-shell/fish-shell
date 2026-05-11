@@ -6,7 +6,7 @@ use crate::parser::BlockType;
 use fish_wcstringutil::join_strings;
 use libc::{STDERR_FILENO, STDOUT_FILENO};
 
-pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
+pub fn eval(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     let argc = args.len();
     if argc <= 1 {
         return Ok(SUCCESS);
@@ -56,7 +56,7 @@ pub fn eval(parser: &Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> Bui
         &new_cmd,
         &ios,
         streams.job_group.as_ref(),
-        BlockType::top,
+        BlockType::Top,
         false,
     );
     let status = if res.was_empty {

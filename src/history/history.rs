@@ -15,16 +15,37 @@
 //!    fallback solution attempts to detect races and retries if a race is detected.
 
 use crate::{
-    common::cstr2wcstring,
-    env::{EnvSetMode, EnvVar},
+    ast::{self, Kind, Node as _},
+    common::valid_var_name,
+    env::{EnvMode, EnvSetMode, EnvStack, EnvVar, Environment},
+    expand::{ExpandFlags, expand_one},
+    fds::wopen_cloexec,
+    flog::{flog, flogf},
     fs::{
-        LOCKED_FILE_MODE, LockedFile, LockingMode, PotentialUpdate, WriteMethod, lock_and_load,
-        rewrite_via_temporary_file,
+        LOCKED_FILE_MODE, LockedFile, LockingMode, PotentialUpdate, WriteMethod, fsync,
+        lock_and_load, rewrite_via_temporary_file,
     },
-    threads::ThreadPool,
+    highlight::highlight_and_colorize,
+    history::file::{HistoryFile, RawHistoryFile},
+    io::IoStreams,
+    localization::wgettext_fmt,
+    operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
+    parse_constants::{ParseTreeFlags, StatementDecoration},
+    parse_util::{detect_parse_errors, unescape_wildcards},
+    parser::Parser,
+    path::{path_get_config, path_get_data, path_is_valid},
+    prelude::*,
+    threads::{ThreadPool, assert_is_background_thread},
+    wildcard::wildcard_match,
+    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
+use bitflags::bitflags;
+use fish_common::{UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{subsequence_in_string, trim};
-use fish_widestring::subslice_position;
+use fish_widestring::{ANY_STRING, bytes2wcstring, cstr2wcstring, subslice_position};
+use lru::LruCache;
+use nix::{fcntl::OFlag, sys::stat::Mode};
+use rand::Rng as _;
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
@@ -36,34 +57,6 @@ use std::{
     ops::ControlFlow,
     sync::{Arc, Mutex, MutexGuard},
     time::{Duration, SystemTime, UNIX_EPOCH},
-};
-
-use bitflags::bitflags;
-use lru::LruCache;
-use nix::{fcntl::OFlag, sys::stat::Mode};
-use rand::Rng as _;
-
-use crate::{
-    ast::{self, Kind, Node as _},
-    common::{CancelChecker, UnescapeStringStyle, bytes2wcstring, unescape_string, valid_var_name},
-    env::{EnvMode, EnvStack, Environment},
-    expand::{ExpandFlags, expand_one},
-    fds::wopen_cloexec,
-    flog::{flog, flogf},
-    fs::fsync,
-    highlight::highlight_and_colorize,
-    history::file::{HistoryFile, RawHistoryFile},
-    io::IoStreams,
-    localization::wgettext_fmt,
-    operation_context::{EXPANSION_LIMIT_BACKGROUND, OperationContext},
-    parse_constants::{ParseTreeFlags, StatementDecoration},
-    parse_util::{detect_parse_errors, unescape_wildcards},
-    parser::Parser,
-    path::{path_get_config, path_get_data, path_is_valid},
-    prelude::*,
-    threads::assert_is_background_thread,
-    wildcard::{ANY_STRING, wildcard_match},
-    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -283,7 +276,19 @@ impl HistoryItem {
     }
 }
 
-static HISTORIES: Mutex<BTreeMap<WString, Arc<History>>> = Mutex::new(BTreeMap::new());
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub enum MemoryHistoryId {
+    PrivateMode,
+    BuiltinRead,
+}
+
+#[derive(Clone, Eq, Ord, PartialEq, PartialOrd)]
+pub enum HistoryId {
+    Memory(MemoryHistoryId),
+    Disk { session_id: WString },
+}
+
+static HISTORIES: Mutex<BTreeMap<HistoryId, Arc<History>>> = Mutex::new(BTreeMap::new());
 
 /// When deleting, whether the deletion should be only for this session or for all sessions.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -1089,12 +1094,12 @@ fn string_could_be_path(potential_path: &wstr) -> bool {
 /// Perform a search of `hist` for `search_string`. Invoke a function `func` for each match. If
 /// `func` returns [`ControlFlow::Break`], stop the search.
 fn do_1_history_search(
+    parser: &mut Parser,
     hist: Arc<History>,
     search_type: SearchType,
     search_string: WString,
     case_sensitive: bool,
-    mut func: impl FnMut(&HistoryItem) -> ControlFlow<(), ()>,
-    cancel_check: &CancelChecker,
+    mut func: impl FnMut(&mut Parser, &HistoryItem) -> ControlFlow<(), ()>,
 ) {
     let mut searcher = HistorySearch::new_with(
         hist,
@@ -1107,8 +1112,11 @@ fn do_1_history_search(
         },
         0,
     );
-    while !cancel_check() && searcher.go_to_next_match(SearchDirection::Backward) {
-        if let ControlFlow::Break(()) = func(searcher.current_item()) {
+
+    while !(parser.context().cancel_checker)()
+        && searcher.go_to_next_match(SearchDirection::Backward)
+    {
+        if let ControlFlow::Break(()) = func(parser, searcher.current_item()) {
             break;
         }
     }
@@ -1119,7 +1127,7 @@ fn format_history_record(
     item: &HistoryItem,
     show_time_format: Option<&str>,
     null_terminate: bool,
-    parser: &Parser,
+    parser: &mut Parser,
     color_enabled: bool,
 ) -> WString {
     let mut result = WString::new();
@@ -1151,11 +1159,7 @@ fn format_history_record(
 
     let mut command = item.str().to_owned();
     if color_enabled {
-        command = bytes2wcstring(&highlight_and_colorize(
-            &command,
-            &parser.context(),
-            parser.vars(),
-        ));
+        command = bytes2wcstring(&highlight_and_colorize(&command, &mut parser.context()));
     }
 
     result.push_utfstr(&command);
@@ -1225,9 +1229,14 @@ impl History {
     /// Creates a new History with a custom directory path.
     /// The history file will be stored at `{directory}/{name}_history`.
     /// If the directory is None, it will be stored at path_get_data().
-    pub fn new(name: &wstr, directory: Option<WString>) -> Arc<Self> {
+    fn new_with_directory(id: HistoryId, directory: Option<WString>) -> Arc<Self> {
         Arc::new(Self(Mutex::new(HistoryImpl::new(
-            name.to_owned(),
+            match id {
+                HistoryId::Memory(_) => WString::new(),
+                HistoryId::Disk {
+                    session_id: filename,
+                } => filename,
+            },
             directory,
         ))))
     }
@@ -1235,14 +1244,14 @@ impl History {
     /// Returns the history with the given name, creating it if necessary, using the default data directory.
     /// This uses the HISTORIES global collection. Note it is possible to create a history without
     /// placing it into this collection.
-    pub fn with_name(name: &wstr) -> Arc<Self> {
+    pub fn new(id: HistoryId) -> Arc<Self> {
         let mut histories = HISTORIES.lock().unwrap();
 
-        if let Some(hist) = histories.get(name) {
+        if let Some(hist) = histories.get(&id) {
             Arc::clone(hist)
         } else {
-            let hist = Self::new(name, None);
-            histories.insert(name.to_owned(), Arc::clone(&hist));
+            let hist = Self::new_with_directory(id.clone(), None);
+            histories.insert(id, Arc::clone(&hist));
             hist
         }
     }
@@ -1371,7 +1380,7 @@ impl History {
     #[allow(clippy::too_many_arguments)]
     pub fn search(
         self: &Arc<Self>,
-        parser: &Parser,
+        parser: &mut Parser,
         streams: &mut IoStreams,
         search_type: SearchType,
         search_args: &[&wstr],
@@ -1380,7 +1389,6 @@ impl History {
         case_sensitive: bool,
         null_terminate: bool,
         reverse: bool,
-        cancel_check: &CancelChecker,
         color_enabled: bool,
     ) -> bool {
         let mut remaining = max_items;
@@ -1388,7 +1396,7 @@ impl History {
         let mut output_error = false;
 
         // The function we use to act on each item.
-        let mut func = |item: &HistoryItem| {
+        let mut func = |parser: &mut Parser, item: &HistoryItem| {
             if remaining == 0 {
                 return ControlFlow::Break(());
             }
@@ -1418,12 +1426,12 @@ impl History {
         if search_args.is_empty() {
             // The user had no search terms; just append everything.
             do_1_history_search(
+                parser,
                 Arc::clone(self),
                 SearchType::Contains,
                 WString::new(),
                 true,
                 &mut func,
-                cancel_check,
             );
         } else {
             #[allow(clippy::unnecessary_to_owned)]
@@ -1435,12 +1443,12 @@ impl History {
                     return false;
                 }
                 do_1_history_search(
+                    parser,
                     Arc::clone(self),
                     search_type,
                     search_string.to_owned(),
                     case_sensitive,
                     &mut func,
-                    cancel_check,
                 );
             }
         }
@@ -1700,17 +1708,23 @@ pub fn save_all() {
 }
 
 /// Return the prefix for the files to be used for command and read history.
-pub fn history_session_id(vars: &dyn Environment) -> WString {
-    history_session_id_from_var(vars.get(L!("fish_history")))
+pub fn history_id(vars: &dyn Environment) -> HistoryId {
+    history_id_from_var(vars.get(L!("fish_history")))
 }
 
-pub fn history_session_id_from_var(history_name_var: Option<EnvVar>) -> WString {
+pub fn history_id_from_var(history_name_var: Option<EnvVar>) -> HistoryId {
+    use HistoryId::*;
+    let default = || Disk {
+        session_id: DFLT_FISH_HISTORY_SESSION_ID.to_owned(),
+    };
     let Some(var) = history_name_var else {
-        return DFLT_FISH_HISTORY_SESSION_ID.to_owned();
+        return default();
     };
     let session_id = var.as_string();
-    if session_id.is_empty() || valid_var_name(&session_id) {
-        session_id
+    if session_id.is_empty() {
+        Memory(MemoryHistoryId::PrivateMode)
+    } else if valid_var_name(&session_id) {
+        Disk { session_id }
     } else {
         flog!(
             error,
@@ -1720,7 +1734,7 @@ pub fn history_session_id_from_var(history_name_var: Option<EnvVar>) -> WString 
                 DFLT_FISH_HISTORY_SESSION_ID
             ),
         );
-        DFLT_FISH_HISTORY_SESSION_ID.to_owned()
+        default()
     }
 }
 
@@ -1737,7 +1751,7 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
 ) -> Vec<WString> {
     assert_is_background_thread();
     let working_directory = vars.get_pwd_slash();
-    let ctx = OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND);
+    let ctx = &mut OperationContext::background(vars, EXPANSION_LIMIT_BACKGROUND);
     let mut result = Vec::new();
     for path in paths {
         // Suppress cmdsubs since we are on a background thread and don't want to execute fish
@@ -1749,7 +1763,7 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
         if expand_one(
             &mut expanded_path,
             ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
-            &ctx,
+            ctx,
             None,
         ) && path_is_valid(&expanded_path, &working_directory)
         {
@@ -1764,7 +1778,7 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
 /// Given a list of proposed paths and a context, expand each one and see if it refers to a file.
 /// Wildcard expansions are suppressed.
 /// Returns `true` if `paths` is empty or every path is valid.
-pub fn all_paths_are_valid(paths: &[WString], ctx: &OperationContext<'_>) -> bool {
+pub fn all_paths_are_valid(paths: &[WString], ctx: &mut OperationContext<'_>) -> bool {
     assert_is_background_thread();
     let working_directory = ctx.vars().get_pwd_slash();
     let mut path = WString::new();
@@ -1806,22 +1820,25 @@ mod tests {
         History, HistoryItem, HistorySearch, PathList, PersistenceMode, SearchDirection,
         SearchFlags, SearchType, VACUUM_FREQUENCY,
     };
-    use crate::common::{ESCAPE_TEST_CHAR, osstr2wcstring};
-    use crate::env::{EnvMode, EnvSetMode, EnvStack};
-    use crate::fs::{LockedFile, WriteMethod};
-    use crate::prelude::*;
-    use crate::tests::prelude::test_init;
-    use fish_build_helper::workspace_root;
-    use fish_wcstringutil::{
-        string_prefixes_string, string_prefixes_string_case_insensitive, wcs2bytes,
+    use crate::{
+        common::ESCAPE_TEST_CHAR,
+        env::{EnvMode, EnvSetMode, EnvStack},
+        fs::{LockedFile, WriteMethod},
+        history::HistoryId,
+        prelude::*,
+        tests::prelude::test_init,
     };
-    use rand::Rng as _;
-    use rand::rngs::ThreadRng;
-    use std::collections::VecDeque;
-    use std::ffi::OsString;
-    use std::io::BufReader;
-    use std::sync::Arc;
-    use std::time::{Duration, SystemTime, UNIX_EPOCH};
+    use fish_build_helper::workspace_root;
+    use fish_wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
+    use fish_widestring::{osstr2wcstring, wcs2bytes};
+    use rand::{Rng as _, rngs::ThreadRng};
+    use std::{
+        collections::VecDeque,
+        ffi::OsString,
+        io::BufReader,
+        sync::Arc,
+        time::{Duration, SystemTime, UNIX_EPOCH},
+    };
 
     fn history_contains(history: &History, txt: &wstr) -> bool {
         for i in 1.. {
@@ -1839,7 +1856,12 @@ mod tests {
 
     // Helper to create a history with a custom directory, for testing.
     fn create_test_history(name: &wstr, custom_dir: &wstr) -> Arc<History> {
-        History::new(name, Some(custom_dir.to_owned()))
+        History::new_with_directory(
+            HistoryId::Disk {
+                session_id: name.to_owned(),
+            },
+            Some(custom_dir.to_owned()),
+        )
     }
 
     fn random_string(rng: &mut ThreadRng) -> WString {
@@ -2293,11 +2315,10 @@ mod tests {
 
     #[test]
     fn test_history_path_detection() {
-        let _cleanup = test_init();
+        test_init();
         // Regression test for #7582.
         // Temporary directory for the history files.
         let hist_tmpdir = fish_tempfile::new_dir().unwrap();
-        let hist_dir = Some(osstr2wcstring(hist_tmpdir.path()));
 
         // Temporary directory for the files we will detect.
         let tmpdir = fish_tempfile::new_dir().unwrap();
@@ -2314,7 +2335,8 @@ mod tests {
         test_vars.set_one(L!("PWD"), global_mode, wdir_path.clone());
         test_vars.set_one(L!("HOME"), global_mode, wdir_path.clone());
 
-        let history = History::new(L!("path_detection"), hist_dir);
+        let history =
+            create_test_history(L!("path_detection"), &osstr2wcstring(hist_tmpdir.path()));
         history.clear();
         assert_eq!(history.size(), 0);
         history.add_pending_with_file_detection(

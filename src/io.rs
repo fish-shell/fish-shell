@@ -1,26 +1,26 @@
-use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH};
-use crate::common::bytes2wcstring;
-use crate::fd_monitor::{Callback, FdMonitor, FdMonitorItemId};
-use crate::fds::{
-    BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec,
+use crate::{
+    builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH},
+    fd_monitor::{Callback, FdMonitor, FdMonitorItemId},
+    fds::{BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec},
+    flog::{flog, flogf, should_flog},
+    nix::isatty,
+    path::path_apply_working_directory,
+    prelude::*,
+    proc::JobGroupRef,
+    redirection::{RedirectionMode, RedirectionSpecList},
+    wutil::{perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat},
 };
-use crate::flog::{flog, flogf, should_flog};
-use crate::nix::isatty;
-use crate::path::path_apply_working_directory;
-use crate::prelude::*;
-use crate::proc::JobGroupRef;
-use crate::redirection::{RedirectionMode, RedirectionSpecList};
-use crate::wutil::{perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat};
 use errno::Errno;
 use fish_util::perror;
-use fish_wcstringutil::wcs2bytes;
+use fish_widestring::{bytes2wcstring, wcs2bytes};
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EWOULDBLOCK, STDOUT_FILENO};
-use nix::fcntl::OFlag;
-use nix::sys::stat::Mode;
-use std::fs::File;
-use std::io;
-use std::os::fd::{AsFd as _, AsRawFd as _, BorrowedFd, OwnedFd, RawFd};
-use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
+use nix::{fcntl::OFlag, sys::stat::Mode};
+use std::{
+    fs::File,
+    io,
+    os::fd::{AsFd as _, AsRawFd as _, BorrowedFd, OwnedFd, RawFd},
+    sync::{Arc, LazyLock, Mutex, MutexGuard},
+};
 
 /// separated_buffer_t represents a buffer of output from commands, prepared to be turned into a
 /// variable. For example, command substitutions output into one of these. Most commands just
@@ -32,9 +32,9 @@ use std::sync::{Arc, LazyLock, Mutex, MutexGuard};
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SeparationType {
     /// this element should be further separated by IFS
-    inferred,
+    Inferred,
     /// this element is explicitly separated and should not be further split
-    explicitly,
+    Explicitly,
 }
 
 pub struct BufferElement {
@@ -50,7 +50,7 @@ impl BufferElement {
         }
     }
     pub fn is_explicitly_separated(&self) -> bool {
-        self.separation == SeparationType::explicitly
+        self.separation == SeparationType::Explicitly
     }
 }
 
@@ -116,7 +116,7 @@ impl SeparatedBuffer {
             return false;
         }
         // Try merging with the last element.
-        if sep == SeparationType::inferred && self.last_inferred() {
+        if sep == SeparationType::Inferred && self.last_inferred() {
             self.elements
                 .last_mut()
                 .unwrap()
@@ -430,7 +430,7 @@ impl IoBuffer {
         } else if amt > 0 {
             buffer.append(
                 &bytes[0..usize::try_from(amt).unwrap()],
-                SeparationType::inferred,
+                SeparationType::Inferred,
             );
         }
         amt
@@ -669,6 +669,17 @@ impl OutputStream {
         }
     }
 
+    /// Consume and return any internally buffered contents.
+    /// This is only implemented for a string_output_stream; others will return an empty string.
+    pub fn take(self) -> WString {
+        match self {
+            OutputStream::String(stream) => stream.take(),
+            OutputStream::Null | OutputStream::Fd(_) | OutputStream::Buffered(_) => {
+                WString::default()
+            }
+        }
+    }
+
     /// Flush any unwritten data to the underlying device, and return an error code.
     /// A 0 code indicates success. The base implementation returns 0.
     pub fn flush_and_check_error(&mut self) -> libc::c_int {
@@ -707,7 +718,7 @@ impl OutputStream {
         match self {
             OutputStream::Buffered(stream) => stream.append_with_separation(s, typ, want_newline),
             OutputStream::Fd(_) | OutputStream::Null | OutputStream::String(_) => {
-                if typ == SeparationType::explicitly && want_newline {
+                if typ == SeparationType::Explicitly && want_newline {
                     self.appendln(s)
                 } else {
                     self.append(s)
@@ -786,6 +797,11 @@ impl StringOutputStream {
     fn contents(&self) -> &wstr {
         &self.contents
     }
+
+    /// Consume and return the wcstring containing the output.
+    fn take(self) -> WString {
+        self.contents
+    }
 }
 
 /// An output stream for builtins which writes into a separated buffer.
@@ -798,7 +814,7 @@ impl BufferedOutputStream {
         Self { buffer }
     }
     fn append(&mut self, s: impl IntoCharIter) -> bool {
-        self.buffer.append(&wcs2bytes(s), SeparationType::inferred)
+        self.buffer.append(&wcs2bytes(s), SeparationType::Inferred)
     }
     fn append_with_separation(
         &mut self,

@@ -6,9 +6,9 @@ sources:
     spec:
       shell: bash
       command: |
-        set -eo pipefail
+        set -e
         # Check that we have latest stable.
-        if rustup check | grep ^stable- | grep 'Update available'; then
+        if rustup check | grep '^stable-.*[uU]pdate available'; then
             echo >&2 "Rust toolchain 'stable' is stale, please update it"
             exit 1
         fi

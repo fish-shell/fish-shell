@@ -340,7 +340,7 @@ fn handle_env_return(retval: EnvStackSetResult, cmd: &wstr, key: &wstr, streams:
     match retval {
         EnvStackSetResult::Ok => (),
         EnvStackSetResult::Perm => {
-            err_fmt!("Tried to change the read-only variable '%s'", key)
+            err_fmt!("Tried to change the read-only variable “%s”", key)
                 .cmd(cmd)
                 .finish(streams);
         }
@@ -401,7 +401,7 @@ impl std::fmt::Display for EnvArrayParseError {
             "{}\n",
             match self {
                 EnvArrayParseError::InvalidIndex(varname) =>
-                    err_fmt!("Invalid index starting at '%s'", varname)
+                    err_fmt!("Invalid index starting at “%s”", varname)
                         .cmd(L!("set"))
                         .to_string(),
             }

@@ -146,7 +146,7 @@ echo test | read -n 2147483647 foo
 echo $foo
 #CHECK: test
 echo test | read -n 2147483648 foo
-#CHECKERR: read: Argument '2147483648' is out of range
+#CHECKERR: read: Argument “2147483648” is out of range
 #CHECKERR: {{.*}}/checks/read.fish (line {{\d+}}):
 #CHECKERR: echo test | read -n 2147483648 foo
 #CHECKERR: ^

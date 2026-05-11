@@ -189,7 +189,7 @@ foo (function foo; echo after; end)
 # This codifies historic behavior.
 function foo; echo before; end
 foo (functions --erase foo)
-# CHECKERR: error: Unknown function 'foo'
+# CHECKERR: error: Unknown function “foo”
 
 function ()
 end

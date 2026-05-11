@@ -7,7 +7,7 @@ $status
 
  # The error might be found here!' | $fish 2>| string replace -r '(.*)' '<$1>'
 
-# CHECK: <fish: The 'exec' command can not be used in a pipeline>
+# CHECK: <fish: The “exec” command can not be used in a pipeline>
 # CHECK: <echo foo | exec grep # this exec is not allowed!>
 # CHECK: <           ^~~~~~~~^>
 
@@ -50,7 +50,7 @@ $fish -c "set -g fish_function_path $(string escape $TMPDIR); this_should_be_an_
 # CHECKERR: function this_should_be_an_error
 # CHECKERR: ^~~~~~~^
 # CHECKERR: from sourcing file ~/temp/this_should_be_an_error.fish
-# CHECKERR: source: Error while reading file '{{.*}}/this_should_be_an_error.fish'
+# CHECKERR: source: Error while reading file “{{.*}}/this_should_be_an_error.fish”
 # CHECKERR: fish: Unknown command: this_should_be_an_error
 # CHECKERR: fish:
 # CHECKERR: set -g fish_function_path {{.*}}; this_should_be_an_error
@@ -98,7 +98,7 @@ $fish -c 'echo (for status in foo; end)'
 # CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~^
 
 $fish -c 'echo (echo <&foo)'
-# CHECKERR: fish: Requested redirection to 'foo', which is not a valid file descriptor
+# CHECKERR: fish: Requested redirection to “foo”, which is not a valid file descriptor
 # CHECKERR: echo <&foo
 # CHECKERR: ^~~~^
 # CHECKERR: in command substitution
@@ -122,7 +122,7 @@ $fish -c 'time begin; end &'
 # CHECKERR: ^~~~~~~~~~~~~~~~^
 
 $fish -c 'echo (set -l foo 1 2 3; for $foo in foo; end)'
-# CHECKERR: fish: Unable to expand variable name ''
+# CHECKERR: fish: Unable to expand variable name “”
 # CHECKERR: set -l foo 1 2 3; for $foo in foo; end
 # CHECKERR: ^~~^
 # CHECKERR: in command substitution

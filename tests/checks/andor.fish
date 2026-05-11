@@ -3,12 +3,12 @@
 set -xl LANG C # uniform quotes
 
 eval 'true | and'
-# CHECKERR: {{.*}}: The 'and' command can not be used in a pipeline
+# CHECKERR: {{.*}}: The “and” command can not be used in a pipeline
 # CHECKERR: true | and
 # CHECKERR:        ^~^
 
 eval 'true | or'
-# CHECKERR: {{.*}}: The 'or' command can not be used in a pipeline
+# CHECKERR: {{.*}}: The “or” command can not be used in a pipeline
 # CHECKERR: true | or
 # CHECKERR:        ^^
 

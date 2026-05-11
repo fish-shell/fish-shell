@@ -162,7 +162,7 @@ functions -c first second third
 # CHECKERR: (Type 'help functions' for related documentation)
 
 functions -c unknown_function copy
-# CHECKERR: functions: Function 'unknown_function' does not exist
+# CHECKERR: functions: Function “unknown_function” does not exist
 # CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
 # CHECKERR: functions -c unknown_function copy
 # CHECKERR: ^
@@ -171,14 +171,14 @@ functions -c unknown_function copy
 function to_copy
 end
 functions -c -- to_copy -invalid_name
-# CHECKERR: functions: Illegal function name '-invalid_name'
+# CHECKERR: functions: Illegal function name “-invalid_name”
 # CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
 # CHECKERR: functions -c -- to_copy -invalid_name
 # CHECKERR: ^
 # CHECKERR: (Type 'help functions' for related documentation)
 
 functions -c -- to_copy function
-# CHECKERR: functions: Illegal function name 'function'
+# CHECKERR: functions: Illegal function name “function”
 # CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
 # CHECKERR: functions -c -- to_copy function
 # CHECKERR: ^
@@ -313,7 +313,7 @@ functions --names --query
 # CHECKERR: (Type 'help functions' for related documentation)
 
 functions -d desc unknown_function
-# CHECKERR: functions: Function 'unknown_function' does not exist
+# CHECKERR: functions: Function “unknown_function” does not exist
 # CHECKERR: {{.*}}/checks/functions.fish (line {{\d+}}):
 # CHECKERR: functions -d desc unknown_function
 # CHECKERR: ^

@@ -3,7 +3,7 @@ if which -v >/dev/null 2>/dev/null # GNU
     complete -c which -s i -l read-alias -d "Read aliases from stdin, reporting matching ones on stdout"
     complete -c which -l skip-alias -d "Ignore option '--read-alias'"
     complete -c which -l read-functions -d "Read shell function definitions from stdin, reporting matching ones on stdout"
-    complete -c which -l skip-functions -d "Ignore option '--read-functions'"
+    complete -c which -l skip-functions -d "Ignore option “--read-functions”"
     complete -c which -l skip-dot -d "Skip dirs in PATH that start with a dot"
     complete -c which -l skip-tilde -d "Skip dirs in PATH that start with tilde and executables in \$HOME"
     complete -c which -l show-dot -d "For matches in PATH dirs that start with a dot, print './programname'"

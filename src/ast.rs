@@ -2193,7 +2193,7 @@ impl<'s> Populator<'s> {
                             self,
                             tok,
                             ParseErrorCode::UnbalancingCase,
-                            "'case' builtin not inside of switch block"
+                            "“case” builtin not inside of switch block"
                         );
                     }
                     ParseKeyword::End => {

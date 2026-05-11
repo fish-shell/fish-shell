@@ -740,7 +740,7 @@ test_ifforwhile_scope
 
 # $status should always be read-only, setting it makes no sense because it's immediately overwritten.
 set -g status 5
-#CHECKERR: set: Tried to change the read-only variable 'status'
+#CHECKERR: set: Tried to change the read-only variable “status”
 
 while set -e __fish_test_universal_exported_var
 end
@@ -992,14 +992,14 @@ while set -e undefined
 end
 
 set -e undefined[x..]
-# CHECKERR: set: Invalid index starting at 'x..]'
+# CHECKERR: set: Invalid index starting at “x..]”
 # CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
 # CHECKERR: set -e undefined[x..]
 # CHECKERR: ^
 # CHECKERR: (Type 'help set' for related documentation)
 
 set -e undefined[..y]
-# CHECKERR: set: Invalid index starting at 'y]'
+# CHECKERR: set: Invalid index starting at “y]”
 # CHECKERR: {{.*}}checks/set.fish (line {{\d+}}):
 # CHECKERR: set -e undefined[..y]
 # CHECKERR: ^

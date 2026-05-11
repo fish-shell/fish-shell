@@ -99,7 +99,7 @@ pub fn set_color(
                     err_fmt!("%s: invalid option argument: %s", name, value)
                 }
                 UnknownColor(arg) => {
-                    err_fmt!("Unknown color '%s'", arg)
+                    err_fmt!("Unknown color “%s”", arg)
                 }
                 UnknownUnderlineStyle(arg) => {
                     err_fmt!("invalid underline style: %s", arg)

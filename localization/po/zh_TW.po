@@ -230,14 +230,6 @@ msgid "'%s' is a broken symbolic link to '%s'"
 msgstr "「%s」是「%s」損壞的象徵式連結"
 
 #, c-format
-msgid "'%s' is not a directory"
-msgstr "「%s」不是目錄"
-
-#, c-format
-msgid "'%s' is not a job"
-msgstr "「%s」不是作業"
-
-#, c-format
 msgid "'%s' is not a valid job ID"
 msgstr "「%s」不是有效的作業 ID"
 
@@ -247,9 +239,6 @@ msgstr "「%s」不是有效的行程 ID"
 
 msgid "'break' while not inside of loop"
 msgstr "「break」不在迴圈裡面"
-
-msgid "'case' builtin not inside of switch block"
-msgstr "「case」不在 switch 區塊裡面"
 
 msgid "'continue' while not inside of loop"
 msgstr "「continue」不在迴圈裡面"
@@ -368,12 +357,12 @@ msgid "An option spec must have at least a short or a long flag"
 msgstr "選項規格必須至少有一個短旗標或長旗標"
 
 #, c-format
-msgid "Argument '%s' is out of range"
-msgstr "引數「%s」超出範圍"
-
-#, c-format
 msgid "Argument is not a number: '%s'"
 msgstr "引數不是數字：「%s」"
+
+#, c-format
+msgid "Argument “%s” is out of range"
+msgstr "引數「%s」超出範圍"
 
 msgid "Await background process completion"
 msgstr "等待背景行程完成"
@@ -415,7 +404,7 @@ msgid "Can not use the no-execute mode when running an interactive session"
 msgstr "互動時不能使用不執行模式"
 
 #, c-format
-msgid "Can't put job %d, '%s' to foreground because it is not under job control"
+msgid "Can't put job %d, “%s” to foreground because it is not under job control"
 msgstr "不能將作業 %d「%s」置於前景，其並不受作業控制管理"
 
 #, c-format
@@ -559,7 +548,7 @@ msgid "End a block of commands"
 msgstr "結束一個程式碼區塊"
 
 #, c-format
-msgid "Error encountered while sourcing file '%s':"
+msgid "Error encountered while sourcing file “%s”:"
 msgstr "載入檔案「%s」時遇到錯誤："
 
 #, c-format
@@ -575,7 +564,7 @@ msgid "Error while reading file %s"
 msgstr "讀取檔案 %s 時發生錯誤"
 
 #, c-format
-msgid "Error while reading file '%s'"
+msgid "Error while reading file “%s”"
 msgstr "讀取檔案「%s」時遇到錯誤"
 
 #, c-format
@@ -689,7 +678,7 @@ msgid "Function '%s' already exists. Cannot create copy of '%s'"
 msgstr "函式「%s」已存在。無法建立「%s」的複本"
 
 #, c-format
-msgid "Function '%s' does not exist"
+msgid "Function “%s” does not exist"
 msgstr "函式「%s」不存在"
 
 msgid "Generate random number"
@@ -734,11 +723,11 @@ msgid "I/O on asynchronous file descriptor is possible"
 msgstr "非同步檔案描述子的 I/O 是可行的"
 
 #, c-format
-msgid "Illegal file descriptor in redirection '%s'"
+msgid "Illegal file descriptor in redirection “%s”"
 msgstr "重新導向「%s」中有非法的檔案描述子"
 
 #, c-format
-msgid "Illegal function name '%s'"
+msgid "Illegal function name “%s”"
 msgstr "非法的函式名稱「%s」"
 
 msgid "Illegal instruction"
@@ -813,7 +802,7 @@ msgid "Invalid function name: %s"
 msgstr "無效的函式名稱：%s"
 
 #, c-format
-msgid "Invalid index starting at '%s'"
+msgid "Invalid index starting at “%s”"
 msgstr "無效的索引值，在「%s」處"
 
 msgid "Invalid index value"
@@ -997,12 +986,12 @@ msgid "No abbreviation named %s with the specified command restrictions"
 msgstr "沒有縮寫名為 %s 且符合指定命令限制"
 
 #, c-format
-msgid "No binding found for key '%s'"
-msgstr "找不到按鍵「%s」的綁定"
-
-#, c-format
 msgid "No binding found for key sequence '%s'"
 msgstr "找不到按鍵序列「%s」的綁定"
+
+#, c-format
+msgid "No binding found for key “%s”"
+msgstr "找不到按鍵「%s」的綁定"
 
 msgid "No blocks defined"
 msgstr "沒有定義事件阻塞"
@@ -1076,7 +1065,7 @@ msgid "Permission denied when changing resource of type '%s'"
 msgstr ""
 
 #, c-format
-msgid "Permission denied: '%s'"
+msgid "Permission denied: “%s”"
 msgstr "權限不足：「%s」"
 
 #, c-format
@@ -1162,7 +1151,7 @@ msgid "Rendering the command line"
 msgstr "繪製命令行"
 
 #, c-format
-msgid "Requested redirection to '%s', which is not a valid file descriptor"
+msgid "Requested redirection to “%s”, which is not a valid file descriptor"
 msgstr "請求重新導向至「%s」，但其不是有效的檔案描述子"
 
 msgid "Requires at least two arguments"
@@ -1298,14 +1287,6 @@ msgstr "終端機所有權事件"
 msgid "Test a condition"
 msgstr "檢查條件"
 
-#, c-format
-msgid "The '%s' command can not be used immediately after a backgrounded job"
-msgstr "「%s」命令不能緊跟在背景作業之後使用"
-
-#, c-format
-msgid "The '%s' command can not be used in a pipeline"
-msgstr "「%s」命令不能在管道中使用"
-
 msgid "The 'time' command may only be at the beginning of a pipeline"
 msgstr "「time」命令只能在管道的開頭"
 
@@ -1316,7 +1297,7 @@ msgid "The completion system"
 msgstr "補全系統"
 
 #, c-format
-msgid "The directory '%s' does not exist"
+msgid "The directory “%s” does not exist"
 msgstr "目錄「%s」不存在"
 
 #, c-format
@@ -1330,11 +1311,19 @@ msgid "The expanded command was empty."
 msgstr "展開的命令空白。"
 
 #, c-format
-msgid "The function '%s' calls itself immediately, which would result in an infinite loop."
+msgid "The function “%s” calls itself immediately, which would result in an infinite loop."
 msgstr "函式「%s」立刻呼叫了它自己，這會造成無限迴圈。"
 
 msgid "The interactive reader/input system"
 msgstr "互動式讀取器／輸入系統"
+
+#, c-format
+msgid "The “%s” command can not be used immediately after a backgrounded job"
+msgstr "「%s」命令不能緊跟在背景作業之後使用"
+
+#, c-format
+msgid "The “%s” command can not be used in a pipeline"
+msgstr "「%s」命令不能在管道中使用"
 
 msgid "There are no suitable jobs"
 msgstr "沒有合式的作業"
@@ -1380,7 +1369,7 @@ msgid "Translate a string"
 msgstr "翻譯字串"
 
 #, c-format
-msgid "Tried to change the read-only variable '%s'"
+msgid "Tried to change the read-only variable “%s”"
 msgstr "試圖變更唯讀變數「%s」"
 
 #, c-format
@@ -1402,7 +1391,7 @@ msgid "Unable to evaluate string substitution"
 msgstr "無法執行字串替換"
 
 #, c-format
-msgid "Unable to expand variable name '%s'"
+msgid "Unable to expand variable name “%s”"
 msgstr "無法展開變數名稱「%s」"
 
 #, c-format
@@ -1458,11 +1447,11 @@ msgid "Unknown"
 msgstr "未知"
 
 #, c-format
-msgid "Unknown builtin '%s'"
+msgid "Unknown builtin “%s”"
 msgstr "未知內建命令「%s」"
 
 #, c-format
-msgid "Unknown color '%s'"
+msgid "Unknown color “%s”"
 msgstr "未知的顏色「%s」"
 
 msgid "Unknown command"
@@ -1484,7 +1473,7 @@ msgid "Unknown command:"
 msgstr "未知命令："
 
 #, c-format
-msgid "Unknown error trying to locate directory '%s'"
+msgid "Unknown error trying to locate directory “%s”"
 msgstr "定位目錄「%s」時發生未知錯誤"
 
 msgid "Unknown error while evaluating command substitution"
@@ -1494,7 +1483,7 @@ msgid "Unknown function"
 msgstr "未知函式"
 
 #, c-format
-msgid "Unknown function '%s'"
+msgid "Unknown function “%s”"
 msgstr "未知函式「%s」"
 
 #, c-format
@@ -1826,6 +1815,17 @@ msgstr "，引數為「%s」"
 msgid "with definition"
 msgstr "，定義為"
 
+#, c-format
+msgid "“%s” is not a directory"
+msgstr "「%s」不是目錄"
+
+#, c-format
+msgid "“%s” is not a job"
+msgstr "「%s」不是作業"
+
+msgid "“case” builtin not inside of switch block"
+msgstr "「case」不在 switch 區塊裡面"
+
 #  第一個 %s 是刪節號。此字串出現在按下 <Tab> 的清單太長的情況。
 #, fuzzy, c-format
 msgid "…and %u more rows"
@@ -1867,7 +1867,7 @@ msgstr "%s：預期至少有 %d 個引數，卻只收到 %d 個\\n"
 msgid "%s: Expected exactly one argument, got %s.\\n\\nSynopsis:\\n\\t%svared%s VARIABLE\\n"
 msgstr "%s：預期正好有一個引數，卻收到 %s。\\n\\n用法：\\n\\t%svared%s 變數\\n"
 
-msgid "%s: Invalid mask '%s'\\n"
+msgid "%s: Invalid mask “%s”\\n"
 msgstr "%s：無效的遮罩「%s」\\n"
 
 msgid "%s: Not inside of command substitution"
@@ -1879,7 +1879,7 @@ msgstr "%s：要略過的位置數量必須是非負整數\\n"
 msgid "%s: Too many arguments"
 msgstr "%s：引數太多"
 
-msgid "%s: Unknown function '%s'\\n"
+msgid "%s: Unknown function “%s”\\n"
 msgstr "%s：未知函式「%s」\\n"
 
 msgid "%s: Unknown option %s\\n"
@@ -6330,15 +6330,6 @@ msgstr ""
 msgid "Alias environment to save URL and CA certificate"
 msgstr ""
 
-msgid "Alias for 'get'"
-msgstr ""
-
-msgid "Alias for 'move delete packages'"
-msgstr ""
-
-msgid "Alias for 'update'"
-msgstr ""
-
 msgid "Alias for --cache-max-age 1"
 msgstr ""
 
@@ -6415,6 +6406,15 @@ msgid "Alias for up"
 msgstr ""
 
 msgid "Alias for upgrade"
+msgstr ""
+
+msgid "Alias for “get”"
+msgstr ""
+
+msgid "Alias for “move delete packages”"
+msgstr ""
+
+msgid "Alias for “update”"
 msgstr ""
 
 msgid "Alias of --hash-info"
@@ -11247,9 +11247,6 @@ msgstr ""
 msgid "Clear temporary files; will not change deployments"
 msgstr ""
 
-msgid "Clear the 'for your eyes only' flag in the message"
-msgstr ""
-
 msgid "Clear the UUID tree"
 msgstr ""
 
@@ -11290,6 +11287,9 @@ msgid "Clear the sequencer state after a failed revert"
 msgstr ""
 
 msgid "Clear the tree log. Usable if it's corrupted and prevents mount."
+msgstr ""
+
+msgid "Clear the “for your eyes only” flag in the message"
 msgstr ""
 
 msgid "Clear/List local NuGet resources"
@@ -14751,7 +14751,7 @@ msgstr ""
 msgid "Delay interval for lines sent"
 msgstr ""
 
-msgid "Delay opening files until a command containing the related 'w' function is applied"
+msgid "Delay opening files until a command containing the related “w” function is applied"
 msgstr ""
 
 msgid "Delay-sign the assembly using only the public portion of the strong name key"
@@ -22257,7 +22257,7 @@ msgstr ""
 msgid "Don't treat C1 control characters as printable"
 msgstr ""
 
-msgid "Don't treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
+msgid "Don't treat input files as text and store them in the OpenPGP canonical text form with standard “CRLF” line endings"
 msgstr ""
 
 msgid "Don't treat warning level issues as fatal. (default on)"
@@ -30795,16 +30795,16 @@ msgstr ""
 msgid "Id of window to capture"
 msgstr ""
 
-msgid "Identical to '--multifile --encrypt'"
-msgstr ""
-
-msgid "Identical to '--multifile --verify'"
-msgstr ""
-
 msgid "Identical to --files but filenames terminate with \\0"
 msgstr ""
 
 msgid "Identical to --multifile --decrypt"
+msgstr ""
+
+msgid "Identical to “--multifile --encrypt”"
+msgstr ""
+
+msgid "Identical to “--multifile --verify”"
 msgstr ""
 
 msgid "Identifier to be renamed"
@@ -30919,9 +30919,6 @@ msgid "Ignore $LESSOPEN"
 msgstr ""
 
 msgid "Ignore $STY"
-msgstr ""
-
-msgid "Ignore 'Content-Length' header"
 msgstr ""
 
 msgid "Ignore CD/DVD repositories"
@@ -31221,7 +31218,7 @@ msgstr ""
 msgid "Ignore option '--read-alias'"
 msgstr ""
 
-msgid "Ignore option '--read-functions'"
+msgid "Ignore option “--read-functions”"
 msgstr ""
 
 msgid "Ignore outstanding file operations"
@@ -31369,6 +31366,9 @@ msgid "Ignore whitespace when using --color-moved"
 msgstr ""
 
 msgid "Ignore zero block in archive"
+msgstr ""
+
+msgid "Ignore “Content-Length” header"
 msgstr ""
 
 msgid "Ignore/don't save file attributes or permissions"
@@ -42273,7 +42273,7 @@ msgstr ""
 msgid "Pass the given arguments to the debugger"
 msgstr ""
 
-msgid "Pass the output through 'pr'"
+msgid "Pass the output through “pr”"
 msgstr ""
 
 msgid "Pass these flags to the dpkg installer"
@@ -47196,7 +47196,7 @@ msgstr ""
 msgid "Provide extra information"
 msgstr ""
 
-msgid "Provide help on the 'gem' command"
+msgid "Provide help on the “gem” command"
 msgstr ""
 
 msgid "Provide home host identity"
@@ -50400,7 +50400,7 @@ msgstr ""
 msgid "Replace include directories"
 msgstr ""
 
-msgid "Replace non-graphic characters with '?'"
+msgid "Replace non-graphic characters with “?”"
 msgstr ""
 
 msgid "Replace only the last occurrence"
@@ -50470,9 +50470,6 @@ msgid "Reply in thread to given Message-ID"
 msgstr ""
 
 msgid "Reply to email-based patch using FROM address"
-msgstr ""
-
-msgid "Report 'unmanaged' or rogue files in the gem repository"
 msgstr ""
 
 msgid "Report RAID devices"
@@ -50665,6 +50662,9 @@ msgid "Report what will be pruned but do not actually prune it"
 msgstr ""
 
 msgid "Report when two files are same"
+msgstr ""
+
+msgid "Report “unmanaged” or rogue files in the gem repository"
 msgstr ""
 
 msgid "Reports interface existence via return code"
@@ -56415,9 +56415,6 @@ msgstr ""
 msgid "Set the \"fsmonitor valid\" bit"
 msgstr ""
 
-msgid "Set the 'for your eyes only' flag in the message"
-msgstr ""
-
 msgid "Set the ACL of file(s), replacing the current ACL"
 msgstr ""
 
@@ -57103,6 +57100,9 @@ msgid "Set the work parameter r"
 msgstr ""
 
 msgid "Set the working directory"
+msgstr ""
+
+msgid "Set the “for your eyes only” flag in the message"
 msgstr ""
 
 msgid "Set this app as the default browser"
@@ -65331,13 +65331,13 @@ msgstr ""
 msgid "Suppress the prefixing filename on output"
 msgstr ""
 
-msgid "Suppress the warning about 'using insecure memory'"
-msgstr ""
-
 msgid "Suppress the warning about missing MDC integrity protection"
 msgstr ""
 
 msgid "Suppress the warning about unsafe file and home directory (--homedir) permissions"
+msgstr ""
+
+msgid "Suppress the warning about “using insecure memory”"
 msgstr ""
 
 msgid "Suppress thermal information"
@@ -67479,7 +67479,7 @@ msgstr ""
 msgid "Treat input as binary"
 msgstr ""
 
-msgid "Treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
+msgid "Treat input files as text and store them in the OpenPGP canonical text form with standard “CRLF” line endings"
 msgstr ""
 
 msgid "Treat input or output as raw samples"

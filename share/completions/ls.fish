@@ -31,7 +31,7 @@ if ls --version >/dev/null 2>/dev/null
     complete -c ls -s L -l dereference -d "Follow symlinks"
     complete -c ls -s n -l numeric-uid-gid -d "Long format, numeric UIDs and GIDs"
     complete -c ls -s p -l file-type -d "Append filetype indicator"
-    complete -c ls -s q -l hide-control-chars -d "Replace non-graphic characters with '?'"
+    complete -c ls -s q -l hide-control-chars -d "Replace non-graphic characters with “?”"
     complete -c ls -s r -l reverse -d "Reverse sort order"
     complete -c ls -s R -l recursive -d "List subdirectory recursively"
     complete -c ls -s s -l size -d "Print size of files"
@@ -109,7 +109,7 @@ else
     complete -c ls -s i -d "Show inode numbers for files"
     test "$uname" != SunOS
     and complete -c ls -s k -d "for -s: Display sizes in kB, not blocks" # GNU sets block size with -k
-    complete -c ls -s q -d "Replace non-graphic characters with '?'"
+    complete -c ls -s q -d "Replace non-graphic characters with “?”"
     complete -c ls -s r -d "Reverse sort order"
     complete -c ls -s s -d "Show file sizes"
 

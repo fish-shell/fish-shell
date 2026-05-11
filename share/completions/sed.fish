@@ -32,7 +32,7 @@ else
     # If not a GNU system, assume we have standard BSD ls features instead
 
     complete -c sed -s E -d "Use extended regexp"
-    complete -c sed -s a -d "Delay opening files until a command containing the related 'w' function is applied"
+    complete -c sed -s a -d "Delay opening files until a command containing the related “w” function is applied"
     complete -c sed -s l -d "Use line buffering"
 
 end

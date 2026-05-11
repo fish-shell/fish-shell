@@ -1876,7 +1876,7 @@ pub fn expand_variable_error(
 localizable_consts!(
     /// Error message for use of backgrounded commands before and/or.
     pub(crate) BOOL_AFTER_BACKGROUND_ERROR_MSG
-    "The '%s' command can not be used immediately after a backgrounded job"
+    "The “%s” command can not be used immediately after a backgrounded job"
 
     /// Error message for backgrounded commands as conditionals.
     BACKGROUND_IN_CONDITIONAL_ERROR_MSG

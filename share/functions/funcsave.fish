@@ -36,7 +36,7 @@ function funcsave --description "Save the current definition of all specified fu
             command rm $funcpath
             and set -q _flag_quiet || printf (_ "%s: removed %s\n") funcsave $funcpath
         else
-            printf (_ "%s: Unknown function '%s'\n") funcsave $funcname >&2
+            printf (_ "%s: Unknown function “%s”\n") funcsave $funcname >&2
             set retval 1
         end
     end

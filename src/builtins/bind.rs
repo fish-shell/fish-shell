@@ -360,7 +360,7 @@ impl BuiltinBind {
                 );
                 if !self.opts.silent {
                     if seq.len() == 1 {
-                        err_fmt!("No binding found for key '%s'", seq[0])
+                        err_fmt!("No binding found for key “%s”", seq[0])
                             .cmd(cmd)
                             .finish(streams);
                     } else {

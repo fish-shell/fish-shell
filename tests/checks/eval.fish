@@ -58,7 +58,7 @@ echo empty block eval: $status # 0
 # CHECK: empty block eval: 0
 
 source /banana/\t/foo
-# CHECKERR: source: Error encountered while sourcing file '/banana/\t/foo':
+# CHECKERR: source: Error encountered while sourcing file “/banana/\t/foo”:
 # CHECKERR: source: No such file or directory
 
 # See that eval can't be defined as a function

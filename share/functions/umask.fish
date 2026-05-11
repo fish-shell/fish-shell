@@ -62,7 +62,7 @@ function __fish_umask_parse
     # pattern to split the rights then testing for that invalid combination.
     set -l basic_pattern '([ugoa]*)([=+-]?)([rwx]*)'
     if not string match -qr "^$basic_pattern(,$basic_pattern)*\$" -- $argv
-        printf (_ "%s: Invalid mask '%s'\n") umask $argv >&2
+        printf (_ "%s: Invalid mask “%s”\n") umask $argv >&2
         return 1
     end
 
@@ -76,7 +76,7 @@ function __fish_umask_parse
         set -l mode $match[3]
         set -l perms $match[4]
         if test -n "$scope" -a -z "$mode"
-            printf (_ "%s: Invalid mask '%s'\n") umask $argv >&2
+            printf (_ "%s: Invalid mask “%s”\n") umask $argv >&2
             return 1
         end
         if test -z "$scope"

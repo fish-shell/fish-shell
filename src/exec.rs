@@ -1052,7 +1052,7 @@ fn get_performer_for_function(
     let Some(props) = function::get_props(p.argv0().unwrap()) else {
         flog!(
             error,
-            wgettext_fmt!("Unknown function '%s'", p.argv0().unwrap())
+            wgettext_fmt!("Unknown function “%s”", p.argv0().unwrap())
         );
         return Err(());
     };

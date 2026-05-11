@@ -18,7 +18,7 @@ use nix::unistd::fchdir;
 pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
     localizable_consts! {
         DIR_DOES_NOT_EXIST
-        "The directory '%s' does not exist"
+        "The directory “%s” does not exist"
     }
 
     let Some(&cmd) = args.first() else {
@@ -121,7 +121,7 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     }
 
     let mut err = if best_errno == ENOTDIR {
-        err_fmt!("'%s' is not a directory", dir_in)
+        err_fmt!("“%s” is not a directory", dir_in)
     } else if !broken_symlink.is_empty() {
         err_fmt!(
             "'%s' is a broken symbolic link to '%s'",
@@ -133,11 +133,11 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     } else if best_errno == ENOENT {
         err_fmt!(DIR_DOES_NOT_EXIST, dir_in)
     } else if best_errno == EACCES || best_errno == EPERM {
-        err_fmt!("Permission denied: '%s'", dir_in)
+        err_fmt!("Permission denied: “%s”", dir_in)
     } else {
         errno::set_errno(Errno(best_errno));
         err_raw!(builtin_strerror()).cmd(L!("cd")).finish(streams);
-        err_fmt!("Unknown error trying to locate directory '%s'", dir_in)
+        err_fmt!("Unknown error trying to locate directory “%s”", dir_in)
     };
 
     if !parser.is_interactive() {

@@ -96,8 +96,8 @@ function __fish_complete_gpg -a __fish_complete_gpg_command
     complete -c $__fish_complete_gpg_command -l decrypt -d "Decrypt specified file or stdin"
     complete -c $__fish_complete_gpg_command -l verify -d "Assume specified file or stdin is sigfile and verify it"
     complete -c $__fish_complete_gpg_command -l multifile -d "Modify certain other commands to accept multiple files for processing"
-    complete -c $__fish_complete_gpg_command -l verify-files -d "Identical to '--multifile --verify'"
-    complete -c $__fish_complete_gpg_command -l encrypt-files -d "Identical to '--multifile --encrypt'"
+    complete -c $__fish_complete_gpg_command -l verify-files -d "Identical to “--multifile --verify”"
+    complete -c $__fish_complete_gpg_command -l encrypt-files -d "Identical to “--multifile --encrypt”"
     complete -c $__fish_complete_gpg_command -l decrypt-files -d "Identical to --multifile --decrypt"
 
     complete -c $__fish_complete_gpg_command -s k -l list-keys -xa "(__fish_complete_gpg_user_id $__fish_complete_gpg_command)" -d "List all keys from the public keyrings, or just the ones given on the command line"
@@ -185,8 +185,8 @@ function __fish_complete_gpg -a __fish_complete_gpg_command
     complete -c $__fish_complete_gpg_command -l bzip2-compress-level -d "Compression level" -xa "(seq 1 9)"
     complete -c $__fish_complete_gpg_command -l bzip2-decompress-lowmem -d "Use a different decompression method for BZIP2 compressed files"
 
-    complete -c $__fish_complete_gpg_command -s t -l textmode -d "Treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
-    complete -c $__fish_complete_gpg_command -l no-textmode -d "Don't treat input files as text and store them in the OpenPGP canonical text form with standard 'CRLF' line endings"
+    complete -c $__fish_complete_gpg_command -s t -l textmode -d "Treat input files as text and store them in the OpenPGP canonical text form with standard “CRLF” line endings"
+    complete -c $__fish_complete_gpg_command -l no-textmode -d "Don't treat input files as text and store them in the OpenPGP canonical text form with standard “CRLF” line endings"
 
     complete -c $__fish_complete_gpg_command -s n -l dry-run -d "Don't make any changes (this is not completely implemented)"
 
@@ -261,8 +261,8 @@ function __fish_complete_gpg -a __fish_complete_gpg_command
 
     complete -c $__fish_complete_gpg_command -l set-filename -x -d "Use specified string as the filename which is stored inside messages"
 
-    complete -c $__fish_complete_gpg_command -l for-your-eyes-only -d "Set the 'for your eyes only' flag in the message"
-    complete -c $__fish_complete_gpg_command -l no-for-your-eyes-only -d "Clear the 'for your eyes only' flag in the message"
+    complete -c $__fish_complete_gpg_command -l for-your-eyes-only -d "Set the “for your eyes only” flag in the message"
+    complete -c $__fish_complete_gpg_command -l no-for-your-eyes-only -d "Clear the “for your eyes only” flag in the message"
 
     complete -c $__fish_complete_gpg_command -l completes-needed -x -d "Number of completely trusted users to introduce a new key signer (defaults to 1)"
     complete -c $__fish_complete_gpg_command -l marginals-needed -x -d "Number of marginally trusted users to introduce a new key signer (defaults to 3)"
@@ -324,7 +324,7 @@ function __fish_complete_gpg -a __fish_complete_gpg_command
     complete -c $__fish_complete_gpg_command -l no-random-seed-file -d "Do not create an internal pool file for quicker generation of random numbers"
     complete -c $__fish_complete_gpg_command -l no-verbose -d "Reset verbose level to 0"
     complete -c $__fish_complete_gpg_command -l no-greeting -d "Suppress the initial copyright message"
-    complete -c $__fish_complete_gpg_command -l no-secmem-warning -d "Suppress the warning about 'using insecure memory'"
+    complete -c $__fish_complete_gpg_command -l no-secmem-warning -d "Suppress the warning about “using insecure memory”"
     complete -c $__fish_complete_gpg_command -l no-permission-warning -d "Suppress the warning about unsafe file and home directory (--homedir) permissions"
     complete -c $__fish_complete_gpg_command -l no-mdc-warning -d "Suppress the warning about missing MDC integrity protection"
 

@@ -1,4 +1,4 @@
-use crate::common::init_special_chars_once;
+use crate::common::{init_special_chars_once, reset_omitted_newline_str_to_default, set_omitted_newline_str};
 use crate::complete::complete_invalidate_path;
 use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
 use crate::env::{EnvMode, EnvStack, Environment as _, setenv_lock, unsetenv_lock};
@@ -91,6 +91,10 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         table.add_anon(
             L!("fish_cursor_end_mode"),
             vars!(handle_fish_cursor_end_mode_change),
+        );
+        table.add_anon(
+            L!("fish_omitted_newline_indicator"),
+            vars!(handle_fish_omitted_newline_indicator),
         );
 
         table
@@ -347,6 +351,14 @@ fn handle_fish_trace(vars: &EnvStack) {
     );
 }
 
+fn handle_fish_omitted_newline_indicator(vars: &EnvStack) {
+    // Use get (not get_unless_empty): an empty string explicitly hides the indicator.
+    match vars.get(L!("fish_omitted_newline_indicator")) {
+        Some(var) => set_omitted_newline_str(&var.as_string().chars().collect::<String>()),
+        None => reset_omitted_newline_str_to_default(),
+    }
+}
+
 pub fn env_dispatch_init(vars: &EnvStack) {
     use once_cell::sync::Lazy;
 
@@ -360,6 +372,7 @@ pub fn env_dispatch_init(vars: &EnvStack) {
 fn run_inits(vars: &EnvStack) {
     init_locale(vars);
     init_special_chars_once();
+    handle_fish_omitted_newline_indicator(vars);
     init_terminal(vars);
     handle_emoji_width(vars);
     update_wait_on_escape_ms(vars);

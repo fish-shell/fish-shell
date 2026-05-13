@@ -3,6 +3,7 @@ fish ?.?.? (released ???)
 
 Interactive improvements
 ------------------------
+- :envvar:`fish_omitted_newline_indicator` can be set to customize the indicator shown when a command's output doesn't end with a newline (:issue:`12605`).
 - On the first run after upgrading from an older version, fish will try harder to check if the current theme matches a historical default, in which case fish won't create ``~/.config/fish/conf.d/fish_frozen_theme.fish``.
   This means that on systems where fish version 3.x was installed originally, the update will avoid creating that file (:issue:`12725`).
 

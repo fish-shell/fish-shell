@@ -690,9 +690,10 @@ fn abandon_line_string(screen_width: Option<usize>) -> Vec<u8> {
     let omitted_newline_str = get_omitted_newline_str();
 
     // Do the PROMPT_SP hack.
-    // Don't need to check for fish_wcwidth errors; this is done when setting up
-    // omitted_newline_char in common.rs.
-    let non_space_width = omitted_newline_str.chars().count();
+    let non_space_width: usize = omitted_newline_str
+        .chars()
+        .map(|c| usize::try_from(fish_wcwidth_visible(c)).unwrap_or(0))
+        .sum();
     // We do `>` rather than `>=` because the code below might require one extra space.
     if screen_width > non_space_width {
         abandon_line_string

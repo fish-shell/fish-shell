@@ -161,6 +161,26 @@ echo
 
 set -e __fish_git_prompt_showdirtystate
 
+# Test that renames count as one staged change, not two (issue #11296).
+# git status --porcelain -z outputs rename source as a separate NUL-delimited field,
+# which should not be counted as an additional change.
+# Use a filename starting with R (in [ACDMRTU]) to trigger the miscount.
+git -c user.email=banana@example.com -c user.name=banana commit -m 'commit staged foo' >/dev/null
+echo content >Rfile
+git add Rfile
+git -c user.email=banana@example.com -c user.name=banana commit -m 'add Rfile' >/dev/null
+
+set -g __fish_git_prompt_show_informative_status 1
+mkdir -p subdir
+git mv Rfile subdir/Rfile
+fish_git_prompt
+echo
+#CHECK: (newbranch|●1)
+git reset >/dev/null 2>&1
+mv subdir/Rfile Rfile
+rmdir subdir
+set -e __fish_git_prompt_show_informative_status
+
 # Test displaying only stash count
 set -g __fish_git_prompt_show_informative_status 1
 set -g __fish_git_prompt_showstashstate 1

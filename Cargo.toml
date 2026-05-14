@@ -1,10 +1,20 @@
+[package]
+name = "fish"
+version = "4.7.1"
+edition.workspace = true
+rust-version.workspace = true
+readme = "README.rst"
+homepage = "https://fishshell.com"
+license.workspace = true
+default-run = "fish"
+
 [workspace]
 members = ["crates/*"]
 
 [workspace.package]
+edition = "2024"
 # To build revisions that use Corrosion (those before 2024-01), use CMake 3.19, Rustc 1.78 and Rustup 1.27.
 rust-version = "1.85"
-edition = "2024"
 repository = "https://github.com/fish-shell/fish-shell"
 # see doc_src/license.rst for details
 # don't forget to update COPYING and debian/copyright too
@@ -34,9 +44,9 @@ fish-printf = { path = "crates/printf", features = ["widestring"] }
 fish-tempfile = { path = "crates/tempfile" }
 fish-util = { path = "crates/util" }
 fish-wcstringutil = { path = "crates/wcstringutil" }
+fish-wgetopt = { path = "crates/wgetopt" }
 fish-widecharwidth = { path = "crates/widecharwidth" }
 fish-widestring = { path = "crates/widestring" }
-fish-wgetopt = { path = "crates/wgetopt" }
 ignore = "0.4.25"
 itertools = "0.14.0"
 libc = "0.2.177"
@@ -47,10 +57,10 @@ lru = "0.16.2"
 nix = { version = "0.31.1", default-features = false, features = [
   "event",
   "fs",
-  "inotify",
   "hostname",
-  "resource",
+  "inotify",
   "process",
+  "resource",
   "signal",
   "term",
   "user",
@@ -80,30 +90,62 @@ rust-embed = { version = "8.11.0", features = [
 rustc_version = "0.4.1"
 serial_test = { version = "3", default-features = false }
 strum_macros = "0.28.0"
-widestring = "1.2.0"
 unicode-segmentation = "1.12.0"
 unicode-width = "0.2.0"
 unix_path = "1.0.1"
 walkdir = "2.5.0"
+widestring = "1.2.0"
 xterm-color = "1.0.1"
 
-[profile.release]
-overflow-checks = true
-lto = true
+[workspace.lints]
+rust.unknown_lints = { level = "allow", priority = -1 }
+rust.unstable_name_collisions = "allow"
+rustdoc.private_intra_doc_links = "allow"
 
-[profile.release-with-debug]
-inherits = "release"
-debug = true
+[workspace.lints.clippy]
+assigning_clones = "warn"
+cloned_instead_of_copied = "warn"
+explicit_into_iter_loop = "warn"
+format_push_string = "warn"
+implicit_clone = "warn"
+len_without_is_empty = "allow"  # we're not a library crate
+let_and_return = "allow"
+manual_assert = "warn"
+manual_range_contains = "allow"
+map_unwrap_or = "warn"
+mut_mut = "warn"
+needless_lifetimes = "allow"
+new_without_default = "allow"
+option_map_unit_fn = "allow"
+ptr_offset_by_literal = "warn"
+ref_option = "warn"
+semicolon_if_nothing_returned = "warn"
+stable_sort_primitive = "warn"
+str_to_string = "warn"
+unnecessary_semicolon = "warn"
+unused_trait_names = "warn"
 
-[package]
+print_stderr = "deny"
+# We do not want to use the e?print(ln)?! macros.
+# These lints flag their use.
+# In the future, they might change to flag other methods of printing.
+print_stdout = "deny"
+
+[lib]
+crate-type = ["rlib"]
+path = "src/lib.rs"
+
+[[bin]]
 name = "fish"
-version = "4.7.1"
-edition.workspace = true
-rust-version.workspace = true
-default-run = "fish"
-license.workspace = true
-homepage = "https://fishshell.com"
-readme = "README.rst"
+path = "src/bin/fish.rs"
+
+[[bin]]
+name = "fish_indent"
+path = "src/bin/fish_indent.rs"
+
+[[bin]]
+name = "fish_key_reader"
+path = "src/bin/fish_key_reader.rs"
 
 [dependencies]
 assert_matches.workspace = true
@@ -137,23 +179,6 @@ rand.workspace = true
 strum_macros.workspace = true
 xterm-color.workspace = true
 
-[target.'cfg(not(target_has_atomic = "64"))'.dependencies]
-portable-atomic.workspace = true
-
-[target.'cfg(windows)'.dependencies]
-rust-embed = { workspace = true, features = [
-  "deterministic-timestamps",
-  "debug-embed",
-  "include-exclude",
-  "interpolate-folder-path",
-] }
-[target.'cfg(not(windows))'.dependencies]
-rust-embed = { workspace = true, features = [
-  "deterministic-timestamps",
-  "include-exclude",
-  "interpolate-folder-path",
-] }
-
 [dev-dependencies]
 serial_test.workspace = true
 
@@ -165,74 +190,50 @@ phf_codegen = { workspace = true, optional = true }
 rsconf.workspace = true
 rustc_version.workspace = true
 
+[target.'cfg(not(target_has_atomic = "64"))'.dependencies]
+portable-atomic.workspace = true
+
+[target.'cfg(not(windows))'.dependencies]
+rust-embed = { workspace = true, features = [
+  "deterministic-timestamps",
+  "include-exclude",
+  "interpolate-folder-path",
+] }
+
+[target.'cfg(windows)'.dependencies]
+rust-embed = { workspace = true, features = [
+  "debug-embed",
+  "deterministic-timestamps",
+  "include-exclude",
+  "interpolate-folder-path",
+] }
+
 [target.'cfg(windows)'.build-dependencies]
 unix_path.workspace = true
-
-[lib]
-crate-type = ["rlib"]
-path = "src/lib.rs"
-
-[[bin]]
-name = "fish"
-path = "src/bin/fish.rs"
-
-[[bin]]
-name = "fish_indent"
-path = "src/bin/fish_indent.rs"
-
-[[bin]]
-name = "fish_key_reader"
-path = "src/bin/fish_key_reader.rs"
 
 [features]
 default = ["embed-manpages", "localize-messages"]
 benchmark = []
 embed-manpages = ["dep:fish-build-man-pages"]
-# Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
-# build time.
-localize-messages = ["dep:fish-gettext"]
 # This feature is used to enable extracting messages from the source code for localization.
 # It only needs to be enabled if updating these messages (and the corresponding PO files) is
 # desired. This happens for the `gettext` xtask, which is also invoked via `cargo xtask check`.
 # There should not be a need to enable this feature manually.
 gettext-extract = ["dep:fish-gettext-extraction"]
+# Enable gettext localization at runtime. Requires the `msgfmt` tool to generate catalog data at
+# build time.
+localize-messages = ["dep:fish-gettext"]
 
 # The following features are auto-detected by the build-script and should not be enabled manually.
 tsan = []
 
-[workspace.lints]
-rust.unknown_lints = { level = "allow", priority = -1 }
-rust.unstable_name_collisions = "allow"
-rustdoc.private_intra_doc_links = "allow"
-
-[workspace.lints.clippy]
-assigning_clones = "warn"
-cloned_instead_of_copied = "warn"
-explicit_into_iter_loop = "warn"
-format_push_string = "warn"
-implicit_clone = "warn"
-len_without_is_empty = "allow"         # we're not a library crate
-let_and_return = "allow"
-manual_assert = "warn"
-manual_range_contains = "allow"
-map_unwrap_or = "warn"
-mut_mut = "warn"
-needless_lifetimes = "allow"
-new_without_default = "allow"
-option_map_unit_fn = "allow"
-ptr_offset_by_literal = "warn"
-ref_option = "warn"
-semicolon_if_nothing_returned = "warn"
-stable_sort_primitive = "warn"
-str_to_string = "warn"
-unnecessary_semicolon = "warn"
-unused_trait_names = "warn"
-
-# We do not want to use the e?print(ln)?! macros.
-# These lints flag their use.
-# In the future, they might change to flag other methods of printing.
-print_stdout = "deny"
-print_stderr = "deny"
-
 [lints]
 workspace = true
+
+[profile.release]
+overflow-checks = true
+lto = true
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true

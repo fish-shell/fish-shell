@@ -21,6 +21,7 @@ The ``fish_vcs_prompt`` function displays information about the current version 
 
 It calls out to VCS-specific functions. The currently supported systems are:
 
+- :doc:`fish_jj_prompt <fish_jj_prompt>`
 - :doc:`fish_git_prompt <fish_git_prompt>`
 - :doc:`fish_hg_prompt <fish_hg_prompt>`
 - :doc:`fish_svn_prompt <fish_svn_prompt>`

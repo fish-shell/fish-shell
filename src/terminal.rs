@@ -1,4 +1,3 @@
-use crate::global_safety::RelaxedAtomicBool;
 // Generic output functions.
 use crate::prelude::*;
 use crate::{
@@ -179,7 +178,7 @@ fn osc_0_or_1_terminal_title(out: &mut Outputter, is_1: bool, title: &[WString])
     for title_line in title {
         out.write_bytes(&wcs2bytes(title_line));
     }
-    out.write_bytes(b"\x07"); // BEL
+    out.write_bytes(b"\x1b\\"); // BEL
     true
 }
 
@@ -187,12 +186,7 @@ fn osc_133_prompt_start(out: &mut Outputter) -> bool {
     if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
-    static TEST_BALLOON: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-    if !TEST_BALLOON.swap(true) {
-        write_to_output!(out, "\x1b]133;A;click_events=1\x1b\\");
-    } else {
-        write_to_output!(out, "\x1b]133;A;click_events=1\x07");
-    }
+    write_to_output!(out, "\x1b]133;A;click_events=1\x1b\\");
     true
 }
 
@@ -200,7 +194,7 @@ fn osc_133_prompt_end(out: &mut Outputter) -> bool {
     if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
-    write_to_output!(out, "\x1b]133;B\x07");
+    write_to_output!(out, "\x1b]133;B\x1b\\");
     true
 }
 
@@ -210,7 +204,7 @@ fn osc_133_command_start(out: &mut Outputter, command: &wstr) -> bool {
     }
     write_to_output!(
         out,
-        "\x1b]133;C;cmdline_url={}\x07",
+        "\x1b]133;C;cmdline_url={}\x1b\\",
         escape_string(command, EscapeStringStyle::Url),
     );
     true
@@ -220,7 +214,7 @@ fn osc_133_command_finished(out: &mut Outputter, exit_status: libc::c_int) -> bo
     if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
         return false;
     }
-    write_to_output!(out, "\x1b]133;D;{}\x07", exit_status);
+    write_to_output!(out, "\x1b]133;D;{}\x1b\\", exit_status);
     true
 }
 

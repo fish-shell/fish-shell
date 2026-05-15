@@ -2099,16 +2099,18 @@ mod tests {
 
         // iTerm2 escape sequences.
         assert_eq!(
-            lc.escape_code_length(L!("\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE")),
-            25
+            lc.escape_code_length(L!("\x1B]50;CurrentDir=test/foo\x1b\\NOT_PART_OF_SEQUENCE")),
+            26
         );
         assert_eq!(
-            lc.escape_code_length(L!("\x1B]50;SetMark\x07NOT_PART_OF_SEQUENCE")),
-            13
+            lc.escape_code_length(L!("\x1B]50;SetMark\x1b\\NOT_PART_OF_SEQUENCE")),
+            14
         );
         assert_eq!(
-            lc.escape_code_length(L!("\x1B]6;1;bg;red;brightness;255\x07NOT_PART_OF_SEQUENCE")),
-            28
+            lc.escape_code_length(L!(
+                "\x1B]6;1;bg;red;brightness;255\x1b\\NOT_PART_OF_SEQUENCE"
+            )),
+            29
         );
         assert_eq!(
             lc.escape_code_length(L!("\x1B]Pg4040ff\x1B\\NOT_PART_OF_SEQUENCE")),
@@ -2273,22 +2275,7 @@ mod tests {
 
         // Escape sequences are not truncated.
         let layout = cache.calc_prompt_layout(
-            L!("\x1B]50;CurrentDir=test/foo\x07NOT_PART_OF_SEQUENCE"),
-            Some(&mut trunc),
-            4,
-        );
-        assert_eq!(
-            layout,
-            PromptLayout {
-                line_starts: vec![0],
-                last_line_width: 4,
-            },
-        );
-        assert_eq!(trunc, ellipsis() + L!("\x1B]50;CurrentDir=test/foo\x07NCE"));
-
-        // Newlines in escape sequences are skipped.
-        let layout = cache.calc_prompt_layout(
-            L!("\x1B]50;CurrentDir=\ntest/foo\x07NOT_PART_OF_SEQUENCE"),
+            L!("\x1B]50;CurrentDir=test/foo\x1b\\NOT_PART_OF_SEQUENCE"),
             Some(&mut trunc),
             4,
         );
@@ -2301,7 +2288,25 @@ mod tests {
         );
         assert_eq!(
             trunc,
-            ellipsis() + L!("\x1B]50;CurrentDir=\ntest/foo\x07NCE")
+            ellipsis() + L!("\x1B]50;CurrentDir=test/foo\x1b\\NCE")
+        );
+
+        // Newlines in escape sequences are skipped.
+        let layout = cache.calc_prompt_layout(
+            L!("\x1B]50;CurrentDir=\ntest/foo\x1b\\NOT_PART_OF_SEQUENCE"),
+            Some(&mut trunc),
+            4,
+        );
+        assert_eq!(
+            layout,
+            PromptLayout {
+                line_starts: vec![0],
+                last_line_width: 4,
+            },
+        );
+        assert_eq!(
+            trunc,
+            ellipsis() + L!("\x1B]50;CurrentDir=\ntest/foo\x1b\\NCE")
         );
 
         // We will truncate down to one character if we have to.

@@ -8,7 +8,6 @@ while others enable optional features and may be ignored by the terminal.
 The terminal must be able to parse Control Sequence Introducer (CSI) commands, Operating System Commands (OSC) and :ref:`optionally <term-compat-dcs-gnu-screen>` Device Control Strings (DCS).
 These are defined by ECMA-48.
 If a valid CSI, OSC or DCS sequence does not represent a command implemented by the terminal, the terminal must ignore it.
-For historical reasons, OSC sequences may be terminated with ``\x07`` instead of ``\e\\``.
 
 Control sequences are denoted in a fish-like syntax.
 Special characters other than ``\`` are not escaped.

@@ -243,7 +243,7 @@ fn path_component_state_transition(
     use PathComponentTransition as T;
     ControlFlow::Continue(if is_blank(c) && !escaped {
         T::Blank
-    } else if is_path_component_character(c) || (is_blank(c) && escaped) {
+    } else if escaped || is_path_component_character(c) {
         T::PathComponent
     } else {
         T::Punctuation
@@ -438,7 +438,7 @@ mod tests {
                 }
                 assert!(
                     stops.is_empty(),
-                    "expected to stop at {stops:?} but not. String: {command:?}"
+                    "expected to stop at {stops:?} but did not. String: {command:?}"
                 );
             }
         }
@@ -459,7 +459,8 @@ mod tests {
         validate!(Left, PathComponents, "^aa^@@  ^aa@@^a^");
         validate!(Left, PathComponents, r#"^a\  ^b\ c/^d"^e\ f"^g"#);
         validate!(Left, PathComponents, r#"^a\  ^b\ c/^d"^e\\\ f"^g"#);
-        validate!(Left, PathComponents, r#"^a\"^bc^"#);
+        validate!(Left, PathComponents, r#"^a\;b^"#);
+        validate!(Left, PathComponents, r#"^a\"bc^"#);
 
         validate!(Right, PathComponents, "^/^foo/^bar/^baz/^");
         validate!(Right, PathComponents, "^echo ^--foo ^--bar^");

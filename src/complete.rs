@@ -1,5 +1,5 @@
 use crate::{
-    abbrs::with_abbrs,
+    abbrs::{with_abbrs, Position},
     ast::unescape_keyword,
     autoload::{Autoload, AutoloadResult},
     builtins::shared::{builtin_exists, builtin_get_desc, builtin_get_names},
@@ -689,7 +689,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 return;
             }
             self.complete_cmd(WString::new());
-            self.complete_abbr(WString::new());
+            self.complete_abbr(WString::new(), false);
             return;
         };
 
@@ -745,7 +745,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             }
             // Complete command filename.
             let current_token = current_token.to_owned();
-            self.complete_abbr(current_token.clone());
+            self.complete_abbr(current_token.clone(), false);
             self.complete_cmd(current_token);
             return;
         }
@@ -834,6 +834,11 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // Maybe apply variable assignments.
         let block = self.apply_var_assignments(&var_assignments);
         if !self.ctx.check_cancel() {
+            // Complete anywhere-position abbreviations in non-command position.
+            if !in_redirection {
+                self.complete_abbr(current_argument.to_owned(), true);
+            }
+
             // This function wants the unescaped string.
             self.complete_param_expand(
                 current_argument,
@@ -1146,14 +1151,18 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     }
 
     /// Attempt to complete an abbreviation for the given string.
-    fn complete_abbr(&mut self, cmd: WString) {
+    /// If `anywhere_only` is true, only abbreviations with `Position::Anywhere` are included;
+    /// otherwise all non-regex abbreviations are included.
+    fn complete_abbr(&mut self, cmd: WString, anywhere_only: bool) {
         // Copy the list of names and descriptions so as not to hold the lock across the call to
         // complete_strings.
         let mut possible_comp = Vec::new();
         let mut descs = HashMap::new();
         with_abbrs(|set| {
             for abbr in set.list() {
-                if !abbr.is_regex() {
+                if !abbr.is_regex()
+                    && (!anywhere_only || abbr.position == Position::Anywhere)
+                {
                     possible_comp.push(Completion::from_completion(abbr.key.clone()));
                     descs.insert(abbr.key.clone(), abbr.replacement.clone());
                 }

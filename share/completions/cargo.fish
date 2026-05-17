@@ -859,9 +859,6 @@ function __fish_cargo_is_in_fish_workspace
         jq --exit-status -r '.packages | map(select(.name == "fish" and .homepage == "https://fishshell.com")) | any' >/dev/null
 end
 
-# The sed command is a hack to only activate the conditions in fish workspaces.
-# Ideally, this would be handled by the completion generator,
-# but `clap_complete` does not have this capability.
-COMPLETE=fish __fish_cargo xtask 2>/dev/null |
-    sed 's/^complete /complete --condition __fish_cargo_is_in_fish_workspace /' |
-    source
+complete -x cargo --condition __fish_cargo_is_in_fish_workspace -a "(
+    COMPLETE=fish __fish_cargo xtask -- (commandline --current-process --tokenize --cut-at-cursor) (commandline --current-token) 2>/dev/null
+)"

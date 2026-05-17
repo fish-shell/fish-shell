@@ -3,7 +3,8 @@
 ## --- WRITTEN MANUALLY ---
 
 function __fish_cargo
-    RUSTUP_AUTO_INSTALL=0 cargo --color=never $argv
+    set -l tmp $__fish_cargo_wrapping cargo --color=never $argv
+    RUSTUP_AUTO_INSTALL=0 $tmp
 end
 
 set -l __fish_cargo_subcommands (__fish_cargo --list 2>&1 | string replace -rf '^\s+([^\s]+)\s*(.*)' '$1\t$2' | string escape)
@@ -845,7 +846,7 @@ if command -q cargo-asm
     # Warning: this will build the project and can take time! We make sure to only call it if it's not a switch so completions
     # for --foo will always be fast.
     if command -q timeout
-        complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(timeout 1 __fish_cargo asm)"
+        complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(__fish_cargo_wrapping={timeout,1} __fish_cargo asm)"
     else
         complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(__fish_cargo asm)"
     end

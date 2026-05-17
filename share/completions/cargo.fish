@@ -854,7 +854,8 @@ end
 
 # Determine whether the working directory is in a fish workspace.
 function __fish_cargo_is_in_fish_workspace
-    __fish_cargo metadata --offline --no-deps --format-version=1 2>/dev/null |
+    command -v jq >/dev/null
+    and __fish_cargo metadata --offline --no-deps --format-version=1 2>/dev/null |
         jq --exit-status -r '.packages | map(select(.name == "fish" and .homepage == "https://fishshell.com")) | any' >/dev/null
 end
 

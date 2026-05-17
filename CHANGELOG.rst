@@ -12,6 +12,7 @@ Interactive improvements
 - ``fish_hg_prompt``, ``fish_git_prompt`` and ``fish_fossil_prompt`` now strip control characters from VCS state read off disk, matching ``prompt_pwd``.
 - The sample informative and minimalist prompts now use ``prompt_pwd`` instead of printing ``$PWD`` directly.
 - ``bind`` shows the file where bindings were defined (:issue:`12504`).
+- Abbreviations with ``--position=anywhere`` can now be completed in argument position, not just in command position (:issue:`12630`).
 
 For distributors and developers
 -------------------------------

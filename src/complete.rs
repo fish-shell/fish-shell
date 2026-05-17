@@ -689,7 +689,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 return;
             }
             self.complete_cmd(WString::new());
-            self.complete_abbr(WString::new(), false);
+            self.complete_abbr(WString::new(), true);
             return;
         };
 
@@ -745,7 +745,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             }
             // Complete command filename.
             let current_token = current_token.to_owned();
-            self.complete_abbr(current_token.clone(), false);
+            self.complete_abbr(current_token.clone(), true);
             self.complete_cmd(current_token);
             return;
         }
@@ -834,9 +834,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // Maybe apply variable assignments.
         let block = self.apply_var_assignments(&var_assignments);
         if !self.ctx.check_cancel() {
-            // Complete anywhere-position abbreviations in non-command position.
+            // Complete abbr in non-command position.
             if !in_redirection {
-                self.complete_abbr(current_argument.to_owned(), true);
+                self.complete_abbr(current_argument.to_owned(), false);
             }
 
             // This function wants the unescaped string.
@@ -1150,19 +1150,18 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         }
     }
 
-    /// Attempt to complete an abbreviation for the given string.
-    /// If `anywhere_only` is true, only abbreviations with `Position::Anywhere` are included;
-    /// otherwise all non-regex abbreviations are included.
-    fn complete_abbr(&mut self, cmd: WString, anywhere_only: bool) {
+    /// Attempt to complete a non-regex abbreviation for the given string.
+    fn complete_abbr(&mut self, cmd: WString, is_command_position: bool) {
         // Copy the list of names and descriptions so as not to hold the lock across the call to
         // complete_strings.
         let mut possible_comp = Vec::new();
         let mut descs = HashMap::new();
         with_abbrs(|set| {
             for abbr in set.list() {
-                if !abbr.is_regex()
-                    && (!anywhere_only || abbr.position == Position::Anywhere)
-                {
+                if abbr.is_regex() {
+                    continue;
+                }
+                if abbr.position == Position::Anywhere || is_command_position {
                     possible_comp.push(Completion::from_completion(abbr.key.clone()));
                     descs.insert(abbr.key.clone(), abbr.replacement.clone());
                 }

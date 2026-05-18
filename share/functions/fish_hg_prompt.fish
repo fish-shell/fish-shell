@@ -30,9 +30,14 @@ function fish_hg_prompt --description 'Write out the hg prompt'
     set -l root (fish_print_hg_root)
     or return 1
 
-    # Read branch and bookmark
+    # Read branch and bookmark.
+    # Strip control characters before showing branch/bookmark names in the prompt.
+    # Raw C1 bytes are stored in fish's private-use encoding at U+F680-U+F69F.
+    # (they live under .hg/ and are not validated by hg itself in this code path).
     set -l branch (cat $root/branch 2>/dev/null; or echo default)
+    set branch (string replace -ra '[\x00-\x1f\x7f-\x9f\x{f680}-\x{f69f}]' '' -- $branch)
     if set -l bookmark (cat $root/bookmarks.current 2>/dev/null)
+        set bookmark (string replace -ra '[\x00-\x1f\x7f-\x9f\x{f680}-\x{f69f}]' '' -- $bookmark)
         set branch "$branch|$bookmark"
     end
 

@@ -3,7 +3,7 @@
 
 function fish_prompt
     set_color $fish_color_cwd
-    echo -n (path basename $PWD)
+    echo -n (prompt_pwd | path basename)
     set_color --reset
     echo -n ' ) '
 end

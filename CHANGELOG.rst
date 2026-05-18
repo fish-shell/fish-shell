@@ -34,6 +34,7 @@ Interactive improvements
 - :envvar:`fish_color_valid_path` now respects background and underline colors (:issue:`12622`).
 - :doc:`funced <cmds/funced>` will no longer lose work if there are parse errors multiple times without new changes to the file.
 - Fixed a case where directory completions were sorted in a surprising order (:issue:`12695`).
+- :doc:`fish_git_prompt <cmds/fish_git_prompt>` no longer adds a trailing space after the branch name in bare repositories (:issue:`12705`).
 - When at the command token, the :kbd:`alt-o` binding will now open read-only files too (:issue:`12671`).
 - Private mode in-memory history (``set fish_history``) is no longer shared with :doc:`builtin read <cmds/read>` (:issue:`12662`).
 

@@ -47,6 +47,8 @@ Other improvements
 - fish no longer creates the ``__fish_initialized`` universal variable on startup.
   If you don't expect to need to downgrade to earlier versions, you can remove it with ``set --erase __fish_initialized``.
   This means that fish now only creates universal variables if instructed by the user.
+- Nested brace expansions now strip unquoted leading and trailing spaces from entries consistently (:issue:`12794`).
+- Add variants to mode prompt indicating the active mode in the vi key bindings.
 
 For distributors and developers
 -------------------------------

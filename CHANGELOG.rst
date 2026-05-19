@@ -17,6 +17,7 @@ Interactive improvements
 Other improvements
 ------------------
 - ``cd`` supports the ``-L`` and ``-P`` options, like other shells, to allow specifying whether symbolic links (symlinks) are resolved when changing directories (:issue:`7206`).
+- Dimmed square brackets indicating the active mode in the vi key bindings.
 
 For distributors and developers
 -------------------------------

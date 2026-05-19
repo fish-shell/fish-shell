@@ -1648,6 +1648,39 @@ You can change the settings of fish by changing the values of certain variables.
 
    the current file creation mask. The preferred way to change the umask variable is through the :doc:`umask <cmds/umask>` function. An attempt to set umask to an invalid value will always fail.
 
+.. envvar:: fish_default_mode_prompt_variant
+
+   Select one of the 3 variants of the default :doc:`mode prompt <cmds/fish_mode_prompt>`:
+
+   .. list-table::
+      :header-rows: 1
+      :widths: 10 35 15 15 15 25
+
+      * - Mode
+        - Description
+        - Indicator String
+        - Surrounding
+        - Dimming
+        - Trigger Values
+      * - Default
+        - Historical, simple & plain default
+        - Single letter
+        - ``[letter]``
+        - None
+        - anything other than below
+      * - Dim
+        - More Noticeable indicating string
+        - Single letter
+        - ``[letter]``
+        - Square Brackets
+        - ``dim`` ``dimmed``
+      * - Triple
+        - Unsurrounded, self-contained indicator
+        - Triple-letter
+        - None
+        - None
+        - ``triple`` ``three`` ``3``
+
 .. envvar:: SHELL_PROMPT_PREFIX
 
    if set, this string is automatically prepended to the left prompt. This is a standard environment variable that may be set by tools like systemd's ``run0`` to indicate special shell sessions.

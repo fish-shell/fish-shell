@@ -16,6 +16,10 @@ Regression fixes:
 -----------------
 - (From 4.6.0) Chinese and Japanese translation of error messages owned by the C library (:issue:`12895`).
 
+Other Improvements
+------------------
+- Add variants to mode prompt indicating the active mode in the vi key bindings.
+
 fish 4.8.1 (released July 14, 2026)
 ===================================
 

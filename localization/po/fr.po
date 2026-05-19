@@ -9290,6 +9290,12 @@ msgstr "Indépendance des blocs (par défaut)"
 msgid "Block size"
 msgstr "Taille de bloc"
 
+msgid "Block size (e.g. 1M, KiB)"
+msgstr ""
+
+msgid "Block size in bytes"
+msgstr ""
+
 msgid "Block size to use in all I/O operations (default: 16K)"
 msgstr "Taille des blocs à utiliser dans toutes les opérations de lecture et écriture (par défaut : 16K)"
 
@@ -13295,9 +13301,6 @@ msgstr ""
 msgid "Count executions of source lines"
 msgstr ""
 
-msgid "Count hard links multiple times"
-msgstr "Compter plusieurs fois les liens matériels"
-
 msgid "Count hidden files, too"
 msgstr ""
 
@@ -15551,12 +15554,6 @@ msgstr ""
 msgid "Dereference TARGETs that are symbolic links"
 msgstr "Déréférencer les CIBLEs si elles sont des liens symboliques"
 
-msgid "Dereference all symlinks"
-msgstr "Déréférencer les liens symboliques"
-
-msgid "Dereference file symlinks"
-msgstr "Déréférencer les liens symboliques"
-
 msgid "Dereference structures for the specified set of system calls"
 msgstr ""
 
@@ -17565,6 +17562,9 @@ msgid "Display an archive's list to console"
 msgstr ""
 
 msgid "Display answers as exclamation points and missing packets as dots"
+msgstr ""
+
+msgid "Display apparent size"
 msgstr ""
 
 msgid "Display architecture specific information"
@@ -25034,6 +25034,9 @@ msgstr ""
 msgid "End current session cleanly"
 msgstr ""
 
+msgid "End each output line with NUL"
+msgstr ""
+
 msgid "End each output line with NUL, not newline, and disable file name escaping"
 msgstr ""
 
@@ -27336,6 +27339,9 @@ msgid "Follow an account"
 msgstr ""
 
 msgid "Follow command-line symbolic links"
+msgstr ""
+
+msgid "Follow command-line symlinks only"
 msgstr ""
 
 msgid "Follow given symlinks with -R"
@@ -31265,6 +31271,9 @@ msgstr ""
 msgid "Ignore files ending with ~"
 msgstr "Omettre les entrées se terminant par « ~ »"
 
+msgid "Ignore files matching mask"
+msgstr ""
+
 msgid "Ignore files that already exist on receiver"
 msgstr "Ignorer les fichiers pré-existants sur la destination"
 
@@ -31342,6 +31351,9 @@ msgstr ""
 
 msgid "Ignore newer bugs than upgrade packages"
 msgstr "Ignorer les nouveaux bogues et mettre à jour les paquets"
+
+msgid "Ignore nodump files"
+msgstr ""
 
 msgid "Ignore non-authenticated packages"
 msgstr "Ignorer les paquets non-authentifiés"
@@ -35334,6 +35346,9 @@ msgid "List information on LXD servers and containers."
 msgstr ""
 
 msgid "List ingress zones added"
+msgstr ""
+
+msgid "List inode usage instead of block usage"
 msgstr ""
 
 msgid "List install_if rule"
@@ -47024,9 +47039,6 @@ msgstr ""
 msgid "Produce filenames as this string"
 msgstr ""
 
-msgid "Produce grand total"
-msgstr "Calculer le total des totaux"
-
 msgid "Produce less output to the terminal"
 msgstr ""
 
@@ -48679,9 +48691,6 @@ msgstr ""
 
 msgid "Recursion (default for download)"
 msgstr "Opérer récursivement (par défaut lors des téléchargements)"
-
-msgid "Recursion limit"
-msgstr "Limite de récursion"
 
 msgid "Recursive mode"
 msgstr "Mode récursif"
@@ -60422,6 +60431,9 @@ msgstr "Montrer les processus légers avec les colonnes LWP/NLWP"
 msgid "Show threads. With SPID"
 msgstr "Montrer les processus légers avec la colonne SPID"
 
+msgid "Show time as WORD instead of modification time"
+msgstr ""
+
 msgid "Show time stamping capabilities and PTP hardware clock"
 msgstr ""
 
@@ -60433,6 +60445,9 @@ msgstr "Afficher la chronologie"
 
 msgid "Show timer"
 msgstr "Afficher le chronométrage"
+
+msgid "Show times using style (or +FORMAT)"
+msgstr ""
 
 msgid "Show timestamp"
 msgstr ""
@@ -61381,9 +61396,6 @@ msgstr ""
 
 msgid "Skip mount checks, repair is not possible"
 msgstr ""
-
-msgid "Skip other file systems"
-msgstr "Passer les systèmes de fichiers tiers"
 
 msgid "Skip package installation for this run"
 msgstr ""
@@ -65259,6 +65271,9 @@ msgid "Summarize changes in working copy"
 msgstr "Résumer les modifications de la copie de travail"
 
 msgid "Summarize disk usage of each file."
+msgstr ""
+
+msgid "Summarize usage of NUL-terminated files in file"
 msgstr ""
 
 msgid "Super go mode: clean out generated files before processing"
@@ -69338,8 +69353,14 @@ msgstr "Utiliser « int » sur 16 bits"
 msgid "Use 1B block size"
 msgstr "Utiliser des blocs d’un octet"
 
-msgid "Use 1kB block size"
-msgstr "Utiliser des blocs d’un kilo-octet"
+msgid "Use 1GB block size"
+msgstr ""
+
+msgid "Use 1KB block size"
+msgstr ""
+
+msgid "Use 1MB block size"
+msgstr ""
 
 msgid "Use 32-bit \"float\""
 msgstr "Utiliser « float » sur 32 bits"
@@ -73387,9 +73408,6 @@ msgstr "Afficher des statistiques d’encodage et décodage à l’exécution"
 
 msgid "Write selection"
 msgstr "Écrire la sélection"
-
-msgid "Write size for all files"
-msgstr "Afficher la taille de tous les fichiers"
 
 msgid "Write special status strings to the specified file descriptor"
 msgstr "Écrire les messages d’état dans le descripteur de fichier spécifié"

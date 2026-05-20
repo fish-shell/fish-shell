@@ -7,7 +7,19 @@ use xtask::{CommandExt, cargo, format::FormatArgs, gettext::GettextArgs, shellch
 
 #[derive(Parser)]
 #[command(
-    name = "cargo xtask",
+    name = "__fish_cargo_xtask",
+    // Use this instead of the Cargo package name (xtask)
+    // to inform users that they can use __fish_cargo_xtask,
+    // which will give them access to completions.
+    //
+    // By default, we do not want to enable completions for `cargo xtask`,
+    // since that would run potentially untrusted code without the user expecting it.
+    // Additionally, we have no way of identifying whether a particular project supports dynamic
+    // completions via `COMPLETE=fish cargo xtask`, and even if we did, we would then also have to
+    // ensure that the correct completions are used depending on the current working directory.
+    // To work around these problems, we introduce the `__fish_cargo_xtask` top-level command,
+    // which signals that fish's xtasks are being used and dynamic completions should be enabled.
+    bin_name = "__fish_cargo_xtask",
     about = "Wrapper for running various utilities",
     arg_required_else_help(true)
 )]
@@ -37,28 +49,8 @@ enum Task {
     ShellCheck,
 }
 
-/// Only used to enable completion generation.
-/// [`clap_complete`] is not built to account for the situation we have here, where the CLI does not
-/// correspond to a top-level shell command.
-/// We work around this here by pretending that we are building a CLI for the `cargo` command, which
-/// only has the single subcommand `xtask`.
-/// These completions can then be combined with the regular cargo completions.
-#[derive(Parser)]
-#[command(name = "cargo")]
-struct FakeCargoWrapperForCompletion {
-    #[command(subcommand)]
-    xtask: FakeCliForCompletion,
-}
-
-#[derive(Subcommand)]
-enum FakeCliForCompletion {
-    /// Run fish's xtasks
-    #[command(subcommand)]
-    Xtask(Task),
-}
-
 fn main() -> Result<()> {
-    CompleteEnv::with_factory(FakeCargoWrapperForCompletion::command).complete();
+    CompleteEnv::with_factory(Cli::command).complete();
 
     let cli = Cli::parse();
     match cli.task {

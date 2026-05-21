@@ -472,8 +472,8 @@ fn can_use_posix_spawn_for_job(job: &Job, dup2s: &Dup2List) -> bool {
     // For example if you were to write:
     //   cmd 6< /dev/null
     // it is possible that the open() of /dev/null would result in fd 6. Here even if we attempted
-    // to add a dup2 action, it would be ignored and the CLO_EXEC bit would remain. So don't use
-    // posix_spawn in this case; instead we'll call fork() and clear the CLO_EXEC bit manually.
+    // to add a dup2 action, it would be ignored and the CLOEXEC bit would remain. So don't use
+    // posix_spawn in this case; instead we'll call fork() and clear the CLOEXEC bit manually.
     for action in dup2s.get_actions() {
         if action.src == action.target {
             return false;

@@ -105,7 +105,7 @@ pub fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<Owned
     Ok(unsafe { OwnedFd::from_raw_fd(newfd) })
 }
 
-/// Sets CLO_EXEC on a given fd according to the value of `should_set`.
+/// Sets CLOEXEC on a given fd according to the value of `should_set`.
 pub fn set_cloexec(fd: RawFd, should_set: bool /* = true */) -> c_int {
     // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
     // existing flags and modify them.

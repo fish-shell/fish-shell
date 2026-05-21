@@ -1108,7 +1108,7 @@ impl Parser {
 
     /// Flush profiling data to the given filename.
     pub fn flush_profiling(&mut self, path: &OsStr) {
-        // Save profiling information. OK to not use CLO_EXEC here because this is called while fish is
+        // Save profiling information. OK to not use CLOEXEC here because this is called while fish is
         // exiting (and hence will not fork).
         let mut f = match std::fs::File::create(path) {
             Ok(f) => f,

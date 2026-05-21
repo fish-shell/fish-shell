@@ -139,7 +139,7 @@ impl Dup2List {
     pub fn add_dup2(&mut self, src: RawFd, target: RawFd) {
         assert!(src >= 0 && target >= 0, "Invalid fd in add_dup2");
         // Note: record these even if src and target is the same.
-        // This is a note that we must clear the CLO_EXEC bit.
+        // This is a note that we must clear the CLOEXEC bit.
         self.actions.push(Dup2Action { src, target });
     }
 

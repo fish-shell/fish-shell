@@ -29,7 +29,7 @@ cfg_if!(
 /// signal an event, making the fd readable.  Multiple calls to `post()` may be coalesced.
 /// On Linux this uses eventfd, on other systems this uses a pipe.
 /// [`try_consume()`](FdEventSignaller::try_consume) may be used to consume the event.
-/// Importantly this is async signal safe. Of course it is `CLO_EXEC` as well.
+/// Importantly this is async signal safe. Of course it is `CLOEXEC` as well.
 pub struct FdEventSignaller {
     // Always the read end of the fd; maybe the write end as well.
     fd: OwnedFd,

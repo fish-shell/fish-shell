@@ -145,8 +145,8 @@ pub fn child_setup_process(
             err = unsafe { libc::dup2(act.src, act.target) };
         } else {
             // This is a weird case like /bin/cmd 6< file.txt
-            // The opened file (which is CLO_EXEC) wants to be dup2'd to its own fd.
-            // We need to unset the CLO_EXEC flag.
+            // The opened file (which is CLOEXEC) wants to be dup2'd to its own fd.
+            // We need to unset the CLOEXEC flag.
             err = clear_cloexec(act.src);
         }
         if err < 0 {
@@ -498,7 +498,7 @@ pub(crate) fn signal_safe_report_exec_error(
 /// Returns the interpreter for the specified script. Returns None if file is not a script with a
 /// shebang.
 fn get_interpreter<'a>(command: &CStr, buffer: &'a mut [u8]) -> Option<&'a CStr> {
-    // OK to not use CLO_EXEC here because this is only called after fork.
+    // OK to not use CLOEXEC here because this is only called after fork.
     let fd = unsafe { libc::open(command.as_ptr(), libc::O_RDONLY) };
     let mut idx = 0;
     if fd >= 0 {

@@ -581,7 +581,7 @@ impl IoChain {
                 }
                 _ => {
                     // We have a path-based redirection. Resolve it to a file.
-                    // Mark it as CLO_EXEC because we don't want it to be open in any child.
+                    // Mark it as CLOEXEC because we don't want it to be open in any child.
                     let path = path_apply_working_directory(&spec.target, pwd);
                     let oflags = spec.oflags();
 

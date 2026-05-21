@@ -37,7 +37,7 @@ $helper print_fds 5>&2
 
 # This attempts to trip a case where the file opened in fish
 # has the same fd as the redirection. In this case, the dup2
-# does not clear the CLO_EXEC bit.
+# does not clear the CLOEXEC bit.
 
 $helper print_fds 4</dev/null
 # CHECK: 0 1 2 4

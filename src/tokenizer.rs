@@ -377,13 +377,11 @@ impl<'c> Iterator for Tokenizer<'c> {
         let buff = &self.start[self.token_cursor..];
         let mut at_cmd_pos = false;
         let token = match this_char {
-            '\0'=> {
+            '\0' => {
                 self.has_next = false;
                 None
             }
-            '\r'|  // carriage-return
-            '\n'|  // newline
-            ';'=> {
+            '\r' | '\n' | ';' => {
                 let mut result = Tok::new(TokenType::End);
                 result.offset = start_pos as u32;
                 result.length = 1;
@@ -395,17 +393,22 @@ impl<'c> Iterator for Tokenizer<'c> {
                     while self.token_cursor < self.start.len() {
                         let c = self.start.char_at(self.token_cursor);
                         if c != '\n' && c != '\r' && c != ' ' && c != '\t' {
-                            break
+                            break;
                         }
                         self.token_cursor += 1;
                     }
                 }
                 Some(result)
             }
-            '{' if self.brace_statement_parser.as_ref()
+            '{' if self
+                .brace_statement_parser
+                .as_ref()
                 .is_some_and(|parser| parser.at_command_position) =>
             {
-                self.brace_statement_parser.as_mut().unwrap().unclosed_brace_statements += 1;
+                self.brace_statement_parser
+                    .as_mut()
+                    .unwrap()
+                    .unclosed_brace_statements += 1;
                 let mut result = Tok::new(TokenType::LeftBrace);
                 result.offset = start_pos as u32;
                 result.length = 1;
@@ -414,7 +417,9 @@ impl<'c> Iterator for Tokenizer<'c> {
                 Some(result)
             }
             '}' => {
-                let brace_count = self.brace_statement_parser.as_mut()
+                let brace_count = self
+                    .brace_statement_parser
+                    .as_mut()
                     .map(|parser| &mut parser.unclosed_brace_statements);
                 if brace_count.as_ref().is_none_or(|count| **count == 0) {
                     return Some(self.call_error(
@@ -432,7 +437,7 @@ impl<'c> Iterator for Tokenizer<'c> {
                 self.token_cursor += 1;
                 Some(result)
             }
-            '&'=> {
+            '&' => {
                 if next_char == Some('&') {
                     // && is and.
                     let mut result = Tok::new(TokenType::AndAnd);
@@ -443,8 +448,8 @@ impl<'c> Iterator for Tokenizer<'c> {
                     Some(result)
                 } else if next_char == Some('>') || next_char == Some('|') {
                     // &> and &| redirect both stdout and stderr.
-                    let redir = PipeOrRedir::try_from(buff).
-                        expect("Should always succeed to parse a &> or &| redirection");
+                    let redir = PipeOrRedir::try_from(buff)
+                        .expect("Should always succeed to parse a &> or &| redirection");
                     let mut result = Tok::new(redir.token_type());
                     result.offset = start_pos as u32;
                     result.length = redir.consumed as u32;
@@ -460,18 +465,18 @@ impl<'c> Iterator for Tokenizer<'c> {
                     Some(result)
                 }
             }
-            '|'=> {
+            '|' => {
                 if next_char == Some('|') {
                     // || is or.
-                        let mut result=Tok::new(TokenType::OrOr);
+                    let mut result = Tok::new(TokenType::OrOr);
                     result.offset = start_pos as u32;
                     result.length = 2;
                     self.token_cursor += 2;
                     at_cmd_pos = true;
                     Some(result)
                 } else {
-                    let pipe = PipeOrRedir::try_from(buff).
-                        expect("Should always succeed to parse a | pipe");
+                    let pipe = PipeOrRedir::try_from(buff)
+                        .expect("Should always succeed to parse a | pipe");
                     let mut result = Tok::new(pipe.token_type());
                     result.offset = start_pos as u32;
                     result.length = pipe.consumed as u32;
@@ -480,17 +485,20 @@ impl<'c> Iterator for Tokenizer<'c> {
                     Some(result)
                 }
             }
-            '>'| '<' => {
+            '>' | '<' => {
                 // There's some duplication with the code in the default case below. The key
                 // difference here is that we must never parse these as a string; a failed
                 // redirection is an error!
                 match PipeOrRedir::try_from(buff) {
                     Ok(redir_or_pipe) => {
                         if redir_or_pipe.fd < 0 {
-                            Some(self.call_error(TokenizerError::InvalidRedirect, self.token_cursor,
-                                            self.token_cursor,
-                                            Some(redir_or_pipe.consumed),
-                                            redir_or_pipe.consumed))
+                            Some(self.call_error(
+                                TokenizerError::InvalidRedirect,
+                                self.token_cursor,
+                                self.token_cursor,
+                                Some(redir_or_pipe.consumed),
+                                redir_or_pipe.consumed,
+                            ))
                         } else {
                             let mut result = Tok::new(redir_or_pipe.token_type());
                             result.offset = start_pos as u32;
@@ -499,53 +507,61 @@ impl<'c> Iterator for Tokenizer<'c> {
                             Some(result)
                         }
                     }
-                    Err(()) => Some(self.call_error(TokenizerError::InvalidRedirect, self.token_cursor,
-                                            self.token_cursor,
-                                            Some(0),
-                                            0))
+                    Err(()) => Some(self.call_error(
+                        TokenizerError::InvalidRedirect,
+                        self.token_cursor,
+                        self.token_cursor,
+                        Some(0),
+                        0,
+                    )),
                 }
             }
-                _ => {
-                    // Maybe a redirection like '2>&1', maybe a pipe like 2>|, maybe just a string.
-                    let error_location = self.token_cursor;
-                    let redir_or_pipe = if this_char.is_ascii_digit() {
-                        PipeOrRedir::try_from(buff).ok()
-                    } else {
-                        None
-                    };
+            _ => {
+                // Maybe a redirection like '2>&1', maybe a pipe like 2>|, maybe just a string.
+                let error_location = self.token_cursor;
+                let redir_or_pipe = if this_char.is_ascii_digit() {
+                    PipeOrRedir::try_from(buff).ok()
+                } else {
+                    None
+                };
 
-                    match redir_or_pipe {
-                        Some(redir_or_pipe) => {
-                            // It looks like a redirection or a pipe. But we don't support piping fd 0. Note
-                            // tSome(hat fd 0 may be -1, indicating overflow; but we don't treat that as a
-                            // tokenizer error.
-                            if redir_or_pipe.is_pipe && redir_or_pipe.fd == 0 {
-                                Some(self.call_error(TokenizerError::InvalidPipe, error_location,
-                                                        error_location, Some(redir_or_pipe.consumed),
-                                                        redir_or_pipe.consumed))
-                            }
-                            else {
-                                let mut result = Tok::new(redir_or_pipe.token_type());
-                                result.offset = start_pos as u32;
-                                result.length = redir_or_pipe.consumed as u32;
-                                self.token_cursor += redir_or_pipe.consumed;
-                                at_cmd_pos = redir_or_pipe.is_pipe;
-                                Some(result)
-                            }
+                match redir_or_pipe {
+                    Some(redir_or_pipe) => {
+                        // It looks like a redirection or a pipe. But we don't support piping fd 0. Note
+                        // tSome(hat fd 0 may be -1, indicating overflow; but we don't treat that as a
+                        // tokenizer error.
+                        if redir_or_pipe.is_pipe && redir_or_pipe.fd == 0 {
+                            Some(self.call_error(
+                                TokenizerError::InvalidPipe,
+                                error_location,
+                                error_location,
+                                Some(redir_or_pipe.consumed),
+                                redir_or_pipe.consumed,
+                            ))
+                        } else {
+                            let mut result = Tok::new(redir_or_pipe.token_type());
+                            result.offset = start_pos as u32;
+                            result.length = redir_or_pipe.consumed as u32;
+                            self.token_cursor += redir_or_pipe.consumed;
+                            at_cmd_pos = redir_or_pipe.is_pipe;
+                            Some(result)
                         }
-                        None => {
-                            // Not a redirection or pipe, so just a string.
-                            let s = self.read_string();
-                            at_cmd_pos = self.brace_statement_parser.as_ref()
-                                .is_some_and(|parser| parser.at_command_position) && {
+                    }
+                    None => {
+                        // Not a redirection or pipe, so just a string.
+                        let s = self.read_string();
+                        at_cmd_pos = self
+                            .brace_statement_parser
+                            .as_ref()
+                            .is_some_and(|parser| parser.at_command_position)
+                            && {
                                 let text = self.text_of(&s);
                                 parser_keywords_is_subcommand(&unescape_keyword(
                                     TokenType::String,
-                                    text)
-                                ) ||
-                                variable_assignment_equals_pos(text).is_some()
+                                    text,
+                                )) || variable_assignment_equals_pos(text).is_some()
                             };
-                            Some(s)
+                        Some(s)
                     }
                 }
             }

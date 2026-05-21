@@ -10838,6 +10838,9 @@ msgstr ""
 msgid "Check whether specified profile is enabled"
 msgstr ""
 
+msgid "Check whether the configuration is valid"
+msgstr ""
+
 msgid "Check whether the firewalld daemon is active"
 msgstr ""
 
@@ -13596,6 +13599,9 @@ msgid "Create a space"
 msgstr ""
 
 msgid "Create a sparse volume"
+msgstr ""
+
+msgid "Create a stack"
 msgstr ""
 
 msgid "Create a stacked branch referring to the source branch"
@@ -21135,6 +21141,9 @@ msgid "Don't ask about patches that are depended on by matched patches (with --m
 msgstr ""
 
 msgid "Don't ask any interactive question"
+msgstr ""
+
+msgid "Don't ask for input for unlock confirmation"
 msgstr ""
 
 msgid "Don't ask for missing credentials"
@@ -28997,6 +29006,9 @@ msgstr ""
 msgid "Generate http://www.dita-op.org's Eclipse configuration to allow editing"
 msgstr ""
 
+msgid "Generate import and resource blocks for found results"
+msgstr ""
+
 msgid "Generate incremental stream from snapshot"
 msgstr ""
 
@@ -35933,6 +35945,9 @@ msgstr ""
 msgid "List sources that are bound to zone"
 msgstr ""
 
+msgid "List stacks for a given organization and/or project"
+msgstr ""
+
 msgid "List startable machine images"
 msgstr ""
 
@@ -37466,6 +37481,9 @@ msgstr ""
 msgid "Manage Flexible Resources between Primary and Secondary Controller "
 msgstr ""
 
+msgid "Manage HCP Terraform stack operations"
+msgstr ""
+
 msgid "Manage OPAM repositories"
 msgstr ""
 
@@ -37509,6 +37527,12 @@ msgid "Manage configuration."
 msgstr ""
 
 msgid "Manage delayed environment variable expansion"
+msgstr ""
+
+msgid "Manage deployment groups"
+msgstr ""
+
+msgid "Manage deployment runs"
 msgstr ""
 
 msgid "Manage devices in array, and possibly start it"
@@ -37575,6 +37599,9 @@ msgid "Manage set of tracked repositories"
 msgstr ""
 
 msgid "Manage settings"
+msgstr ""
+
+msgid "Manage stack configuration"
 msgstr ""
 
 msgid "Manage stashes"
@@ -38163,6 +38190,9 @@ msgid "Merges GWT servlet elements into deployment descriptor (and non GWT servl
 msgstr ""
 
 msgid "Message to print after patch failure"
+msgstr ""
+
+msgid "Metadata related commands"
 msgstr ""
 
 msgid "Method and interface name"
@@ -41039,6 +41069,9 @@ msgstr ""
 msgid "Output current account details"
 msgstr ""
 
+msgid "Output declared modules in a machine-readable format"
+msgstr ""
+
 msgid "Output delimited values"
 msgstr ""
 
@@ -43553,6 +43586,9 @@ msgstr ""
 msgid "Prepare the change to be pushed, but do not actually push it"
 msgstr ""
 
+msgid "Prepare the configuration directory for further commands"
+msgstr ""
+
 msgid "Prepend PHP's include_path with given path(s)"
 msgstr ""
 
@@ -44755,6 +44791,9 @@ msgstr ""
 
 msgid "Print full user-to-user latency"
 msgstr "Visa full användare-tilöl-användare-latens"
+
+msgid "Print function signatures in JSON format"
+msgstr ""
 
 msgid "Print further version info"
 msgstr ""
@@ -46913,6 +46952,9 @@ msgstr ""
 msgid "Produce long listing"
 msgstr ""
 
+msgid "Produce machine readable output in JSON format"
+msgstr ""
+
 msgid "Produce machine-readable output"
 msgstr ""
 
@@ -48770,6 +48812,9 @@ msgstr ""
 msgid "Reflect pending patches in output [DEFAULT]"
 msgstr ""
 
+msgid "Reformat Terraform Stacks configuration"
+msgstr ""
+
 msgid "Reformat Zig source into canonical form"
 msgstr ""
 
@@ -49020,6 +49065,9 @@ msgid "Release Write file descriptor"
 msgstr ""
 
 msgid "Release a closed Nexus staging repo into a permanent Nexus repo for general consumption"
+msgstr ""
+
+msgid "Release a stuck lock on the current workspace"
 msgstr ""
 
 msgid "Release hold recursively"
@@ -53600,6 +53648,9 @@ msgstr ""
 msgid "Search and build packages recursively"
 msgstr ""
 
+msgid "Search and list remote infrastructure with Terraform"
+msgstr ""
+
 msgid "Search blobs registered in the index file"
 msgstr ""
 
@@ -57986,6 +58037,9 @@ msgstr ""
 msgid "Show all config settings"
 msgstr ""
 
+msgid "Show all declared modules in a working directory"
+msgstr ""
+
 msgid "Show all env variables for an app"
 msgstr ""
 
@@ -59771,6 +59825,9 @@ msgstr ""
 msgid "Show shorter output"
 msgstr ""
 
+msgid "Show signatures and descriptions for the available functions"
+msgstr ""
+
 msgid "Show sizes in GiB, or GB with --si"
 msgstr ""
 
@@ -60015,6 +60072,9 @@ msgid "Show the current Ruby version"
 msgstr ""
 
 msgid "Show the current Ruby version & how it was selected"
+msgstr ""
+
+msgid "Show the current Stacks Plugin version"
 msgstr ""
 
 msgid "Show the current version of prt-get"
@@ -65493,6 +65553,9 @@ msgid "Switch to a commit for inspection and discardable experiment"
 msgstr ""
 
 msgid "Switch to a different tree"
+msgstr ""
+
+msgid "Switch to a different working directory before executing"
 msgstr ""
 
 msgid "Switch to a different working directory before executing the command"
@@ -73206,6 +73269,9 @@ msgid "Write out a NeXTstep/GNUstep"
 msgstr ""
 
 msgid "Write out a new empty file system volume"
+msgstr ""
+
+msgid "Write out dependency locks for the configured providers"
 msgstr ""
 
 msgid "Write out setting names"

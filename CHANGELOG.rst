@@ -10,6 +10,20 @@ Interactive improvements
 - On the first run after upgrading from an older version, fish will try harder to check if the current theme matches a historical default, in which case fish won't create ``~/.config/fish/conf.d/fish_frozen_theme.fish``.
   This means that on systems where fish version 3.x was installed originally, the update will avoid creating that file (:issue:`12725`).
 
+For distributors and developers
+-------------------------------
+- With the exception of the ``$CMAKE_INSTALL_PREFIX/share/fish/man`` directory, fish no longer installs files to ``$CMAKE_INSTALL_PREFIX/share/fish``.
+  In particular, this means that both
+  ``$CMAKE_INSTALL_PREFIX/share/fish/completions`` and
+  ``$CMAKE_INSTALL_PREFIX/share/fish/functions``
+  should now be empty.
+  If another package installs completions or functions to those directories,
+  they should be changed to install to
+  ``extra_completionsdir`` (typically ``$CMAKE_INSTALL_PREFIX/share/fish/vendor_completions.d``) or
+  ``extra_functionsdir`` (typically ``$CMAKE_INSTALL_PREFIX/share/fish/vendor_functions.d``)
+  instead.
+  The old location has been ignored since fish 4.2.
+
 Regression fixes:
 -----------------
 - (from 4.4) Vi mode ``x`` in :doc:`builtin read <cmds/read>` (:issue:`12724`).

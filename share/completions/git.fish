@@ -1563,11 +1563,11 @@ complete -f -c git -n '__fish_git_using_command describe' -l first-parent -d 'Fo
 
 ### diff
 complete -c git -n __fish_git_needs_command -a diff -d 'Show changes between commits and working tree'
-complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_ranges)'
-complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_complete_stashes)'
+complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -xpc)' -n 'not __fish_git_contains_opt no-index' -ka '(__fish_git_ranges)'
+complete -c git -n '__fish_git_using_command diff' -n 'not contains -- -- (commandline -xpc)' -n 'not __fish_git_contains_opt no-index' -ka '(__fish_git_complete_stashes)'
 begin
     set -lx __fish_git_recent_commits_arg --all
-    __fish_git_add_revision_completion -n '__fish_git_using_command diff'
+    __fish_git_add_revision_completion -n '__fish_git_using_command diff' -n 'not __fish_git_contains_opt no-index'
 end
 complete -c git -n '__fish_git_using_command diff' -l cached -d 'Show diff of changes in the index'
 complete -c git -n '__fish_git_using_command diff' -l staged -d 'Show diff of changes in the index'

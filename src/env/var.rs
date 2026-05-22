@@ -1,4 +1,4 @@
-use crate::signal::Signal;
+use crate::signal::RawSignal;
 use bitflags::bitflags;
 use fish_common::assert_sorted_by_name;
 use fish_wcstringutil::join_strings;
@@ -85,7 +85,7 @@ pub struct Statuses {
 
     /// Signal from the most recent process in the last job that was terminated by a signal.
     /// None if all processes exited normally.
-    pub kill_signal: Option<Signal>,
+    pub kill_signal: Option<RawSignal>,
 
     /// Pipestatus value.
     pub pipestatus: Vec<c_int>,

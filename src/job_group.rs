@@ -1,7 +1,7 @@
 use crate::global_safety::RelaxedAtomicBool;
 use crate::prelude::*;
 use crate::proc::{JobGroupRef, Pid};
-use crate::signal::Signal;
+use crate::signal::RawSignal;
 use nix::sys::termios::Termios;
 use std::cell::RefCell;
 use std::num::NonZeroU32;
@@ -118,15 +118,15 @@ impl JobGroup {
     }
 
     /// Gets the cancellation signal, if any.
-    pub fn get_cancel_signal(&self) -> Option<Signal> {
+    pub fn get_cancel_signal(&self) -> Option<RawSignal> {
         match self.signal.load(Ordering::Relaxed) {
             0 => None,
-            s => Some(Signal::new(s)),
+            s => Some(RawSignal::new(s)),
         }
     }
 
     /// Mark that a process in this group got a signal and should cancel.
-    pub fn cancel_with_signal(&self, signal: Signal) {
+    pub fn cancel_with_signal(&self, signal: RawSignal) {
         // We only assign the signal if one hasn't yet been assigned. This means the first signal to
         // register wins over any that come later.
         self.signal

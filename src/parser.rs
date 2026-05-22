@@ -23,7 +23,7 @@ use crate::{
     parse_tree::{NodeRef, ParsedSourceRef, SourceLineCache, parse_source},
     prelude::*,
     proc::{InternalJobId, JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap},
-    signal::{Signal, signal_check_cancel, signal_clear_cancel},
+    signal::{RawSignal, signal_check_cancel, signal_clear_cancel},
     wait_handle::WaitHandleStore,
 };
 use assert_matches::assert_matches;
@@ -637,7 +637,7 @@ impl Parser {
             if self.cancel_behavior == CancelBehavior::Clear && self.block_list.is_empty() {
                 signal_clear_cancel();
             } else {
-                return EvalRes::new(ProcStatus::from_signal(Signal::new(sig)));
+                return EvalRes::new(ProcStatus::from_signal(RawSignal::new(sig)));
             }
         }
 
@@ -649,7 +649,7 @@ impl Parser {
             // Did fish itself get a signal?
             let sig = signal_check_cancel();
             if sig != 0 {
-                return Some(Signal::new(sig));
+                return Some(RawSignal::new(sig));
             }
             // Has this job group been cancelled?
             jg.as_ref().and_then(|jg| jg.get_cancel_signal())
@@ -698,7 +698,7 @@ impl Parser {
 
         let sig = signal_check_cancel();
         if sig != 0 {
-            EvalRes::new(ProcStatus::from_signal(Signal::new(sig)))
+            EvalRes::new(ProcStatus::from_signal(RawSignal::new(sig)))
         } else {
             let status = ProcStatus::from_exit_code(self.last_status());
             let break_expand = reason == EndExecutionReason::Error;

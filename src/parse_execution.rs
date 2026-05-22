@@ -50,7 +50,7 @@ use crate::{
     },
     reader::fish_is_unwinding_for_exit,
     redirection::{RedirectionMode, RedirectionSpec, RedirectionSpecList},
-    signal::Signal,
+    signal::RawSignal,
     timer::push_timer,
     tokenizer::{PipeOrRedir, TokenType, variable_assignment_equals_pos},
     trace::{trace_if_enabled, trace_if_enabled_with_args},
@@ -85,7 +85,7 @@ pub struct ExecutionContext {
 
     // If set, one of our processes received a cancellation signal (INT or QUIT) so we are
     // unwinding.
-    cancel_signal: Option<Signal>,
+    cancel_signal: Option<RawSignal>,
 
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.

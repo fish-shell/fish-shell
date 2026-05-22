@@ -12,7 +12,7 @@ use crate::{
     prelude::*,
     proc::{InternalJobId, Pid},
     reader::reader_update_termsize,
-    signal::{Signal, signal_check_cancel, signal_handle},
+    signal::{RawSignal, signal_check_cancel, signal_handle},
 };
 use fish_common::{ScopeGuard, escape};
 use fish_widestring::str2wcstring;
@@ -37,7 +37,7 @@ pub enum EventDescription {
     /// well).
     Any,
     /// An event triggered by a signal.
-    Signal { signal: Signal },
+    Signal { signal: RawSignal },
     /// An event triggered by a variable update.
     Variable { name: WString },
     /// An event triggered by a process exit.
@@ -357,13 +357,13 @@ static OBSERVED_SIGNALS: [AtomicU32; SIGNAL_COUNT] = [ATOMIC_U32_0; SIGNAL_COUNT
 /// temporarily moved here. There was no mutex around this in the cpp code. TODO: Move it back.
 static BLOCKED_EVENTS: Mutex<Vec<Event>> = Mutex::new(Vec::new());
 
-fn inc_signal_observed(sig: Signal) {
+fn inc_signal_observed(sig: RawSignal) {
     if let Some(sig) = OBSERVED_SIGNALS.get(usize::from(sig)) {
         sig.fetch_add(1, Ordering::Relaxed);
     }
 }
 
-fn dec_signal_observed(sig: Signal) {
+fn dec_signal_observed(sig: RawSignal) {
     if let Some(sig) = OBSERVED_SIGNALS.get(usize::from(sig)) {
         sig.fetch_sub(1, Ordering::Relaxed);
     }
@@ -548,7 +548,7 @@ pub fn fire_delayed(parser: &mut Parser) {
     while signals != 0 {
         let sig = signals.trailing_zeros() as i32;
         signals &= !(1_u64 << sig);
-        let sig = Signal::new(sig);
+        let sig = RawSignal::new(sig);
 
         // HACK: The only variables we change in response to a *signal* are $COLUMNS and $LINES.
         // Do that now.

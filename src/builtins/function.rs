@@ -10,7 +10,7 @@ use crate::parse_execution::varname_error;
 use crate::parse_tree::NodeRef;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::proc::{InternalJobId, Pid};
-use crate::signal::Signal;
+use crate::signal::RawSignal;
 use crate::{err_fmt, err_str, function};
 use nix::unistd::getpid;
 use std::sync::Arc;
@@ -130,7 +130,7 @@ fn parse_cmd_opts(
                 opts.description = w.woptarg.unwrap().to_owned();
             }
             's' => {
-                let Some(signal) = Signal::parse(w.woptarg.unwrap()) else {
+                let Some(signal) = RawSignal::parse(w.woptarg.unwrap()) else {
                     err_fmt!("Unknown signal '%s'", w.woptarg.unwrap())
                         .cmd(cmd)
                         .finish(streams);

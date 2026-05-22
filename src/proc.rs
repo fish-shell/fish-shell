@@ -17,7 +17,7 @@ use crate::{
     prelude::*,
     reader::{fish_is_unwinding_for_exit, reader_schedule_prompt_repaint},
     redirection::RedirectionSpecList,
-    signal::{Signal, signal_set_handlers_once},
+    signal::{RawSignal, signal_set_handlers_once},
     topic_monitor::{GenerationsList, Topic, topic_monitor_principal},
     wait_handle::{WaitHandle, WaitHandleRef, WaitHandleStore},
     wutil::{perror_nix, wbasename},
@@ -173,7 +173,7 @@ impl ProcStatus {
     }
 
     /// Construct directly from a signal.
-    pub fn from_signal(signal: Signal) -> ProcStatus {
+    pub fn from_signal(signal: RawSignal) -> ProcStatus {
         ProcStatus::new(Some(Self::w_exitcode(0 /* ret */, signal.code())))
     }
 
@@ -911,7 +911,7 @@ impl Job {
                 continue;
             }
             if status.signal_exited() {
-                st.kill_signal = Some(Signal::new(status.signal_code()));
+                st.kill_signal = Some(RawSignal::new(status.signal_code()));
             }
             laststatus = status.status_value();
             has_status = true;
@@ -1105,7 +1105,7 @@ fn handle_child_status(job: &Job, proc: &Process, status: ProcStatus) {
         if [SIGINT, SIGQUIT].contains(&sig) {
             if is_interactive_session() {
                 // Mark the job group as cancelled.
-                job.group().cancel_with_signal(Signal::new(sig));
+                job.group().cancel_with_signal(RawSignal::new(sig));
             } else if !event::is_signal_observed(sig) {
                 // Deliver the SIGINT or SIGQUIT signal to ourself since we're not interactive.
                 let act =
@@ -1475,7 +1475,7 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
         Some(p) => {
             // We are summarizing a process which exited with a signal.
             // Arguments are the signal name and description.
-            let sig = Signal::new(p.status().signal_code());
+            let sig = RawSignal::new(p.status().signal_code());
             buffer.push(' ');
             buffer += &escape(sig.name())[..];
 

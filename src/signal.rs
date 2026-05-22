@@ -251,7 +251,7 @@ pub fn signal_set_handlers_once(interactive: bool) {
 }
 
 /// Mark that a signal is being handled.
-pub fn signal_handle(sig: Signal) {
+pub fn signal_handle(sig: RawSignal) {
     let sig = sig.code();
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
 
@@ -340,7 +340,7 @@ impl SigChecker {
 /// Struct describing an entry for the lookup table used to convert between signal names and signal
 /// ids, etc.
 struct LookupEntry {
-    signal: Signal,
+    signal: RawSignal,
     name: &'static wstr,
     desc: LocalizableString, // Note: this needs to be localized via gettext before presenting it to the user.
 }
@@ -348,7 +348,7 @@ struct LookupEntry {
 impl LookupEntry {
     const fn new(signal: i32, name: &'static wstr, desc: LocalizableString) -> Self {
         Self {
-            signal: Signal::new(signal),
+            signal: RawSignal::new(signal),
             name,
             desc,
         }
@@ -472,15 +472,15 @@ fn match_signal_name(canonical: &wstr, mut name: &wstr) -> bool {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
 /// A wrapper around the system signal code.
-pub struct Signal(NonZeroI32);
+pub struct RawSignal(NonZeroI32);
 
-impl Signal {
+impl RawSignal {
     /// Creates a new `Signal` to represent the passed system signal code `sig`.
     /// Panics if `sig` is zero.
     pub const fn new(sig: i32) -> Self {
         match NonZeroI32::new(sig) {
             None => panic!("Invalid zero signal value!"),
-            Some(result) => Signal(result),
+            Some(result) => RawSignal(result),
         }
     }
 
@@ -517,7 +517,7 @@ impl Signal {
     /// recognized, `None` is returned.
     /// This also accepts integer codes via fish_wcstoi().
     /// Previously sig2wcs().
-    pub fn parse(name: &wstr) -> Option<Signal> {
+    pub fn parse(name: &wstr) -> Option<RawSignal> {
         for entry in SIGNAL_TABLE.iter() {
             if match_signal_name(entry.name, name) {
                 return Some(entry.signal);
@@ -526,7 +526,7 @@ impl Signal {
 
         if let Ok(num) = fish_wcstoi(name) {
             if num > 0 {
-                return Some(Signal::new(num));
+                return Some(RawSignal::new(num));
             }
         }
         None
@@ -534,58 +534,58 @@ impl Signal {
 }
 
 // Allow signals to be compared against i32.
-impl PartialEq<i32> for Signal {
+impl PartialEq<i32> for RawSignal {
     fn eq(&self, other: &i32) -> bool {
         self.code() == *other
     }
 }
 
-impl From<Signal> for i32 {
-    fn from(value: Signal) -> Self {
+impl From<RawSignal> for i32 {
+    fn from(value: RawSignal) -> Self {
         value.code()
     }
 }
 
-impl From<Signal> for usize {
-    fn from(value: Signal) -> Self {
+impl From<RawSignal> for usize {
+    fn from(value: RawSignal) -> Self {
         usize::try_from(value.code()).unwrap()
     }
 }
 
-impl From<Signal> for NonZeroI32 {
-    fn from(value: Signal) -> Self {
+impl From<RawSignal> for NonZeroI32 {
+    fn from(value: RawSignal) -> Self {
         value.0
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Signal;
+    use super::RawSignal;
     use crate::prelude::*;
 
     #[test]
     fn test_signal_name() {
-        let sig = Signal::new(libc::SIGINT);
+        let sig = RawSignal::new(libc::SIGINT);
         assert_eq!(sig.name(), "SIGINT");
     }
 
     #[rustfmt::skip]
     #[test]
     fn test_signal_parse() {
-        assert_eq!(Signal::parse(L!("SIGHUP")), Some(Signal::new(libc::SIGHUP)));
-        assert_eq!(Signal::parse(L!("sigwinch")), Some(Signal::new(libc::SIGWINCH)));
-        assert_eq!(Signal::parse(L!("TSTP")), Some(Signal::new(libc::SIGTSTP)));
-        assert_eq!(Signal::parse(L!("TstP")), Some(Signal::new(libc::SIGTSTP)));
-        assert_eq!(Signal::parse(L!("sigCONT")), Some(Signal::new(libc::SIGCONT)));
-        assert_eq!(Signal::parse(L!("SIGFOO")), None);
-        assert_eq!(Signal::parse(L!("")), None);
-        assert_eq!(Signal::parse(L!("SIG")), None);
-        assert_eq!(Signal::parse(L!("سلام")), None);
+        assert_eq!(RawSignal::parse(L!("SIGHUP")), Some(RawSignal::new(libc::SIGHUP)));
+        assert_eq!(RawSignal::parse(L!("sigwinch")), Some(RawSignal::new(libc::SIGWINCH)));
+        assert_eq!(RawSignal::parse(L!("TSTP")), Some(RawSignal::new(libc::SIGTSTP)));
+        assert_eq!(RawSignal::parse(L!("TstP")), Some(RawSignal::new(libc::SIGTSTP)));
+        assert_eq!(RawSignal::parse(L!("sigCONT")), Some(RawSignal::new(libc::SIGCONT)));
+        assert_eq!(RawSignal::parse(L!("SIGFOO")), None);
+        assert_eq!(RawSignal::parse(L!("")), None);
+        assert_eq!(RawSignal::parse(L!("SIG")), None);
+        assert_eq!(RawSignal::parse(L!("سلام")), None);
 
-        assert_eq!(Signal::parse(&libc::SIGINT.to_wstring()), Some(Signal::new(libc::SIGINT)));
-        assert_eq!(Signal::parse(L!("0")), None);
-        assert_eq!(Signal::parse(L!("-0")), None);
-        assert_eq!(Signal::parse(L!("-1")), None);
+        assert_eq!(RawSignal::parse(&libc::SIGINT.to_wstring()), Some(RawSignal::new(libc::SIGINT)));
+        assert_eq!(RawSignal::parse(L!("0")), None);
+        assert_eq!(RawSignal::parse(L!("-0")), None);
+        assert_eq!(RawSignal::parse(L!("-1")), None);
     }
 
     #[test]

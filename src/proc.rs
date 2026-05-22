@@ -32,7 +32,7 @@ use libc::{
 };
 use nix::{
     sys::{
-        signal::{SaFlags, SigAction, SigHandler, SigSet, Signal as NixSignal, kill, killpg},
+        signal::{SaFlags, SigAction, SigHandler, SigSet, Signal, kill, killpg},
         wait::{WaitPidFlag, WaitStatus, waitpid},
     },
     unistd::getpgrp,
@@ -860,7 +860,7 @@ impl Job {
     /// Return true on success, false if we failed to send the signal.
     pub fn resume(&self) -> bool {
         self.flags_mut().notified_of_stop = false;
-        if !self.signal(NixSignal::SIGCONT) {
+        if !self.signal(Signal::SIGCONT) {
             flogf!(
                 proc_pgroup,
                 "Failed to send SIGCONT to procs in job %s",
@@ -878,7 +878,7 @@ impl Job {
 
     /// Send the specified signal to all processes in this job.
     /// Return true on success, false on failure.
-    pub fn signal(&self, signal: NixSignal) -> bool {
+    pub fn signal(&self, signal: Signal) -> bool {
         if let Some(pgid) = self.group().pgid() {
             if let Err(err) = killpg(pgid.as_nix_pid(), signal) {
                 perror_nix(&format!("killpg({pgid}, {})", signal.as_str()), err);
@@ -1134,9 +1134,9 @@ pub fn hup_jobs(jobs: &JobList) {
     for j in jobs {
         let Some(pgid) = j.pgid() else { continue };
         if pgid.as_nix_pid() != fish_pgrp && !j.is_completed() {
-            j.signal(NixSignal::SIGHUP);
+            j.signal(Signal::SIGHUP);
             if j.is_stopped() {
-                j.signal(NixSignal::SIGCONT);
+                j.signal(Signal::SIGCONT);
             }
 
             // For most applications, the above alone is sufficient for the suspended process to
@@ -1160,7 +1160,7 @@ pub fn hup_jobs(jobs: &JobList) {
         // handle SIGHUP+SIGCONT without running into SIGTTOU.
         std::thread::sleep(std::time::Duration::from_millis(50));
         for j in kill_list.drain(..) {
-            j.signal(NixSignal::SIGKILL);
+            j.signal(Signal::SIGKILL);
         }
     }
 }

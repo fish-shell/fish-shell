@@ -326,9 +326,19 @@ where
         // only be updated once every 10 milliseconds.
         #[cfg(any(target_os = "linux", target_os = "android"))]
         {
-            let mut times: [libc::timespec; 2] = unsafe { std::mem::zeroed() };
-            times[0].tv_nsec = libc::UTIME_OMIT; // don't change atime
-            if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut times[1]) } == 0 {
+            use libc::timespec;
+            let mut time = timespec {
+                tv_sec: 0,
+                tv_nsec: 0,
+            };
+            if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut time) } == 0 {
+                let times = [
+                    timespec {
+                        tv_sec: 0,
+                        tv_nsec: libc::UTIME_OMIT, // don't change atime,
+                    },
+                    time,
+                ];
                 unsafe {
                     // This accesses both times[0] and times[1]. Check `utimensat(2)` for details.
                     libc::futimens(new_file.as_raw_fd(), &times[0]);

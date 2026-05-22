@@ -83,7 +83,7 @@ impl DirEntry {
     // Reset our fields.
     fn reset(&mut self) {
         self.name.clear();
-        self.inode = unsafe { std::mem::zeroed() };
+        self.inode = 0;
         self.typ.set(None);
         self.dev_inode.set(None);
     }

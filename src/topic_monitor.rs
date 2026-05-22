@@ -28,6 +28,7 @@ use fish_widestring::WString;
 use nix::errno::Errno;
 use nix::unistd;
 use std::cell::Cell;
+use std::mem::MaybeUninit;
 use std::os::fd::AsRawFd as _;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Condvar, Mutex, MutexGuard};
@@ -172,14 +173,12 @@ impl BinarySemaphore {
         // On BSD sem_init uses a file descriptor under the hood which doesn't get CLOEXEC (see #7304).
         // So use fast semaphores on Linux only.
         #[cfg(target_os = "linux")]
-        {
-            // sem_t does not have an initializer in Rust so we use zeroed().
-            let sem = Box::pin(UnsafeCell::new(unsafe { std::mem::zeroed() }));
-
-            let res = unsafe { libc::sem_init(sem.get(), 0, 0) };
-            if res == 0 {
-                return Self::Semaphore(sem);
-            }
+        if let Some(sem) = {
+            let mut sem = MaybeUninit::uninit();
+            let res = unsafe { libc::sem_init(sem.as_mut_ptr(), 0, 0) };
+            (res == 0).then_some(unsafe { sem.assume_init() })
+        } {
+            return Self::Semaphore(Box::pin(UnsafeCell::new(sem)));
         }
 
         let pipes = fds::make_autoclose_pipes().expect("Failed to make pubsub pipes");

@@ -64,7 +64,7 @@ impl Options {
         }
 
         if cmds.len() > 1 {
-            return Some(err_fmt!("Cannot combine options %s", join(&cmds, L!(", "))));
+            return Some(err_fmt!("Cannot combine options %s", cmds.join(L!(", "))));
         }
 
         // If run with no options, treat it like --add if we have arguments,
@@ -100,23 +100,6 @@ impl Options {
 
         None
     }
-}
-
-fn join(list: &[&wstr], sep: &wstr) -> WString {
-    let mut result = WString::new();
-    let mut iter = list.iter();
-
-    let first = match iter.next() {
-        Some(first) => first,
-        None => return result,
-    };
-    result.push_utfstr(first);
-
-    for s in iter {
-        result.push_utfstr(sep);
-        result.push_utfstr(s);
-    }
-    result
 }
 
 // Print abbreviations in a fish-script friendly way.

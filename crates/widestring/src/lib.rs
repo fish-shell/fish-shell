@@ -15,7 +15,7 @@ use std::{
 pub use widestring::{Utf32Str as wstr, Utf32String as WString, utf32str as L, utfstr::CharsUtf32};
 
 pub mod prelude {
-    pub use crate::{IntoCharIter, L, ToWString, WExt, WString, wstr};
+    pub use crate::{IntoCharIter, Join, L, ToWString, WExt, WString, wstr};
 }
 
 // Highest legal ASCII value.
@@ -941,6 +941,38 @@ impl WExt for wstr {
     }
 }
 
+// Based on `std::slice::Join`, but this gated behind `feature(slice_concat_trait)`,
+// and will never be stabilized (https://github.com/rust-lang/rust/issues/27747)
+pub trait Join<Separator> {
+    type Output;
+
+    fn join(&self, sep: Separator) -> Self::Output;
+}
+
+impl<Separator, S> Join<Separator> for [S]
+where
+    Separator: AsRef<wstr>,
+    S: AsRef<wstr>,
+{
+    type Output = WString;
+
+    fn join(&self, sep: Separator) -> Self::Output {
+        let mut result = WString::new();
+        let mut iter = self.iter();
+
+        let Some(first) = iter.next() else {
+            return result;
+        };
+        result.push_utfstr(first.as_ref());
+
+        for s in iter {
+            result.push_utfstr(sep.as_ref());
+            result.push_utfstr(s.as_ref());
+        }
+        result
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1065,5 +1097,38 @@ mod tests {
         assert_eq!(L!("|foo|").trim_matches('|'), L!("foo"));
         assert_eq!(L!("<foo|").trim_matches('|'), L!("<foo"));
         assert_eq!(L!("|foo>").trim_matches('|'), L!("foo>"));
+    }
+
+    #[test]
+    fn test_join() {
+        // wstr/WString
+        assert_eq!([L!("a"), L!("b"), L!("c")].join(L!(",")), L!("a,b,c"));
+        assert_eq!(
+            [WString::from("d"), WString::from("e"), WString::from("f")].join(WString::from(",")),
+            L!("d,e,f")
+        );
+
+        // Mix types
+        assert_eq!(
+            [WString::from("g"), WString::from("h"), WString::from("i")].join(L!(",")),
+            L!("g,h,i")
+        );
+        assert_eq!(
+            [L!("j"), L!("k"), L!("l")].join(WString::from(",")),
+            L!("j,k,l")
+        );
+
+        // Vec (use `Vec::from` instead of `vec!` to silence clippy)
+        assert_eq!(
+            Vec::from([L!("m"), L!("n"), L!("o")]).join(L!(",")),
+            L!("m,n,o")
+        );
+        assert_eq!(
+            Vec::from([WString::from("p"), WString::from("q"), WString::from("r")]).join(L!(",")),
+            L!("p,q,r")
+        );
+
+        // Empty
+        assert_eq!(Vec::<&wstr>::new().join(WString::from(",")), L!(""));
     }
 }

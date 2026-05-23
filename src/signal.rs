@@ -126,13 +126,8 @@ pub fn signal_reset_handlers() {
     let act = SigAction::new(SigHandler::SigDfl, SaFlags::empty(), SigSet::empty()).into();
 
     for data in SIGNAL_TABLE.iter() {
-        if data.signal == libc::SIGHUP {
-            let mut oact = MaybeUninit::uninit();
-            unsafe { libc::sigaction(libc::SIGHUP, std::ptr::null(), oact.as_mut_ptr()) };
-            let oact = unsafe { oact.assume_init() };
-            if oact.sa_sigaction == libc::SIG_IGN {
-                continue;
-            }
+        if data.signal == libc::SIGHUP && sighup_disposition() == libc::SIG_IGN {
+            continue;
         }
         unsafe {
             libc::sigaction(data.signal.code(), &act, std::ptr::null_mut());
@@ -146,12 +141,16 @@ fn sigaction(sig: i32, act: &libc::sigaction, oact: *mut libc::sigaction) -> lib
     unsafe { libc::sigaction(sig, act, oact) }
 }
 
+fn sighup_disposition() -> libc::sighandler_t {
+    let mut oact: libc::sigaction = unsafe { MaybeUninit::zeroed().assume_init() };
+    unsafe { libc::sigaction(libc::SIGHUP, std::ptr::null_mut(), &mut oact) };
+    oact.sa_sigaction
+}
+
 fn set_interactive_handlers() {
     let signal_handler: usize = fish_signal_handler as *const () as libc::sighandler_t;
     let mut act: libc::sigaction = unsafe { std::mem::zeroed() };
-    let mut oact: libc::sigaction = unsafe { std::mem::zeroed() };
     act.sa_flags = 0;
-    oact.sa_flags = 0;
     unsafe { libc::sigemptyset(&mut act.sa_mask) };
 
     let nullptr = std::ptr::null_mut();
@@ -172,8 +171,7 @@ fn set_interactive_handlers() {
     act.sa_flags = libc::SA_SIGINFO;
     sigaction(libc::SIGTERM, &act, nullptr);
 
-    unsafe { libc::sigaction(libc::SIGHUP, nullptr, &mut oact) };
-    if oact.sa_sigaction == libc::SIG_DFL {
+    if sighup_disposition() == libc::SIG_DFL {
         act.sa_sigaction = signal_handler;
         act.sa_flags = libc::SA_SIGINFO;
         sigaction(libc::SIGHUP, &act, nullptr);
@@ -280,13 +278,8 @@ pub static SIGNALS_TO_DEFAULT: LazyLock<libc::sigset_t> = LazyLock::new(|| {
         // If SIGHUP is being ignored (e.g., because were were run via `nohup`) don't reset it.
         // We don't special case other signals because if they're being ignored that shouldn't
         // affect processes we spawn. They should get the default behavior for those signals.
-        if data.signal == libc::SIGHUP {
-            let mut act = MaybeUninit::uninit();
-            unsafe { libc::sigaction(data.signal.code(), std::ptr::null(), act.as_mut_ptr()) };
-            let act = unsafe { act.assume_init() };
-            if act.sa_sigaction == libc::SIG_IGN {
-                continue;
-            }
+        if data.signal == libc::SIGHUP && sighup_disposition() == libc::SIG_IGN {
+            continue;
         }
         unsafe { libc::sigaddset(set.as_mut_ptr(), data.signal.code()) };
     }

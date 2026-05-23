@@ -415,9 +415,6 @@ const SIGNAL_TABLE : &[LookupEntry] = &[
     signal_entry!(SIGSTKFLT, SIGSTKFLT_DESC),
 
     #[cfg(target_os = "linux")]
-    signal_entry!(SIGIOT, SIGIOT_DESC),
-
-    #[cfg(target_os = "linux")]
     signal_entry!(SIGPWR, SIGPWR_DESC),
 
     // TODO: determine whether SIGWIND is defined on any platform.
@@ -433,9 +430,6 @@ localizable_consts!(
 
     #[allow(dead_code)]
     SIGSTKFLT_DESC "Stack fault"
-
-    #[allow(dead_code)]
-    SIGIOT_DESC "Abort (Alias for SIGABRT)"
 
     #[allow(dead_code)]
     SIGPWR_DESC "Power failure"

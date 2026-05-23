@@ -499,7 +499,7 @@ impl RawSignal {
     pub fn code(&self) -> i32 {
         self.0.into()
     }
-    /// Parses a string into the equivalent [`Signal`] sharing the same name.
+    /// Parses a string into the equivalent [`RawSignal`] sharing the same name.
     /// Accepts both `SIGABC` and `ABC` to match against `Signal::SIGABC`. If the signal name is not
     /// recognized, `None` is returned.
     /// This also accepts integer codes via fish_wcstoi().

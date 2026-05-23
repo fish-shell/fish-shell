@@ -973,6 +973,31 @@ where
     }
 }
 
+impl<Separator, I> Join<Separator> for I
+where
+    Separator: AsRef<wstr>,
+    I: Iterator + Clone,
+    I::Item: AsRef<wstr>,
+{
+    type Output = WString;
+
+    fn join(&self, sep: Separator) -> Self::Output {
+        let mut result = WString::new();
+        let mut iter = self.clone();
+
+        let Some(first) = iter.next() else {
+            return result;
+        };
+        result.push_utfstr(first.as_ref());
+
+        for s in iter {
+            result.push_utfstr(sep.as_ref());
+            result.push_utfstr(s.as_ref());
+        }
+        result
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1126,6 +1151,15 @@ mod tests {
         assert_eq!(
             Vec::from([WString::from("p"), WString::from("q"), WString::from("r")]).join(L!(",")),
             L!("p,q,r")
+        );
+
+        // Iterator
+        assert_eq!(
+            [L!("s"), L!("t"), L!("u")]
+                .iter()
+                .map(|s| WString::from("-") + *s)
+                .join(L!(",")),
+            L!("-s,-t,-u")
         );
 
         // Empty

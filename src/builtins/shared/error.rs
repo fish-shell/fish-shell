@@ -65,6 +65,13 @@ impl<'a> Error<'a> {
         pub UNEXP_OPT_ARG
         "%s: option does not take an argument"
 
+        /// Error message on invalid option arguments.
+        pub INVALID_OPT_ARGS
+        "%s: invalid option argument(s): %s"
+
+        pub INVALID_OPT_ARG_COMBO_2
+        "%s: option arguments `%s` and `%s` cannot be used together"
+
         /// Error message on missing man page.
         pub MISSING_HELP
         "missing man page\nDocumentation may not be installed.\n`help %s` will show an online version"

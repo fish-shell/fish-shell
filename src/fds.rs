@@ -2,7 +2,7 @@ use crate::{flog::flog, prelude::*, signal::signal_check_cancel, wutil::perror_n
 use cfg_if::cfg_if;
 use fish_util::perror;
 use fish_widestring::wcs2zstring;
-use libc::{EINTR, c_int};
+use libc::c_int;
 use nix::fcntl::{FcntlArg, OFlag};
 use std::{
     ffi::CStr,
@@ -11,7 +11,7 @@ use std::{
     mem::ManuallyDrop,
     ops::{Deref, DerefMut},
     os::{
-        fd::{AsRawFd, FromRawFd, IntoRawFd, OwnedFd},
+        fd::{AsRawFd as _, FromRawFd, IntoRawFd, OwnedFd},
         unix::prelude::*,
     },
 };
@@ -95,10 +95,19 @@ pub fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<Owned
     }
 
     // Here we are asking the kernel to give us a cloexec fd.
-    let newfd =
-        nix::fcntl::fcntl(&fd, FcntlArg::F_DUPFD_CLOEXEC(FIRST_HIGH_FD)).inspect_err(|&err| {
-            perror_nix("fcntl", err);
-        })?;
+    dup_heightened(fd, true)
+}
+
+pub fn dup_heightened<Fd: AsFd>(fd: Fd, cloexec: bool) -> nix::Result<OwnedFd> {
+    let args = if cloexec {
+        FcntlArg::F_DUPFD_CLOEXEC(FIRST_HIGH_FD)
+    } else {
+        FcntlArg::F_DUPFD(FIRST_HIGH_FD)
+    };
+    // Here we are asking the kernel to give us a cloexec fd.
+    let newfd = nix::fcntl::fcntl(&fd, args).inspect_err(|&err| {
+        perror_nix("fcntl", err);
+    })?;
 
     Ok(unsafe { OwnedFd::from_raw_fd(newfd) })
 }
@@ -196,12 +205,12 @@ pub fn open_dir(path: &CStr, flags: OFlag) -> nix::Result<OwnedFd> {
 }
 
 /// Close a file descriptor `fd`, retrying on EINTR.
-pub fn exec_close(fd: RawFd) {
-    assert!(fd >= 0, "Invalid fd");
-    while unsafe { libc::close(fd) } == -1 {
-        if errno::errno().0 != EINTR {
-            perror("close");
-            break;
+pub fn close<Fd: AsFd>(fd: Fd) -> nix::Result<()> {
+    let fd = fd.as_fd().as_raw_fd();
+    loop {
+        let res = nix::Error::result(unsafe { libc::close(fd) });
+        if !res.is_err_and(|err| err == nix::errno::Errno::EINTR) {
+            return res.map(|_| ());
         }
     }
 }
@@ -296,6 +305,37 @@ impl std::io::Read for BorrowedFdFile {
     }
     fn read_to_string(&mut self, buf: &mut String) -> io::Result<usize> {
         self.deref_mut().read_to_string(buf)
+    }
+}
+
+// Helper so we can store both Owned and BorrowedFd
+#[derive(Debug)]
+pub enum CowFd<'a> {
+    Owned(OwnedFd),
+    Borrowed(BorrowedFd<'a>),
+}
+impl<'a> AsFd for CowFd<'a> {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        match self {
+            CowFd::Owned(fd) => fd.as_fd(),
+            CowFd::Borrowed(fd) => fd.as_fd(),
+        }
+    }
+}
+
+pub trait FdTryFrom<T>: Sized {
+    type Error;
+
+    fn fd_try_from(value: T) -> Result<Self, Self::Error>;
+}
+impl<'a> FdTryFrom<&wstr> for BorrowedFd<'a> {
+    type Error = ();
+
+    fn fd_try_from(value: &wstr) -> Result<Self, Self::Error> {
+        match crate::wutil::wcstoi::<RawFd, _>(value) {
+            Ok(fd) if fd >= 0 => Ok(unsafe { Self::borrow_raw(fd) }),
+            Ok(_) | Err(_) => Err(()),
+        }
     }
 }
 

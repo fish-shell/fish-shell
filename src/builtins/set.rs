@@ -6,13 +6,43 @@ use crate::{
     err_fmt, err_str,
     event::{self, Event},
     expand::{expand_escape_string, expand_escape_variable},
+    fds::{CowFd, FdTryFrom as _, close, dup_heightened},
     history::{History, history_id},
     parse_execution::varname_error,
     parser::ParserEnvSetMode,
+    redirection::RedirectionMode,
     wutil::wcstoi::wcstoi_partial,
 };
 use fish_common::{EscapeFlags, EscapeStringStyle, escape, escape_string, help_section};
-use fish_widestring::ELLIPSIS_CHAR;
+use fish_widestring::{ELLIPSIS_CHAR, wcs2osstring};
+use std::{
+    fs::File,
+    io::ErrorKind,
+    os::fd::{AsRawFd as _, BorrowedFd, IntoRawFd as _, OwnedFd},
+};
+
+const CLOSE_FD_ERROR: &str = "Failed to close descriptor `%s[%d]` (%s): %s";
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+struct FdMode {
+    redirection_mode: RedirectionMode,
+    reuse: bool,
+    cloexec: bool,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+enum FdArg {
+    /// no `--fd` option used
+    None,
+    /// `--fd`
+    NoValue,
+    /// `--fd=<value>`
+    Mode(FdMode),
+    /// Invalid value for  `--fd=<value>`.
+    /// We don't know yet if having a value is Ok or not in the first place,
+    /// so store the error here to be reported later as needed
+    ValueError(WString),
+}
 
 #[derive(Debug, Clone)]
 struct Options {
@@ -34,6 +64,7 @@ struct Options {
     prepend: bool,
     preserve_failure_exit_status: bool,
     no_event: bool,
+    fd: FdArg,
 }
 
 impl Default for Options {
@@ -57,6 +88,7 @@ impl Default for Options {
             prepend: false,
             preserve_failure_exit_status: true,
             no_event: false,
+            fd: FdArg::None,
         }
     }
 }
@@ -91,6 +123,7 @@ impl Options {
         const PATH_ARG: char = 1 as char;
         const UNPATH_ARG: char = 2 as char;
         const NO_EVENT_ARG: char = 3 as char;
+        const FD_ARG: char = 4 as char;
         // Variables used for parsing the argument list. This command is atypical in using the "+"
         // (REQUIRE_ORDER) option for flag parsing. This is not typical of most fish commands. It means
         // we stop scanning for flags when the first non-flag argument is seen.
@@ -112,6 +145,7 @@ impl Options {
             wopt(L!("path"), NoArgument, PATH_ARG),
             wopt(L!("unpath"), NoArgument, UNPATH_ARG),
             wopt(L!("no-event"), NoArgument, NO_EVENT_ARG),
+            wopt(L!("fd"), OptionalArgument, FD_ARG),
             wopt(L!("help"), NoArgument, 'h'),
         ];
 
@@ -149,6 +183,7 @@ impl Options {
                     opts.show = true;
                     opts.preserve_failure_exit_status = false;
                 }
+                FD_ARG => opts.fd = Self::parse_fd_arg(w.woptarg),
                 ':' => {
                     builtin_missing_argument(
                         parser,
@@ -214,6 +249,82 @@ impl Options {
         Self::validate(&opts, cmd, args, optind, parser, streams)?;
 
         Ok(Some((opts, optind)))
+    }
+
+    fn parse_fd_arg(mode: Option<&wstr>) -> FdArg {
+        let Some(mode) = mode else {
+            return FdArg::NoValue;
+        };
+
+        let remove_if = |vec: &mut Vec<&wstr>, key| {
+            if let Some(idx) = vec.iter().position(|s| s == key) {
+                vec.remove(idx);
+                true
+            } else {
+                false
+            }
+        };
+        let mut opt_args = mode
+            .split(',')
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>();
+        opt_args.sort_unstable();
+        opt_args.dedup();
+        let ro = remove_if(&mut opt_args, L!("ro"));
+        let wo = remove_if(&mut opt_args, L!("wo"));
+        let r#try = remove_if(&mut opt_args, L!("try"));
+        let append = remove_if(&mut opt_args, L!("append"));
+        let reuse = remove_if(&mut opt_args, L!("reuse"));
+        let cloexec = remove_if(&mut opt_args, L!("cloexec"));
+
+        if !opt_args.is_empty() {
+            return FdArg::ValueError(wgettext_fmt!(
+                Error::INVALID_OPT_ARGS,
+                "--fd",
+                opt_args.iter().map(|s| sprintf!("`%s`", s)).join(L!(", "))
+            ));
+        }
+
+        let redirection_mode = match (ro, wo, r#try, append) {
+            (false, true, false, false) => RedirectionMode::Overwrite,
+            (false, _, false, true) => RedirectionMode::Append,
+            (true, false, false, false) => RedirectionMode::Input,
+            (true, false, true, false) => RedirectionMode::TryInput,
+            (false, true, true, false) => RedirectionMode::NoClob,
+            (false, false, _, false) => {
+                return FdArg::ValueError(wgettext_fmt!("--fd: requires `ro`, `wo` or `append`"));
+            }
+            (true, true, _, _) => {
+                return FdArg::ValueError(wgettext_fmt!(
+                    Error::INVALID_OPT_ARG_COMBO_2,
+                    "--fd",
+                    "ro",
+                    "wo"
+                ));
+            }
+            (true, false, _, true) => {
+                return FdArg::ValueError(wgettext_fmt!(
+                    Error::INVALID_OPT_ARG_COMBO_2,
+                    "--fd",
+                    "ro",
+                    "append"
+                ));
+            }
+            (false, _, true, true) => {
+                return FdArg::ValueError(wgettext_fmt!(
+                    Error::INVALID_OPT_ARG_COMBO_2,
+                    "--fd",
+                    "try",
+                    "append"
+                ));
+            }
+        };
+
+        FdArg::Mode(FdMode {
+            redirection_mode,
+            reuse,
+            cloexec,
+        })
     }
 
     fn validate(
@@ -300,6 +411,39 @@ impl Options {
                 .full_trailer(parser)
                 .finish(streams);
             return Err(STATUS_INVALID_ARGS);
+        }
+
+        // --fd and its value are only valid in specific contexts
+        if opts.query || opts.list || opts.show {
+            if opts.fd != FdArg::None {
+                err_str!(Error::INVALID_OPT_COMBO)
+                    .cmd(cmd)
+                    .full_trailer(parser)
+                    .finish(streams);
+                return Err(STATUS_INVALID_ARGS);
+            }
+        } else if opts.erase {
+            // The fact that there is a value is the error, it doesn't matter
+            // if that value itself is valid or not
+            if matches!(opts.fd, FdArg::Mode(_) | FdArg::ValueError(_)) {
+                err_str!("--fd: option does not take an argument when erasing a variable")
+                    .cmd(cmd)
+                    .full_trailer(parser)
+                    .finish(streams);
+                return Err(STATUS_INVALID_ARGS);
+            }
+        } else {
+            if opts.fd == FdArg::NoValue {
+                err_str!("--fd: option requires an argument when setting a variable")
+                    .cmd(cmd)
+                    .full_trailer(parser)
+                    .finish(streams);
+                return Err(STATUS_INVALID_ARGS);
+            }
+            if let FdArg::ValueError(err) = &opts.fd {
+                err_raw!(err).cmd(cmd).full_trailer(parser).finish(streams);
+                return Err(STATUS_INVALID_ARGS);
+            }
         }
 
         if args.len() == optind && opts.erase {
@@ -532,9 +676,29 @@ fn split_var_and_indexes_internal<'a>(
     Ok(res)
 }
 
+fn maybe_close_fd_var(fd_str: &wstr) -> std::io::Result<()> {
+    if let Ok(fd) = BorrowedFd::fd_try_from(fd_str) {
+        if fd.as_raw_fd() <= 2 {
+            // stdin/ou/err are always assumed to exists, so to avoid errors
+            // (and worse, targeting some random file), redirect from `/dev/null`
+            // instead
+            let file = File::options().read(true).write(true).open("/dev/null")?;
+            unsafe { nix::unistd::dup2_raw(file, fd.as_raw_fd()) }?;
+        } else {
+            close(fd)?;
+        }
+    }
+    Ok(())
+}
+
 /// Given a list of values and 1-based indexes, return a new list with those elements removed.
 /// Note this deliberately accepts both args by value, as it modifies them both.
-fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<isize>) -> Vec<WString> {
+fn erased_at_indexes(
+    var: &wstr,
+    mut input: Vec<WString>,
+    mut indexes: Vec<isize>,
+    close_fd: bool,
+) -> Vec<WString> {
     // Sort our indexes into *descending* order.
     indexes.sort_by_key(|&index| std::cmp::Reverse(index));
 
@@ -548,7 +712,12 @@ fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<isize>) -> Vec<WS
         };
         if idx > 0 && idx <= input.len() {
             // One-based indexing!
-            input.remove(idx - 1);
+            let str = input.remove(idx - 1);
+            if close_fd {
+                if let Err(err) = maybe_close_fd_var(&str) {
+                    flogf!(warning, CLOSE_FD_ERROR, var, idx, str, err.to_string());
+                }
+            }
         }
     }
     input
@@ -784,6 +953,8 @@ fn erase(
     args: &[&wstr],
 ) -> BuiltinResult {
     let mut ret = Ok(SUCCESS);
+    let close_fd = opts.fd == FdArg::NoValue;
+
     let mut erase_with_mode = |mode| {
         for arg in args {
             let Some(split) = split_var_and_indexes(arg, mode, parser.vars(), streams) else {
@@ -799,6 +970,28 @@ fn erase(
             }
             let retval;
             if split.indexes.is_empty() {
+                // With --fd, try to close the file descriptors when the values are numbers
+                if close_fd {
+                    if let Some(var) = parser.vars().get(split.varname) {
+                        // `rev()` to be consistent with split indexes when reporting errors
+                        var.as_list()
+                            .iter()
+                            .enumerate()
+                            .rev()
+                            .for_each(|(idx, fd_str)| {
+                                if let Err(err) = maybe_close_fd_var(fd_str) {
+                                    flogf!(
+                                        warning,
+                                        CLOSE_FD_ERROR,
+                                        split.varname,
+                                        idx + 1,
+                                        fd_str,
+                                        err.to_string()
+                                    );
+                                }
+                            });
+                    }
+                }
                 // unset the var
                 retval = parser.remove_var(split.varname, ParserEnvSetMode::new(mode));
                 // When a non-existent-variable is unset, return NotFound as $status
@@ -815,7 +1008,12 @@ fn erase(
                 let Some(var) = split.var else {
                     return Err(STATUS_CMD_ERROR);
                 };
-                let result = erased_at_indexes(var.as_list().to_owned(), split.indexes);
+                let result = erased_at_indexes(
+                    split.varname,
+                    var.as_list().to_owned(),
+                    split.indexes,
+                    close_fd,
+                );
                 retval = env_set_reporting_errors(
                     cmd,
                     opts,
@@ -876,18 +1074,111 @@ fn is_subsequence<T: Eq>(
     })
 }
 
+/// Convert `arg`, a path or a file descriptor, into a new file descriptor
+/// The descriptor will either be heightened or use the same fd number as
+/// `target_fd`.
+/// The error can be `None` if we failed to create the file descriptor but it
+/// was somewhat expected (e.g. with `RedirectionMode::NoClob` when `args` is
+/// a path to an existing file)
+fn arg_to_fd(
+    arg: &wstr,
+    mode: RedirectionMode,
+    cloexec: bool,
+    target_fd: Option<BorrowedFd>,
+) -> Result<OwnedFd, Option<WString>> {
+    let fd = if let Ok(fd) = BorrowedFd::fd_try_from(arg) {
+        // Number => expect an fd we need to duplicate
+        CowFd::Borrowed(fd)
+    } else {
+        // Not a number => expect a path we can open
+        let options = mode.options().expect("invalid redirection mode");
+        // Not using wopen_cloexec because we don't want to heightenize yet
+        match options.open(wcs2osstring(arg)) {
+            Ok(fd) => CowFd::Owned(std::os::fd::OwnedFd::from(fd)),
+            Err(err) => match mode {
+                RedirectionMode::TryInput => match options.open("/dev/null") {
+                    Ok(fd) => CowFd::Owned(std::os::fd::OwnedFd::from(fd)),
+                    Err(err) => {
+                        return Err(Some(wgettext_fmt!(
+                            "Failed to open `%s`: %s",
+                            "/dev/null",
+                            err.to_string()
+                        )));
+                    }
+                },
+                RedirectionMode::NoClob if err.kind() == ErrorKind::AlreadyExists => {
+                    flogf!(warning, "`%s`: Already exists", arg);
+                    return Err(None);
+                }
+                _ => {
+                    return Err(Some(wgettext_fmt!(
+                        "Failed to open `%s`: %s",
+                        arg,
+                        err.to_string()
+                    )));
+                }
+            },
+        }
+    };
+    match target_fd {
+        None => match dup_heightened(fd, cloexec) {
+            Ok(fd) => Ok(fd),
+            Err(err) => Err(Some(wgettext_fmt!(
+                "Failed to duplicate descriptor %s: %s",
+                arg,
+                err.to_string()
+            ))),
+        },
+        Some(target_fd) => {
+            unsafe { nix::unistd::dup2_raw(fd, target_fd.as_raw_fd()) }.map_err(|err| {
+                Some(wgettext_fmt!(
+                    "Failed to duplicate descriptor: %s",
+                    err.to_string()
+                ))
+            })
+        }
+    }
+}
+
+fn print_fd_error_fd(err: Option<WString>) {
+    if let Some(err) = err {
+        flog!(warning, err);
+    }
+}
+
 /// Return a list of new values for the variable `varname`, respecting the `opts`.
 /// This handles the simple case where there are no indexes.
 fn new_var_values(
-    varname: &wstr,
     opts: &Options,
+    varname: &wstr,
     argv: &[&wstr],
     vars: &dyn Environment,
 ) -> Vec<WString> {
+    let fd_list = if let FdArg::Mode(mode) = opts.fd {
+        argv.iter()
+            .copied()
+            .map(|s| {
+                arg_to_fd(s, mode.redirection_mode, mode.cloexec, None).map_or_else(
+                    |err| {
+                        print_fd_error_fd(err);
+                        WString::new()
+                    },
+                    |fd| fd.into_raw_fd().to_wstring(),
+                )
+            })
+            .collect()
+    } else {
+        vec![]
+    };
+
     let mut result = vec![];
     if !opts.prepend && !opts.append {
         // Not prepending or appending.
-        result.extend(argv.iter().copied().map(|s| s.to_owned()));
+        if fd_list.is_empty() {
+            result.extend(argv.iter().copied().map(|s| s.to_owned()));
+        } else {
+            result.extend(fd_list);
+        }
     } else {
         // Note: when prepending or appending, we always use default scoping when fetching existing
         // values. For example:
@@ -901,18 +1192,29 @@ fn new_var_values(
         }
 
         if opts.prepend {
-            result.splice(0..0, argv.iter().copied().map(|s| s.to_owned()));
+            if fd_list.is_empty() {
+                result.splice(0..0, argv.iter().copied().map(|arg| arg.to_owned()));
+            } else {
+                // We could move instead of clone when not also appending, but
+                // the Rust compiler is not smart enough yet to not complain
+                // about a moved `fd_list` regardless
+                result.splice(0..0, fd_list.iter().cloned());
+            }
         }
 
         if opts.append {
-            result.extend(argv.iter().copied().map(|s| s.to_owned()));
+            if fd_list.is_empty() {
+                result.extend(argv.iter().copied().map(|s| s.to_owned()));
+            } else {
+                result.extend(fd_list);
+            }
         }
     }
     result
 }
 
 /// This handles the more difficult case of setting individual slices of a var.
-fn new_var_values_by_index(split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
+fn new_var_values_by_index(opts: &Options, split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
     assert_eq!(
         argv.len(),
         split.indexes.len(),
@@ -940,7 +1242,40 @@ fn new_var_values_by_index(split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
         if idx >= result.len() {
             result.resize(idx + 1, WString::new());
         }
-        result[idx] = arg.into();
+
+        if let FdArg::Mode(mode) = opts.fd {
+            let fd_target = if mode.reuse {
+                BorrowedFd::fd_try_from(&result[idx]).ok()
+            } else {
+                None
+            };
+            if let Some(fd_target) = fd_target {
+                match arg_to_fd(arg, mode.redirection_mode, mode.cloexec, Some(fd_target)) {
+                    Ok(fd) => {
+                        // We don't want the newly created `OwnedFd` to
+                        // close the socket when done.
+                        let _ = fd.into_raw_fd();
+
+                        // `result[idx]` value is unchanged
+                    }
+                    Err(err) => {
+                        print_fd_error_fd(err);
+                        result[idx].clear();
+                    }
+                }
+            } else {
+                result[idx] = arg_to_fd(arg, mode.redirection_mode, mode.cloexec, None)
+                    .map_or_else(
+                        |err| {
+                            print_fd_error_fd(err);
+                            WString::new()
+                        },
+                        |fd| fd.into_raw_fd().to_wstring(),
+                    );
+            }
+        } else {
+            result[idx] = arg.into();
+        }
     }
     result
 }
@@ -989,6 +1324,7 @@ fn set_internal(
     }
 
     // Setting with explicit indexes like `set foo[3] ...` has additional error handling.
+    #[allow(clippy::collapsible_else_if)]
     if !split.indexes.is_empty() {
         // Indexes must be > 0. (Note split_var_and_indexes negates negative values).
         for ind in &split.indexes {
@@ -1020,14 +1356,22 @@ fn set_internal(
             .finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
+    } else {
+        if matches!(opts.fd, FdArg::Mode(mode) if mode.reuse) {
+            err_str!("--fd=reuse: can only be used when assigning to a slice",)
+                .cmd(cmd)
+                .full_trailer(parser)
+                .finish(streams);
+            return Err(STATUS_INVALID_ARGS);
+        }
     }
 
     let new_values = if split.indexes.is_empty() {
         // Handle the simple, common, case. Set the var to the specified values.
-        new_var_values(split.varname, opts, argv, parser.vars())
+        new_var_values(opts, split.varname, argv, parser.vars())
     } else {
         // Handle the uncommon case of setting specific slices of a var.
-        new_var_values_by_index(&split, argv)
+        new_var_values_by_index(opts, &split, argv)
     };
 
     // Set the value back in the variable stack and fire any events.

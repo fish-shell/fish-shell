@@ -192,6 +192,10 @@ msgid "%s: invalid mode name. See `help %s`"
 msgstr "%s: nombre de modo no válido. Consulte `help %s`"
 
 #, c-format
+msgid "%s: invalid option argument(s): %s"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid option argument: %s"
 msgstr ""
 
@@ -206,6 +210,10 @@ msgstr "%s: subcomando no válido"
 #, c-format
 msgid "%s: invalid variable name. See `help %s`"
 msgstr "%s: nombre de variable no válido. Consulte `help %s`"
+
+#, c-format
+msgid "%s: option arguments `%s` and `%s` cannot be used together"
+msgstr ""
 
 #, c-format
 msgid "%s: option cannot be used with a non-option argument"
@@ -313,6 +321,18 @@ msgstr "--entire y --groups-only son mutuamente excluyentes"
 
 msgid "--entire and --index are mutually exclusive"
 msgstr "--entire y --index son mutuamente excluyentes"
+
+msgid "--fd: option does not take an argument when erasing a variable"
+msgstr ""
+
+msgid "--fd: option requires an argument when setting a variable"
+msgstr ""
+
+msgid "--fd: requires `ro`, `wo` or `append`"
+msgstr ""
+
+msgid "--fd=reuse: can only be used when assigning to a slice"
+msgstr ""
 
 msgid "--invert and --groups-only are mutually exclusive"
 msgstr "--invert y --groups-only son mutuamente excluyentes"
@@ -664,6 +684,18 @@ msgstr "Eventos del monitor de FD"
 
 msgid "Failed to assign shell to its own process group"
 msgstr "No se pudo asignar el shell a su propio grupo de procesos"
+
+#, c-format
+msgid "Failed to duplicate descriptor %s: %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to duplicate descriptor: %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to open `%s`: %s"
+msgstr ""
 
 #, c-format
 msgid "Failed to set terminal mode (%s)"

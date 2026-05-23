@@ -1,3 +1,5 @@
+REMINDER: negative numbers are paths, not fds
+
 set - display and change shell variables
 ========================================
 

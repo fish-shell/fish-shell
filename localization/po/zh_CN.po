@@ -213,6 +213,10 @@ msgid "%s: invalid mode name. See `help %s`"
 msgstr "%s: 无效模式名。参见 `help %s`"
 
 #, c-format
+msgid "%s: invalid option argument(s): %s"
+msgstr ""
+
+#, c-format
 msgid "%s: invalid option argument: %s"
 msgstr ""
 
@@ -227,6 +231,10 @@ msgstr "%s: 无效的子命令"
 #, c-format
 msgid "%s: invalid variable name. See `help %s`"
 msgstr "%s: 无效的变量名。参见 `help %s`"
+
+#, c-format
+msgid "%s: option arguments `%s` and `%s` cannot be used together"
+msgstr ""
 
 #, c-format
 msgid "%s: option cannot be used with a non-option argument"
@@ -334,6 +342,18 @@ msgstr "--entire 和 --groups-only 互斥"
 
 msgid "--entire and --index are mutually exclusive"
 msgstr "--entire 和 --index 互斥"
+
+msgid "--fd: option does not take an argument when erasing a variable"
+msgstr ""
+
+msgid "--fd: option requires an argument when setting a variable"
+msgstr ""
+
+msgid "--fd: requires `ro`, `wo` or `append`"
+msgstr ""
+
+msgid "--fd=reuse: can only be used when assigning to a slice"
+msgstr ""
 
 msgid "--invert and --groups-only are mutually exclusive"
 msgstr "--invert 和 --groups-only 互斥"
@@ -685,6 +705,18 @@ msgstr "FD 监控事件"
 
 msgid "Failed to assign shell to its own process group"
 msgstr "无法将 shell 分配到它自己的进程组"
+
+#, c-format
+msgid "Failed to duplicate descriptor %s: %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to duplicate descriptor: %s"
+msgstr ""
+
+#, c-format
+msgid "Failed to open `%s`: %s"
+msgstr ""
 
 #, c-format
 msgid "Failed to set terminal mode (%s)"

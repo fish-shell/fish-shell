@@ -4,6 +4,7 @@ use crate::io::IoChain;
 use crate::prelude::*;
 use crate::wutil::fish_wcstoi;
 use nix::fcntl::OFlag;
+use std::fs::OpenOptions;
 use std::os::fd::RawFd;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
@@ -40,6 +41,33 @@ impl RedirectionMode {
             RedirectionMode::Overwrite => Some(OFlag::O_CREAT | OFlag::O_WRONLY | OFlag::O_TRUNC),
             RedirectionMode::NoClob => Some(OFlag::O_CREAT | OFlag::O_EXCL | OFlag::O_WRONLY),
             RedirectionMode::Input | RedirectionMode::TryInput => Some(OFlag::O_RDONLY),
+            _ => None,
+        }
+    }
+
+    /// The OpenOptions for this redirection mode.
+    pub fn options(self) -> Option<OpenOptions> {
+        match self {
+            RedirectionMode::Append => {
+                let mut options = OpenOptions::new();
+                options.create(true).append(true).write(true);
+                Some(options)
+            }
+            RedirectionMode::Overwrite => {
+                let mut options = OpenOptions::new();
+                options.create(true).write(true).truncate(true);
+                Some(options)
+            }
+            RedirectionMode::NoClob => {
+                let mut options = OpenOptions::new();
+                options.create_new(true).write(true);
+                Some(options)
+            }
+            RedirectionMode::Input | RedirectionMode::TryInput => {
+                let mut options = OpenOptions::new();
+                options.read(true);
+                Some(options)
+            }
             _ => None,
         }
     }

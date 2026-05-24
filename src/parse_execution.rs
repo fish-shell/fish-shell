@@ -90,9 +90,6 @@ pub struct ExecutionContext {
     /// The block IO chain.
     /// For example, in `begin; foo ; end < file.txt` this would have the 'file.txt' IO.
     block_io: IoChain,
-
-    /// Hack to supress non-redirectable stderr in some unit tests.
-    test_only_suppress_stderr: bool,
 }
 
 // Report an error, setting $status to `status`. Always returns
@@ -127,16 +124,11 @@ pub fn varname_error<'a>(command: &'a wstr, bad_name: &'a wstr) -> Error<'a> {
 impl ExecutionContext {
     /// Construct a context in preparation for evaluating a node in a tree, with the given block_io.
     /// The execution context may access the parser and parent job group (if any) through ctx.
-    pub fn new(
-        pstree: ParsedSourceRef,
-        block_io: IoChain,
-        test_only_suppress_stderr: bool,
-    ) -> Self {
+    pub fn new(pstree: ParsedSourceRef, block_io: IoChain) -> Self {
         Self {
             pstree,
             cancel_signal: None,
             block_io,
-            test_only_suppress_stderr,
         }
     }
 
@@ -254,7 +246,7 @@ impl ExecutionContext {
             let backtrace_and_desc = ctx.parser().get_backtrace(&self.pstree().src, error_list);
 
             // Print it.
-            if !self.test_only_suppress_stderr {
+            if !ctx.parser().test_only_suppress_stderr() {
                 eprintf!("%s", backtrace_and_desc);
             }
 

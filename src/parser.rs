@@ -419,6 +419,10 @@ pub struct Parser {
 
     // Timeout for blocking terminal queries.
     pub blocking_query_timeout: Option<Duration>,
+
+    // If set, do not print certain error messages to stderr, to keep the tests clean.
+    #[cfg(test)]
+    pub test_only_suppress_stderr: bool,
 }
 
 #[derive(Copy, Clone, Default)]
@@ -454,6 +458,8 @@ impl Parser {
             profile_items: Default::default(),
             global_event_blocks: 0,
             blocking_query_timeout: None,
+            #[cfg(test)]
+            test_only_suppress_stderr: false,
         };
 
         result
@@ -482,7 +488,7 @@ impl Parser {
     }
 
     pub fn eval(&mut self, cmd: &wstr, io: &IoChain) -> EvalRes {
-        self.eval_with(cmd, io, None, BlockType::Top, false)
+        self.eval_with(cmd, io, None, BlockType::Top)
     }
 
     /// Evaluate the expressions contained in cmd.
@@ -499,7 +505,6 @@ impl Parser {
         io: &IoChain,
         job_group: Option<&JobGroupRef>,
         block_type: BlockType,
-        test_only_suppress_stderr: bool,
     ) -> EvalRes {
         // Parse the source into a tree, if we can.
         let mut error_list = ParseErrorList::new();
@@ -508,19 +513,13 @@ impl Parser {
             ParseTreeFlags::default(),
             Some(&mut error_list),
         ) {
-            return self.eval_parsed_source(
-                &ps,
-                io,
-                job_group,
-                block_type,
-                test_only_suppress_stderr,
-            );
+            return self.eval_parsed_source(&ps, io, job_group, block_type);
         }
 
         // Get a backtrace. This includes the message.
         let backtrace_and_desc = self.get_backtrace(cmd, &error_list);
 
-        if !test_only_suppress_stderr {
+        if !self.test_only_suppress_stderr() {
             // Print it.
             eprintf!("%s\n", backtrace_and_desc);
         }
@@ -543,19 +542,12 @@ impl Parser {
         io: &IoChain,
         job_group: Option<&JobGroupRef>,
         block_type: BlockType,
-        test_only_suppress_stderr: bool,
     ) -> EvalRes {
         assert_matches!(block_type, BlockType::Top | BlockType::Subst);
         let job_list = ps.top_job_list();
         if !job_list.is_empty() {
             // Execute the top job list.
-            self.eval_node(
-                &job_list,
-                io,
-                job_group,
-                block_type,
-                test_only_suppress_stderr,
-            )
+            self.eval_node(&job_list, io, job_group, block_type)
         } else {
             let status = ProcStatus::from_exit_code(self.last_status());
             EvalRes {
@@ -590,7 +582,7 @@ impl Parser {
         // Construct a parsed source ref.
         // Be careful to transfer ownership, this could be a very large string.
         let ps = Arc::new(ParsedSource::new(src, ast));
-        Ok(self.eval_parsed_source(&ps, io, job_group, block_type, false))
+        Ok(self.eval_parsed_source(&ps, io, job_group, block_type))
     }
 
     pub fn eval_file_wstr(
@@ -619,7 +611,6 @@ impl Parser {
         block_io: &IoChain,
         job_group: Option<&JobGroupRef>,
         block_type: BlockType,
-        test_only_suppress_stderr: bool,
     ) -> EvalRes {
         // Only certain blocks are allowed.
         assert_matches!(
@@ -676,11 +667,8 @@ impl Parser {
         op_ctx.cancel_checker = cancel_checker;
 
         // Create a new execution context.
-        let mut execution_context = ExecutionContext::new(
-            node.parsed_source_ref(),
-            block_io.clone(),
-            test_only_suppress_stderr,
-        );
+        let mut execution_context =
+            ExecutionContext::new(node.parsed_source_ref(), block_io.clone());
 
         // Check the exec count so we know if anything got executed.
         let exec_counts = |ctx: &mut OperationContext<'_>| {
@@ -1242,6 +1230,17 @@ impl Parser {
     /// Checks if the max eval depth has been exceeded
     pub fn is_eval_depth_exceeded(&self) -> bool {
         self.scope().eval_level >= FISH_MAX_EVAL_DEPTH
+    }
+
+    /// Return whether we should suppress certain error printing during tests.
+    #[cfg(test)]
+    pub fn test_only_suppress_stderr(&self) -> bool {
+        self.test_only_suppress_stderr
+    }
+
+    #[cfg(not(test))]
+    pub fn test_only_suppress_stderr(&self) -> bool {
+        false
     }
 
     pub fn set_color_theme(&mut self, background_color: Option<&xterm_color::Color>) {

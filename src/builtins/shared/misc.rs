@@ -558,7 +558,6 @@ pub fn builtin_print_help(parser: &mut Parser, streams: &mut IoStreams, cmd: &ws
         streams.io_chain,
         streams.job_group.as_ref(),
         BlockType::Top,
-        false,
     );
     if res.status.normal_exited() && res.status.exit_code() == 2 {
         err_fmt!(Error::MISSING_HELP, name_esc)

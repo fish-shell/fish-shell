@@ -103,6 +103,12 @@ impl TestParser {
             pushed_dirs: Vec::new(),
         }
     }
+
+    // Mark that we expect noisy errors to be printed and that these should be suppressed.
+    pub fn suppressing_stderr(mut self) -> TestParser {
+        self.parser.test_only_suppress_stderr = true;
+        self
+    }
 }
 
 pub trait ParserExt {

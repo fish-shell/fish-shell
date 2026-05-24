@@ -2101,7 +2101,7 @@ mod tests {
     fn test_eval_recursion_detection() {
         test_init();
         // Ensure that we don't crash on infinite self recursion and mutual recursion.
-        let parser = &mut TestParser::new();
+        let parser = &mut TestParser::new().suppressing_stderr();
         parser.eval(
             L!("function recursive ; recursive ; end ; recursive; "),
             &IoChain::new(),
@@ -2123,7 +2123,7 @@ mod tests {
         let TestParser {
             ref mut parser,
             ref mut pushed_dirs,
-        } = TestParser::new();
+        } = TestParser::new().suppressing_stderr();
         macro_rules! validate {
             ($cmd:expr, $result:expr) => {
                 parser.eval($cmd, &IoChain::new());
@@ -2149,7 +2149,7 @@ mod tests {
     #[serial]
     fn test_eval_empty_function_name() {
         test_init();
-        let parser = &mut TestParser::new();
+        let parser = &mut TestParser::new().suppressing_stderr();
         parser.eval(
             L!("function '' ; echo fail; exit 42 ; end ; ''"),
             &IoChain::new(),

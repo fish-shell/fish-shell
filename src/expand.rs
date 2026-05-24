@@ -1559,7 +1559,7 @@ mod tests {
         tests::prelude::*,
     };
     use fish_widestring::{ANY_STRING, str2wcstring};
-    use std::collections::{HashSet, hash_map::RandomState};
+    use std::collections::{HashMap, HashSet, hash_map::RandomState};
 
     fn expand_test_impl(
         input: &wstr,
@@ -2004,13 +2004,9 @@ mod tests {
     #[test]
     fn test_replace_home_directory_with_tilde() {
         use super::replace_home_directory_with_tilde as rhdwt;
-        use crate::env::{EnvMode, EnvSetMode, EnvStack};
-        let vars = EnvStack::new();
-        vars.set_one(
-            L!("HOME"),
-            EnvSetMode::new(EnvMode::GLOBAL, false),
-            L!("/home/testuser").to_owned(),
-        );
+        let vars = TestEnvironment {
+            vars: HashMap::from([(L!("HOME").to_owned(), L!("/home/testuser").to_owned())]),
+        };
 
         assert_eq!(rhdwt("/home/testuser/", &vars), "~/");
         assert_eq!(rhdwt("/home/testuser/Documents/", &vars), "~/Documents/");

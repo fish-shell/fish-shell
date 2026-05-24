@@ -8,7 +8,7 @@ use crate::{
     prelude::*,
     proc::JobGroupRef,
     redirection::{RedirectionMode, RedirectionSpecList},
-    wutil::{perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat},
+    wutil::{perror_nix, unescape_bytes_and_write_to_fd, wdirname, wstat},
 };
 use errno::Errno;
 use fish_util::perror;
@@ -330,12 +330,12 @@ impl IoBufferfill {
         // Our buffer will read from the read end of the pipe. This end must be non-blocking. This is
         // because our fillthread needs to poll to decide if it should shut down, and also accept input
         // from direct buffer transfers.
-        match make_fd_nonblocking(pipes.read.as_raw_fd()) {
+        match make_fd_nonblocking(&pipes.read) {
             Ok(_) => (),
             Err(e) => {
                 flog!(warning, PIPE_ERROR);
-                perror_io("fcntl", &e);
-                return Err(e);
+                perror_nix("fcntl", e);
+                return Err(e.into());
             }
         }
         // Our fillthread gets the read end of the pipe. Our returned Bufferfill gets the write end.

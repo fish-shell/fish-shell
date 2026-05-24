@@ -190,7 +190,7 @@ impl BinarySemaphore {
         // we'll never receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as
         // non-blocking (so reads will never block) and use select() to poll it.
         if cfg!(feature = "tsan") {
-            let _ = make_fd_nonblocking(pipes.read.as_raw_fd());
+            let _ = make_fd_nonblocking(&pipes.read);
         }
 
         Self::Pipes(pipes)

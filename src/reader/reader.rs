@@ -949,7 +949,8 @@ fn read_ni(parser: &mut Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode
     loop {
         let mut buff = [0_u8; 4096];
 
-        match nix::unistd::read(unsafe { BorrowedFd::borrow_raw(fd) }, &mut buff) {
+        let fd = unsafe { BorrowedFd::borrow_raw(fd) };
+        match nix::unistd::read(fd, &mut buff) {
             Ok(0) => {
                 // EOF.
                 break;

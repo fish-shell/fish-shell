@@ -2,7 +2,7 @@ use crate::{flog::flog, prelude::*, signal::signal_check_cancel, wutil::perror_n
 use cfg_if::cfg_if;
 use fish_util::perror;
 use fish_widestring::wcs2zstring;
-use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
+use libc::{EINTR, c_int};
 use nix::fcntl::{FcntlArg, OFlag};
 use std::{
     ffi::CStr,
@@ -87,11 +87,9 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
 /// Return the fd, which always has CLOEXEC set; or an invalid fd on failure, in
 /// which case an error will have been printed, and the input fd closed.
 pub fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<OwnedFd> {
-    let raw_fd = fd.as_raw_fd();
-
-    if raw_fd >= FIRST_HIGH_FD {
+    if fd.as_raw_fd() >= FIRST_HIGH_FD {
         if !input_has_cloexec {
-            set_cloexec(raw_fd, true);
+            let _ = set_cloexec(&fd, true);
         }
         return Ok(fd);
     }
@@ -106,23 +104,16 @@ pub fn heightenize_fd(fd: OwnedFd, input_has_cloexec: bool) -> nix::Result<Owned
 }
 
 /// Sets CLOEXEC on a given fd according to the value of `should_set`.
-pub fn set_cloexec(fd: RawFd, should_set: bool /* = true */) -> c_int {
+pub fn set_cloexec<Fd: AsFd>(fd: Fd, should_set: bool /* = true */) -> nix::Result<c_int> {
     // Note we don't want to overwrite existing flags like O_NONBLOCK which may be set. So fetch the
     // existing flags and modify them.
-    let flags = unsafe { libc::fcntl(fd, F_GETFD, 0) };
-    if flags < 0 {
-        return -1;
-    }
+    let flags = nix::fcntl::FdFlag::from_bits_retain(nix::fcntl::fcntl(&fd, nix::fcntl::F_GETFD)?);
     let mut new_flags = flags;
-    if should_set {
-        new_flags |= FD_CLOEXEC;
-    } else {
-        new_flags &= !FD_CLOEXEC;
-    }
+    new_flags.set(nix::fcntl::FdFlag::FD_CLOEXEC, should_set);
     if flags == new_flags {
-        0
+        Ok(0)
     } else {
-        unsafe { libc::fcntl(fd, F_SETFD, new_flags) }
+        nix::fcntl::fcntl(&fd, nix::fcntl::F_SETFD(new_flags))
     }
 }
 
@@ -216,27 +207,22 @@ pub fn exec_close(fd: RawFd) {
 }
 
 /// Mark an fd as nonblocking
-pub fn make_fd_nonblocking(fd: RawFd) -> std::io::Result<()> {
-    let flags = unsafe { libc::fcntl(fd, F_GETFL, 0) };
-    let nonblocking = (flags & O_NONBLOCK) == O_NONBLOCK;
-    if !nonblocking {
-        match unsafe { libc::fcntl(fd, F_SETFL, flags | O_NONBLOCK) } {
-            -1 => return Err(io::Error::last_os_error()),
-            _ => return Ok(()),
-        };
-    }
-    Ok(())
+pub fn make_fd_nonblocking<Fd: AsFd>(fd: Fd) -> nix::Result<()> {
+    make_fd_nonblocking_impl(fd, true)
 }
 
 /// Mark an fd as blocking
-pub fn make_fd_blocking(fd: RawFd) -> Result<(), io::Error> {
-    let flags = unsafe { libc::fcntl(fd, F_GETFL, 0) };
-    let nonblocking = (flags & O_NONBLOCK) == O_NONBLOCK;
-    if nonblocking {
-        match unsafe { libc::fcntl(fd, F_SETFL, flags & !O_NONBLOCK) } {
-            -1 => return Err(io::Error::last_os_error()),
-            _ => return Ok(()),
-        };
+pub fn make_fd_blocking<Fd: AsFd>(fd: Fd) -> nix::Result<()> {
+    make_fd_nonblocking_impl(fd, false)
+}
+
+/// Mark an fd as blocking
+fn make_fd_nonblocking_impl<Fd: AsFd>(fd: Fd, block: bool) -> nix::Result<()> {
+    let flags = nix::fcntl::OFlag::from_bits_retain(nix::fcntl::fcntl(&fd, nix::fcntl::F_GETFL)?);
+    let mut new_flags = flags;
+    new_flags.set(nix::fcntl::OFlag::O_NONBLOCK, block);
+    if new_flags != flags {
+        let _ = nix::fcntl::fcntl(&fd, nix::fcntl::F_SETFL(new_flags))?;
     }
     Ok(())
 }

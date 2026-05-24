@@ -62,8 +62,8 @@ impl FdEventSignaller {
                 let Ok(pipes) = make_autoclose_pipes() else {
                     exit_without_destructors(1);
                 };
-                make_fd_nonblocking(pipes.read.as_raw_fd()).unwrap();
-                make_fd_nonblocking(pipes.write.as_raw_fd()).unwrap();
+                make_fd_nonblocking(&pipes.read).unwrap();
+                make_fd_nonblocking(&pipes.write).unwrap();
                 Self {
                     fd: pipes.read,
                     write: pipes.write,

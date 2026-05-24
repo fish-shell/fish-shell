@@ -60,7 +60,7 @@ use std::{
     io::{Read as _, Write as _},
     mem::MaybeUninit,
     num::NonZeroU32,
-    os::fd::{AsRawFd as _, FromRawFd as _, OwnedFd, RawFd},
+    os::fd::{AsFd as _, AsRawFd as _, FromRawFd as _, OwnedFd, RawFd},
     slice,
     sync::{
         Arc,
@@ -892,7 +892,7 @@ fn exec_external_command(
 
     // Ensure that stdin is blocking before we hand it off (see issue #176).
     // Note this will also affect stdout and stderr if they refer to the same tty.
-    let _ = make_fd_blocking(STDIN_FILENO);
+    let _ = make_fd_blocking(std::io::stdin().as_fd());
 
     let envv = parser.vars().export_array();
 

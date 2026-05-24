@@ -62,14 +62,14 @@ impl NotifydNotifier {
             return None;
         }
         // Mark us for non-blocking reads, and CLOEXEC.
-        let _ = make_fd_nonblocking(notify_fd);
-        let _ = set_cloexec(notify_fd, true);
+        let _ = make_fd_nonblocking(unsafe { BorrowedFd::borrow_raw(notify_fd) });
+        let _ = set_cloexec(unsafe { BorrowedFd::borrow_raw(notify_fd) }, true);
 
         // Serious hack: notify_fd is likely the read end of a pipe. The other end is owned by
         // libnotify, which does not mark it as CLOEXEC (it should!). The next fd is probably
         // notify_fd + 1. Do it ourselves. If the implementation changes and some other FD gets
         // marked as CLOEXEC, that's probably a good thing.
-        let _ = set_cloexec(notify_fd + 1, true);
+        let _ = set_cloexec(unsafe { BorrowedFd::borrow_raw(notify_fd + 1) }, true);
 
         Some(Self {
             notify_fd,

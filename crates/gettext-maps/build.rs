@@ -139,7 +139,7 @@ fn embed_localizations(cache_dir: &Path) {
                 write!(
                     &mut cached_map_file,
                     "static {}: phf::Map<&'static str, &'static str> = {}",
-                    &map_name,
+                    map_name,
                     single_language_localization_map.build()
                 )
                 .unwrap();

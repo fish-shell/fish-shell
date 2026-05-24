@@ -574,9 +574,9 @@ mod tests {
                     {:4} chars: {}\n
                     Use this seed to reproduce: {}",
                 origin.len(),
-                &bytes2hex(&origin),
+                bytes2hex(&origin),
                 n.len(),
-                &bytes2hex(&n),
+                bytes2hex(&n),
                 seed,
             );
         }

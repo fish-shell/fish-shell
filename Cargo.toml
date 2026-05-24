@@ -233,6 +233,8 @@ unused_trait_names = "warn"
 # In the future, they might change to flag other methods of printing.
 print_stdout = "deny"
 print_stderr = "deny"
+# usage in tests is fine since it avoids interacting with TopicMonitor
+# and is configured in clippy.toml with `allow-print-in-tests`
 
 [lints]
 workspace = true

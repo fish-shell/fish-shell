@@ -1107,6 +1107,12 @@ pub unsafe fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()
     Ok(())
 }
 
+/// A convenience wrapper around `write_loop` for writing to stdout.
+pub fn print_loop(buf: &[u8]) -> std::io::Result<()> {
+    // SAFETY: When std is available, we can assume that stdout is valid and writable.
+    unsafe { write_loop(&libc::STDOUT_FILENO, buf) }
+}
+
 pub const fn help_section_exists(section: &str) -> bool {
     let haystack = include_str!("../../../share/help_sections");
     let needle = section;

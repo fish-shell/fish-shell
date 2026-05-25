@@ -115,8 +115,8 @@ use assert_matches::assert_matches;
 use errno::{Errno, errno};
 use fish_common::{
     EscapeFlags, EscapeStringStyle, ScopeGuard, escape, escape_string, escape_string_with_quote,
-    exit_without_destructors, get_obfuscation_read_char, help_section,
-    restore_term_foreground_process_group_for_exit, write_loop,
+    exit_without_destructors, get_obfuscation_read_char, help_section, print_loop,
+    restore_term_foreground_process_group_for_exit,
 };
 use fish_fallback::{fish_wcwidth, lowercase};
 use fish_feature_flags::FeatureFlag;
@@ -2652,7 +2652,7 @@ impl<'a> Reader<'a> {
         // HACK: If stdin isn't the same terminal as stdout, we just moved the cursor.
         // For now, just reset it to the beginning of the line.
         if self.conf.inputfd != STDIN_FILENO {
-            let _ = unsafe { write_loop(&STDOUT_FILENO, b"\r") };
+            let _ = print_loop(b"\r");
         }
 
         // Ensure we have no pager contents when we exit.

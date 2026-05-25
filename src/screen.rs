@@ -24,7 +24,7 @@ use crate::terminal::TerminalCommand::{
 use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
 use crate::termsize::Termsize;
 use crate::wutil::fstat;
-use fish_common::write_loop;
+use fish_common::print_loop;
 use fish_fallback::{fish_wcswidth_canonicalizing, fish_wcwidth};
 use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
 use fish_widestring::{ELLIPSIS_CHAR, wcs2bytes};
@@ -321,10 +321,10 @@ impl Screen {
         if is_dumb() {
             let prompt_narrow = wcs2bytes(left_prompt);
 
-            let _ = unsafe { write_loop(&STDOUT_FILENO, b"\r") };
-            let _ = unsafe { write_loop(&STDOUT_FILENO, &prompt_narrow) };
-            let _ = unsafe { write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_before_suggestion)) };
-            let _ = unsafe { write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_after_suggestion)) };
+            let _ = print_loop(b"\r");
+            let _ = print_loop(&prompt_narrow);
+            let _ = print_loop(&wcs2bytes(explicit_before_suggestion));
+            let _ = print_loop(&wcs2bytes(explicit_after_suggestion));
 
             return;
         }
@@ -551,7 +551,7 @@ impl Screen {
         self.need_clear_lines = true;
 
         // This should prevent resetting the cursor position during the next repaint.
-        let _ = unsafe { write_loop(&STDOUT_FILENO, b"\r") };
+        let _ = print_loop(b"\r");
         self.actual.cursor.x = 0;
 
         self.save_status();
@@ -671,7 +671,7 @@ impl Screen {
         self.actual_left_prompt = None;
         self.need_clear_lines = true;
 
-        let _ = unsafe { write_loop(&STDOUT_FILENO, &abandon_line_string(screen_width)) };
+        let _ = print_loop(&abandon_line_string(screen_width));
         self.actual.cursor.x = 0;
 
         self.save_status();

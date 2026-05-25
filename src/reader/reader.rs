@@ -2652,7 +2652,7 @@ impl<'a> Reader<'a> {
         // HACK: If stdin isn't the same terminal as stdout, we just moved the cursor.
         // For now, just reset it to the beginning of the line.
         if self.conf.inputfd != STDIN_FILENO {
-            let _ = write_loop(&STDOUT_FILENO, b"\r");
+            let _ = unsafe { write_loop(&STDOUT_FILENO, b"\r") };
         }
 
         // Ensure we have no pager contents when we exit.

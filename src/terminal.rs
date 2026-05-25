@@ -548,7 +548,7 @@ impl Outputter {
     /// Output any buffered data to the given `fd`.
     fn flush_to(&mut self, fd: RawFd) {
         if fd >= 0 && !self.contents.is_empty() {
-            let _ = write_loop(&fd, &self.contents);
+            let _ = unsafe { write_loop(&fd, &self.contents) };
             self.contents.clear();
         }
     }

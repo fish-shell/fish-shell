@@ -1055,7 +1055,9 @@ pub fn get_obfuscation_read_char() -> char {
 
 /// Call read, blocking and repeating on EINTR. Exits on EAGAIN.
 /// Return the number of bytes read, or 0 on EOF, or an error.
-pub fn read_blocked(fd: RawFd, buf: &mut [u8]) -> nix::Result<usize> {
+/// # Safety
+/// The caller must ensure that `fd` is a valid file descriptor and is open for reading.
+pub unsafe fn read_blocked(fd: RawFd, buf: &mut [u8]) -> nix::Result<usize> {
     loop {
         let res = nix::unistd::read(unsafe { BorrowedFd::borrow_raw(fd) }, buf);
         if let Err(nix::Error::EINTR) = res {
@@ -1084,7 +1086,9 @@ impl<T: Read + ?Sized> ReadExt for T {
 
 /// A rusty port of the C++ `write_loop()` function from `common.cpp`. This should be deprecated in
 /// favor of native rust read/write methods at some point.
-pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
+/// # Safety
+/// The caller must ensure that `fd` is a valid file descriptor and is open for writing.
+pub unsafe fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
     let fd = fd.as_raw_fd();
     let mut total = 0;
     while total < buf.len() {

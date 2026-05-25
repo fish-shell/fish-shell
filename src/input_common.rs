@@ -488,7 +488,7 @@ enum InputEventTrigger {
 fn readb(in_fd: RawFd) -> Option<u8> {
     assert!(in_fd >= 0, "Invalid in fd");
     let mut arr: [u8; 1] = [0];
-    if read_blocked(in_fd, &mut arr) != Ok(1) {
+    if unsafe { read_blocked(in_fd, &mut arr) } != Ok(1) {
         // The terminal has been closed.
         return None;
     }

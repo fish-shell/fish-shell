@@ -321,10 +321,10 @@ impl Screen {
         if is_dumb() {
             let prompt_narrow = wcs2bytes(left_prompt);
 
-            let _ = write_loop(&STDOUT_FILENO, b"\r");
-            let _ = write_loop(&STDOUT_FILENO, &prompt_narrow);
-            let _ = write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_before_suggestion));
-            let _ = write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_after_suggestion));
+            let _ = unsafe { write_loop(&STDOUT_FILENO, b"\r") };
+            let _ = unsafe { write_loop(&STDOUT_FILENO, &prompt_narrow) };
+            let _ = unsafe { write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_before_suggestion)) };
+            let _ = unsafe { write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_after_suggestion)) };
 
             return;
         }
@@ -551,7 +551,7 @@ impl Screen {
         self.need_clear_lines = true;
 
         // This should prevent resetting the cursor position during the next repaint.
-        let _ = write_loop(&STDOUT_FILENO, b"\r");
+        let _ = unsafe { write_loop(&STDOUT_FILENO, b"\r") };
         self.actual.cursor.x = 0;
 
         self.save_status();
@@ -671,7 +671,7 @@ impl Screen {
         self.actual_left_prompt = None;
         self.need_clear_lines = true;
 
-        let _ = write_loop(&STDOUT_FILENO, &abandon_line_string(screen_width));
+        let _ = unsafe { write_loop(&STDOUT_FILENO, &abandon_line_string(screen_width)) };
         self.actual.cursor.x = 0;
 
         self.save_status();

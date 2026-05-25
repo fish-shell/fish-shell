@@ -626,7 +626,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
     exec_thread_pool().perform(move || {
         let mut status = f.success_status;
         if !f.skip_out() {
-            if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
+            if let Err(err) = unsafe { write_loop(&f.src_outfd, &f.outdata) } {
                 if err.raw_os_error() != Some(EPIPE) {
                     perror_io("write", &err);
                 }
@@ -636,7 +636,7 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
             }
         }
         if !f.skip_err() {
-            if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
+            if let Err(err) = unsafe { write_loop(&f.src_errfd, &f.errdata) } {
                 if err.raw_os_error() != Some(EPIPE) {
                     perror_io("write", &err);
                 }

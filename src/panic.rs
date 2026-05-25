@@ -45,7 +45,7 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
                     libc::getpid()
                 });
                 let mut buf = [0_u8; 1];
-                while let Ok(n) = read_blocked(STDIN_FILENO, &mut buf) {
+                while let Ok(n) = unsafe { read_blocked(STDIN_FILENO, &mut buf) } {
                     if n == 0 || matches!(buf[0], b'q' | b'\n' | b'\r') {
                         eprintf!("\n");
                         break;

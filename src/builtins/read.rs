@@ -317,7 +317,7 @@ fn read_in_chunks(fd: RawFd, buff: &mut WString, split_null: bool, do_seek: bool
     while !finished {
         let mut inbuf = [0_u8; READ_CHUNK_SIZE];
 
-        let bytes_read = match read_blocked(fd, &mut inbuf) {
+        let bytes_read = match unsafe { read_blocked(fd, &mut inbuf) } {
             Ok(0) | Err(_) => {
                 eof = true;
                 break;
@@ -382,7 +382,7 @@ fn read_one_char_at_a_time(
         let chars_read = buff.len();
         let res = loop {
             let mut b = [0_u8; 1];
-            match read_blocked(fd, &mut b) {
+            match unsafe { read_blocked(fd, &mut b) } {
                 Ok(0) | Err(_) => {
                     break None;
                 }

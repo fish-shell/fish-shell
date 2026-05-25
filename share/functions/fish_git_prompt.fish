@@ -369,6 +369,9 @@ function fish_git_prompt --description "Prompt function for Git"
     end
 
     set b (string replace refs/heads/ '' -- $b)
+    # Strip control characters before display.
+    set b (string replace -ra '[[:cntrl:]]' '' -- $b)
+    set r (string replace -ra '[[:cntrl:]]' '' -- $r)
     if string match -qr '^\d+$' "$__fish_git_prompt_shorten_branch_len"
         set -q __fish_git_prompt_shorten_branch_char_suffix
         and set -l char -c "$__fish_git_prompt_shorten_branch_char_suffix"
@@ -495,8 +498,6 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
     set -l step
     set -l total
 
-    # Strip control characters from these dot-files before showing them in the prompt.
-    # (git itself does not validate the contents of rebase-merge/rebase-apply state files).
     if test -d $git_dir/rebase-merge
         set branch (cat $git_dir/rebase-merge/head-name 2>/dev/null)
         set step (cat $git_dir/rebase-merge/msgnum 2>/dev/null)
@@ -527,6 +528,10 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
         else if test -f $git_dir/BISECT_LOG
             set operation "|BISECTING"
         end
+    end
+
+    if test -n "$step" -a -n "$total"
+        set operation "$operation $step/$total"
     end
 
     if test -z "$branch"
@@ -563,16 +568,6 @@ function __fish_git_prompt_operation_branch_bare --description "fish_git_prompt 
             # Let user know they're inside the git dir of a non-bare repo
             set branch "GIT_DIR!"
         end
-    end
-
-    for var_name in branch step total
-        if set -q $var_name[1]
-            set $var_name (string replace -ra '[\x00-\x1f\x7f-\x9f\x{f680}-\x{f69f}]' '' -- $$var_name)
-        end
-    end
-
-    if test -n "$step" -a -n "$total"
-        set operation "$operation $step/$total"
     end
 
     echo $operation

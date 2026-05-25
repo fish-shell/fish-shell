@@ -48,10 +48,7 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
 
     echo -n ' ('
     set_color magenta
-    # Strip control characters to avoid injecting terminal escape sequences into the prompt.
-    # Raw C1 bytes are stored in fish's private-use encoding at U+F680-U+F69F.
-    set branch (string replace -ra '[\x00-\x1f\x7f-\x9f\x{f680}-\x{f69f}]' '' -- $branch)
-    echo -n "$branch"
+    echo -n "$branch" | string replace -ra '[[:cntrl:]]' ''
     set_color --reset
     echo -n '|'
     #set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | sort -u)

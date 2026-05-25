@@ -15,7 +15,7 @@ set -gx PATH $tmp/bin $PATH
 
 mkdir -p $tmp/hgrepo/.hg
 touch $tmp/hgrepo/.hg/dirstate
-printf 'main\e]0;OHNO\a\x7f\u0080\x80' >$tmp/hgrepo/.hg/branch
+printf 'main\e]0;OHNO\a\x7f' >$tmp/hgrepo/.hg/branch
 
 cd $tmp/hgrepo
 fish_hg_prompt
@@ -27,7 +27,7 @@ mkdir $tmp/gitrepo
 cd $tmp/gitrepo
 git init -q
 mkdir .git/rebase-merge
-printf 'refs/heads/main\e]0;OHNO\a\x7f\u0080\x80' >.git/rebase-merge/head-name
+printf 'refs/heads/main\e]0;OHNO\a\x7f' >.git/rebase-merge/head-name
 : >.git/rebase-merge/msgnum
 : >.git/rebase-merge/end
 

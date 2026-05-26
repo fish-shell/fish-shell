@@ -12,6 +12,7 @@ use crate::{
 use errno::Errno;
 use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
 use nix::unistd::fchdir;
+use std::sync::Arc;
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
@@ -82,35 +83,42 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         let res = wopen_dir(&norm_dir, BEST_O_SEARCH).map_err(|err| err as i32);
 
         let res = res.and_then(|fd| {
-            fchdir(&fd).map_err(|_|
+            fchdir(&fd)
+                .map_err(|_|
                 // nix::Result::Err contains nix::errno::Errno, which does not offer an API for
                 // converting to a raw int.
                 errno::errno().0)
+                .map(|()| fd)
         });
 
-        if let Err(err) = res {
-            // Some errors we skip and only report if nothing worked.
-            // ENOENT in particular is very low priority
-            // - if in another directory there was a *file* by the correct name
-            // we prefer *that* error because it's more specific
-            if err == ENOENT {
-                let tmp = wreadlink(&norm_dir);
-                // clippy doesn't like this is_some/unwrap pair, but using if let is harder to read IMO
-                // TODO: if-let-chains
-                if let Some(tmp) = tmp.filter(|_| broken_symlink.is_empty()) {
-                    broken_symlink = norm_dir;
-                    broken_symlink_target = tmp;
-                } else if best_errno == 0 {
-                    best_errno = errno::errno().0;
+        let fd = match res {
+            Ok(fd) => fd,
+            Err(err) => {
+                // Some errors we skip and only report if nothing worked.
+                // ENOENT in particular is very low priority
+                // - if in another directory there was a *file* by the correct name
+                // we prefer *that* error because it's more specific
+                if err == ENOENT {
+                    let tmp = wreadlink(&norm_dir);
+                    if let Some(tmp) = tmp.filter(|_| broken_symlink.is_empty()) {
+                        broken_symlink = norm_dir;
+                        broken_symlink_target = tmp;
+                    } else if best_errno == 0 {
+                        best_errno = errno::errno().0;
+                    }
+                    continue;
+                } else if err == ENOTDIR {
+                    best_errno = err;
+                    continue;
                 }
-                continue;
-            } else if err == ENOTDIR {
                 best_errno = err;
-                continue;
+                break;
             }
-            best_errno = err;
-            break;
-        }
+        };
+
+        // Stash the fd for the cwd in the parser so it stays open.
+        // Eventually fish will support distinct CWDs for different parsers in different threads.
+        parser.libdata_mut().cwd_fd = Some(Arc::new(fd));
 
         parser.set_var_and_fire(
             L!("PWD"),

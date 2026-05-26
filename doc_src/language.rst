@@ -628,7 +628,7 @@ Examples:
 
 - ``~/.*`` matches all hidden files (also known as "dotfiles") and directories in your home directory.
 
-For most commands, if any wildcard fails to expand, the command is not executed, :ref:`$status <variables-status>` is set to nonzero, and a warning is printed. This behavior is like what bash does with ``shopt -s failglob``. There are exceptions, namely :doc:`set <cmds/set>` and :doc:`path <cmds/path>`, overriding variables in :ref:`overrides <variables-override>`, :doc:`count <cmds/count>` and :doc:`for <cmds/for>`. Their globs will instead expand to zero arguments (so the command won't see them at all), like with ``shopt -s nullglob`` in bash.
+For most commands, if any wildcard fails to expand, the command is not executed, :ref:`$status <variables-status>` is set to nonzero, and a warning is printed. This behavior is like what bash does with ``shopt -s failglob``. There are exceptions, namely :doc:`set <cmds/set>`, :doc:`path <cmds/path>`, :doc:`value <cmds/value>`, overriding variables in :ref:`overrides <variables-override>`, :doc:`count <cmds/count>` and :doc:`for <cmds/for>`. Their globs will instead expand to zero arguments (so the command won't see them at all), like with ``shopt -s nullglob`` in bash.
 
 Examples::
 

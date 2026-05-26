@@ -796,11 +796,12 @@ impl ExecutionContext {
             };
         } else {
             // Not implicit cd.
-            let glob_behavior = if [L!("set"), L!("count"), L!("path")].contains(&&cmd[..]) {
-                WildcardNoMatchBehavior::Allow
-            } else {
-                WildcardNoMatchBehavior::Fail
-            };
+            let glob_behavior =
+                if [L!("count"), L!("path"), L!("set"), L!("value")].contains(&&cmd[..]) {
+                    WildcardNoMatchBehavior::Allow
+                } else {
+                    WildcardNoMatchBehavior::Fail
+                };
             // Form the list of arguments. The command is the first argument, followed by any arguments
             // from expanding the command, followed by the argument nodes themselves. E.g. if the
             // command is '$gco foo' and $gco is git checkout.

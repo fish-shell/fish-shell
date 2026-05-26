@@ -46,6 +46,7 @@ pub mod test;
 pub mod r#true;
 pub mod r#type;
 pub mod ulimit;
+pub mod value;
 pub mod wait;
 
 mod prelude {

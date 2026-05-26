@@ -108,9 +108,7 @@ To use the flags argparse has extracted::
         return 1
     end
 
-    set -l myname somedefault
-    set -ql _flag_name[1]
-    and set myname $_flag_name[-1] # here we use the *last* --name=
+    set -l myname (value somedefault $_flag_name)[-1] # use the last --name, or the default
 
 Any characters in the flag name that are not valid in a variable name (like ``-`` dashes) will be replaced with underscores.
 

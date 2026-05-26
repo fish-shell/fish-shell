@@ -353,6 +353,10 @@ const BUILTIN_DATAS: &[BuiltinData] = &[
         func: ulimit::ulimit,
     },
     BuiltinData {
+        name: L!("value"),
+        func: value::value,
+    },
+    BuiltinData {
         name: L!("wait"),
         func: wait::wait,
     },

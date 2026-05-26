@@ -119,6 +119,7 @@ cmds/true
 cmds/type
 cmds/ulimit
 cmds/umask
+cmds/value
 cmds/vared
 cmds/wait
 cmds/while

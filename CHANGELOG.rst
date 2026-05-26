@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+New features
+------------
+- New :doc:`value <cmds/value>` builtin that outputs its arguments as separate list elements, useful for starting pipelines with a variable, returning values from functions, and inline lists (e.g. ``set separator (value $_flag_separator ' ')[1]``).
+
 Deprecations and removed features
 ---------------------------------
 - `--command` and `--path` options in `complete` no longer unescape their value.

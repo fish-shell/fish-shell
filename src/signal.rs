@@ -242,8 +242,8 @@ pub fn signal_set_handlers_once(interactive: bool) {
     static NONINTER_ONCE: std::sync::Once = std::sync::Once::new();
     NONINTER_ONCE.call_once(|| signal_set_handlers(false));
 
-    static INTER_ONCE: std::sync::Once = std::sync::Once::new();
     if interactive {
+        static INTER_ONCE: std::sync::Once = std::sync::Once::new();
         INTER_ONCE.call_once(set_interactive_handlers);
     }
 }

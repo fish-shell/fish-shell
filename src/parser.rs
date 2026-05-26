@@ -274,8 +274,14 @@ pub struct LibraryData {
     /// the command line.
     pub transient_commandline: ScopedRefCell<Option<WString>>,
 
-    /// A file descriptor holding the current working directory, for use in openat().
-    /// This is never null and never invalid.
+    /// A file descriptor holding the current working directory.
+    /// Note that the long-term design of fish will implement subshells using threads;
+    /// these subshells necessarily may have distinct CWDs. The process-wide CWD is only
+    /// used for transitory checks, such as surrounding fork().
+    /// fish code should generally NOT assume that the process-wide CWD matches this.
+    /// Either resolve full paths, or use the _at() family of syscalls with this fd.
+    /// This is never null and never invalid except in crazy error conditions
+    /// (e.g. starting fish in a chmod 000 directory) which have yet to be rationalized.
     pub cwd_fd: Option<Arc<OwnedFd>>,
 
     /// Variables supporting the "status" builtin.

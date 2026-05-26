@@ -12,6 +12,11 @@ chmod 000 .
 $fish -c 'echo Look Ma! No crashing!' 2>/dev/null
 #CHECK: Look Ma! No crashing!
 
+# Verify fish reports the unreadable cwd on stderr instead of silently leaving cwd_fd unset.
+$fish -c 'true' 2>&1 1>/dev/null | string match -q '*Unable to open the current working directory*'
+and echo "cwd error reported"
+#CHECK: cwd error reported
+
 # Careful here, Solaris' rm tests if the directory is in $PWD, so we need to cd back
 cd $oldpwd
 rmdir $tmpdir

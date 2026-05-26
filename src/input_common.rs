@@ -155,6 +155,14 @@ pub enum ReadlineCmd {
     RepeatJump,
     ClearScreenAndRepaint,
     ScrollbackPush,
+    // Selection-extending movement commands (natural text-editor style selection).
+    SelectForwardChar,
+    SelectBackwardChar,
+    SelectBeginningOfLine,
+    SelectEndOfLine,
+    SelectForwardWord,
+    SelectBackwardWord,
+    SelectAll,
     // NOTE: This one has to be last.
     ReverseRepeatJump,
 }

@@ -25,6 +25,15 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv right forward-char
     bind --preset $argv left backward-char
 
+    # Shift+arrows extend the selection (text-editor style), overriding the shared bigword
+    # movement bindings. Alt+shift+arrows extend by a word.
+    bind --preset $argv shift-right select-forward-char
+    bind --preset $argv shift-left select-backward-char
+    bind --preset $argv alt-shift-right select-forward-word
+    bind --preset $argv alt-shift-left select-backward-word
+    bind --preset $argv shift-home select-beginning-of-line
+    bind --preset $argv shift-end select-end-of-line
+
     bind --preset $argv delete delete-char
     bind --preset $argv backspace backward-delete-char
     bind --preset $argv shift-backspace backward-delete-char

@@ -29,8 +29,15 @@ function fish_default_key_bindings -d "emacs-like key binds"
     # movement bindings. Alt+shift+arrows extend by a word.
     bind --preset $argv shift-right select-forward-char
     bind --preset $argv shift-left select-backward-char
-    bind --preset $argv alt-shift-right select-forward-word
-    bind --preset $argv alt-shift-left select-backward-word
+    # On macOS, Option+Shift+Arrow should use token (shell-tokenizer) boundaries to match
+    # the behavior of Option+Arrow (forward-token). On Linux/other, use word (punctuation)
+    # boundaries to match forward-word. Also handle the raw escape sequence sent by iTerm2 < 3.5.12.
+    for alt_shift_right in alt-shift-right \e\[1\;10C # TODO(terminal-workaround) iTerm2 < 3.5.12
+        __fish_per_os_bind --preset $argv $alt_shift_right select-forward-token select-forward-word
+    end
+    for alt_shift_left in alt-shift-left \e\[1\;10D # TODO(terminal-workaround) iTerm2 < 3.5.12
+        __fish_per_os_bind --preset $argv $alt_shift_left select-backward-token select-backward-word
+    end
     bind --preset $argv shift-home select-beginning-of-line
     bind --preset $argv shift-end select-end-of-line
 

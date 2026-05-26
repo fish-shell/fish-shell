@@ -4224,8 +4224,6 @@ impl<'a> Reader<'a> {
                     self.update_buff_pos(self.active_edit_line_tag(), None);
                 }
             }
-            // Selection-extending movement commands. Each one begins a selection if none is
-            // active, then performs the corresponding cursor movement to extend or contract it.
             rl::SelectForwardChar => {
                 if self.selection.is_none() {
                     let pos = self.command_line.position();
@@ -4320,6 +4318,26 @@ impl<'a> Reader<'a> {
                     /*newv*/ true,
                     /*to_word_end*/ false,
                 );
+            }
+            rl::SelectForwardToken => {
+                if self.selection.is_none() {
+                    let pos = self.command_line.position();
+                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                }
+                let Some(new_position) = self.forward_token(false) else {
+                    return;
+                };
+                self.update_buff_pos(EditableLineTag::Commandline, Some(new_position));
+            }
+            rl::SelectBackwardToken => {
+                if self.selection.is_none() {
+                    let pos = self.command_line.position();
+                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                }
+                let Some(new_position) = self.backward_token() else {
+                    return;
+                };
+                self.update_buff_pos(EditableLineTag::Commandline, Some(new_position));
             }
             rl::SelectAll => {
                 let len = self.command_line.len();
@@ -6419,6 +6437,8 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::SelectEndOfLine
         | rl::SelectForwardWord
         | rl::SelectBackwardWord
+        | rl::SelectForwardToken
+        | rl::SelectBackwardToken
         | rl::SelectAll =>
         // These commands operate on the search field if that's where the focus is.
         {

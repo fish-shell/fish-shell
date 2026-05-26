@@ -1868,6 +1868,9 @@ msgstr ""
 msgid "$status, the return code"
 msgstr "$status 退出代码"
 
+msgid "%d elements\\n"
+msgstr "%d 个元素\\n"
+
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
 msgstr "%s: %s 是一个数组变量。使用 %svared%s %s[n]%s 编辑第 n 个元素于 %s\\n"
 
@@ -2971,6 +2974,9 @@ msgstr "将启动分析信息输出到文件"
 
 msgid "Output timing and explain sequence"
 msgstr "输出时序和解释序列"
+
+msgid "Output values as list elements"
+msgstr ""
 
 msgid "POSIX-style short option to complete"
 msgstr "要补全的 POSIX 风格短选项"

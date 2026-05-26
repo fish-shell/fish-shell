@@ -21,6 +21,17 @@ Description
 
 Like :doc:`set <set>`, :doc:`path <path>`, and :doc:`count <count>`, ``value`` uses "nullglob" behavior: if a wildcard argument fails to expand, it silently expands to nothing rather than aborting the command.
 
+Fish ships a wrapper function around the builtin ``value``. When the universal variable ``fish_value_show`` is set, stdout is a terminal, and ``value`` appears to be invoked interactively at the top level, the wrapper displays element count and per-element detail instead of raw output::
+
+    > set -U fish_value_show 1
+    > value $PATH
+    3 elements
+    [1]: |/usr/local/bin|
+    [2]: |/usr/bin|
+    [3]: |/bin|
+
+Unset ``fish_value_show`` to disable this behavior. The plain builtin is always available via ``builtin value``.
+
 Examples
 --------
 

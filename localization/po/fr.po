@@ -1976,6 +1976,9 @@ msgstr ""
 msgid "$status, the return code"
 msgstr ""
 
+msgid "%d elements\\n"
+msgstr "%d éléments\\n"
+
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
 msgstr "%s : %s est un tableau. Utilisez %svared%s %s[n]%s pour éditer le n-ième élément de %s\\n"
 
@@ -3078,6 +3081,9 @@ msgid "Output startup profiling information to a file"
 msgstr ""
 
 msgid "Output timing and explain sequence"
+msgstr ""
+
+msgid "Output values as list elements"
 msgstr ""
 
 msgid "POSIX-style short option to complete"

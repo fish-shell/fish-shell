@@ -1847,6 +1847,9 @@ msgstr ""
 msgid "$status, the return code"
 msgstr "$status は返り値(return code)"
 
+msgid "%d elements\\n"
+msgstr "%d 要素\\n"
+
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
 msgstr "%s: %s は配列変数です。%s の n 番目の要素を編集するには %svared%s %s[n]%s を使用してください\\n"
 
@@ -2953,6 +2956,9 @@ msgstr "起動時のプロファイリング情報をファイルに出力"
 
 msgid "Output timing and explain sequence"
 msgstr "タイミングを出力し、シーケンスを解説"
+
+msgid "Output values as list elements"
+msgstr ""
 
 msgid "POSIX-style short option to complete"
 msgstr "補完対象の POSIX 形式ショートオプション"

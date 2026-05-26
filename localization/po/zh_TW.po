@@ -1843,6 +1843,9 @@ msgstr "$PATH"
 msgid "$status, the return code"
 msgstr "$status，回傳的代碼"
 
+msgid "%d elements\\n"
+msgstr "%d 個元素\\n"
+
 msgid "%s: %s is an array variable. Use %svared%s %s[n]%s to edit the n:th element of %s\\n"
 msgstr "%s：%s 是陣列變數。請使用 %svared%s %s[n]%s 來編輯 %s 的第 n 個元素\\n"
 
@@ -2946,6 +2949,9 @@ msgstr "將啟動時的效能側寫資訊輸出到檔案"
 
 msgid "Output timing and explain sequence"
 msgstr "輸出時機並解釋序列"
+
+msgid "Output values as list elements"
+msgstr ""
 
 msgid "POSIX-style short option to complete"
 msgstr "要補全的 POSIX 式短選項"

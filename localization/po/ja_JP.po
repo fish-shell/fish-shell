@@ -2354,6 +2354,9 @@ msgstr "エイリアスを自動的に funcsave "
 msgid "Autosave after successful edit"
 msgstr "編集成功時、自動保存"
 
+msgid "CUA (Windows-standard) key bindings"
+msgstr ""
+
 msgid "Case insensitive"
 msgstr "大文字と小文字を区別しない"
 
@@ -3445,6 +3448,9 @@ msgstr "関数および組み込みコマンドの検索を抑制"
 
 msgid "Suspend the current shell."
 msgstr "現在のシェルを中断(suspend)"
+
+msgid "Switch between named key-binding presets"
+msgstr ""
 
 msgid "TRAP handler: debug prompt"
 msgstr "トラップハンドラ: デバッグプロンプト"

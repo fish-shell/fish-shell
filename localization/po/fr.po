@@ -2483,6 +2483,9 @@ msgstr ""
 msgid "Autosave after successful edit"
 msgstr ""
 
+msgid "CUA (Windows-standard) key bindings"
+msgstr ""
+
 msgid "Case insensitive"
 msgstr ""
 
@@ -3571,6 +3574,9 @@ msgstr ""
 
 msgid "Suspend the current shell."
 msgstr "Suspendre le shell actuel"
+
+msgid "Switch between named key-binding presets"
+msgstr ""
 
 msgid "TRAP handler: debug prompt"
 msgstr ""

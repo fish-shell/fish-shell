@@ -210,7 +210,12 @@ const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
     make_md(L!("select-backward-char"), ReadlineCmd::SelectBackwardChar),
     make_md(L!("select-backward-token"), ReadlineCmd::SelectBackwardToken),
     make_md(L!("select-backward-word"), ReadlineCmd::SelectBackwardWord),
+    make_md(
+        L!("select-beginning-of-buffer"),
+        ReadlineCmd::SelectBeginningOfBuffer,
+    ),
     make_md(L!("select-beginning-of-line"), ReadlineCmd::SelectBeginningOfLine),
+    make_md(L!("select-end-of-buffer"), ReadlineCmd::SelectEndOfBuffer),
     make_md(L!("select-end-of-line"), ReadlineCmd::SelectEndOfLine),
     make_md(L!("select-forward-char"), ReadlineCmd::SelectForwardChar),
     make_md(L!("select-forward-token"), ReadlineCmd::SelectForwardToken),

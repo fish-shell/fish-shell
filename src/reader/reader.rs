@@ -4339,6 +4339,21 @@ impl<'a> Reader<'a> {
                 };
                 self.update_buff_pos(EditableLineTag::Commandline, Some(new_position));
             }
+            rl::SelectBeginningOfBuffer => {
+                if self.selection.is_none() {
+                    let pos = self.command_line.position();
+                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                }
+                self.update_buff_pos(EditableLineTag::Commandline, Some(0));
+            }
+            rl::SelectEndOfBuffer => {
+                if self.selection.is_none() {
+                    let pos = self.command_line.position();
+                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                }
+                let end = self.command_line.len();
+                self.update_buff_pos(EditableLineTag::Commandline, Some(end));
+            }
             rl::SelectAll => {
                 let len = self.command_line.len();
                 self.selection = Some(SelectionData { begin: 0, start: 0, stop: len });
@@ -6439,6 +6454,8 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::SelectBackwardWord
         | rl::SelectForwardToken
         | rl::SelectBackwardToken
+        | rl::SelectBeginningOfBuffer
+        | rl::SelectEndOfBuffer
         | rl::SelectAll =>
         // These commands operate on the search field if that's where the focus is.
         {

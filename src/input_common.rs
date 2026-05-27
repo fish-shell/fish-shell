@@ -164,6 +164,8 @@ pub enum ReadlineCmd {
     SelectBackwardWord,
     SelectForwardToken,
     SelectBackwardToken,
+    SelectBeginningOfBuffer,
+    SelectEndOfBuffer,
     SelectAll,
     // NOTE: This one has to be last.
     ReverseRepeatJump,

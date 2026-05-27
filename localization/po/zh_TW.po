@@ -2350,6 +2350,9 @@ msgstr "自動 funcsave 別名"
 msgid "Autosave after successful edit"
 msgstr "成功編輯後自動儲存"
 
+msgid "CUA (Windows-standard) key bindings"
+msgstr ""
+
 msgid "Case insensitive"
 msgstr "不區分大小寫"
 
@@ -3438,6 +3441,9 @@ msgstr "抑制尋找函式和內建命令"
 
 msgid "Suspend the current shell."
 msgstr "暫停此 shell。"
+
+msgid "Switch between named key-binding presets"
+msgstr ""
 
 msgid "TRAP handler: debug prompt"
 msgstr "TRAP 處理器：除錯提示"

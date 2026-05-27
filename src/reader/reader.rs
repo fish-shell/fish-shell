@@ -3988,40 +3988,41 @@ impl<'a> Reader<'a> {
             }
             rl::TransposeWords => {
                 let (elt, el) = self.active_edit_line();
-
-                // If we are not in a token, look for one ahead.
-                let buff_pos = el.position()
-                    + el.text()[el.position()..]
-                        .chars()
-                        .take_while(|c| !c.is_alphanumeric())
-                        .count();
-
-                self.update_buff_pos(elt, Some(buff_pos));
-                let (elt, el) = self.active_edit_line();
                 let text = el.text();
+                let pos = el.position();
 
-                let (mut tok, mut prev_tok) = get_token_extent(text, el.position());
+                let (mut tok, mut prev_tok) = get_token_extent(text, pos);
 
-                // In case we didn't find a token at or after the cursor...
                 if tok.start == el.len() {
-                    // ...retry beginning from the previous token.
-                    let pos = prev_tok.end;
-                    (tok, prev_tok) = get_token_extent(text, pos);
+                    // Cursor is past all tokens (end of buffer or trailing whitespace).
+                    // Retry from the end of prev_tok to capture it as the right-hand word.
+                    if prev_tok.is_empty() {
+                        return;
+                    }
+                    (tok, prev_tok) = get_token_extent(text, prev_tok.end);
+                } else if tok.is_empty() {
+                    // Cursor is between two tokens. Transpose the two words to the LEFT of
+                    // the cursor — matching GNU readline / Emacs behavior — rather than
+                    // looking forward to the next word. Re-query from inside prev_tok so
+                    // that it becomes the right-hand word and its predecessor becomes left.
+                    if prev_tok.is_empty() {
+                        return;
+                    }
+                    (tok, prev_tok) = get_token_extent(text, prev_tok.start);
                 }
+                // Cursor is inside a word: tok and prev_tok are already the correct pair.
 
-                // Make sure we have two tokens.
                 if !prev_tok.is_empty() && !tok.is_empty() && tok.start > prev_tok.start {
                     let prev = &text[prev_tok.clone()];
                     let sep = &text[prev_tok.end..tok.start];
                     let trail = &text[tok.end..];
 
-                    // Compose new command line with swapped tokens.
                     let mut new_text = text[..prev_tok.start].to_owned();
                     new_text.push_utfstr(&text[tok.clone()]);
                     new_text.push_utfstr(sep);
                     new_text.push_utfstr(prev);
                     new_text.push_utfstr(trail);
-                    // Put cursor right after the second token.
+                    // Leave cursor after the word that moved right (originally prev_tok).
                     self.set_command_line_and_position(elt, new_text, tok.end);
                 }
             }

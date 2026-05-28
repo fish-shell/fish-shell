@@ -15,7 +15,7 @@ $fish -c 'echo Look Ma! No crashing!' 2>/dev/null
 # Verify fish reports the unreadable cwd on stderr instead of silently leaving cwd_fd unset.
 {
     $fish -c 'true' 2>&1 1>/dev/null | string match -q '*Unable to open the current working directory*'
-    or status build-info | grep '^Target.*-cygwin$'
+    or status build-info | grep -q '^Target.*-cygwin$'
 }
 and echo "cwd error reported"
 #CHECK: cwd error reported

@@ -3603,11 +3603,19 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::BackwardChar => {
-                // Collapse selection to its left edge, or move backward normally.
+                // Collapse selection to its left edge in exclusive mode, or move backward normally.
                 if let Some(selection) = self.get_selection() {
-                    let left = selection.start;
-                    self.selection = None;
-                    self.update_buff_pos(EditableLineTag::Commandline, Some(left));
+                    if self.cursor_selection_mode == CursorSelectionMode::Exclusive {
+                        let left = selection.start;
+                        self.selection = None;
+                        self.update_buff_pos(EditableLineTag::Commandline, Some(left));
+                    } else {
+                        // Inclusive mode: extend selection backward
+                        let (elt, el) = self.active_edit_line();
+                        if el.position() != 0 {
+                            self.update_buff_pos(elt, Some(el.position() - 1));
+                        }
+                    }
                 } else {
                     let (elt, el) = self.active_edit_line();
                     if self.is_navigating_pager_contents() {
@@ -3626,11 +3634,19 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::ForwardChar | rl::ForwardSingleChar => {
-                // Collapse selection to its right edge, or move forward normally.
+                // Collapse selection to its right edge in exclusive mode, or move forward normally.
                 if let Some(selection) = self.get_selection() {
-                    let right = selection.end;
-                    self.selection = None;
-                    self.update_buff_pos(EditableLineTag::Commandline, Some(right));
+                    if self.cursor_selection_mode == CursorSelectionMode::Exclusive {
+                        let right = selection.end;
+                        self.selection = None;
+                        self.update_buff_pos(EditableLineTag::Commandline, Some(right));
+                    } else {
+                        // Inclusive mode: extend selection forward
+                        if !self.is_at_end() {
+                            let (elt, el) = self.active_edit_line();
+                            self.update_buff_pos(elt, Some(el.position() + 1));
+                        }
+                    }
                 } else if self.is_navigating_pager_contents() {
                     self.select_completion_in_direction(SelectionMotion::East, false);
                 } else if self.is_at_autosuggestion() {
@@ -4227,7 +4243,11 @@ impl<'a> Reader<'a> {
             rl::SelectForwardChar => {
                 if self.selection.is_none() {
                     let pos = self.command_line.position();
-                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                    self.selection = Some(SelectionData {
+                        begin: pos,
+                        start: pos,
+                        stop: pos,
+                    });
                 }
                 if !self.is_at_end() {
                     let (elt, el) = self.active_edit_line();
@@ -4237,7 +4257,11 @@ impl<'a> Reader<'a> {
             rl::SelectBackwardChar => {
                 if self.selection.is_none() {
                     let pos = self.command_line.position();
-                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                    self.selection = Some(SelectionData {
+                        begin: pos,
+                        start: pos,
+                        stop: pos,
+                    });
                 }
                 let (elt, el) = self.active_edit_line();
                 if el.position() != 0 {
@@ -4248,7 +4272,11 @@ impl<'a> Reader<'a> {
             rl::SelectBeginningOfLine => {
                 if self.selection.is_none() {
                     let pos = self.command_line.position();
-                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                    self.selection = Some(SelectionData {
+                        begin: pos,
+                        start: pos,
+                        stop: pos,
+                    });
                 }
                 loop {
                     let (elt, el) = self.active_edit_line();
@@ -4265,7 +4293,11 @@ impl<'a> Reader<'a> {
             rl::SelectEndOfLine => {
                 if self.selection.is_none() {
                     let pos = self.command_line.position();
-                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                    self.selection = Some(SelectionData {
+                        begin: pos,
+                        start: pos,
+                        stop: pos,
+                    });
                 }
                 loop {
                     let position = {
@@ -4287,7 +4319,11 @@ impl<'a> Reader<'a> {
             rl::SelectForwardWord => {
                 if self.selection.is_none() {
                     let pos = self.command_line.position();
-                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                    self.selection = Some(SelectionData {
+                        begin: pos,
+                        start: pos,
+                        stop: pos,
+                    });
                 }
                 let elt = self.active_edit_line_tag();
                 self.data.move_word(
@@ -4307,7 +4343,11 @@ impl<'a> Reader<'a> {
             rl::SelectBackwardWord => {
                 if self.selection.is_none() {
                     let pos = self.command_line.position();
-                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                    self.selection = Some(SelectionData {
+                        begin: pos,
+                        start: pos,
+                        stop: pos,
+                    });
                 }
                 let elt = self.active_edit_line_tag();
                 self.data.move_word(
@@ -4322,7 +4362,11 @@ impl<'a> Reader<'a> {
             rl::SelectForwardToken => {
                 if self.selection.is_none() {
                     let pos = self.command_line.position();
-                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                    self.selection = Some(SelectionData {
+                        begin: pos,
+                        start: pos,
+                        stop: pos,
+                    });
                 }
                 let Some(new_position) = self.forward_token(false) else {
                     return;
@@ -4332,31 +4376,24 @@ impl<'a> Reader<'a> {
             rl::SelectBackwardToken => {
                 if self.selection.is_none() {
                     let pos = self.command_line.position();
-                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
+                    self.selection = Some(SelectionData {
+                        begin: pos,
+                        start: pos,
+                        stop: pos,
+                    });
                 }
                 let Some(new_position) = self.backward_token() else {
                     return;
                 };
                 self.update_buff_pos(EditableLineTag::Commandline, Some(new_position));
             }
-            rl::SelectBeginningOfBuffer => {
-                if self.selection.is_none() {
-                    let pos = self.command_line.position();
-                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
-                }
-                self.update_buff_pos(EditableLineTag::Commandline, Some(0));
-            }
-            rl::SelectEndOfBuffer => {
-                if self.selection.is_none() {
-                    let pos = self.command_line.position();
-                    self.selection = Some(SelectionData { begin: pos, start: pos, stop: pos });
-                }
-                let end = self.command_line.len();
-                self.update_buff_pos(EditableLineTag::Commandline, Some(end));
-            }
             rl::SelectAll => {
                 let len = self.command_line.len();
-                self.selection = Some(SelectionData { begin: 0, start: 0, stop: len });
+                self.selection = Some(SelectionData {
+                    begin: 0,
+                    start: 0,
+                    stop: len,
+                });
                 self.update_buff_pos(EditableLineTag::Commandline, Some(len));
             }
             rl::InsertLineOver => {
@@ -6454,8 +6491,6 @@ fn command_ends_paging(c: ReadlineCmd, focused_on_search_field: bool) -> bool {
         | rl::SelectBackwardWord
         | rl::SelectForwardToken
         | rl::SelectBackwardToken
-        | rl::SelectBeginningOfBuffer
-        | rl::SelectEndOfBuffer
         | rl::SelectAll =>
         // These commands operate on the search field if that's where the focus is.
         {

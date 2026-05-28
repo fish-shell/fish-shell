@@ -40,8 +40,6 @@ function fish_cua_key_bindings -d "CUA (Windows-standard) key bindings"
 
     bind --preset $argv shift-home select-beginning-of-line
     bind --preset $argv shift-end select-end-of-line
-    bind --preset $argv ctrl-shift-home select-beginning-of-buffer
-    bind --preset $argv ctrl-shift-end select-end-of-buffer
 
     bind --preset $argv delete delete-char
     bind --preset $argv backspace backward-delete-char

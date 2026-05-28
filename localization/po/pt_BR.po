@@ -3447,9 +3447,6 @@ msgstr ""
 msgid "Suspend the current shell."
 msgstr ""
 
-msgid "Switch between named key-binding presets"
-msgstr ""
-
 msgid "TRAP handler: debug prompt"
 msgstr ""
 

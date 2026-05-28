@@ -3442,9 +3442,6 @@ msgstr "抑制尋找函式和內建命令"
 msgid "Suspend the current shell."
 msgstr "暫停此 shell。"
 
-msgid "Switch between named key-binding presets"
-msgstr ""
-
 msgid "TRAP handler: debug prompt"
 msgstr "TRAP 處理器：除錯提示"
 

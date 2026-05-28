@@ -3467,9 +3467,6 @@ msgstr "禁止函数和内建命令查询"
 msgid "Suspend the current shell."
 msgstr "挂起当前 shell。"
 
-msgid "Switch between named key-binding presets"
-msgstr ""
-
 msgid "TRAP handler: debug prompt"
 msgstr "TRAP 处理函数：调试提示符"
 

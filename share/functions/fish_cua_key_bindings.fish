@@ -1,3 +1,4 @@
+# localization: tier1
 function fish_cua_key_bindings -d "CUA (Windows-standard) key bindings"
     if contains -- -h $argv
         or contains -- --help $argv

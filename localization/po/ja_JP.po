@@ -3449,9 +3449,6 @@ msgstr "関数および組み込みコマンドの検索を抑制"
 msgid "Suspend the current shell."
 msgstr "現在のシェルを中断(suspend)"
 
-msgid "Switch between named key-binding presets"
-msgstr ""
-
 msgid "TRAP handler: debug prompt"
 msgstr "トラップハンドラ: デバッグプロンプト"
 

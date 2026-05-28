@@ -462,7 +462,7 @@ fn match_signal_name(canonical: &wstr, mut name: &wstr) -> bool {
 pub struct RawSignal(NonZeroI32);
 
 impl RawSignal {
-    /// Creates a new `Signal` to represent the passed system signal code `sig`.
+    /// Creates a new `RawSignal` to represent the passed system signal code `sig`.
     /// Panics if `sig` is zero.
     pub const fn new(sig: i32) -> Self {
         match NonZeroI32::new(sig) {
@@ -581,10 +581,13 @@ mod tests {
     /// for the unknown ones too. We don't need to do this for Linux and macOS because we're using
     /// rust's native OS targeting for those.
     fn bsd_signals() {
-        assert_eq!(Signal::parse(L!("SIGEMT")), Some(Signal::new(libc::SIGEMT)));
         assert_eq!(
-            Signal::parse(L!("SIGINFO")),
-            Some(Signal::new(libc::SIGINFO))
+            RawSignal::parse(L!("SIGEMT")),
+            Some(RawSignal::new(libc::SIGEMT))
+        );
+        assert_eq!(
+            RawSignal::parse(L!("SIGINFO")),
+            Some(RawSignal::new(libc::SIGINFO))
         );
     }
 }

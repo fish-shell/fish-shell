@@ -14,6 +14,8 @@ use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
 use nix::unistd::fchdir;
 use std::sync::Arc;
 
+// cd is highlighted specially in src/highlight/highlight.rs - new options also need to be added
+// there
 const SHORT_OPTIONS: &wstr = L!("hLP");
 const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("help"), ArgType::NoArgument, 'h'),

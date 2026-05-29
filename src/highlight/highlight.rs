@@ -337,6 +337,19 @@ pub fn is_veritable_cd(expanded_command: &wstr) -> bool {
     expanded_command == L!("cd") && complete_wrap_map().get(L!("cd")).is_none()
 }
 
+fn is_cd_option(candidate: &wstr) -> bool {
+    let args = vec![
+        L!("--help"),
+        L!("-h"),
+        L!("--logical"),
+        L!("-L"),
+        L!("--physical"),
+        L!("-P"),
+    ];
+    args.into_iter()
+        .any(|arg| string_prefixes_string(candidate, arg))
+}
+
 /// Given an item `item` from the history which is a proposed autosuggestion, return whether the
 /// autosuggestion is valid. It may not be valid if e.g. it is attempting to cd into a directory
 /// which does not exist.
@@ -369,10 +382,8 @@ pub fn autosuggest_validate_from_history(
         && !cd_dir.is_empty()
         && expand_one(&mut cd_dir, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None)
     {
-        if string_prefixes_string(&cd_dir, L!("--help"))
-            || string_prefixes_string(&cd_dir, L!("-h"))
-        {
-            // cd --help is always valid.
+        if is_cd_option(&cd_dir) {
+            // known arguments are always valid
             return true;
         } else {
             // Check the directory target, respecting CDPATH.
@@ -936,7 +947,11 @@ impl<'src, 'ctx> Highlighter<'src, 'ctx> {
             .is_some_and(|c| source_range.contains_inclusive(c));
         let token = arg.source(self.buff).to_owned();
         let test_result = if cmd_is_cd {
-            self.file_tester.test_cd_path(&token, is_prefix)
+            if is_cd_option(&token) {
+                Ok(IsFile(false))
+            } else {
+                self.file_tester.test_cd_path(&token, is_prefix)
+            }
         } else {
             let is_path = self.file_tester.test_path(&token, is_prefix);
             Ok(IsFile(is_path))
@@ -1498,6 +1513,12 @@ mod tests {
                 ("--help", fg(HighlightRole::Option)),
                 ("-h", fg(HighlightRole::Option)),
                 ("definitely_not_a_directory", fg(HighlightRole::Error)),
+            );
+
+            validate!(
+                ("cd", fg(HighlightRole::Command)),
+                ("--logical", fg(HighlightRole::Option)),
+                ("still_definitely_not_a_directory", fg(HighlightRole::Error)),
             );
 
             validate!(

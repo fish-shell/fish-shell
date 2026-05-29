@@ -99,18 +99,12 @@ impl<'src, 'opctx> FileTester<'src, 'opctx> {
         )
     }
 
-    // Test if the string is a prefix of a valid path we could cd into, or is some other token
-    // we recognize (primarily --help).
+    // Test if the string is a prefix of a valid path we could cd into
     // If is_prefix is true, we test if the string is a prefix of a valid path we could cd into.
     pub fn test_cd_path(&mut self, token: &wstr, is_prefix: bool) -> FileTestResult {
         let mut param = token.to_owned();
         if !expand_one(&mut param, ExpandFlags::FAIL_ON_CMDSUBST, self.ctx, None) {
             // Failed expansion (e.g. may contain a command substitution). Ignore it.
-            return FileTestResult::Ok(IsFile(false));
-        }
-        // Maybe it's just --help.
-        if string_prefixes_string(&param, L!("--help")) || string_prefixes_string(&param, L!("-h"))
-        {
             return FileTestResult::Ok(IsFile(false));
         }
         let valid_path = is_potential_cd_path(

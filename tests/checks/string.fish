@@ -1311,7 +1311,7 @@ string replace --max-matches 99999999999999999999
 string replace
 # CHECKERR: string replace: missing argument
 string replace one
-# CHECKERR: string replace: expected 1 arguments; got 2
+# CHECKERR: string replace: expected 2 arguments; got 1
 
 string replace -r o '${bad_name}' foobar
 # CHECKERR: string replace: Regular expression substitute error: unknown substring

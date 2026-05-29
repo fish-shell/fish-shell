@@ -68,7 +68,7 @@ impl<'args> StringSubCommand<'args> for Replace<'args> {
         };
         *optind += 1;
         let Some(replacement) = args.get(*optind).copied() else {
-            err_fmt!(Error::UNEXP_ARG_COUNT, 1, 2)
+            err_fmt!(Error::UNEXP_ARG_COUNT, 2, 1)
                 .subcmd(cmd, subcmd)
                 .finish(streams);
             return Err(STATUS_INVALID_ARGS);

@@ -14,6 +14,10 @@ Interactive improvements
 - ``bind`` shows the file where bindings were defined (:issue:`12504`).
 - Abbreviations with ``--position=anywhere`` can now be completed in argument position, not just in command position (:issue:`12630`).
 
+Other improvements
+------------------
+- ``cd`` supports the ``-L`` and ``-P`` options, like other shells, to allow specifying whether symbolic links (symlinks) are resolved when changing directories (:issue:`7206`).
+
 For distributors and developers
 -------------------------------
 - With the exception of the ``$CMAKE_INSTALL_PREFIX/share/fish/man`` directory, fish no longer installs files to ``$CMAKE_INSTALL_PREFIX/share/fish``.

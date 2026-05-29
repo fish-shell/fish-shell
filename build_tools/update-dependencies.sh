@@ -3,7 +3,6 @@
 set -ex
 
 command -v curl
-command -v gcloud
 command -v jq
 command -v rustup
 command -v updatecli

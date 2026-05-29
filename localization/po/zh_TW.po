@@ -2197,9 +2197,6 @@ msgstr "你的歷史紀錄中有 %s 個相異目錄，但我只能處理 %s 個"
 msgid "This should not happen. Have you changed the cd function?"
 msgstr "這不該發生。你是不是變更過 cd 函式？"
 
-msgid "Too many args for cd command"
-msgstr "cd 命令的引數太多"
-
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr "輸入 %shelp%s 取得如何使用 fish 的說明"
 
@@ -2361,6 +2358,9 @@ msgstr "執行 bind 後變更目前模式"
 
 msgid "Change directory"
 msgstr "變更目錄"
+
+msgid "Change directory without resolving symbolic links"
+msgstr ""
 
 msgid "Change extension for given paths"
 msgstr "變更指定路徑的副檔名"
@@ -3189,6 +3189,9 @@ msgstr "需要參數"
 
 msgid "Require parameter and don't use file completion"
 msgstr "需要參數且不使用檔案補全"
+
+msgid "Resolve symbolic links before changing directory"
+msgstr ""
 
 msgid "Return as soon as the first job completes"
 msgstr "一項作業完成時就回傳"

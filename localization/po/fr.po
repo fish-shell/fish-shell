@@ -2330,9 +2330,6 @@ msgstr "Il y a %s dossiers uniques dans votre historique alors que je ne peux en
 msgid "This should not happen. Have you changed the cd function?"
 msgstr "Ceci ne devrait pas se produire. Avez-vous modifié la fonction cd ?"
 
-msgid "Too many args for cd command"
-msgstr "Trop d’arguments pour la commande cd"
-
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr ""
 
@@ -2493,6 +2490,9 @@ msgid "Change current mode after bind is executed"
 msgstr ""
 
 msgid "Change directory"
+msgstr ""
+
+msgid "Change directory without resolving symbolic links"
 msgstr ""
 
 msgid "Change extension for given paths"
@@ -3321,6 +3321,9 @@ msgid "Require parameter"
 msgstr "Requérir un paramètre"
 
 msgid "Require parameter and don't use file completion"
+msgstr ""
+
+msgid "Resolve symbolic links before changing directory"
 msgstr ""
 
 msgid "Return as soon as the first job completes"

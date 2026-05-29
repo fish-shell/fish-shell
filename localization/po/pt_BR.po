@@ -2202,9 +2202,6 @@ msgstr ""
 msgid "This should not happen. Have you changed the cd function?"
 msgstr ""
 
-msgid "Too many args for cd command"
-msgstr ""
-
 msgid "Type %shelp%s for instructions on how to use fish"
 msgstr "Digite %shelp%s para instruções sobre como utilizar o fish"
 
@@ -2366,6 +2363,9 @@ msgstr ""
 
 msgid "Change directory"
 msgstr "Muda diretório"
+
+msgid "Change directory without resolving symbolic links"
+msgstr ""
 
 msgid "Change extension for given paths"
 msgstr ""
@@ -3193,6 +3193,9 @@ msgid "Require parameter"
 msgstr "Require parameter"
 
 msgid "Require parameter and don't use file completion"
+msgstr ""
+
+msgid "Resolve symbolic links before changing directory"
 msgstr ""
 
 msgid "Return as soon as the first job completes"

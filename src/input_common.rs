@@ -1008,12 +1008,28 @@ pub trait InputEventQueuer {
         };
         let mut next_char = |zelf: &mut Self| zelf.read_sequence_byte(buffer).unwrap_or(0xff);
         let private_mode;
-        if matches!(c, b'?' | b'<' | b'=' | b'>') {
-            // private mode
-            private_mode = Some(c);
-            c = next_char(self);
-        } else {
-            private_mode = None;
+        match c {
+            b'[' => {
+                // Illegal CSI command.
+                return Some(KeyEvent::new(
+                    Modifiers::default(),
+                    function_key(match next_char(self) {
+                        b'A' => 1,
+                        b'B' => 2,
+                        b'C' => 3,
+                        b'D' => 4,
+                        b'E' => 5,
+                        _ => return invalid_sequence(buffer),
+                    }),
+                ));
+            }
+            b'?' | b'<' | b'=' | b'>' => {
+                private_mode = Some(c);
+                c = next_char(self);
+            }
+            _ => {
+                private_mode = None;
+            }
         }
         let mut count = 0;
         let mut subcount = 0;

@@ -41,17 +41,18 @@ uv lock --upgrade --exclude-newer="$(date --date='7 days ago' --iso-8601)"
 
 from_gh() {
     repo=$1
-    path=$2
-    destination=$3
-    contents=$(curl -fsS https://raw.githubusercontent.com/"${repo}"/refs/heads/master/"${path}")
+    branch=$2
+    path=$3
+    destination=$4
+    contents=$(curl -fsS https://raw.githubusercontent.com/"${repo}"/refs/heads/"${branch}"/"${path}")
     printf '%s\n' "$contents" >"$destination"
 }
 
-from_gh ridiculousfish/widecharwidth widechar_width.rs crates/widecharwidth/src/widechar_width.rs
-from_gh ridiculousfish/littlecheck littlecheck/littlecheck.py tests/littlecheck.py
-from_gh catppuccin/fish themes/catppuccin-frappe.theme share/themes/catppuccin-frappe.theme
-from_gh catppuccin/fish themes/catppuccin-macchiato.theme share/themes/catppuccin-macchiato.theme
-from_gh catppuccin/fish themes/catppuccin-mocha.theme share/themes/catppuccin-mocha.theme
+from_gh ridiculousfish/widecharwidth master widechar_width.rs crates/widecharwidth/src/widechar_width.rs
+from_gh ridiculousfish/littlecheck master littlecheck/littlecheck.py tests/littlecheck.py
+from_gh catppuccin/fish main themes/catppuccin-frappe.theme share/themes/catppuccin-frappe.theme
+from_gh catppuccin/fish main themes/catppuccin-macchiato.theme share/themes/catppuccin-macchiato.theme
+from_gh catppuccin/fish main themes/catppuccin-mocha.theme share/themes/catppuccin-mocha.theme
 
 # Update Cargo.lock
 cargo update

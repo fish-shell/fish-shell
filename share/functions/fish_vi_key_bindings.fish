@@ -151,10 +151,11 @@ function fish_vi_exec_motion
                 end
             case change
                 switch $motion[1]
-                    case kill-word-vi
+                    case kill-word-vi kill-bigword-vi
+                        set -l end_kill (string replace -- -vi '' $motion[1]) # kill-word / kill-bigword
                         for i in $seq_total
                             if test $i -eq $total
-                                commandline -f kill-word
+                                commandline -f $end_kill
                             else
                                 $motion_cmd
                             end

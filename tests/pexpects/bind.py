@@ -474,15 +474,15 @@ expect_prompt(
     "\r\n.*XXX def\r\n", unmatched="vi mode 'ce' should change to end of word"
 )
 
-# Test 'cW' - change WORD, deletes to start of next WORD (like vim's 'dW')
+# Test 'cW' - change WORD, changes to end of WORD keeping trailing space (like 'cE')
 send("echo abc-def ghi")
 send("\033")
 sleep(0.200)
 send(
     "0wcWXXX\r"
-)  # Move to 'abc-def', 'cW' deletes 'abc-def ' (including space), type 'XXX'
+)  # Move to 'abc-def', 'cW' changes 'abc-def' (not the space), type 'XXX'
 expect_prompt(
-    "\r\n.*XXXghi\r\n", unmatched="vi mode 'cW' should delete to start of next WORD"
+    "\r\n.*XXX ghi\r\n", unmatched="vi mode 'cW' should change to end of WORD"
 )
 
 # Test 'cE' - change to end of WORD (like vim's 'dE')

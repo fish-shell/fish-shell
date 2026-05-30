@@ -461,7 +461,7 @@ mod tests {
     };
     use crate::{prelude::*, tests::prelude::*};
     use fish_widestring::bytes2wcstring;
-    use rand::Rng as _;
+    use rand::RngExt as _;
     use std::{
         fs::OpenOptions,
         io::{Read as _, Seek as _},

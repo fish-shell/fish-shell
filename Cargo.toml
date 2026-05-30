@@ -43,7 +43,7 @@ libc = "0.2.177"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
 # files as of 22 April 2024.
-lru = "0.16.2"
+lru = "0.18.0"
 nix = { version = "0.31.1", default-features = false, features = [
   "event",
   "fs",
@@ -66,10 +66,7 @@ portable-atomic = { version = "1", default-features = false, features = [
   "fallback",
 ] }
 proc-macro2 = "1.0"
-rand = { version = "0.9.2", default-features = false, features = [
-  "small_rng",
-  "thread_rng",
-] }
+rand = { version = "0.10.1", default-features = false, features = ["thread_rng"] }
 regex = "1.12.3"
 rsconf = "0.3.0"
 rust-embed = { version = "8.11.0", features = [

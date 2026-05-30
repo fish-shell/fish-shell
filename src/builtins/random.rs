@@ -4,7 +4,7 @@ use crate::builtins::error::Error;
 use crate::{err_fmt, err_str, wutil};
 use fish_util::get_seeded_rng;
 use rand::rngs::SmallRng;
-use rand::{Rng as _, RngCore as _};
+use rand::{Rng as _, RngExt as _};
 use std::sync::{LazyLock, Mutex};
 
 static RNG: LazyLock<Mutex<SmallRng>> =

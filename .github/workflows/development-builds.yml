@@ -24,7 +24,7 @@ jobs:
           mkdir /tmp/fish-built
           FISH_ARTEFACT_PATH=/tmp/fish-built ./build_tools/make_tarball.sh
           FISH_ARTEFACT_PATH=/tmp/fish-built DEB_SIGN_KEYFILE=/tmp/gpg/signing-gpg-key ./build_tools/make_linux_packages.sh $version
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1, build_tools/update-dependencies.sh
         with:
           name: linux-source-packages
           path: |

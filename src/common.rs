@@ -329,7 +329,7 @@ mod tests {
         ENCODE_DIRECT_BASE, ENCODE_DIRECT_END, L, WString, bytes2wcstring, decode_with_replacement,
         wcs2bytes, wstr,
     };
-    use rand::{Rng as _, RngCore as _};
+    use rand::{Rng as _, RngExt as _};
     use std::fmt::Write as _;
 
     #[test]

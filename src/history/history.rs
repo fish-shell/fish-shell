@@ -45,7 +45,7 @@ use fish_wcstringutil::{subsequence_in_string, trim};
 use fish_widestring::{ANY_STRING, bytes2wcstring, cstr2wcstring, subslice_position};
 use lru::LruCache;
 use nix::{fcntl::OFlag, sys::stat::Mode};
-use rand::Rng as _;
+use rand::RngExt as _;
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
@@ -1831,7 +1831,7 @@ mod tests {
     use fish_build_helper::workspace_root;
     use fish_wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
     use fish_widestring::{osstr2wcstring, wcs2bytes};
-    use rand::{Rng as _, rngs::ThreadRng};
+    use rand::{RngExt as _, rngs::ThreadRng};
     use std::{
         collections::VecDeque,
         ffi::OsString,

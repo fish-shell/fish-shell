@@ -151,7 +151,7 @@ jobs:
         shell: msys2 {0}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
-    - uses: msys2/setup-msys2@4f806de0a5a7294ffabaff804b38a9b435a73bda # v2.30.0, build_tools/update-dependencies.sh
+    - uses: msys2/setup-msys2@e9898307ac31d1a803454791be09ab9973336e1c # v2.31.1, build_tools/update-dependencies.sh
       with:
         update: true
         msystem: MSYS

@@ -5,13 +5,9 @@ function fish_greeting
         set -g fish_greeting "$line1$line2"
     end
 
-    if set -q fish_private_mode
+    if set -q fish_private_mode && set -q fish_greeting[1]
         set -l line (_ "fish is running in private mode, history will not be persisted.")
-        if set -q fish_greeting[1]
-            set -g fish_greeting $fish_greeting\n$line
-        else
-            set -g fish_greeting $line
-        end
+        set -g fish_greeting $fish_greeting\n$line
     end
 
     # The greeting used to be skipped when fish_greeting was empty (not just undefined)

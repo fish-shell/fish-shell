@@ -81,7 +81,7 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
     }
 
     let config = &*CONFIG_DIRECTORY;
-    if let Some(error) = &data.err {
+    if let Some(error) = &config.err {
         maybe_issue_path_warning(
             L!("config"),
             wgettext!("can not save universal variables or functions"),

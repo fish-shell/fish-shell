@@ -62,7 +62,7 @@ Windows
    for Linux with the instructions for the appropriate distribution
    listed above under “Packages for Linux”, or from source with the
    instructions below.
--  Fish can also be installed on all versions of Windows using
+-  fish can also be installed on all versions of Windows using
    `Cygwin <https://cygwin.com/>`__ or `MSYS2 <https://github.com/Berrysoft/fish-msys2>`__.
 
 Building from source

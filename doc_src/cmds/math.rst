@@ -218,6 +218,6 @@ Examples
 Compatibility notes
 -------------------
 
-Fish 1.x and 2.x releases relied on the ``bc`` command for handling ``math`` expressions. Starting with fish 3.0.0 fish uses the tinyexpr library and evaluates the expression without the involvement of any external commands.
+fish 1.x and 2.x releases relied on the ``bc`` command for handling ``math`` expressions. Starting with fish 3.0.0 fish uses the tinyexpr library and evaluates the expression without the involvement of any external commands.
 
 You don't need to use ``--`` before the expression, even if it begins with a minus sign which might otherwise be interpreted as an invalid option. If you do insert ``--`` before the expression, it will cause option scanning to stop just like for every other command and it won't be part of the expression.

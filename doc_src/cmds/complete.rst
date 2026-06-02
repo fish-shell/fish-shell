@@ -81,7 +81,7 @@ The following options are available:
 **-h** or **--help**
     Displays help about using this command.
 
-Command-specific tab-completions in ``fish`` are based on the notion of options and arguments. An option is a parameter which begins with a hyphen, such as ``-h``, ``-help`` or ``--help``. Arguments are parameters that do not begin with a hyphen. Fish recognizes three styles of options, the same styles as the GNU getopt library. These styles are:
+Command-specific tab-completions in ``fish`` are based on the notion of options and arguments. An option is a parameter which begins with a hyphen, such as ``-h``, ``-help`` or ``--help``. Arguments are parameters that do not begin with a hyphen. fish recognizes three styles of options, the same styles as the GNU getopt library. These styles are:
 
 - Short options, like ``-a``. Short options are a single character long, are preceded by a single hyphen and can be grouped together (like ``-la``, which is equivalent to ``-l -a``). Option arguments may be specified by appending the option with the value (``-w32``), or, if ``--require-parameter`` is given, in the following parameter (``-w 32``).
 

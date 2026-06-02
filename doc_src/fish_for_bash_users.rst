@@ -1,7 +1,7 @@
-Fish for bash users
+fish for Bash users
 ===================
 
-This is to give you a quick overview if you come from bash (or to a lesser extent other shells like zsh or ksh) and want to know how fish differs. Fish is intentionally not POSIX-compatible and as such some of the things you are used to work differently.
+This is to give you a quick overview if you come from bash (or to a lesser extent other shells like zsh or ksh) and want to know how fish differs. fish is intentionally not POSIX-compatible and as such some of the things you are used to work differently.
 
 Many things are similar - they both fundamentally expand commandlines to execute commands, have pipes, redirections, variables, globs, use command output in various ways. This document is there to quickly show you the differences.
 
@@ -10,7 +10,7 @@ Many things are similar - they both fundamentally expand commandlines to execute
 Command substitutions
 ---------------------
 
-Fish spells command substitutions as ``$(command)`` or ``(command)``, but not ```command```.
+fish spells command substitutions as ``$(command)`` or ``(command)``, but not ```command```.
 
 In addition, it only splits them on newlines instead of $IFS. If you want to split on something else, use :doc:`string split <cmds/string-split>`, :doc:`string split0 <cmds/string-split>` or :doc:`string collect <cmds/string-collect>`. If those are used as the last command in a command substitution the splits they create are carried over. So::
 
@@ -21,7 +21,7 @@ will correctly handle all possible filenames.
 Variables
 ---------
 
-Fish sets and erases variables with :doc:`set <cmds/set>` instead of ``VAR=VAL`` and a variety of separate builtins like ``declare`` and ``unset`` and ``export``. ``set`` takes options to determine the scope and exportedness of a variable::
+fish sets and erases variables with :doc:`set <cmds/set>` instead of ``VAR=VAL`` and a variety of separate builtins like ``declare`` and ``unset`` and ``export``. ``set`` takes options to determine the scope and exportedness of a variable::
 
   # Define $PAGER *g*lobal and e*x*ported,
   # so this is like ``export PAGER=less``
@@ -41,7 +41,7 @@ or to erase variables::
   PAGER=cat git log
 
 
-Fish does not perform word splitting. Once a variable has been set to a value, that value stays as it is, so double-quoting variable expansions isn't the necessity it is in bash. [#]_
+fish does not perform word splitting. Once a variable has been set to a value, that value stays as it is, so double-quoting variable expansions isn't the necessity it is in bash. [#]_
 
 For instance, here's bash
 
@@ -102,7 +102,7 @@ See :ref:`Shell variables <variables>` for more.
 Variable defaults (``${my_variable:-"default value"}``)
 -------------------------------------------------------
 
-Fish doesn't have ``${my_variable:-fallback}`` for providing default values to unset variables. Instead, you can set default values by checking whether the variable has been set yet::
+fish doesn't have ``${my_variable:-fallback}`` for providing default values to unset variables. Instead, you can set default values by checking whether the variable has been set yet::
 
   # Ensure XDG_CONFIG_HOME is set or use a default value
   set -q XDG_CONFIG_HOME || set XDG_CONFIG_HOME $HOME/.config
@@ -111,7 +111,7 @@ Fish doesn't have ``${my_variable:-fallback}`` for providing default values to u
 Wildcards (globs)
 -----------------
 
-Fish only supports the ``*`` and ``**`` glob (and the deprecated ``?`` glob) as syntax. If a glob doesn't match it fails the command (like with bash's ``failglob``) unless the command is ``for``, ``set`` or ``count`` or the glob is used with an environment override (``VAR=* command``), in which case it expands to nothing (like with bash's ``nullglob`` option).
+fish only supports the ``*`` and ``**`` glob (and the deprecated ``?`` glob) as syntax. If a glob doesn't match it fails the command (like with bash's ``failglob``) unless the command is ``for``, ``set`` or ``count`` or the glob is used with an environment override (``VAR=* command``), in which case it expands to nothing (like with bash's ``nullglob`` option).
 
 Globbing doesn't happen on expanded variables, so::
 
@@ -131,7 +131,7 @@ See :ref:`Wildcards <expand-wildcard>` for more.
 Quoting
 -------
 
-Fish has two quoting styles: ``""`` and ``''``. Variables are expanded in double-quotes, nothing is expanded in single-quotes.
+fish has two quoting styles: ``""`` and ``''``. Variables are expanded in double-quotes, nothing is expanded in single-quotes.
 
 There is no ``$''``, instead the sequences that would transform are transformed *when unquoted*::
 
@@ -144,7 +144,7 @@ See :ref:`Quotes <quotes>` for more.
 String manipulation
 -------------------
 
-Fish does not have ``${foo%bar}``, ``${foo#bar}`` and ``${foo/bar/baz}``. Instead string manipulation is done by the :doc:`string <cmds/string>` builtin.
+fish does not have ``${foo%bar}``, ``${foo#bar}`` and ``${foo/bar/baz}``. Instead string manipulation is done by the :doc:`string <cmds/string>` builtin.
 
 For example, to replace "bar" with "baz"::
 
@@ -208,7 +208,7 @@ as fish's :doc:`source <cmds/source>` can read from stdin.
 Heredocs
 --------
 
-Fish does not have ``<<EOF`` "heredocs". Instead of
+fish does not have ``<<EOF`` "heredocs". Instead of
 
 .. code-block:: sh
 
@@ -280,14 +280,14 @@ So heredocs really are minor syntactical sugar that introduces a lot of special 
 Test (``test``, ``[``, ``[[``)
 ------------------------------
 
-Fish has a POSIX-compatible ``test`` or ``[`` builtin. There is no ``[[`` and ``test`` does not accept ``==`` as a synonym for ``=``. It can compare floating point numbers, however.
+fish has a POSIX-compatible ``test`` or ``[`` builtin. There is no ``[[`` and ``test`` does not accept ``==`` as a synonym for ``=``. It can compare floating point numbers, however.
 
 ``set -q`` can be used to determine if a variable exists or has a certain number of elements (``set -q foo[2]``).
 
 Arithmetic Expansion
 --------------------
 
-Fish does not have ``$((i+1))`` arithmetic expansion, computation is handled by :doc:`math <cmds/math>`::
+fish does not have ``$((i+1))`` arithmetic expansion, computation is handled by :doc:`math <cmds/math>`::
 
   math $i + 1
 
@@ -310,7 +310,7 @@ Both ``*`` and ``x`` are valid ways to spell multiplication, but ``*`` needs to 
 Prompts
 -------
 
-Fish does not use the ``$PS1``, ``$PS2`` and so on variables. Instead the prompt is the output of the :doc:`fish_prompt <cmds/fish_prompt>` function, plus the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` function if :ref:`vi mode <vi-mode>` is enabled. The output of the :doc:`fish_right_prompt <cmds/fish_right_prompt>` function is used for the right-sided prompt.
+fish does not use the ``$PS1``, ``$PS2`` and so on variables. Instead the prompt is the output of the :doc:`fish_prompt <cmds/fish_prompt>` function, plus the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` function if :ref:`vi mode <vi-mode>` is enabled. The output of the :doc:`fish_right_prompt <cmds/fish_right_prompt>` function is used for the right-sided prompt.
 
 As an example, here's a relatively simple bash prompt:
 
@@ -332,18 +332,18 @@ and a rough fish equivalent::
 
 This shows a few differences:
 
-- Fish provides :doc:`set_color <cmds/set_color>` to color text. It can use the 16 named colors and also RGB sequences (so you could also use ``set_color 5555FF``)
+- fish provides :doc:`set_color <cmds/set_color>` to color text. It can use the 16 named colors and also RGB sequences (so you could also use ``set_color 5555FF``)
 - Instead of introducing specific escapes like ``\h`` for the hostname, the prompt is a function. To achieve the effect of ``\h``, fish provides helper functions like :doc:`prompt_hostname <cmds/prompt_hostname>`, which prints a shortened version of the hostname.
-- Fish offers other helper functions for adding things to the prompt, like :doc:`fish_vcs_prompt <cmds/fish_vcs_prompt>` for adding a display for common version control systems (git, mercurial, svn), and :doc:`prompt_pwd <cmds/prompt_pwd>` for showing a shortened ``$PWD`` (the user's home directory becomes ``~`` and any path component is shortened).
+- fish offers other helper functions for adding things to the prompt, like :doc:`fish_vcs_prompt <cmds/fish_vcs_prompt>` for adding a display for common version control systems (git, mercurial, svn), and :doc:`prompt_pwd <cmds/prompt_pwd>` for showing a shortened ``$PWD`` (the user's home directory becomes ``~`` and any path component is shortened).
 
 The default prompt is reasonably full-featured and its code can be read via ``type fish_prompt``.
 
-Fish does not have ``$PS2`` for continuation lines, instead it leaves the lines indented to show that the commandline isn't complete yet.
+fish does not have ``$PS2`` for continuation lines, instead it leaves the lines indented to show that the commandline isn't complete yet.
 
 Blocks and loops
 ----------------
 
-Fish's blocking constructs look a little different. They all start with a word, end in ``end`` and don't have a second starting word::
+fish's blocking constructs look a little different. They all start with a word, end in ``end`` and don't have a second starting word::
 
   for i in 1 2 3; do
      echo $i
@@ -402,7 +402,7 @@ Fish's blocking constructs look a little different. They all start with a word, 
   # (bash allows the word "function",
   #  but this is an extension)
 
-Fish does not have an ``until``. Use ``while not`` or ``while !``.
+fish does not have an ``until``. Use ``while not`` or ``while !``.
 
 Subshells
 ---------
@@ -424,7 +424,7 @@ This includes things like:
         baz &
     done
 
-Fish does not currently have subshells. You will have to find a different solution. The isolation can usually be achieved by scoping variables (with ``set -l``), but if you really do need to run your code in a new shell environment you can use ``fish -c 'your code here'`` to do so explicitly.
+fish does not currently have subshells. You will have to find a different solution. The isolation can usually be achieved by scoping variables (with ``set -l``), but if you really do need to run your code in a new shell environment you can use ``fish -c 'your code here'`` to do so explicitly.
 
 ``()`` subshells are often confused with ``{}`` grouping, which does *not* use a subshell. When you just need to group, you can use ``begin; end`` in fish::
 

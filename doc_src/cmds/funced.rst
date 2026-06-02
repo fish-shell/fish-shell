@@ -40,7 +40,7 @@ Run::
 
   >_ funced fish_prompt
 
-This will open up your editor, allowing you to modify the function. When you're done, save and quit. Fish will reload the function, so you should see the changes right away.
+This will open up your editor, allowing you to modify the function. When you're done, save and quit. fish will reload the function, so you should see the changes right away.
 
 When you're done, use::
 

@@ -6,7 +6,7 @@ Tutorial
 Why fish?
 ---------
 
-Fish is a fully-equipped command line shell (like bash or zsh) that is smart and user-friendly. Fish supports powerful features like syntax highlighting, autosuggestions, and tab completions that just work, with nothing to learn or configure.
+fish is a fully-equipped command line shell (like bash or zsh) that is smart and user-friendly. fish supports powerful features like syntax highlighting, autosuggestions, and tab completions that just work, with nothing to learn or configure.
 
 If you want to make your command line more productive, more useful, and more fun, without learning a bunch of arcane syntax and configuration options, then fish might be just what you're looking for!
 
@@ -46,7 +46,7 @@ For a comprehensive description of fish's scripting language, see :doc:`The Fish
 Running Commands
 ----------------
 
-Fish runs commands like other shells: you type a command, followed by its arguments. Spaces are separators::
+fish runs commands like other shells: you type a command, followed by its arguments. Spaces are separators::
 
     > echo hello world
     hello world
@@ -332,7 +332,7 @@ For more on combining lists with strings (or even other lists), see :ref:`cartes
 Wildcards
 ---------
 
-Fish supports the familiar wildcard ``*``. To list all JPEG files::
+fish supports the familiar wildcard ``*``. To list all JPEG files::
 
     > ls *.jpg
     lena.jpg
@@ -655,7 +655,7 @@ $PATH
 
 ``$PATH`` is an environment variable containing the directories that fish searches for commands. Unlike other shells, $PATH is a :ref:`list <tut-lists>`, not a colon-delimited string.
 
-Fish takes care to set ``$PATH`` to a default, but typically it is just inherited from fish's parent process and is set to a value that makes sense for the system - see :ref:`Exports <tut-exports>`.
+fish takes care to set ``$PATH`` to a default, but typically it is just inherited from fish's parent process and is set to a value that makes sense for the system - see :ref:`Exports <tut-exports>`.
 
 To prepend /usr/local/bin and /usr/sbin to ``$PATH``, you can write::
 
@@ -689,7 +689,7 @@ Or you can modify $fish_user_paths yourself, but you should be careful *not* to 
 Startup (Where's .bashrc?)
 --------------------------
 
-Fish starts by executing commands in ``~/.config/fish/config.fish``. You can create it if it does not exist.
+fish starts by executing commands in ``~/.config/fish/config.fish``. You can create it if it does not exist.
 
 It is possible to directly create functions and variables in ``config.fish`` file, using the commands shown above. For example:
 

@@ -221,7 +221,7 @@ These variables are passed to the function as local exported variables.
 
 The script should write any error messages to stdout, not stderr. It should return a status of zero if the flag value is valid otherwise a non-zero status to indicate it is invalid.
 
-Fish ships with a ``_validate_int`` function that accepts a ``--min`` and ``--max`` flag. Let's say your command accepts a ``-m`` or ``--max`` flag and the minimum allowable value is zero and the maximum is 5. You would define the option like this: ``m/max=!_validate_int --min 0 --max 5``. The default if you call ``_validate_int`` without those flags is to check that the value is a valid integer with no limits on the min or max value allowed.
+fish ships with a ``_validate_int`` function that accepts a ``--min`` and ``--max`` flag. Let's say your command accepts a ``-m`` or ``--max`` flag and the minimum allowable value is zero and the maximum is 5. You would define the option like this: ``m/max=!_validate_int --min 0 --max 5``. The default if you call ``_validate_int`` without those flags is to check that the value is a valid integer with no limits on the min or max value allowed.
 
 Here are some examples of flag validations::
 

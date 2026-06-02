@@ -109,7 +109,7 @@ You can set the ``fish_history`` variable to another name for the current shell 
 
 You can change ``fish_history`` at any time (by using ``set -x fish_history "session_name"``) and it will take effect right away. If you set it to ``"default"``, it will use the default session name (which is ``"fish"``).
 
-Other shells such as bash and zsh use a variable named ``HISTFILE`` for a similar purpose. Fish uses a different name to avoid conflicts and signal that the behavior is different (session name instead of a file path). Also, if you set the var to anything other than ``fish`` or ``default`` it will inhibit importing the bash history. That's because the most common use case for this feature is to avoid leaking private or sensitive history when giving a presentation.
+Other shells such as bash and zsh use a variable named ``HISTFILE`` for a similar purpose. fish uses a different name to avoid conflicts and signal that the behavior is different (session name instead of a file path). Also, if you set the var to anything other than ``fish`` or ``default`` it will inhibit importing the bash history. That's because the most common use case for this feature is to avoid leaking private or sensitive history when giving a presentation.
 
 Notes
 -----

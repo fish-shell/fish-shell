@@ -220,4 +220,4 @@ This runs fish with a temporary home directory::
 
 Notes
 -----
-- Fish versions prior to 3.0 supported the syntax ``set PATH[1] PATH[4] /bin /sbin``, which worked like ``set PATH[1 4] /bin /sbin``.
+- fish versions prior to 3.0 supported the syntax ``set PATH[1] PATH[4] /bin /sbin``, which worked like ``set PATH[1 4] /bin /sbin``.

@@ -1,10 +1,10 @@
 ####################
-Contributing To Fish
+Contributing To fish
 ####################
 
 This document tells you how you can contribute to fish.
 
-Fish is free and open source software, distributed under the terms of the GPLv2.
+fish is free and open source software, distributed under the terms of the GPLv2.
 
 Contributions are welcome, and there are many ways to contribute!
 
@@ -21,7 +21,7 @@ Archives are available at https://lists.sr.ht/~krobelus/fish-shell/.
 GitHub
 ======
 
-Fish is available on GitHub, at https://github.com/fish-shell/fish-shell.
+fish is available on GitHub, at https://github.com/fish-shell/fish-shell.
 
 First, you'll need an account there, and you'll need a git clone of fish.
 Fork it on GitHub and then run::
@@ -140,7 +140,7 @@ To reformat files, there is an xtask
    cargo xtask format --all
    cargo xtask format somefile.rs some.fish
 
-Fish Script Style Guide
+fish Script Style Guide
 -----------------------
 
 1. All fish scripts, such as those in the *share/functions* and *tests*
@@ -154,7 +154,7 @@ Fish Script Style Guide
    for public vars or ``_fish`` for private vars to minimize the
    possibility of name clashes with user defined vars.
 
-Configuring Your Editor for Fish Scripts
+Configuring Your Editor for fish Scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you use Vim: Install `vim-fish <https://github.com/dag/vim-fish>`__,
@@ -253,7 +253,7 @@ To run all tests and linters, use::
 Contributing Translations
 =========================
 
-Fish uses GNU gettext to translate messages from English to other languages.
+fish uses GNU gettext to translate messages from English to other languages.
 We use custom tools for extracting messages from source files and to localize at runtime.
 This means that we do not have a runtime dependency on the gettext library.
 It also means that some features are not supported, such as message context and plurals.

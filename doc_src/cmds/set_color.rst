@@ -31,7 +31,7 @@ Hexadecimal RGB values can be in lower or uppercase.
 
 If :envvar:`fish_term24bit` is set to 0, fish will translate RGB values to the nearest color on the 256-color palette.
 If :envvar:`fish_term256` is also set to 0, fish will translate them to the 16-color palette instead.
-Fish launched as ``fish -d term_support`` will include diagnostic messages that indicate the color support mode in use.
+fish launched as ``fish -d term_support`` will include diagnostic messages that indicate the color support mode in use.
 
 If multiple colors are specified, fish prefers the first RGB one.
 However if :envvar:`fish_term256` is set to 0, fish prefers the first named color specified.
@@ -93,7 +93,7 @@ Notes
 1. Using ``set_color normal`` will reset all colors and modes to the terminal's default.
 2. In contrast, ``set_color --foreground normal`` will only reset the foreground color and leave all the other colors and modes unchanged.
 3. Because of the risk of confusion, ``set_color --reset`` is recommended over ``set_color normal``.
-4. Setting the background color only affects subsequently written characters. Fish provides no way to set the background color for the entire terminal window. Configuring the window background color (and other attributes such as its opacity) has to be done using whatever mechanisms the terminal provides. Look for a config option.
+4. Setting the background color only affects subsequently written characters. fish provides no way to set the background color for the entire terminal window. Configuring the window background color (and other attributes such as its opacity) has to be done using whatever mechanisms the terminal provides. Look for a config option.
 5. Some terminals use the ``--bold`` escape sequence to switch to a brighter color set rather than increasing the weight of text.
 6. If you use ``set_color`` in a command substitution or a pipe, these characters will also be captured.
    This may or may not be desirable.

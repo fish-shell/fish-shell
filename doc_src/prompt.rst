@@ -7,7 +7,7 @@ Writing your own prompt
       This document uses formatting to show what a prompt would look like. If you are viewing this in the man page,
       you probably want to switch to looking at the html version instead. Run ``help custom-prompt`` to view it in a web browser.
 
-Fish ships a number of prompts that you can view with the :doc:`fish_config <cmds/fish_config>` command, and many users have shared their prompts online.
+fish ships a number of prompts that you can view with the :doc:`fish_config <cmds/fish_config>` command, and many users have shared their prompts online.
 
 However, you can also write your own, or adjust an existing prompt. This is a good way to get used to fish's :doc:`scripting language <language>`.
 
@@ -207,7 +207,7 @@ Where to go from here?
 
 We have now built a simple but working and usable prompt, but of course more can be done.
 
-- Fish offers more helper functions:
+- fish offers more helper functions:
    - ``prompt_login`` to describe the user/hostname/container or ``prompt_hostname`` to describe just the host
    - ``fish_is_root_user`` to help with changing the symbol for root.
    - ``fish_vcs_prompt`` to show version control information (or ``fish_git_prompt`` / ``fish_hg_prompt`` / ``fish_svn_prompt`` to limit it to specific systems)

@@ -34,9 +34,9 @@ supplied. This default behaviour can be enforced with the ``-L`` or ``--no-deref
 
 The ``-P`` or ``--dereference`` option resolves all symbolic links first. This was the default in fish versions before 3.0.0.
 
-Fish will also try to change directory if given a command that looks like a directory (starting with **.**, **/** or **~**, or ending with **/**), without explicitly requiring **cd**.
+fish will also try to change directory if given a command that looks like a directory (starting with **.**, **/** or **~**, or ending with **/**), without explicitly requiring **cd**.
 
-Fish also ships a wrapper function around the builtin **cd** that understands ``cd -`` as changing to the previous directory.
+fish also ships a wrapper function around the builtin **cd** that understands ``cd -`` as changing to the previous directory.
 See also :doc:`prevd <prevd>`.
 This wrapper function maintains a history of the 25 most recently visited directories in the ``$dirprev`` and ``$dirnext`` global variables.
 If you make those universal variables your **cd** history is shared among all fish instances.

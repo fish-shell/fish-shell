@@ -18,7 +18,7 @@ When fish tries to execute a command and can't find it, it invokes this function
 
 It can print a message to tell you about it, and it often also checks for a missing package that would include the command.
 
-Fish ships multiple handlers for various operating systems and chooses from them when this function is loaded,
+fish ships multiple handlers for various operating systems and chooses from them when this function is loaded,
 or you can define your own.
 
 It receives the full commandline as one argument per token, so $argv[1] contains the missing command.

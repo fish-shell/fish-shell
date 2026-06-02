@@ -53,7 +53,7 @@ See also
 
 ``if`` is only as useful as the command used as the condition.
 
-Fish ships a few:
+fish ships a few:
 
 - :doc:`test` can compare numbers, strings and check paths
 - :doc:`string` can perform string operations including wildcard and regular expression matches

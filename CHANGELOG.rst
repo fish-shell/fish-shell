@@ -1460,7 +1460,7 @@ Deprecations and removed features
 
   Like ``stderr-nocaret``, they will eventually be made read-only.
 - Most ``string`` subcommands no longer append a newline to their input if the input didn't have one (:issue:`8473`, :issue:`3847`)
-- Fish's escape sequence removal (like for ``string length --visible`` or to figure out how wide the prompt is) no longer has special support for non-standard color sequences like from Data General terminals, e.g. the Data General Dasher D220 from 1984. This removes a bunch of work in the common case, allowing ``string length --visible`` to be much faster with unknown escape sequences. We don't expect anyone to have ever used fish with such a terminal (:issue:`8769`).
+- fish's escape sequence removal (like for ``string length --visible`` or to figure out how wide the prompt is) no longer has special support for non-standard color sequences like from Data General terminals, e.g. the Data General Dasher D220 from 1984. This removes a bunch of work in the common case, allowing ``string length --visible`` to be much faster with unknown escape sequences. We don't expect anyone to have ever used fish with such a terminal (:issue:`8769`).
 - Code to upgrade universal variables from fish before 3.0 has been removed. Users who upgrade directly from fish versions 2.7.1 or before will have to set their universal variables & abbreviations again. (:issue:`8781`)
 - The meaning of an empty color variable has changed (:issue:`8793`). Previously, when a variable was set but empty, it would be interpreted as the "normal" color. Now, empty color variables cause the same effect as unset variables - the general highlighting variable for that type is used instead. For example::
 
@@ -1471,14 +1471,14 @@ Deprecations and removed features
 
   This makes it easier to make self-contained color schemes that don't accidentally use color that was set before.
   ``fish_config`` has been adjusted to set known color variables that a theme doesn't explicitly set to empty.
-- ``eval`` is now a reserved keyword, so it can't be used as a function name. This follows ``set`` and ``read``, and is necessary because it can't be cleanly shadowed by a function - at the very least ``eval set -l argv foo`` breaks. Fish will ignore autoload files for it, so left over ``eval.fish`` from previous fish versions won't be loaded.
+- ``eval`` is now a reserved keyword, so it can't be used as a function name. This follows ``set`` and ``read``, and is necessary because it can't be cleanly shadowed by a function - at the very least ``eval set -l argv foo`` breaks. fish will ignore autoload files for it, so left over ``eval.fish`` from previous fish versions won't be loaded.
 - The git prompt in informative mode now defaults to skipping counting untracked files, as this was extremely slow. To turn it on, set :envvar:`__fish_git_prompt_showuntrackedfiles` or set the git config value "bash.showuntrackedfiles" to ``true`` explicitly (which can be done for individual repositories). The "informative+vcs" sample prompt already skipped display of untracked files, but didn't do so in a way that skipped the computation, so it should be quite a bit faster in many cases (:issue:`8980`).
 - The ``__terlar_git_prompt`` function, used by the "Terlar" sample prompt, has been rebuilt as a configuration of the normal ``fish_git_prompt`` to ease maintenance, improve performance and add features (like reading per-repo git configuration). Some slight changes remain; users who absolutely must have the same behavior are encouraged to copy the old function (:issue:`9011`, :issue:`7918`, :issue:`8979`).
 
 Scripting improvements
 ----------------------
 - Quoted command substitution that directly follow a variable expansion (like ``echo "$var$(echo x)"``) no longer affect the variable expansion (:issue:`8849`).
-- Fish now correctly expands command substitutions that are preceded by an escaped dollar (like ``echo \$(echo)``). This regressed in version 3.4.0.
+- fish now correctly expands command substitutions that are preceded by an escaped dollar (like ``echo \$(echo)``). This regressed in version 3.4.0.
 - ``math`` can now handle underscores (``_``) as visual separators in numbers (:issue:`8611`, :issue:`8496`)::
 
     math 5 + 2_123_252
@@ -1498,7 +1498,7 @@ Scripting improvements
 
 Interactive improvements
 ------------------------
-- Fish now reports a special error if a command wasn't found and there is a non-executable file by that name in :envvar:`PATH` (:issue:`8804`).
+- fish now reports a special error if a command wasn't found and there is a non-executable file by that name in :envvar:`PATH` (:issue:`8804`).
 - ``less`` and other interactive commands would occasionally be stopped when run in a pipeline with fish functions; this has been fixed (:issue:`8699`).
 - Case-changing autosuggestions generated mid-token now correctly append only the suffix, instead of duplicating the token (:issue:`8820`).
 - ``ulimit`` learned a number of new options for the resource limits available on Linux, FreeBSD ande NetBSD, and returns a specific warning if the limit specified is not available on the active operating system (:issue:`8823`, :issue:`8786`).
@@ -1508,9 +1508,9 @@ Interactive improvements
 - Since fish 3.2.0, pressing :kbd:`ctrl-d` while a command is running would end up inserting a space into the next commandline, which has been fixed (:issue:`8871`).
 - A bug that caused multi-line prompts to be moved down a line when pasting or switching modes has been fixed (:issue:`3481`).
 - The Web-based configuration system no longer strips too many quotes in the abbreviation display (:issue:`8917`, :issue:`8918`).
-- Fish started with ``--no-config`` will now use the default keybindings (:issue:`8493`)
+- fish started with ``--no-config`` will now use the default keybindings (:issue:`8493`)
 - When fish inherits a :envvar:`USER` environment variable value that doesn't correspond to the current effective user ID, it will now correct it in all cases (:issue:`8879`, :issue:`8583`).
-- Fish sets a new :envvar:`EUID` variable containing the current effective user id (:issue:`8866`).
+- fish sets a new :envvar:`EUID` variable containing the current effective user id (:issue:`8866`).
 - ``history search`` no longer interprets the search term as an option (:issue:`8853`)
 - The status message when a job terminates should no longer be erased by a multiline prompt (:issue:`8817`)
 
@@ -1771,7 +1771,7 @@ Improved terminal support
 
 Other improvements
 ------------------
-- Fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests with targets named ``test_$filename`` - ``make test_set.fish`` only runs the set.fish test. (:issue:`7851`)
+- fish's test suite now uses ``ctest``, and has become much faster to run. It is now also possible to run only specific tests with targets named ``test_$filename`` - ``make test_set.fish`` only runs the set.fish test. (:issue:`7851`)
 - The HTML version of the documentation now includes copy buttons for code examples (:issue:`8218`).
 - The HTML version of the documentation and the web-based configuration tool now pick more modern system fonts instead of falling back to Arial and something like Courier New most of the time (:issue:`8632`).
 - The Debian & Ubuntu package linked from fishshell.com is now a single package, rather than split into ``fish`` and ``fish-common`` (:issue:`7845`).
@@ -3370,7 +3370,7 @@ Other fixes and improvements
    variables (:issue:`4200`, :issue:`4341`), executing functions, globs (:issue:`4579`),
    ``string`` reading from standard input (:issue:`4610`), and slicing history
    (in particular, ``$history[1]`` for the last executed command).
--  Fish’s internal wcwidth function has been updated to deal with newer
+-  fish’s internal wcwidth function has been updated to deal with newer
    Unicode, and the width of some characters can be configured via the
    ``fish_ambiguous_width`` (:issue:`5149`) and ``fish_emoji_width`` (:issue:`2652`)
    variables. Alternatively, a new build-time option INTERNAL_WCWIDTH
@@ -4126,7 +4126,7 @@ Backward-incompatible changes
 Other notable fixes and improvements
 ------------------------------------
 
--  Fish no longer silences errors in config.fish (:issue:`2702`)
+-  fish no longer silences errors in config.fish (:issue:`2702`)
 -  Directory autosuggestions will now descend as far as possible if
    there is only one child directory (:issue:`2531`)
 -  Add support for bright colors (:issue:`1464`)
@@ -4156,13 +4156,13 @@ Other notable fixes and improvements
       systemd-analyze, localectl, timedatectl
    -  and more
 
--  Fish no longer has a function called sgrep, freeing it for user
+-  fish no longer has a function called sgrep, freeing it for user
    customization (:issue:`2245`)
 -  A rewrite of the completions for cd, fixing a few bugs (:issue:`2299`, :issue:`2300`,
    :issue:`562`)
 -  Linux VTs now run in a simplified mode to avoid issues (:issue:`2311`)
 -  The vi-bindings now inherit from the emacs bindings
--  Fish will also execute ``fish_user_key_bindings`` when in vi-mode
+-  fish will also execute ``fish_user_key_bindings`` when in vi-mode
 -  ``funced`` will now also check $VISUAL (:issue:`2268`)
 -  A new ``suspend`` function (:issue:`2269`)
 -  Subcommand completion now works better with split /usr (:issue:`2141`)
@@ -4231,7 +4231,7 @@ Other notable fixes and improvements
 
 -  New documentation design (:issue:`1662`), which requires a Doxygen version
    1.8.7 or newer to build.
--  Fish now defines a default directory for other packages to provide
+-  fish now defines a default directory for other packages to provide
    completions. By default this is
    ``/usr/share/fish/vendor-completions.d``; on systems with
    ``pkgconfig`` installed this path is discoverable with

@@ -27,7 +27,7 @@ Further information on how to use :ref:`vi mode <vi-mode>`.
 Differences from Vim
 --------------------
 
-Fish's vi mode aims to be familiar to vim users, but there are some differences:
+fish's vi mode aims to be familiar to vim users, but there are some differences:
 
 **Word character handling**
     In vim, underscore (``_``) is treated as a keyword character by default, so word motions like ``w``, ``b``, and ``e`` treat ``foo_bar`` as a single word. In fish, underscore is treated as punctuation, so word motions stop at underscores. For example, pressing ``w`` on ``foo_bar`` in fish stops at the ``_``, while in vim it would jump past the entire identifier.

@@ -4,7 +4,7 @@ Frequently asked questions
 What is the equivalent to this thing from bash (or other shells)?
 -----------------------------------------------------------------
 
-See :doc:`Fish for bash users <fish_for_bash_users>`
+See :doc:`fish for bash users <fish_for_bash_users>`
 
 How do I set or clear an environment variable?
 ----------------------------------------------
@@ -327,7 +327,7 @@ This is more important to fish than other shells because features like syntax hi
 Sometimes, there is disagreement on the width. There are numerous causes and fixes for this:
 
 - It is possible the character is too new for your system to know - in this case you need to refrain from using it.
-- Fish or your terminal might not know about the character or handle it wrong - in this case fish or your terminal needs to be fixed, or you need to update to a fixed version.
+- fish or your terminal might not know about the character or handle it wrong - in this case fish or your terminal needs to be fixed, or you need to update to a fixed version.
 - The character has an "ambiguous" width and fish thinks that means a width of X while your terminal thinks it's Y. In this case you either need to change your terminal's configuration or set $fish_ambiguous_width to the correct value.
 - The character is an emoji and your system only supports Unicode 8. In this case set $fish_emoji_width to 1.
 

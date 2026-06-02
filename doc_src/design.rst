@@ -5,7 +5,7 @@ This is a description of the design principles that have been used to design fis
 
 1. Everything that can be done in other shell languages should be possible to do in fish, though fish may rely on external commands in doing so.
 
-2. Fish should be user-friendly, but not at the expense of expressiveness. Most tradeoffs between power and ease of use can be avoided with careful design.
+2. fish should be user-friendly, but not at the expense of expressiveness. Most tradeoffs between power and ease of use can be avoided with careful design.
 
 3. Whenever possible without breaking the above goals, fish should follow POSIX.
 
@@ -55,9 +55,9 @@ Different configuration options are a nightmare to maintain, since the number of
 
 Examples:
 
-- Fish allows the user to set various syntax highlighting colors. This is needed because fish does not know what colors the terminal uses by default, which might make some things unreadable. The proper solution would be for text color preferences to be defined centrally by the user for all programs, and for the terminal emulator to send these color properties to fish.
+- fish allows the user to set various syntax highlighting colors. This is needed because fish does not know what colors the terminal uses by default, which might make some things unreadable. The proper solution would be for text color preferences to be defined centrally by the user for all programs, and for the terminal emulator to send these color properties to fish.
 
-- Fish does not allow you to set the number of history entries, different language substyles or any number of other common shell configuration options.
+- fish does not allow you to set the number of history entries, different language substyles or any number of other common shell configuration options.
 
 A special note on the evils of configurability is the long list of very useful features found in some shells, that are not turned on by default. Both zsh and bash support command-specific completions, but no such completions are shipped with bash by default, and they are turned off by default in zsh. Other features that zsh supports that are disabled by default include tab-completion of strings containing wildcards, a sane completion pager and a history file.
 

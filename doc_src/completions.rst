@@ -38,7 +38,7 @@ which offers yes/no in these cases::
   > myprog -o <TAB>
   > myprog --output <TAB>
 
-Fish will also offer files by default, in addition to the arguments you specified. You would either inhibit file completion for a single option::
+fish will also offer files by default, in addition to the arguments you specified. You would either inhibit file completion for a single option::
 
   complete -c myprog -s o -l output --no-files -ra "yes no"
 
@@ -142,9 +142,9 @@ Functions beginning with the string ``__fish_print_`` print a newline separated 
 Where to put completions
 ------------------------
 
-Completions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. Fish automatically searches through any directories in the list variable ``$fish_complete_path``, and any completions defined are automatically loaded when needed. A completion file must have a filename consisting of the name of the command to complete and the suffix ``.fish``.
+Completions can be defined on the commandline or in a configuration file, but they can also be automatically loaded. fish automatically searches through any directories in the list variable ``$fish_complete_path``, and any completions defined are automatically loaded when needed. A completion file must have a filename consisting of the name of the command to complete and the suffix ``.fish``.
 
-By default, Fish searches the following for completions, using the first available file that it finds:
+By default, fish searches the following for completions, using the first available file that it finds:
 
 - A directory for end-users to keep their own completions, usually ``~/.config/fish/completions`` (controlled by the ``XDG_CONFIG_HOME`` environment variable);
 - A directory for systems administrators to install completions for all users on the system, usually ``/etc/fish/completions``;

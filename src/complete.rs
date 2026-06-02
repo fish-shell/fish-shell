@@ -3195,6 +3195,7 @@ mod tests {
 
         complete_remove_wrapper(L!("cdwrap1").into(), L!("cd"));
         complete_remove_wrapper(L!("cdwrap2").into(), L!("cdwrap1"));
+        with_abbrs_mut(|abbrset| abbrset.clear());
         parser.popd(pushed_dirs);
     }
 

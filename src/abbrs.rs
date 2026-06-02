@@ -252,6 +252,11 @@ impl AbbreviationSet {
         true
     }
 
+    #[cfg(test)]
+    pub fn clear(&mut self) {
+        *self = Default::default();
+    }
+
     /// Return true if we have an abbreviation with the given name.
     pub fn has_name(&self, name: &wstr) -> bool {
         self.used_names.contains(name)
@@ -418,6 +423,8 @@ mod tests {
 
         // yin/yang expands everywhere.
         validate!("command yin", None, "command yang");
+
+        with_abbrs_mut(|abbrset| abbrset.clear());
     }
 
     #[test]
@@ -454,6 +461,7 @@ mod tests {
             assert!(!abbrs_g.erase(L!("gc"), &[]));
             assert!(abbrs_g.erase(L!("gcc"), &[]));
             assert!(!abbrs_g.erase(L!("gcc"), &[]));
+            abbrs_g.clear();
         });
     }
 }

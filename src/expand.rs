@@ -1999,6 +1999,8 @@ mod tests {
         );
 
         assert_eq!(abbr_expand_1(L!("foo"), cmd), Some(L!("bar").into()));
+
+        with_abbrs_mut(|abbrset| abbrset.clear());
     }
 
     #[test]

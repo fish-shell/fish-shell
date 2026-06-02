@@ -64,36 +64,34 @@ pub fn path_get_config_remoteness() -> DirRemoteness {
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
 pub fn path_emit_config_directory_messages(vars: &EnvStack) {
-    let data = &*DATA_DIRECTORY;
-    if let Some(error) = &data.err {
-        maybe_issue_path_warning(
+    for (base_directory, which_dir, custom_error_msg, xdg_var) in [
+        (
+            &*DATA_DIRECTORY,
             L!("data"),
             wgettext!("can not save history"),
-            data.used_xdg,
             L!("XDG_DATA_HOME"),
-            &data.path,
-            error,
-            vars,
-        );
-    }
-    if data.remoteness == DirRemoteness::Remote {
-        flog!(path, "data path appears to be on a network volume");
-    }
-
-    let config = &*CONFIG_DIRECTORY;
-    if let Some(error) = &config.err {
-        maybe_issue_path_warning(
+        ),
+        (
+            &*CONFIG_DIRECTORY,
             L!("config"),
             wgettext!("can not save universal variables or functions"),
-            config.used_xdg,
             L!("XDG_CONFIG_HOME"),
-            &config.path,
-            error,
-            vars,
-        );
-    }
-    if config.remoteness == DirRemoteness::Remote {
-        flog!(path, "config path appears to be on a network volume");
+        ),
+    ] {
+        if let Some(error) = &base_directory.err {
+            maybe_issue_path_warning(
+                which_dir,
+                custom_error_msg,
+                base_directory.used_xdg,
+                xdg_var,
+                &base_directory.path,
+                error,
+                vars,
+            );
+        }
+        if base_directory.remoteness == DirRemoteness::Remote {
+            flog!(path, which_dir, "path appears to be on a network volume");
+        }
     }
 }
 

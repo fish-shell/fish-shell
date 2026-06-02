@@ -283,7 +283,7 @@ pub fn abbrs_match(token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer
 
 #[cfg(test)]
 mod tests {
-    use super::{Abbreviation, Position, abbrs_get_set, abbrs_match, with_abbrs_mut};
+    use super::{Abbreviation, Position, abbrs_match, with_abbrs_mut};
     use crate::editable_line::{Edit, apply_edit};
     use crate::highlight::HighlightSpec;
     use crate::prelude::*;
@@ -295,8 +295,7 @@ mod tests {
     fn test_abbreviations() {
         test_init();
         let parser = &mut TestParser::new();
-        {
-            let mut abbrs = abbrs_get_set();
+        with_abbrs_mut(|abbrs| {
             abbrs.add(Abbreviation::new(
                 L!("gc").to_owned(),
                 L!("gc").to_owned(),
@@ -325,7 +324,7 @@ mod tests {
                 Position::Anywhere,
                 false,
             ));
-        }
+        });
 
         // Helper to expand an abbreviation, enforcing we have no more than one result.
         macro_rules! abbr_expand_1 {

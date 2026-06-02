@@ -689,7 +689,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 return;
             }
             self.complete_cmd(WString::new());
-            self.complete_abbr(WString::new());
+            self.complete_abbr(L!(""));
             return;
         };
 
@@ -744,9 +744,8 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 return;
             }
             // Complete command filename.
-            let current_token = current_token.to_owned();
-            self.complete_abbr(current_token.clone());
-            self.complete_cmd(current_token);
+            self.complete_abbr(current_token);
+            self.complete_cmd(current_token.to_owned());
             return;
         }
         // See whether we are in an argument, in a redirection or in the whitespace in between.
@@ -1146,7 +1145,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     }
 
     /// Attempt to complete an abbreviation for the given string.
-    fn complete_abbr(&mut self, cmd: WString) {
+    fn complete_abbr(&mut self, cmd: &wstr) {
         // Copy the list of names and descriptions so as not to hold the lock across the call to
         // complete_strings.
         let mut possible_comp = Vec::new();
@@ -1165,7 +1164,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             wgettext_fmt!(ABBR_DESC, replacement)
         };
         self.complete_strings(
-            &cmd,
+            cmd,
             &{ Box::new(desc_func) as _ },
             &possible_comp,
             CompleteFlags::NO_SPACE,

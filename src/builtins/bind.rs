@@ -213,6 +213,9 @@ impl BuiltinBind {
         let mut cur_file = None;
 
         for binding in lst {
+            if bind_mode.is_some_and(|m| m != binding.mode) {
+                continue;
+            }
             let mut out = WString::new();
             let definition_file =
                 &self.input_mappings.get(&binding.seq, bind_mode, user)[0].definition_file;
@@ -232,9 +235,6 @@ impl BuiltinBind {
                     });
                     cur_file = Some(def_file);
                 }
-            }
-            if bind_mode.is_some_and(|m| m != binding.mode) {
-                continue;
             }
             self.list_one(&binding.seq, Some(&binding.mode), user, parser, streams);
         }

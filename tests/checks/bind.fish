@@ -3,6 +3,8 @@
 
 set -l fish (status fish-path)
 
+bind -M insert
+
 set -l tmpdir (mktemp -d)
 for bindings in true fish_default_key_bindings fish_vi_key_bindings
     $fish -c "

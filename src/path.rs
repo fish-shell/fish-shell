@@ -77,6 +77,12 @@ pub fn path_emit_config_directory_messages(vars: &EnvStack) {
             wgettext!("can not save universal variables or functions"),
             L!("XDG_CONFIG_HOME"),
         ),
+        (
+            &*CACHE_DIRECTORY,
+            L!("cache"),
+            wgettext!("can not save caching data"),
+            L!("XDG_CACHE_HOME"),
+        ),
     ] {
         if let Some(error) = &base_directory.err {
             maybe_issue_path_warning(

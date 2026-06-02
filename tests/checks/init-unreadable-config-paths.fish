@@ -1,8 +1,9 @@
 # RUN: fish=%fish %fish %s
 
-mkdir config-home data-home
-chmod 000 config-home data-home
-XDG_CONFIG_HOME=$PWD/config-home \
+mkdir cache-home config-home data-home
+chmod 000 cache-home config-home data-home
+XDG_CACHE_HOME=$PWD/cache-home \
+    XDG_CONFIG_HOME=$PWD/config-home \
     XDG_DATA_HOME=$PWD/data-home \
     $fish -c true
 # CHECKERR: error: can not save history
@@ -14,3 +15,8 @@ XDG_CONFIG_HOME=$PWD/config-home \
 # CHECKERR: warning-path: Unable to locate config directory derived from $XDG_CONFIG_HOME: '{{.*}}/config-home/fish'.
 # CHECKERR: warning-path: The error was 'Permission denied (os error 13)'.
 # CHECKERR: warning-path: Please set $XDG_CONFIG_HOME to a directory where you have write access.
+
+# CHECKERR: error: can not save caching data
+# CHECKERR: warning-path: Unable to locate cache directory derived from $XDG_CACHE_HOME: '{{.*}}/cache-home/fish'.
+# CHECKERR: warning-path: The error was 'Permission denied (os error 13)'.
+# CHECKERR: warning-path: Please set $XDG_CACHE_HOME to a directory where you have write access.

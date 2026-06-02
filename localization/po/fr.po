@@ -1725,6 +1725,9 @@ msgstr ""
 msgid "calling job for event handler not found"
 msgstr ""
 
+msgid "can not save caching data"
+msgstr ""
+
 msgid "can not save history"
 msgstr ""
 

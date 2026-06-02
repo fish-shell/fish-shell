@@ -1595,6 +1595,9 @@ msgstr "1つの引数で呼び出されました。これは将来的に偽(fals
 msgid "calling job for event handler not found"
 msgstr "イベントハンドラの呼び出し元ジョブが見つかりませんでした"
 
+msgid "can not save caching data"
+msgstr ""
+
 msgid "can not save history"
 msgstr "履歴を保存できません"
 

@@ -131,24 +131,12 @@ and __fish_set_locale
 # Some things should only be done for login terminals
 # This used to be in etc/config.fish - keep it here to keep the semantics
 #
-if status is-login
-    if command -sq /usr/libexec/path_helper
-        __fish_macos_set_env PATH /etc/paths '/etc/paths.d'
-        if test -n "$MANPATH"
-            __fish_macos_set_env MANPATH /etc/manpaths '/etc/manpaths.d'
-        end
-        functions -e __fish_macos_set_env
+if status is-login && command -sq /usr/libexec/path_helper
+    __fish_macos_set_env PATH /etc/paths '/etc/paths.d'
+    if test -n "$MANPATH"
+        __fish_macos_set_env MANPATH /etc/manpaths '/etc/manpaths.d'
     end
-
-    #
-    # Put linux consoles in unicode mode.
-    #
-    # TODO(terminal-workaround)
-    if test "$TERM" = linux
-        and string match -qir '\.UTF' -- $LANG
-        and command -sq unicode_start
-        unicode_start
-    end
+    functions -e __fish_macos_set_env
 end
 
 # Invoke this here to apply the current value of fish_user_path after

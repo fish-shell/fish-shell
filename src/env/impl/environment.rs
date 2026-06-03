@@ -5,13 +5,10 @@ use crate::env::{
 use crate::env_universal_common::EnvUniversal;
 use crate::flog::flog;
 use crate::global_safety::RelaxedAtomicBool;
-use crate::history::{History, history_id_from_var};
-use crate::kill::kill_entries;
 use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::portable_atomic::AtomicU64;
 use crate::prelude::*;
-use crate::reader::{commandline_get_state, reader_status_count};
-use crate::threads::{is_forked_child, is_main_thread};
+use crate::threads::is_forked_child;
 use crate::wutil::fish_wcstol_radix;
 use fish_widestring::wcs2zstring;
 use nix::sys::stat::{Mode, umask};
@@ -307,9 +304,9 @@ fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
 /// A struct wrapping up parser-local variables. These are conceptually variables that differ in
 /// different fish internal processes.
 #[derive(Default, Clone)]
-struct PerprocData {
-    pwd: WString,
-    statuses: Statuses,
+pub(super) struct PerprocData {
+    pub(super) pwd: WString,
+    pub(super) statuses: Statuses,
 }
 
 #[derive(Clone)]
@@ -321,7 +318,7 @@ pub struct EnvScopedImpl {
     globals: EnvNodeRef,
 
     // Per process data.
-    perproc_data: PerprocData,
+    pub(super) perproc_data: PerprocData,
 
     // Exported variable array used by execv.
     export_array: Option<Arc<OwningNullTerminatedArray>>,
@@ -352,73 +349,7 @@ impl EnvScopedImpl {
     }
 
     fn try_get_computed(&self, key: &wstr) -> Option<EnvVar> {
-        let ev = ElectricVar::for_name(key)?;
-        if !ev.computed() {
-            return None;
-        }
-
-        if key == "PWD" {
-            Some(EnvVar::new(
-                self.perproc_data.pwd.clone(),
-                EnvVarFlags::EXPORT,
-            ))
-        } else if key == "history" {
-            // Big hack. We only allow getting the history on the main thread. Note that history_t
-            // may ask for an environment variable, so don't take the lock here (we don't need it).
-            if !is_main_thread() {
-                return Some(EnvVar::new_from_name_vec(key, vec![]));
-            }
-            let history = commandline_get_state(true).history.unwrap_or_else(|| {
-                let fish_history_var = self.getf(L!("fish_history"), EnvMode::default());
-                let history_id = history_id_from_var(fish_history_var);
-                History::new(history_id)
-            });
-            Some(EnvVar::new_from_name_vec(key, history.get_history()))
-        } else if key == "fish_killring" {
-            Some(EnvVar::new_from_name_vec(
-                L!("fish_killring"),
-                kill_entries(),
-            ))
-        } else if key == "pipestatus" {
-            let js = &self.perproc_data.statuses;
-            let mut result = Vec::with_capacity(js.pipestatus.len());
-            for i in &js.pipestatus {
-                result.push(i.to_wstring());
-            }
-            Some(EnvVar::new_from_name_vec(L!("pipestatus"), result))
-        } else if key == "status" {
-            let js = &self.perproc_data.statuses;
-            Some(EnvVar::new_from_name(L!("status"), js.status.to_wstring()))
-        } else if key == "status_generation" {
-            let status_generation = reader_status_count();
-            Some(EnvVar::new_from_name(
-                L!("status_generation"),
-                status_generation.to_wstring(),
-            ))
-        } else if key == "fish_kill_signal" {
-            let js = &self.perproc_data.statuses;
-            let signal = js.kill_signal.map_or(0, |ks| ks.code());
-            Some(EnvVar::new_from_name(
-                L!("fish_kill_signal"),
-                signal.to_wstring(),
-            ))
-        } else if key == "umask" {
-            // note umask() is an absurd API: you call it to set the value and it returns the old
-            // value. Thus we have to call it twice, to reset the value. The env_lock protects
-            // against races. Guess what the umask is; if we guess right we don't need to reset it.
-            let guess = Mode::S_IWGRP | Mode::S_IWOTH;
-            let res = umask(guess);
-            if res != guess {
-                umask(res);
-            }
-            Some(EnvVar::new_from_name(
-                L!("umask"),
-                sprintf!("0%0.3o", res.bits()),
-            ))
-        } else {
-            // We should never get here unless the electric var list is out of sync with the above code.
-            panic!("Unrecognized computed var name {}", key);
-        }
+        ElectricVar::for_name(key).and_then(|ev| ev.compute(self))
     }
 
     fn try_get_local(&self, key: &wstr) -> Option<EnvVar> {

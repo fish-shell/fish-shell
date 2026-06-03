@@ -1,6 +1,6 @@
+use super::var::{ELECTRIC_VARIABLES, ElectricVar, is_read_only};
 use crate::env::{
-    ELECTRIC_VARIABLES, ElectricVar, EnvMode, EnvSetMode, EnvStackSetResult, EnvVar, EnvVarFlags,
-    PATH_ARRAY_SEP, Statuses, VarTable, is_read_only,
+    EnvMode, EnvSetMode, EnvStackSetResult, EnvVar, EnvVarFlags, PATH_ARRAY_SEP, Statuses, VarTable,
 };
 use crate::env_universal_common::EnvUniversal;
 use crate::flog::flog;

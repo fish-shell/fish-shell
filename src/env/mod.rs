@@ -1,12 +1,14 @@
 pub mod config_paths;
 mod environment;
-mod environment_impl;
+mod r#impl;
 mod var;
 
 pub use environment::*;
+pub use r#impl::is_read_only;
+pub use var::*;
+
 use fish_widestring::ToCString;
 use std::sync::{Mutex, atomic::AtomicUsize};
-pub use var::*;
 
 /// Limit `read` to 1 GiB (bytes, not wide chars) by default. This can be overridden with the
 /// `fish_read_limit` variable.

@@ -1,9 +1,6 @@
-use super::{
-    ElectricVar,
-    environment_impl::{
-        EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult, UVAR_SCOPE_IS_GLOBAL,
-        colon_split, uvars,
-    },
+use super::r#impl::environment::{
+    EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult, UVAR_SCOPE_IS_GLOBAL,
+    colon_split, uvars,
 };
 use crate::{
     abbrs::{Abbreviation, Position, abbrs_get_set},
@@ -11,6 +8,7 @@ use crate::{
     env::{
         EnvMode, EnvSetMode, EnvVar, Statuses,
         config_paths::{ConfigPaths, PREFIX},
+        r#impl::is_electric_var,
     },
     env_dispatch::{VarChangeMilieu, env_dispatch_init, env_dispatch_var_change},
     event::Event,
@@ -584,13 +582,13 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         // PORTING: That assumption appears to be wrong https://github.com/rust-lang/rust/blob/2ceed0b6cb9e9866225d7cfcfcbb4a62db047163/library/std/src/sys/unix/os.rs#L584C30-L584C30
         // it appears they allow names starting with =, but do not turn malformed lines
         // into the variable name with an empty value
-        if ElectricVar::for_name(&key).is_none() {
+        if !is_electric_var(&key) && {
             // fish_user_paths should not be exported; attempting to re-import it from
             // a value we previously (due to user error) exported will cause impossibly
             // difficult to debug PATH problems.
-            if key != "fish_user_paths" {
-                vars.set(&key, global_exported_mode, vec![val.clone()]);
-            }
+            key != "fish_user_paths"
+        } {
+            vars.set(&key, global_exported_mode, vec![val.clone()]);
         }
         inherited_vars.insert(key, val);
     }

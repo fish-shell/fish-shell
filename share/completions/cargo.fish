@@ -62,6 +62,7 @@ complete -c cargo -n '__fish_seen_subcommand_from r run t test b build debug c c
 
 ## --- AUTO-GENERATED WITH `cargo complete fish` ---
 # Manually massaged to improve some descriptions
+# Subcommand `complete` no longer exists. See https://github.com/rust-lang/cargo/pull/9288
 complete -c cargo -n __fish_use_subcommand -l explain -d 'Run `rustc --explain CODE`'
 complete -c cargo -n __fish_use_subcommand -l color -d 'Coloring: auto, always, never'
 complete -c cargo -n __fish_use_subcommand -l config -d 'Override a configuration value (unstable)'
@@ -78,7 +79,6 @@ complete -c cargo -n __fish_use_subcommand -f -a bench -d 'Execute all benchmark
 complete -c cargo -n __fish_use_subcommand -f -a build -d 'Compile a local package and all of its dependencies'
 complete -c cargo -n __fish_use_subcommand -f -a check -d 'Check a local package and all of its dependencies for errors'
 complete -c cargo -n __fish_use_subcommand -f -a clean -d 'Remove artifacts that cargo has generated in the past'
-complete -c cargo -n __fish_use_subcommand -f -a complete -d 'Generate completion file for a shell'
 complete -c cargo -n __fish_use_subcommand -f -a doc -d 'Build a package\'s documentation'
 complete -c cargo -n __fish_use_subcommand -f -a fetch -d 'Fetch dependencies of a package from the network'
 complete -c cargo -n __fish_use_subcommand -f -a fix -d 'Automatically fix lint warnings reported by rustc'
@@ -234,15 +234,6 @@ complete -c cargo -n "__fish_seen_subcommand_from clean" -s v -l verbose -d 'Use
 complete -c cargo -n "__fish_seen_subcommand_from clean" -l frozen -d 'Require Cargo.lock and cache are up to date'
 complete -c cargo -n "__fish_seen_subcommand_from clean" -l locked -d 'Require Cargo.lock is up to date'
 complete -c cargo -n "__fish_seen_subcommand_from clean" -l offline -d 'Run without accessing the network'
-complete -c cargo -n "__fish_seen_subcommand_from complete" -l color -d 'Coloring: auto, always, never'
-complete -c cargo -n "__fish_seen_subcommand_from complete" -l config -d 'Override a configuration value (unstable)'
-complete -c cargo -n "__fish_seen_subcommand_from complete" -s Z -d 'Unstable (nightly-only) flags to Cargo, see \'cargo -Z help\' for details'
-complete -c cargo -n "__fish_seen_subcommand_from complete" -s h -l help -d 'Prints help information'
-complete -c cargo -n "__fish_seen_subcommand_from complete" -s V -l version -d 'Prints version information'
-complete -c cargo -n "__fish_seen_subcommand_from complete" -s v -l verbose -d 'Use verbose output (-vv very verbose/build.rs output)'
-complete -c cargo -n "__fish_seen_subcommand_from complete" -l frozen -d 'Require Cargo.lock and cache are up to date'
-complete -c cargo -n "__fish_seen_subcommand_from complete" -l locked -d 'Require Cargo.lock is up to date'
-complete -c cargo -n "__fish_seen_subcommand_from complete" -l offline -d 'Run without accessing the network'
 complete -c cargo -n "__fish_seen_subcommand_from d doc" -s p -l package -d 'Package to document'
 complete -c cargo -n "__fish_seen_subcommand_from d doc" -l exclude -d 'Exclude packages from the build'
 complete -c cargo -n "__fish_seen_subcommand_from d doc" -s j -l jobs -d 'Number of parallel jobs, defaults to # of CPUs'

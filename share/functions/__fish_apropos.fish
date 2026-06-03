@@ -8,14 +8,7 @@ end
 if test (__fish_uname) = Darwin
     and test -x /usr/libexec/makewhatis
 
-    set -l dir
-    if test -n "$XDG_CACHE_HOME"
-        set dir $XDG_CACHE_HOME/fish
-    else
-        set dir (getconf DARWIN_USER_CACHE_DIR)"fish"
-    end
-
-    function __fish_apropos -V dir
+    function __fish_apropos
         # macOS has a read only filesystem where the whatis database should be.
 
         if functions -q apropos || test "$(command -v apropos)" != /usr/bin/apropos
@@ -30,6 +23,7 @@ if test (__fish_uname) = Darwin
         # and override the MANPATH using that directory before we run `apropos`
         #
         # the cache is rebuilt once a week.
+        set -l dir (__fish_make_cache_dir apropos)
         set -l whatis $dir/whatis
         set -l max_age 600000 # like a week
         set -l age $max_age
@@ -41,7 +35,6 @@ if test (__fish_uname) = Darwin
         MANPATH="$dir" __fish_without_manpager /usr/bin/apropos "$argv"
 
         if test $age -ge $max_age
-            test -d "$dir" || mkdir -m 700 -p $dir
             set -l sh (__fish_posix_shell)
             $sh -c '( "$@" ) >/dev/null 2>&1 </dev/null &' -- \
                 /usr/libexec/makewhatis -o "$whatis" \

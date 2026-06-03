@@ -618,7 +618,7 @@ impl EnvUniversal {
 
 /// Return the default variable path, or an empty string on failure.
 pub fn default_vars_path() -> WString {
-    if let Some(mut path) = default_vars_path_directory() {
+    if let Some(mut path) = path_get_config() {
         path.push_str("/fish_variables");
         return path;
     }
@@ -648,11 +648,6 @@ mod fish3_uvars {
     pub const SETUVAR: &[u8] = b"SETUVAR";
     pub const EXPORT: &[u8] = b"--export";
     pub const PATH: &[u8] = b"--path";
-}
-
-/// Return the default variable path, or an empty string on failure.
-fn default_vars_path_directory() -> Option<WString> {
-    path_get_config()
 }
 
 /// Test if the message msg contains the command cmd.

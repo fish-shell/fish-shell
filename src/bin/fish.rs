@@ -39,7 +39,7 @@ use fish::{
     parse_tree::ParsedSource,
     parse_util::detect_parse_errors_in_ast,
     parser::{BlockType, CancelBehavior, Parser, ParserEnvSetMode},
-    path::path_get_config,
+    path::{ValidatedPath, path_get_config},
     prelude::*,
     printf,
     proc::{
@@ -178,10 +178,9 @@ fn read_init(parser: &mut Parser, paths: &ConfigPaths) {
     source_config_in_directory(parser, &osstr2wcstring(&paths.sysconf));
 
     // We need to get the configuration directory before we can source the user configuration file.
-    // If path_get_config returns false then we have no configuration directory and no custom config
-    // to load.
-    if let Some(config_dir) = path_get_config() {
-        source_config_in_directory(parser, &config_dir);
+    let ValidatedPath { path, ok } = path_get_config();
+    if ok {
+        source_config_in_directory(parser, path);
     }
 }
 

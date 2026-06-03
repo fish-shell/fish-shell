@@ -630,19 +630,19 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     vars.set_one(
         FISH_CONFIG_DIR,
         global_mode,
-        path_get_config().unwrap_or_default(),
+        path_get_config().path.to_owned(),
     );
 
     vars.set_one(
         FISH_USER_DATA_DIR,
         global_mode,
-        path_get_data().unwrap_or_default(),
+        path_get_data().path.to_owned(),
     );
 
     vars.set_one(
         FISH_CACHE_DIR,
         global_mode,
-        path_get_cache().unwrap_or_default(),
+        path_get_cache().path.to_owned(),
     );
     // Set up a default PATH
     setup_path(global_exported_mode);

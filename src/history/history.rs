@@ -32,7 +32,7 @@ use crate::{
     parse_constants::{ParseTreeFlags, StatementDecoration},
     parse_util::{detect_parse_errors, unescape_wildcards},
     parser::Parser,
-    path::{path_get_data, path_is_valid},
+    path::{ValidatedPath, path_get_data, path_is_valid},
     prelude::*,
     threads::{ThreadPool, assert_is_background_thread},
     wildcard::wildcard_match,
@@ -341,13 +341,15 @@ impl HistoryImpl {
 
         let mut path = if let Some(custom_dir) = &self.custom_directory {
             custom_dir.clone()
-        } else if let Some(data_path) = path_get_data() {
-            data_path
         } else {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::NotFound,
-                "Error obtaining data directory. This is a manually constructed error which does not indicate why this happened.",
-            ));
+            let ValidatedPath { path, ok } = path_get_data();
+            if !ok {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "Data directory was inaccessible at startup",
+                ));
+            }
+            path.to_owned()
         };
 
         path.push('/');

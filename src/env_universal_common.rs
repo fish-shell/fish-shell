@@ -2,7 +2,7 @@ use crate::common::valid_var_name;
 use crate::env::{EnvVar, EnvVarFlags, VarTable};
 use crate::flog::{flog, flogf};
 use crate::fs::{PotentialUpdate, lock_and_load, rewrite_via_temporary_file};
-use crate::path::path_get_config;
+use crate::path::{ValidatedPath, path_get_config};
 use crate::prelude::*;
 use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path_narrow, wrealpath};
 use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
@@ -618,11 +618,13 @@ impl EnvUniversal {
 
 /// Return the default variable path, or an empty string on failure.
 pub fn default_vars_path() -> WString {
-    if let Some(mut path) = path_get_config() {
-        path.push_str("/fish_variables");
-        return path;
+    let ValidatedPath { path, ok } = path_get_config();
+    if !ok {
+        return WString::new();
     }
-    WString::new()
+    let mut path = path.to_owned();
+    path.push_str("/fish_variables");
+    path
 }
 
 /// Error message.

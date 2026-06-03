@@ -17,18 +17,23 @@ use std::io::ErrorKind;
 use std::os::unix::prelude::*;
 use std::sync::LazyLock;
 
+pub struct ValidatedPath<'a> {
+    pub path: &'a wstr,
+    pub ok: bool,
+}
+
 /// Returns the user configuration directory for fish. If the directory or one of its parents
 /// doesn't exist, they are first created.
-pub fn path_get_config() -> Option<WString> {
-    CONFIG_DIRECTORY.path()
+pub fn path_get_config() -> ValidatedPath<'static> {
+    CONFIG_DIRECTORY.validated_path()
 }
 
 /// Returns the user data directory for fish. If the directory or one of its parents doesn't exist,
 /// they are first created.
 ///
 /// Volatile files presumed to be local to the machine, such as the fish_history will be stored in this directory.
-pub fn path_get_data() -> Option<WString> {
-    DATA_DIRECTORY.path()
+pub fn path_get_data() -> ValidatedPath<'static> {
+    DATA_DIRECTORY.validated_path()
 }
 
 /// Returns the user cache directory for fish. If the directory or one of its parents doesn't exist,
@@ -36,8 +41,8 @@ pub fn path_get_data() -> Option<WString> {
 ///
 /// Volatile files presumed to be local to the machine such as all the
 /// generated_completions, will be stored in this directory.
-pub fn path_get_cache() -> Option<WString> {
-    CACHE_DIRECTORY.path()
+pub fn path_get_cache() -> ValidatedPath<'static> {
+    CACHE_DIRECTORY.validated_path()
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -556,8 +561,11 @@ struct BaseDirectory {
 }
 
 impl BaseDirectory {
-    fn path(&self) -> Option<WString> {
-        self.err.is_none().then(|| self.path.clone())
+    fn validated_path(&self) -> ValidatedPath<'_> {
+        ValidatedPath {
+            path: &self.path,
+            ok: self.err.is_none(),
+        }
     }
 }
 

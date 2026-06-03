@@ -1103,10 +1103,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             )
             .result
         };
-        if result == ExpandResultCode::cancel {
+        if result == ExpandResultCode::Cancel {
             return;
         }
-        if result == ExpandResultCode::ok && self.flags.descriptions {
+        if result == ExpandResultCode::Ok && self.flags.descriptions {
             self.complete_cmd_desc(&str_cmd);
         }
 
@@ -1628,7 +1628,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             if matches!(
                 expand_to_receiver(s.to_owned(), &mut self.completions, flags, self.ctx, None)
                     .result,
-                ExpandResultCode::error | ExpandResultCode::overflow,
+                ExpandResultCode::Error | ExpandResultCode::Overflow,
             ) {
                 flogf!(complete, "Error while expanding string '%s'", s);
             }
@@ -1650,7 +1650,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 None,
             )
             .result,
-            ExpandResultCode::error | ExpandResultCode::overflow
+            ExpandResultCode::Error | ExpandResultCode::Overflow
         ) {
             flogf!(complete, "Error while expanding string '%s'", sep_string);
         }
@@ -1904,7 +1904,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             );
             // If expansion succeeds, set the value; if it fails (e.g. it has a cmdsub) set an empty
             // value anyways.
-            let vals = if expand_ret.result == ExpandResultCode::ok {
+            let vals = if expand_ret.result == ExpandResultCode::Ok {
                 expression_expanded
                     .into_iter()
                     .map(|c| c.completion)

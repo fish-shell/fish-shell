@@ -301,7 +301,7 @@ fn topic_to_bit(t: Topic) -> TopicBitmask {
 
 // Some stuff that needs to be protected by the same lock.
 #[derive(Default)]
-struct data_t {
+struct Data {
     /// The current values.
     current: GenerationsList,
 
@@ -317,7 +317,7 @@ type StatusBits = u8;
 
 #[derive(Default)]
 pub struct TopicMonitor {
-    data_: Mutex<data_t>,
+    data_: Mutex<Data>,
 
     /// Condition variable for broadcasting notifications.
     /// This is associated with data_'s mutex.
@@ -402,7 +402,7 @@ impl TopicMonitor {
     /// Apply any pending updates to the data.
     /// This accepts data because it must be locked.
     /// Return the updated generation list.
-    fn updated_gens_in_data(&self, data: &mut MutexGuard<data_t>) -> GenerationsList {
+    fn updated_gens_in_data(&self, data: &mut MutexGuard<Data>) -> GenerationsList {
         // Atomically acquire the pending updates, swapping in 0.
         // If there are no pending updates (likely) or a thread is waiting, just return.
         // Otherwise CAS in 0 and update our topics.

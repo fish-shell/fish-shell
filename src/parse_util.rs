@@ -1660,7 +1660,7 @@ fn detect_errors_in_decorated_statement(
                 true, /* skip wildcards */
             )
             .result,
-            ExpandResultCode::error | ExpandResultCode::overflow
+            ExpandResultCode::Error | ExpandResultCode::Overflow
         ) {
             errored = true;
         }

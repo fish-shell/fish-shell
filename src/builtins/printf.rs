@@ -76,7 +76,7 @@ fn iswxdigit(c: char) -> bool {
     c.is_ascii_hexdigit()
 }
 
-struct builtin_printf_state_t<'a, 'b> {
+struct State<'a, 'b> {
     // Out and err streams. Note this is a captured reference!
     streams: &'a mut IoStreams<'b>,
 
@@ -179,10 +179,7 @@ impl RawStringToScalarType for f64 {
 
 /// Convert a string to a scalar type.
 /// Use state.verify_numeric to report any errors.
-fn string_to_scalar_type<T: RawStringToScalarType>(
-    s: &wstr,
-    state: &mut builtin_printf_state_t,
-) -> T {
+fn string_to_scalar_type<T: RawStringToScalarType>(s: &wstr, state: &mut State) -> T {
     if s.char_at(0) == '"' || s.char_at(0) == '\'' {
         // Note that if the string is really just a leading quote,
         // we really do want to convert the "trailing nul".
@@ -202,7 +199,7 @@ fn modify_allowed_format_specifiers(ok: &mut [bool; 256], str: &str, flag: bool)
     }
 }
 
-impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
+impl<'a, 'b> State<'a, 'b> {
     #[allow(clippy::partialeq_to_none)]
     fn verify_numeric(&mut self, s: &wstr, end: &wstr, errcode: Option<wutil::Error>) {
         // This check matches the historic `errcode != EINVAL` check from C++.
@@ -757,7 +754,7 @@ pub fn printf(_parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr])
         return Err(STATUS_INVALID_ARGS);
     }
 
-    let mut state = builtin_printf_state_t {
+    let mut state = State {
         streams,
         exit_code: Ok(SUCCESS),
         early_exit: false,

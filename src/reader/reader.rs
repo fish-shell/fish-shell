@@ -6441,28 +6441,25 @@ fn reader_shell_test(parser: &Parser, bstr: &wstr) -> Result<(), ParseIssue> {
 }
 
 impl<'a> Reader<'a> {
-    // Import history from older location (config path) if our current history is empty.
+    // Import history from other shells
     fn import_history_if_necessary(&mut self) {
-        if self.history.is_empty() {
-            self.history.populate_from_config_path();
-        }
-
         // Import history from bash, etc. if our current history is still empty and is the default
         // history.
-        if self.history.is_empty() && self.history.is_default() {
-            // Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete
-            // (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash
-            // itself. But this is better than nothing.
-            let var = self.vars().get(L!("HISTFILE"));
-            let mut path =
-                var.map_or_else(|| L!("~/.bash_history").to_owned(), |var| var.as_string());
-            expand_tilde(&mut path, self.vars());
-
-            let Ok(file) = wopen_cloexec(&path, OFlag::O_RDONLY, Mode::empty()) else {
-                return;
-            };
-            self.history.populate_from_bash(BufReader::new(file));
+        if !self.history.is_empty() || !self.history.is_default() {
+            return;
         }
+
+        // Try opening a bash file. We make an effort to respect $HISTFILE; this isn't very complete
+        // (AFAIK it doesn't have to be exported), and to really get this right we ought to ask bash
+        // itself. But this is better than nothing.
+        let var = self.vars().get(L!("HISTFILE"));
+        let mut path = var.map_or_else(|| L!("~/.bash_history").to_owned(), |var| var.as_string());
+        expand_tilde(&mut path, self.vars());
+
+        let Ok(file) = wopen_cloexec(&path, OFlag::O_RDONLY, Mode::empty()) else {
+            return;
+        };
+        self.history.populate_from_bash(BufReader::new(file));
     }
 
     fn should_add_to_history(&mut self, text: &wstr) -> bool {

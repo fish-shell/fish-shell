@@ -19,11 +19,10 @@ use crate::{
     common::valid_var_name,
     env::{EnvMode, EnvSetMode, EnvStack, EnvVar, Environment},
     expand::{ExpandFlags, expand_one},
-    fds::wopen_cloexec,
     flog::{flog, flogf},
     fs::{
-        LOCKED_FILE_MODE, LockedFile, LockingMode, PotentialUpdate, WriteMethod, fsync,
-        lock_and_load, rewrite_via_temporary_file,
+        LockedFile, LockingMode, PotentialUpdate, WriteMethod, fsync, lock_and_load,
+        rewrite_via_temporary_file,
     },
     highlight::highlight_and_colorize,
     history::file::{HistoryFile, RawHistoryFile},
@@ -33,7 +32,7 @@ use crate::{
     parse_constants::{ParseTreeFlags, StatementDecoration},
     parse_util::{detect_parse_errors, unescape_wildcards},
     parser::Parser,
-    path::{path_get_config, path_get_data, path_is_valid},
+    path::{path_get_data, path_is_valid},
     prelude::*,
     threads::{ThreadPool, assert_is_background_thread},
     wildcard::wildcard_match,
@@ -44,14 +43,13 @@ use fish_common::{UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{subsequence_in_string, trim};
 use fish_widestring::{ANY_STRING, bytes2wcstring, cstr2wcstring, subslice_position};
 use lru::LruCache;
-use nix::{fcntl::OFlag, sys::stat::Mode};
 use rand::RngExt as _;
 use std::{
     borrow::Cow,
     collections::{BTreeMap, HashMap, HashSet},
     ffi::{CStr, CString},
     fs::File,
-    io::{BufRead, BufWriter, Read as _, Write as _},
+    io::{BufRead, BufWriter, Write as _},
     mem::MaybeUninit,
     num::NonZeroUsize,
     ops::ControlFlow,
@@ -864,56 +862,6 @@ impl HistoryImpl {
         self.first_unwritten_new_item_index = 0;
     }
 
-    /// Populates from older location (in config path, rather than data path).
-    /// This is accomplished by clearing ourselves, and copying the contents of the old history
-    /// file to the new history file.
-    /// The new contents will automatically be re-mapped later.
-    fn populate_from_config_path(&mut self) {
-        let Ok(Some(new_file)) = self.history_file_path() else {
-            return;
-        };
-
-        let Some(mut old_file) = path_get_config() else {
-            return;
-        };
-
-        old_file.push('/');
-        old_file.push_utfstr(&self.name);
-        old_file.push_str("_history");
-
-        let Ok(mut src_file) = wopen_cloexec(&old_file, OFlag::O_RDONLY, Mode::empty()) else {
-            return;
-        };
-
-        // Clear must come after we've retrieved the new_file name, and before we open
-        // destination file descriptor, since it destroys the name and the file.
-        self.clear();
-
-        let mut dst_file = match wopen_cloexec(
-            &new_file,
-            OFlag::O_WRONLY | OFlag::O_CREAT,
-            LOCKED_FILE_MODE,
-        ) {
-            Ok(file) => file,
-            Err(err) => {
-                flog!(history_file, "Error when writing history file:", err);
-                return;
-            }
-        };
-
-        let mut buf = [0; libc::BUFSIZ as usize];
-        while let Ok(n) = src_file.read(&mut buf) {
-            if n == 0 {
-                break;
-            }
-
-            if let Err(err) = dst_file.write_all(&buf[..n]) {
-                flog!(history_file, "Error when writing history file:", err);
-                break;
-            }
-        }
-    }
-
     /// Import a bash command history file. Bash's history format is very simple: just lines with
     /// `#`s for comments. Ignore a few commands that are bash-specific. It makes no attempt to
     /// handle multiline commands. We can't actually parse bash syntax and the bash history file
@@ -1479,11 +1427,6 @@ impl History {
     /// Irreversibly clears history for the current session.
     pub fn clear_session(&self) {
         self.imp().clear_session();
-    }
-
-    /// Populates from older location (in config path, rather than data path).
-    pub fn populate_from_config_path(&self) {
-        self.imp().populate_from_config_path();
     }
 
     /// Populates from a bash history file.

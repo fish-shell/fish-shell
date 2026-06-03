@@ -261,27 +261,36 @@ pub struct ElectricVar {
     flags: electric::ElectricVarFlags,
 }
 
+impl ElectricVar {
+    const fn new(name: &'static wstr, flags: electric::ElectricVarFlags) -> Self {
+        Self { name, flags }
+    }
+}
+
 pub const FISH_TERMINAL_COLOR_THEME_VAR: &wstr = L!("fish_terminal_color_theme");
 
 // Keep sorted alphabetically
-#[rustfmt::skip]
-pub const ELECTRIC_VARIABLES: &[ElectricVar] = &[
-    ElectricVar{name: L!("FISH_VERSION"), flags: electric::READONLY},
-    ElectricVar{name: L!("PWD"), flags: electric::READONLY | electric::COMPUTED | electric::EXPORTS},
-    ElectricVar{name: L!("SHLVL"), flags: electric::READONLY | electric::EXPORTS},
-    ElectricVar{name: L!("_"), flags: electric::READONLY},
-    ElectricVar{name: L!("fish_kill_signal"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("fish_killring"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("fish_pid"), flags:electric::READONLY},
-    ElectricVar{name: FISH_TERMINAL_COLOR_THEME_VAR, flags:electric::READONLY},
-    ElectricVar{name: L!("history"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("hostname"), flags:electric::READONLY},
-    ElectricVar{name: L!("pipestatus"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("status"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("status_generation"), flags:electric::READONLY | electric::COMPUTED},
-    ElectricVar{name: L!("umask"), flags:electric::COMPUTED},
-    ElectricVar{name: L!("version"), flags:electric::READONLY},
-];
+pub const ELECTRIC_VARIABLES: &[ElectricVar] = {
+    use electric::{COMPUTED, EXPORTS, READONLY};
+    let v = ElectricVar::new;
+    &[
+        v(L!("FISH_VERSION"), READONLY),
+        v(L!("PWD"), READONLY | COMPUTED | EXPORTS),
+        v(L!("SHLVL"), READONLY | EXPORTS),
+        v(L!("_"), READONLY),
+        v(L!("fish_kill_signal"), READONLY | COMPUTED),
+        v(L!("fish_killring"), READONLY | COMPUTED),
+        v(L!("fish_pid"), READONLY),
+        v(FISH_TERMINAL_COLOR_THEME_VAR, READONLY),
+        v(L!("history"), READONLY | COMPUTED),
+        v(L!("hostname"), READONLY),
+        v(L!("pipestatus"), READONLY | COMPUTED),
+        v(L!("status"), READONLY | COMPUTED),
+        v(L!("status_generation"), READONLY | COMPUTED),
+        v(L!("umask"), COMPUTED),
+        v(L!("version"), READONLY),
+    ]
+};
 assert_sorted_by_name!(ELECTRIC_VARIABLES);
 
 impl ElectricVar {

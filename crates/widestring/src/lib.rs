@@ -608,6 +608,12 @@ pub trait ToWString {
     fn to_wstring(&self) -> WString;
 }
 
+impl ToWString for std::path::Path {
+    fn to_wstring(&self) -> WString {
+        bytes2wcstring(self.as_os_str().as_encoded_bytes())
+    }
+}
+
 #[inline]
 fn to_wstring_impl(mut val: u64, neg: bool) -> WString {
     // 20 digits max in u64: 18446744073709551616.

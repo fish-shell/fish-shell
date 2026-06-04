@@ -366,17 +366,14 @@ impl EnvScopedImpl {
             // Big hack. We only allow getting the history on the main thread. Note that history_t
             // may ask for an environment variable, so don't take the lock here (we don't need it).
             if !is_main_thread() {
-                return None;
+                return Some(EnvVar::new_from_name_vec(key, vec![]));
             }
             let history = commandline_get_state(true).history.unwrap_or_else(|| {
                 let fish_history_var = self.getf(L!("fish_history"), EnvMode::default());
                 let history_id = history_id_from_var(fish_history_var);
                 History::new(history_id)
             });
-            Some(EnvVar::new_from_name_vec(
-                L!("history"),
-                history.get_history(),
-            ))
+            Some(EnvVar::new_from_name_vec(key, history.get_history()))
         } else if key == "fish_killring" {
             Some(EnvVar::new_from_name_vec(
                 L!("fish_killring"),

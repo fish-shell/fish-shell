@@ -11,7 +11,7 @@ function __fish_migrate
 
     # Create empty configuration directories if they do not already exist
     test -e $__fish_config_dir/completions/ -a -e $__fish_config_dir/conf.d/ -a -e $__fish_config_dir/functions/ ||
-        mkdir -p $__fish_config_dir/{completions, conf.d, functions}
+        mkdir -m 700 -p $__fish_config_dir/{completions, conf.d, functions}
 
     # Create config.fish with some boilerplate if it does not exist
     test -e $__fish_config_dir/config.fish || echo "\

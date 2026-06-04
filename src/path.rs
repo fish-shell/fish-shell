@@ -608,17 +608,11 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
         used_xdg = false;
     }
 
-    let mut remoteness = DirRemoteness::Unknown;
-    let err = if path.is_empty() {
-        Some(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            "Path is empty",
-        ))
-    } else if let Err(io_error) = create_dir_all_with_mode(wcs2osstring(&path), 0o700) {
-        Some(io_error)
+    let err = create_dir_all_with_mode(wcs2osstring(&path), 0o700).err();
+    let remoteness = if err.is_some() {
+        DirRemoteness::Unknown
     } else {
-        remoteness = path_remoteness(&path);
-        None
+        path_remoteness(&path)
     };
 
     BaseDirectory {

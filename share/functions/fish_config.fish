@@ -40,7 +40,7 @@ function fish_config --description "Launch fish's web based configuration"
     if test $cmd = browse
         if set -l python (__fish_anypython)
             function __fish_config_webconfig -V python -a web_config
-                set -lx __fish_bin_dir $__fish_bin_dir
+                set -lx fish_bin_dir $__fish_bin_dir
                 set -lx __fish_terminal_color_theme $fish_terminal_color_theme
                 $python $web_config/webconfig.py
             end

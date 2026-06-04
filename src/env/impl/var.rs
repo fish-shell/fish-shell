@@ -81,7 +81,11 @@ pub(super) mod electric_values {
         ElectricVar, Getter,
     };
     use crate::{
-        env::{EnvMode, EnvVar, EnvVarFlags, FISH_TERMINAL_COLOR_THEME_VAR},
+        env::{
+            EnvMode, EnvVar, EnvVarFlags, FISH_BIN_DIR, FISH_CACHE_DIR, FISH_CONFIG_DIR,
+            FISH_DATADIR_VAR, FISH_HELPDIR_VAR, FISH_MANDIR_VAR, FISH_SYSCONFDIR_VAR,
+            FISH_TERMINAL_COLOR_THEME_VAR, FISH_USER_DATA_DIR,
+        },
         history::{History, history_id_from_var},
         kill::kill_entries,
         reader::{commandline_get_state, reader_status_count},
@@ -107,6 +111,14 @@ pub(super) mod electric_values {
         exported_var(L!("PWD"), Computed(GET_PWD)),
         exported_var(L!("SHLVL"), Regular),
         var(L!("_"), Regular),
+        var(FISH_BIN_DIR, Regular),
+        var(FISH_CACHE_DIR, Regular),
+        var(FISH_CONFIG_DIR, Regular),
+        var(FISH_DATADIR_VAR, Regular),
+        var(FISH_HELPDIR_VAR, Regular),
+        var(FISH_MANDIR_VAR, Regular),
+        var(FISH_SYSCONFDIR_VAR, Regular),
+        var(FISH_USER_DATA_DIR, Regular),
         var(L!("fish_kill_signal"), Computed(GET_FISH_KILL_SIGNAL)),
         var(L!("fish_killring"), Computed(GET_FISH_KILLRING)),
         var(L!("fish_pid"), Regular),

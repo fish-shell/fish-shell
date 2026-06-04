@@ -455,14 +455,14 @@ impl Environment for EnvStack {
 }
 
 /// Some configuration path environment variables.
-const FISH_DATADIR_VAR: &wstr = L!("__fish_data_dir");
-const FISH_SYSCONFDIR_VAR: &wstr = L!("__fish_sysconf_dir");
-const FISH_HELPDIR_VAR: &wstr = L!("__fish_help_dir");
-const FISH_MANDIR_VAR: &wstr = L!("__fish_man_dir");
-const FISH_BIN_DIR: &wstr = L!("__fish_bin_dir");
-const FISH_CONFIG_DIR: &wstr = L!("__fish_config_dir");
-const FISH_USER_DATA_DIR: &wstr = L!("__fish_user_data_dir");
-const FISH_CACHE_DIR: &wstr = L!("__fish_cache_dir");
+pub(super) const FISH_DATADIR_VAR: &wstr = L!("__fish_data_dir");
+pub(super) const FISH_SYSCONFDIR_VAR: &wstr = L!("__fish_sysconf_dir");
+pub(super) const FISH_HELPDIR_VAR: &wstr = L!("__fish_help_dir");
+pub(super) const FISH_MANDIR_VAR: &wstr = L!("__fish_man_dir");
+pub(super) const FISH_BIN_DIR: &wstr = L!("__fish_bin_dir");
+pub(super) const FISH_CONFIG_DIR: &wstr = L!("__fish_config_dir");
+pub(super) const FISH_USER_DATA_DIR: &wstr = L!("__fish_user_data_dir");
+pub(super) const FISH_CACHE_DIR: &wstr = L!("__fish_cache_dir");
 
 /// Set up the USER and HOME variable.
 fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {

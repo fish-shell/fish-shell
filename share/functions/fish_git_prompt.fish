@@ -213,17 +213,17 @@ function fish_git_prompt --description "Prompt function for Git"
     set -q repo_info[6]
     and set -l sha $repo_info[6]
 
-    set -l rbc (__fish_git_prompt_operation_branch_bare $repo_info)
-    set -l r $rbc[1] # current operation
-    set -l b $rbc[2] # current branch
-    set -l detached $rbc[3]
-    set -l dirtystate #dirty working directory
-    set -l stagedstate #staged changes
-    set -l invalidstate #staged changes
-    set -l stashstate #stashes
-    set -l untrackedfiles #untracked
-    set -l c $rbc[4] # bare repository
-    set -l p #upstream
+    set -l branch_state (__fish_git_prompt_operation_branch_bare $repo_info)
+    set -l operation $branch_state[1]
+    set -l branch $branch_state[2]
+    set -l detached $branch_state[3]
+    set -l dirtystate
+    set -l stagedstate
+    set -l invalidstate
+    set -l stashstate
+    set -l untrackedfiles
+    set -l bare_prefix $branch_state[4]
+    set -l upstream
     set -l informative_status
 
     set -q __fish_git_prompt_status_order
@@ -329,7 +329,7 @@ function fish_git_prompt --description "Prompt function for Git"
         # (showupstream has a variety of options, not just bool)
         if set -q __fish_git_prompt_showupstream
             or contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-            set p (__fish_git_prompt_show_upstream)
+            set upstream (__fish_git_prompt_show_upstream)
         end
     end
 
@@ -348,7 +348,7 @@ function fish_git_prompt --description "Prompt function for Git"
         end
     end
 
-    set -l f ""
+    set -l flags ""
     for i in $__fish_git_prompt_status_order
         if test -n "$$i"
             set -l color_var ___fish_git_prompt_color_$i
@@ -363,49 +363,49 @@ function fish_git_prompt --description "Prompt function for Git"
             # This won't be done if we actually do the full informative status
             # because that does the printing.
             contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-            and set f "$f$color$symbol$$i$color_done"
-            or set f "$f$color$symbol$color_done"
+            and set flags "$flags$color$symbol$$i$color_done"
+            or set flags "$flags$color$symbol$color_done"
         end
     end
 
-    set b (string replace refs/heads/ '' -- $b)
+    set branch (string replace refs/heads/ '' -- $branch)
     # Strip control characters before display.
-    set b (string replace -ra '[[:cntrl:]]' '' -- $b)
-    set r (string replace -ra '[[:cntrl:]]' '' -- $r)
+    set branch (string replace -ra '[[:cntrl:]]' '' -- $branch)
+    set operation (string replace -ra '[[:cntrl:]]' '' -- $operation)
     if string match -qr '^\d+$' "$__fish_git_prompt_shorten_branch_len"
         set -q __fish_git_prompt_shorten_branch_char_suffix
         and set -l char -c "$__fish_git_prompt_shorten_branch_char_suffix"
-        set b (string shorten -m "$__fish_git_prompt_shorten_branch_len" $char -- "$b")
+        set branch (string shorten -m "$__fish_git_prompt_shorten_branch_len" $char -- "$branch")
     end
-    if test -n "$b"
-        set b "$branch_color$b$branch_done"
+    if test -n "$branch"
+        set branch "$branch_color$branch$branch_done"
         if test -z "$dirtystate$untrackedfiles$stagedstate"; and test -n "$___fish_git_prompt_char_cleanstate"
             and not contains -- "$__fish_git_prompt_show_informative_status" yes true 1
-            set b "$b$___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done"
+            set branch "$branch$___fish_git_prompt_color_cleanstate$___fish_git_prompt_char_cleanstate$___fish_git_prompt_color_cleanstate_done"
         end
     end
-    if test -n "$c"
-        set c "$___fish_git_prompt_color_bare$c$___fish_git_prompt_color_bare_done"
+    if test -n "$bare_prefix"
+        set bare_prefix "$___fish_git_prompt_color_bare$bare_prefix$___fish_git_prompt_color_bare_done"
     end
-    if test -n "$r"
-        set r "$___fish_git_prompt_color_merging$r$___fish_git_prompt_color_merging_done"
+    if test -n "$operation"
+        set operation "$___fish_git_prompt_color_merging$operation$___fish_git_prompt_color_merging_done"
     end
-    if test -n "$p"
-        set p "$___fish_git_prompt_color_upstream$p$___fish_git_prompt_color_upstream_done"
+    if test -n "$upstream"
+        set upstream "$___fish_git_prompt_color_upstream$upstream$___fish_git_prompt_color_upstream_done"
     end
 
     # Formatting
     # If we have state, a bare repo or upstream difference, add a separator.
     # merging is already separate.
-    if test -n "$f$c$p"
-        set f "$space$f"
+    if test -n "$flags$bare_prefix$upstream"
+        set flags "$space$flags"
     end
     set -l format $argv[1]
     if test -z "$format"
         set format " (%s)"
     end
 
-    printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$c$b$f$r$p$informative_status$___fish_git_prompt_color_suffix" "$___fish_git_prompt_color_suffix_done"
+    printf "%s$format%s" "$___fish_git_prompt_color_prefix" "$___fish_git_prompt_color_prefix_done$bare_prefix$branch$flags$operation$upstream$informative_status$___fish_git_prompt_color_suffix" "$___fish_git_prompt_color_suffix_done"
 end
 
 ### helper functions

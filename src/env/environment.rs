@@ -625,23 +625,14 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         set_path(FISH_HELPDIR_VAR, paths.doc.as_ref());
     }
 
-    vars.set_one(
-        FISH_CONFIG_DIR,
-        global_mode,
-        path_get_config().path.to_owned(),
-    );
+    for (varname, validated_path) in [
+        (FISH_CACHE_DIR, path_get_cache()),
+        (FISH_CONFIG_DIR, path_get_config()),
+        (FISH_USER_DATA_DIR, path_get_data()),
+    ] {
+        vars.set_one(varname, global_mode, validated_path.path.to_owned());
+    }
 
-    vars.set_one(
-        FISH_USER_DATA_DIR,
-        global_mode,
-        path_get_data().path.to_owned(),
-    );
-
-    vars.set_one(
-        FISH_CACHE_DIR,
-        global_mode,
-        path_get_cache().path.to_owned(),
-    );
     // Set up a default PATH
     setup_path(global_exported_mode);
 

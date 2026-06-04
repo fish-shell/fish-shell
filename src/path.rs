@@ -622,10 +622,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
     } else if let Err(io_error) = create_dir_all_with_mode(wcs2osstring(&path), 0o700) {
         Some(io_error)
     } else {
-        // Need to append a trailing slash to check the contents of the directory, not its parent.
-        let mut tmp = path.clone();
-        tmp.push('/');
-        remoteness = path_remoteness(&tmp);
+        remoteness = path_remoteness(&path);
         None
     };
 

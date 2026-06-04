@@ -2,7 +2,8 @@
 from pexpect_helper import SpawnedProc
 
 sp = SpawnedProc()
-sendline, sleep, expect_prompt, expect_str = (
+send, sendline, sleep, expect_prompt, expect_str = (
+    sp.send,
     sp.sendline,
     sp.sleep,
     sp.expect_prompt,
@@ -25,4 +26,14 @@ expect_prompt()
 
 sendline("echo it worked")
 expect_str("it worked")
+expect_prompt()
+
+sendline("function interrupt_test; sleep 1; echo hello; end")
+expect_prompt()
+sendline("while true; interrupt_test; end")
+sleep(0.30)
+send("\x03")  # ctrl-c
+expect_prompt()
+sendline("echo loop interrupted")
+expect_str("loop interrupted")
 expect_prompt()

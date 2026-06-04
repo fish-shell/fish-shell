@@ -144,7 +144,7 @@ end
 __fish_reconstruct_path
 
 if status is-interactive
-    __fish_migrate
+    __fish_theme_migrate
 end
 if status is-interactive || set -qgx __fish_force_load_default_theme
     fish_config theme choose default --no-override

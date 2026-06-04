@@ -15,6 +15,7 @@ use nix::unistd::AccessFlags;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
 use std::os::unix::prelude::*;
+use std::path::PathBuf;
 use std::sync::LazyLock;
 
 pub struct ValidatedPath<'a> {
@@ -547,6 +548,8 @@ pub fn path_apply_working_directory(path: &wstr, working_directory: &wstr) -> WS
 struct BaseDirectory {
     /// the path where we attempted to create the directory.
     path: WString,
+    /// whether we actually created the directory if it didn't exist
+    created: bool,
     /// whether the dir is remote
     remoteness: DirRemoteness,
     /// the error code if creating the directory failed, or 0 on success.
@@ -585,6 +588,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
 
         return BaseDirectory {
             path: osstr2wcstring(build_dir),
+            created: false,
             remoteness: DirRemoteness::Unknown,
             used_xdg: false,
             err,
@@ -608,8 +612,27 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
         used_xdg = false;
     }
 
-    let err = create_dir_all_with_mode(wcs2osstring(&path), 0o700).err();
-    let remoteness = if err.is_some() {
+    enum Success {
+        AlreadyExists,
+        CreatedDir,
+    }
+    let result = {
+        let path = PathBuf::from(wcs2osstring(&path));
+        use std::io::ErrorKind::{AlreadyExists, NotFound};
+        let mut recursive = false;
+        loop {
+            break match create_dir(&path, 0o700, recursive) {
+                Ok(()) => Ok(Success::CreatedDir),
+                Err(e) if e.kind() == AlreadyExists && path.is_dir() => Ok(Success::AlreadyExists),
+                Err(e) if e.kind() == NotFound => {
+                    recursive = true;
+                    continue;
+                }
+                Err(e) => Err(e),
+            };
+        }
+    };
+    let remoteness = if result.is_err() {
         DirRemoteness::Unknown
     } else {
         path_remoteness(&path)
@@ -617,17 +640,22 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
 
     BaseDirectory {
         path,
+        created: matches!(result, Ok(Success::CreatedDir)),
         remoteness,
-        err,
+        err: result.err(),
         used_xdg,
     }
 }
 
 // Like std::fs::create_dir_all, but new directories are created using the given mode (e.g. 0o700).
-fn create_dir_all_with_mode<P: AsRef<std::path::Path>>(path: P, mode: u32) -> std::io::Result<()> {
+fn create_dir<P: AsRef<std::path::Path>>(
+    path: P,
+    mode: u32,
+    recursive: bool,
+) -> std::io::Result<()> {
     use std::os::unix::fs::DirBuilderExt as _;
     std::fs::DirBuilder::new()
-        .recursive(true)
+        .recursive(recursive)
         .mode(mode)
         .create(path.as_ref())
 }
@@ -717,8 +745,28 @@ static DATA_DIRECTORY: LazyLock<BaseDirectory> =
 static CACHE_DIRECTORY: LazyLock<BaseDirectory> =
     LazyLock::new(|| make_base_directory(L!("XDG_CACHE_HOME"), L!("/.cache/fish")));
 
-static CONFIG_DIRECTORY: LazyLock<BaseDirectory> =
-    LazyLock::new(|| make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish")));
+static CONFIG_DIRECTORY: LazyLock<BaseDirectory> = LazyLock::new(|| {
+    let config_dir = make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish"));
+    if config_dir.created {
+        let mut path = PathBuf::from(wcs2osstring(&config_dir.path));
+        for basename in ["completions", "conf.d", "functions"] {
+            path.push(basename);
+            let _ = create_dir(&path, 0o700, false);
+            path.pop();
+        }
+        path.push("config.fish");
+        let _ = std::fs::write(
+            path,
+            br#"
+if status is-interactive
+    # Commands to run in interactive sessions can go here
+end
+"#
+            .trim_ascii_start(),
+        );
+    }
+    config_dir
+});
 
 /// Appends a path component, with a / if necessary.
 pub fn append_path_component(path: &mut WString, component: &wstr) {

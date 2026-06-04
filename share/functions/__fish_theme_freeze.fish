@@ -11,7 +11,7 @@ function __fish_theme_freeze
 
     mkdir -p -- (path dirname -- $__fish_config_dir/conf.d)
     printf >$__fish_config_dir/$relative_path %s\n \
-        $(test $data_source = __fish_migrate &&
+        $(test $data_source = __fish_theme_migrate &&
             echo "\
 # This file was created by fish when upgrading to version 4.3, to migrate
 # theme variables from universal to global scope.") \
@@ -22,7 +22,7 @@ function __fish_theme_freeze
 # or
 #     man fish-interactive | less +/^SYNTAX.HIGHLIGHTING
 # for appropriate commands to add to ~/.config/fish/config.fish instead." \
-        $(test $data_source = __fish_migrate &&
+        $(test $data_source = __fish_theme_migrate &&
             echo '# See also the release notes for fish 4.3.0 (run `help relnotes`).') \
         "" \
         'set --global '$theme_data

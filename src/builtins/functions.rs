@@ -14,7 +14,7 @@ use fish_common::{EscapeFlags, EscapeStringStyle, escape_string};
 use fish_widestring::bytes2wcstring;
 
 #[derive(Default)]
-struct FunctionsCmdOpts<'args> {
+struct Options<'args> {
     print_help: bool,
     erase: bool,
     list: bool,
@@ -53,7 +53,7 @@ const LONG_OPTIONS: &[WOption] = &[
 /// Parses options to builtin function, populating opts.
 /// Returns an exit status.
 fn parse_cmd_opts<'args>(
-    opts: &mut FunctionsCmdOpts<'args>,
+    opts: &mut Options<'args>,
     optind: &mut usize,
     argv: &mut [&'args wstr],
     parser: &mut Parser,
@@ -133,7 +133,7 @@ pub fn functions(
         "Function '%s' does not exist"
     }
 
-    let mut opts = FunctionsCmdOpts::default();
+    let mut opts = Options::default();
     let mut optind = 0;
 
     parse_cmd_opts(&mut opts, &mut optind, args, parser, streams)?;

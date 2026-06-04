@@ -96,14 +96,14 @@ enum TestFeatureRetVal {
     NotRecognized,
 }
 
-struct StatusCmdOpts {
+struct Options {
     level: i32,
     new_job_control_mode: Option<JobControl>,
     status_cmd: Option<StatusCmd>,
     print_help: bool,
 }
 
-impl StatusCmdOpts {
+impl Options {
     // Set the status command to the given command.
     // Returns true on success, false if there's already a status command, in which case an error is printed.
     fn try_set_status_cmd(&mut self, subcmd: StatusCmd, streams: &mut IoStreams) -> bool {
@@ -123,7 +123,7 @@ impl StatusCmdOpts {
     }
 }
 
-impl Default for StatusCmdOpts {
+impl Default for Options {
     fn default() -> Self {
         Self {
             level: 1,
@@ -204,7 +204,7 @@ fn print_features(streams: &mut IoStreams) {
 }
 
 fn parse_cmd_opts(
-    opts: &mut StatusCmdOpts,
+    opts: &mut Options,
     optind: &mut usize,
     args: &mut [&wstr],
     parser: &Parser,
@@ -344,7 +344,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
     let cmd = args[0];
     let argc = args.len();
 
-    let mut opts = StatusCmdOpts::default();
+    let mut opts = Options::default();
     let mut optind = 0usize;
     parse_cmd_opts(&mut opts, &mut optind, args, parser, streams)?;
 

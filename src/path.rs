@@ -61,11 +61,6 @@ pub fn path_get_data_remoteness() -> DirRemoteness {
     DATA_DIRECTORY.remoteness
 }
 
-/// Like path_get_data_remoteness but for the config directory.
-pub fn path_get_config_remoteness() -> DirRemoteness {
-    CONFIG_DIRECTORY.remoteness
-}
-
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
 pub fn path_emit_config_directory_messages(vars: &EnvStack) {

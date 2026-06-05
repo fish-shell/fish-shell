@@ -30,13 +30,13 @@ Options
 The following options are available:
 
 **-f** or **--no-functions**
-    Stops checking functions
+    Skips checking functions
 
 **-c** or **--no-completions**
-    Stops checking completions
+    Skips checking completions
 
 **-C** or **--no-config**
-    Stops checking configuration files like config.fish or snippets in the conf.d directories.
+    Skips checking configuration files like config.fish or snippets in the conf.d directories.
 
 **-d** or **--no-diff**
     Removes the diff display (this happens automatically if ``diff`` can't be found)

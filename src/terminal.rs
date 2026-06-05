@@ -1,5 +1,5 @@
 // Generic output functions.
-use crate::prelude::*;
+use crate::{flog, prelude::*, should_flog};
 use crate::{
     screen::{is_dumb, only_grayscale},
     text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle},
@@ -282,6 +282,9 @@ impl Outputter {
         fn write(out: &mut Outputter, sequence: &'static [u8]) -> bool {
             out.write_bytes(sequence);
             true
+        }
+        if should_flog!(reader) {
+            flog!(reader, format!("Writing terminal command {:?}", cmd));
         }
         match cmd {
             ClearScreen => write(self, b"\x1b[H\x1b[2J"),

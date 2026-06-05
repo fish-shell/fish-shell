@@ -82,7 +82,6 @@ use crate::{
     },
     reader::word_motion::bigword_class,
     screen::{CharOffset, Screen, is_dumb, screen_force_clear_to_end},
-    should_flog,
     signal::{
         signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
         signal_set_handlers_once,
@@ -2991,13 +2990,6 @@ impl<'a> Reader<'a> {
     }
 }
 
-fn send_xtgettcap_query(out: &mut Outputter, cap: &'static str) {
-    if should_flog!(reader) {
-        flog!(reader, format!("Sending XTGETTCAP request for {}:", cap));
-    }
-    out.write_command(QueryXtgettcap(cap));
-}
-
 fn query_capabilities_via_dcs(out: &mut Outputter, vars: &dyn Environment) {
     // TODO(term-workaround)
     if vars.get_unless_empty(L!("STY")).is_some()
@@ -3009,8 +3001,8 @@ fn query_capabilities_via_dcs(out: &mut Outputter, vars: &dyn Environment) {
         return;
     }
     out.write_command(DecsetAlternateScreenBuffer); // enable alternative screen buffer
-    send_xtgettcap_query(out, SCROLL_CONTENT_UP_TERMINFO_CODE);
-    send_xtgettcap_query(out, XTGETTCAP_QUERY_OS_NAME);
+    out.write_command(QueryXtgettcap(SCROLL_CONTENT_UP_TERMINFO_CODE));
+    out.write_command(QueryXtgettcap(XTGETTCAP_QUERY_OS_NAME));
     out.write_command(DecrstAlternateScreenBuffer); // disable alternative screen buffer
 }
 

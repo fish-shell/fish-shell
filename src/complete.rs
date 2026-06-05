@@ -2,7 +2,7 @@ use crate::{
     abbrs::{Position, with_abbrs},
     ast::unescape_keyword,
     autoload::{Autoload, AutoloadResult},
-    builtins::shared::{builtin_exists, builtin_get_desc, builtin_get_names},
+    builtins::{builtin_exists, builtin_get_desc, builtin_get_names},
     common::valid_var_name_char,
     env::{EnvMode, EnvStack, Environment},
     exec::exec_subshell,

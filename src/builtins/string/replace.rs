@@ -279,7 +279,7 @@ impl<'args, 'opts> StringReplacer<'args, 'opts> {
 
 #[cfg(test)]
 mod tests {
-    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
     use crate::tests::prelude::*;
     use crate::validate;
 

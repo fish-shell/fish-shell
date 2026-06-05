@@ -25,7 +25,7 @@ use super::{
 use crate::{
     abbrs::{self, abbrs_match},
     ast::{self, Kind, is_same_node},
-    builtins::shared::{ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_OK},
+    builtins::{ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_OK},
     common::{get_program_name, shell_modes},
     complete::{
         CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete,
@@ -53,7 +53,7 @@ use crate::{
         History, HistoryId, HistorySearch, MemoryHistoryId, PersistenceMode, SearchDirection,
         SearchFlags, SearchType, history_id, in_private_mode,
     },
-    input_common::{
+    input::{
         BackgroundColorQuery, CharEvent, CharInputStyle, CursorPositionQuery,
         CursorPositionQueryReason, ImplicitEvent, InputData, InputEventQueue,
         InputEventQueuer as _, LONG_READ_TIMEOUT, QueryResponse, QueryResultEvent, ReadlineCmd,
@@ -333,6 +333,8 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
     // We blocked execution of code and mappings so input function args must be empty.
     assert!(input_data.input_function_args.is_empty());
     assert!(input_data.event_storage.is_empty());
+    // N.B We might drop bracketed paste data here but that's unlikely since we didn't ask for
+    // it yet.
     flogf!(
         reader,
         "Returning %u pending input events",

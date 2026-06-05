@@ -1,5 +1,6 @@
-pub mod debounce;
+mod debounce;
 #[allow(clippy::module_inception)]
-pub mod threads;
+mod threads;
 
+pub use debounce::Debounce;
 pub use threads::*;

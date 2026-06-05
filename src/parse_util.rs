@@ -4,7 +4,7 @@ use crate::{
         self, Ast, Keyword as _, Kind, Leaf as _, Node, NodeVisitor, Token as _, Traversal,
         is_same_node,
     },
-    builtins::shared::builtin_exists,
+    builtins::builtin_exists,
     common::{valid_var_name, valid_var_name_char},
     expand::{ExpandFlags, ExpandResultCode, expand_one, expand_to_command_and_args},
     operation_context::OperationContext,

@@ -16,7 +16,7 @@ macro_rules! err_fmt {
         $(, $args:expr)* // list of expressions
         $(,)?   // optional trailing comma
     ) => {
-        $crate::builtins::error::Error::new(
+        $crate::builtins::Error::new(
             $crate::wgettext_fmt!($string, $($args),*).into()
         )
     };
@@ -29,7 +29,7 @@ macro_rules! err_str {
         $string:expr // format string (literal or LocalizableString)
         $(,)?   // optional trailing comma
     ) => {
-        $crate::builtins::error::Error::new(std::borrow::Cow::Borrowed($crate::wgettext!($string)))
+        $crate::builtins::Error::new(std::borrow::Cow::Borrowed($crate::wgettext!($string)))
     };
 }
 pub use err_str;
@@ -41,7 +41,7 @@ macro_rules! err_raw {
     (
         $string:expr // owned WString
     ) => {
-        $crate::builtins::error::Error::new($string.into())
+        $crate::builtins::Error::new($string.into())
     };
 }
 pub use err_raw;

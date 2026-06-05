@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::{
-    builtins::error::Error, err_fmt, err_raw, err_str, fds::wopen_cloexec, nix::isatty,
-    parser::Block, reader::reader_read,
+    builtins::Error, err_fmt, err_raw, err_str, fds::wopen_cloexec, nix::isatty, parser::Block,
+    reader::reader_read,
 };
 use fish_common::{FilenameRef, escape};
 use nix::{fcntl::OFlag, sys::stat::Mode};

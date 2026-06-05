@@ -84,9 +84,3 @@ pub fn file_id_for_path_narrow(path: &CStr) -> FileId {
         .as_ref()
         .map_or(INVALID_FILE_ID, FileId::from_md)
 }
-
-pub fn file_id_for_path_or_error(path: &wstr) -> std::io::Result<FileId> {
-    let path = wcs2zstring(path);
-    let path = OsStr::from_bytes(path.to_bytes());
-    fs::metadata(path).map(|md| FileId::from_md(&md))
-}

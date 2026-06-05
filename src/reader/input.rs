@@ -2,8 +2,7 @@
 use super::{Reader, reader_reading_interrupted, reader_schedule_prompt_repaint};
 use crate::{
     event,
-    input::input_get_bind_mode,
-    input_common::{CharEvent, InputData, InputEventQueuer, ReadlineCmd},
+    input::{CharEvent, InputData, InputEventQueuer, ReadlineCmd, input_get_bind_mode},
     proc::job_reap,
     signal::signal_clear_cancel,
 };

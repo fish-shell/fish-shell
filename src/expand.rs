@@ -4,7 +4,7 @@
 //! string buffers and reference counting.
 
 use crate::{
-    builtins::shared::{
+    builtins::{
         STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD,
         STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH,
         STATUS_UNMATCHED_WILDCARD,
@@ -20,7 +20,7 @@ use crate::{
     path::path_apply_working_directory,
     prelude::*,
     wildcard::{WildcardResult, wildcard_expand_string, wildcard_has_internal},
-    wutil::{Options, normalize_path, wcstoi_partial},
+    wutil::{normalize_path, wcstoi, wcstoi_partial},
 };
 use bitflags::bitflags;
 use fish_common::{
@@ -425,7 +425,7 @@ fn parse_slice(
             1 // first index
         } else {
             let mut consumed = 0;
-            match wcstoi_partial(&input[pos..], Options::default(), &mut consumed) {
+            match wcstoi_partial(&input[pos..], wcstoi::Options::default(), &mut consumed) {
                 Ok(tmp) => {
                     if tmp == 0 {
                         // Explicitly refuse $foo[0] as valid syntax, regardless of whether or
@@ -470,7 +470,7 @@ fn parse_slice(
                 -1 // last index
             } else {
                 let mut consumed = 0;
-                match wcstoi_partial(&input[pos..], Options::default(), &mut consumed) {
+                match wcstoi_partial(&input[pos..], wcstoi::Options::default(), &mut consumed) {
                     Ok(tmp) => {
                         if tmp == 0 {
                             return Err((pos, ParseSliceError::ZeroIndex));

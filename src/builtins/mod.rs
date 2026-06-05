@@ -1,4 +1,4 @@
-pub mod shared;
+mod shared;
 
 pub mod abbr;
 pub mod argparse;

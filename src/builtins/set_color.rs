@@ -2,7 +2,7 @@
 
 use super::prelude::*;
 use crate::{
-    builtins::error::Error,
+    builtins::Error,
     err_fmt,
     screen::{is_dumb, only_grayscale},
     terminal::Outputter,

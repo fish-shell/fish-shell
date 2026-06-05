@@ -4,7 +4,7 @@ use libc::{RLIM_INFINITY, c_uint, rlim_t};
 use nix::errno::Errno;
 use nix::sys::resource::Resource as ResourceEnum;
 
-use crate::{builtins::error::Error, err_fmt, err_raw, err_str, wutil::perror_nix};
+use crate::{builtins::Error, err_fmt, err_raw, err_str, wutil::perror_nix};
 use fish_fallback::{fish_wcswidth, wcscasecmp};
 
 use super::prelude::*;
@@ -17,7 +17,7 @@ pub mod limits {
     /// Constants that exist everywhere (except perhaps Cygwin).
     /// Note these are uints on Linux but ints everywhere else - we use -1 as a sentinel
     /// so cast to int.
-    pub mod common {
+    mod common {
         use cfg_if::cfg_if;
         use libc;
         pub const CORE: libc::c_int = libc::RLIMIT_CORE as _;

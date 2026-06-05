@@ -4,7 +4,7 @@ use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
 use crate::env::{EnvMode, EnvStack, Environment as _, setenv_lock, unsetenv_lock};
 use crate::flog::flog;
 use crate::function;
-use crate::input_common::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
+use crate::input::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
 use crate::locale::{invalidate_numeric_locale, set_libc_locales};
 use crate::prelude::*;
 use crate::reader::{

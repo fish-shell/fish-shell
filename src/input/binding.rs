@@ -1,11 +1,8 @@
+use super::input::{CharEvent, CharInputStyle, ImplicitEvent, InputEventQueuer, KeyEvent};
 use crate::{
     env::Environment,
-    flog::flog,
+    flog::{FloggableDebug, flog},
     global_safety::RelaxedAtomicBool,
-    input_common::{
-        CharEvent, CharInputStyle, ImplicitEvent, InputEventQueuer, KeyMatchQuality,
-        R_END_INPUT_FUNCTIONS, ReadlineCmd, match_key_event_to_key,
-    },
     key::{self, Key, Modifiers, canonicalize_raw_escapes, ctrl},
     prelude::*,
     reader::{Reader, reader_reset_interrupted},
@@ -20,14 +17,66 @@ use std::{
     },
 };
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum KeyMatchQuality {
+    BaseLayoutModuloShift,
+    BaseLayout,
+    ModuloShift,
+    Exact,
+}
+
+impl FloggableDebug for KeyMatchQuality {}
+
+pub(crate) fn match_key_event_to_key(event: &KeyEvent, key: &Key) -> Option<KeyMatchQuality> {
+    if &event.key == key {
+        return Some(KeyMatchQuality::Exact);
+    }
+
+    let shifted_evt = apply_shift(event.key, false, event.shifted_codepoint);
+    let shifted_key = apply_shift(*key, true, '\0');
+    if shifted_evt.is_some() && shifted_evt == shifted_key {
+        return Some(KeyMatchQuality::ModuloShift);
+    }
+
+    if event.base_layout_codepoint != '\0' {
+        let mut base_layout_key = event.key;
+        base_layout_key.codepoint = event.base_layout_codepoint;
+        if base_layout_key == *key {
+            return Some(KeyMatchQuality::BaseLayout);
+        }
+        let shifted_base_layout_key = apply_shift(base_layout_key, true, '\0');
+        if shifted_base_layout_key.is_some() && shifted_base_layout_key == shifted_key {
+            return Some(KeyMatchQuality::BaseLayoutModuloShift);
+        }
+    }
+
+    None
+}
+
+fn apply_shift(mut key: Key, do_ascii: bool, shifted_codepoint: char) -> Option<Key> {
+    if !key.modifiers.shift {
+        return Some(key);
+    }
+    if shifted_codepoint != '\0' {
+        key.codepoint = shifted_codepoint;
+    } else if do_ascii && key.codepoint.is_ascii_lowercase() {
+        // For backwards compatibility, we convert the "bind shift-a" notation to "bind A".
+        // This enables us to match "A" events which are the legacy encoding for keys that
+        // generate text -- until we request kitty's "Report all keys as escape codes".
+        // We do not currently convert non-ASCII key notation such as "bind shift-ä".
+        key.codepoint = key.codepoint.to_ascii_uppercase();
+    } else {
+        return None;
+    }
+    key.modifiers.shift = false;
+    Some(key)
+}
+
 pub const FISH_BIND_MODE_VAR: &wstr = L!("fish_bind_mode");
 pub const DEFAULT_BIND_MODE: &wstr = L!("default");
 
-/// A name for our own key mapping for nul.
-pub const NUL_MAPPING_NAME: &wstr = L!("nul");
-
 #[derive(Debug, Clone)]
-pub struct InputMappingName {
+pub struct BindingName {
     pub seq: Vec<Key>,
     pub mode: WString,
 }
@@ -38,12 +87,12 @@ pub enum KeyNameStyle {
     RawEscapeSequence,
 }
 
-/// Struct representing a keybinding. Returned by input_get_mappings.
+/// Struct representing a keybinding.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct InputMapping {
-    /// Character sequence which generates this event.
+pub struct Binding {
+    /// Character sequence which triggers this binding.
     seq: Vec<Key>,
-    /// Commands that should be evaluated by this mapping.
+    /// Commands that should be evaluated by this binding.
     pub commands: Vec<WString>,
     /// We wish to preserve the user-specified order. This is just an incrementing value.
     specification_order: u32,
@@ -57,8 +106,8 @@ pub struct InputMapping {
     pub definition_file: Option<FilenameRef>,
 }
 
-impl InputMapping {
-    /// Create a new mapping.
+impl Binding {
+    /// Create a new binding.
     fn new(
         seq: Vec<Key>,
         commands: Vec<WString>,
@@ -66,14 +115,14 @@ impl InputMapping {
         sets_mode: Option<WString>,
         key_name_style: KeyNameStyle,
         definition_file: Option<FilenameRef>,
-    ) -> InputMapping {
+    ) -> Binding {
         static LAST_INPUT_MAP_SPEC_ORDER: AtomicU32 = AtomicU32::new(0);
         let specification_order = 1 + LAST_INPUT_MAP_SPEC_ORDER.fetch_add(1, Ordering::Relaxed);
         assert!(
             sets_mode.is_none() || !mode.is_empty(),
             "sets_mode set but mode is empty"
         );
-        InputMapping {
+        Binding {
             seq,
             commands,
             specification_order,
@@ -84,7 +133,7 @@ impl InputMapping {
         }
     }
 
-    /// Return true if this is a generic mapping, i.e. acts as a fallback.
+    /// Return true if this is a generic binding, i.e. acts as a fallback.
     fn is_generic(&self) -> bool {
         self.seq.is_empty()
     }
@@ -103,162 +152,168 @@ impl Named for InputFunctionMetadata {
     }
 }
 
-/// Helper to create a new InputFunctionMetadata struct.
-const fn make_md(name: &'static wstr, code: ReadlineCmd) -> InputFunctionMetadata {
-    InputFunctionMetadata { name, code }
+macro_rules! define_readline_cmds {
+    {
+        $( ( $name:literal, $readline_cmd:ident ), )*
+    } => {
+        #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+        #[repr(u8)]
+        pub enum ReadlineCmd {
+            $( $readline_cmd , )*
+        }
+
+        /// Helper to create a new InputFunctionMetadata struct.
+        const fn make_md(name: &'static wstr, code: ReadlineCmd) -> InputFunctionMetadata {
+            InputFunctionMetadata { name, code }
+        }
+
+        /// A static mapping of all readline commands as strings to their ReadlineCmd equivalent.
+        const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = {
+            use ReadlineCmd::*;
+            &[
+                $(
+                    make_md(L!($name), $readline_cmd),
+                )*
+            ]
+        };
+        assert_sorted_by_name!(INPUT_FUNCTION_METADATA);
+    }
 }
 
-/// A static mapping of all readline commands as strings to their ReadlineCmd equivalent.
-/// Keep this list sorted alphabetically!
-#[rustfmt::skip]
-const INPUT_FUNCTION_METADATA: &[InputFunctionMetadata] = &[
-    make_md(L!("accept-autosuggestion"), ReadlineCmd::AcceptAutosuggestion),
-    make_md(L!("and"), ReadlineCmd::FuncAnd),
-    make_md(L!("backward-bigword"), ReadlineCmd::BackwardBigword),
-    make_md(L!("backward-bigword-end"), ReadlineCmd::BackwardBigwordEnd),
-    make_md(L!("backward-char"), ReadlineCmd::BackwardChar),
-    make_md(L!("backward-char-passive"), ReadlineCmd::BackwardCharPassive),
-    make_md(L!("backward-delete-char"), ReadlineCmd::BackwardDeleteChar),
-    make_md(L!("backward-jump"), ReadlineCmd::BackwardJump),
-    make_md(L!("backward-jump-till"), ReadlineCmd::BackwardJumpTill),
-    make_md(L!("backward-kill-bigword"), ReadlineCmd::BackwardKillBigword),
-    make_md(L!("backward-kill-line"), ReadlineCmd::BackwardKillLine),
-    make_md(L!("backward-kill-path-component"), ReadlineCmd::BackwardKillPathComponent),
-    make_md(L!("backward-kill-token"), ReadlineCmd::BackwardKillToken),
-    make_md(L!("backward-kill-word"), ReadlineCmd::BackwardKillWord),
-    make_md(L!("backward-path-component"), ReadlineCmd::BackwardPathComponent),
-    make_md(L!("backward-token"), ReadlineCmd::BackwardToken),
-    make_md(L!("backward-word"), ReadlineCmd::BackwardWord),
-    make_md(L!("backward-word-end"), ReadlineCmd::BackwardWordEnd),
-    make_md(L!("begin-selection"), ReadlineCmd::BeginSelection),
-    make_md(L!("begin-undo-group"), ReadlineCmd::BeginUndoGroup),
-    make_md(L!("beginning-of-buffer"), ReadlineCmd::BeginningOfBuffer),
-    make_md(L!("beginning-of-history"), ReadlineCmd::BeginningOfHistory),
-    make_md(L!("beginning-of-line"), ReadlineCmd::BeginningOfLine),
-    make_md(L!("cancel"), ReadlineCmd::Cancel),
-    make_md(L!("cancel-commandline"), ReadlineCmd::CancelCommandline),
-    make_md(L!("capitalize-word"), ReadlineCmd::CapitalizeWord),
-    make_md(L!("clear-commandline"), ReadlineCmd::ClearCommandline),
-    make_md(L!("clear-screen"), ReadlineCmd::ClearScreenAndRepaint),
-    make_md(L!("complete"), ReadlineCmd::Complete),
-    make_md(L!("complete-and-search"), ReadlineCmd::CompleteAndSearch),
-    make_md(L!("delete-char"), ReadlineCmd::DeleteChar),
-    make_md(L!("delete-or-exit"), ReadlineCmd::DeleteOrExit),
-    make_md(L!("down-line"), ReadlineCmd::DownLine),
-    make_md(L!("downcase-selection"), ReadlineCmd::DowncaseSelection),
-    make_md(L!("downcase-word"), ReadlineCmd::DowncaseWord),
-    make_md(L!("end-of-buffer"), ReadlineCmd::EndOfBuffer),
-    make_md(L!("end-of-history"), ReadlineCmd::EndOfHistory),
-    make_md(L!("end-of-line"), ReadlineCmd::EndOfLine),
-    make_md(L!("end-selection"), ReadlineCmd::EndSelection),
-    make_md(L!("end-undo-group"), ReadlineCmd::EndUndoGroup),
-    make_md(L!("execute"), ReadlineCmd::Execute),
-    make_md(L!("exit"), ReadlineCmd::Exit),
-    make_md(L!("expand-abbr"), ReadlineCmd::ExpandAbbr),
-    make_md(L!("force-repaint"), ReadlineCmd::ForceRepaint),
-    make_md(L!("forward-bigword"), ReadlineCmd::ForwardBigwordEmacs),
-    make_md(L!("forward-bigword-end"), ReadlineCmd::ForwardBigwordEnd),
-    make_md(L!("forward-bigword-vi"), ReadlineCmd::ForwardBigwordVi),
-    make_md(L!("forward-char"), ReadlineCmd::ForwardChar),
-    make_md(L!("forward-char-passive"), ReadlineCmd::ForwardCharPassive),
-    make_md(L!("forward-jump"), ReadlineCmd::ForwardJump),
-    make_md(L!("forward-jump-till"), ReadlineCmd::ForwardJumpTill),
-    make_md(L!("forward-path-component"), ReadlineCmd::ForwardPathComponent),
-    make_md(L!("forward-single-char"), ReadlineCmd::ForwardSingleChar),
-    make_md(L!("forward-token"), ReadlineCmd::ForwardToken),
-    make_md(L!("forward-word"), ReadlineCmd::ForwardWordEmacs),
-    make_md(L!("forward-word-end"), ReadlineCmd::ForwardWordEnd),
-    make_md(L!("forward-word-vi"), ReadlineCmd::ForwardWordVi),
-    make_md(L!("get-key"), ReadlineCmd::GetKey),
-    make_md(L!("history-delete"), ReadlineCmd::HistoryDelete),
-    make_md(L!("history-last-token-search-backward"), ReadlineCmd::HistoryLastTokenSearchBackward),
-    make_md(L!("history-last-token-search-forward"), ReadlineCmd::HistoryLastTokenSearchForward),
-    make_md(L!("history-pager"), ReadlineCmd::HistoryPager),
-    #[allow(deprecated)]
-    make_md(L!("history-pager-delete"), ReadlineCmd::HistoryPagerDelete),
-    make_md(L!("history-prefix-search-backward"), ReadlineCmd::HistoryPrefixSearchBackward),
-    make_md(L!("history-prefix-search-forward"), ReadlineCmd::HistoryPrefixSearchForward),
-    make_md(L!("history-search-backward"), ReadlineCmd::HistorySearchBackward),
-    make_md(L!("history-search-forward"), ReadlineCmd::HistorySearchForward),
-    make_md(L!("history-token-search-backward"), ReadlineCmd::HistoryTokenSearchBackward),
-    make_md(L!("history-token-search-forward"), ReadlineCmd::HistoryTokenSearchForward),
-    make_md(L!("insert-line-over"), ReadlineCmd::InsertLineOver),
-    make_md(L!("insert-line-under"), ReadlineCmd::InsertLineUnder),
-    make_md(L!("jump-till-matching-bracket"), ReadlineCmd::JumpTillMatchingBracket),
-    make_md(L!("jump-to-matching-bracket"), ReadlineCmd::JumpToMatchingBracket),
-    make_md(L!("kill-a-bigword"), ReadlineCmd::KillABigWord),
-    make_md(L!("kill-a-word"), ReadlineCmd::KillAWord),
-    make_md(L!("kill-bigword"), ReadlineCmd::KillBigwordEmacs),
-    make_md(L!("kill-bigword-vi"), ReadlineCmd::KillBigwordVi),
-    make_md(L!("kill-inner-bigword"), ReadlineCmd::KillInnerBigWord),
-    make_md(L!("kill-inner-line"), ReadlineCmd::KillInnerLine),
-    make_md(L!("kill-inner-word"), ReadlineCmd::KillInnerWord),
-    make_md(L!("kill-line"), ReadlineCmd::KillLine),
-    make_md(L!("kill-path-component"), ReadlineCmd::KillPathComponent),
-    make_md(L!("kill-selection"), ReadlineCmd::KillSelection),
-    make_md(L!("kill-token"), ReadlineCmd::KillToken),
-    make_md(L!("kill-whole-line"), ReadlineCmd::KillWholeLine),
-    make_md(L!("kill-word"), ReadlineCmd::KillWordEmacs),
-    make_md(L!("kill-word-vi"), ReadlineCmd::KillWordVi),
-    make_md(L!("nextd-or-forward-word"), ReadlineCmd::NextdOrForwardWordEmacs),
-    make_md(L!("or"), ReadlineCmd::FuncOr),
-    make_md(L!("pager-toggle-search"), ReadlineCmd::PagerToggleSearch),
-    make_md(L!("prevd-or-backward-word"), ReadlineCmd::PrevdOrBackwardWord),
-    make_md(L!("redo"), ReadlineCmd::Redo),
-    make_md(L!("repaint"), ReadlineCmd::Repaint),
-    make_md(L!("repaint-mode"), ReadlineCmd::RepaintMode),
-    make_md(L!("repeat-jump"), ReadlineCmd::RepeatJump),
-    make_md(L!("repeat-jump-reverse"), ReadlineCmd::ReverseRepeatJump),
-    make_md(L!("scrollback-push"), ReadlineCmd::ScrollbackPush),
-    make_md(L!("self-insert"), ReadlineCmd::SelfInsert),
-    make_md(L!("self-insert-notfirst"), ReadlineCmd::SelfInsertNotFirst),
-    make_md(L!("suppress-autosuggestion"), ReadlineCmd::SuppressAutosuggestion),
-    make_md(L!("swap-selection-start-stop"), ReadlineCmd::SwapSelectionStartStop),
-    make_md(L!("togglecase-char"), ReadlineCmd::TogglecaseChar),
-    make_md(L!("togglecase-selection"), ReadlineCmd::TogglecaseSelection),
-    make_md(L!("transpose-chars"), ReadlineCmd::TransposeChars),
-    make_md(L!("transpose-words"), ReadlineCmd::TransposeWords),
-    make_md(L!("undo"), ReadlineCmd::Undo),
-    make_md(L!("up-line"), ReadlineCmd::UpLine),
-    make_md(L!("upcase-selection"), ReadlineCmd::UpcaseSelection),
-    make_md(L!("upcase-word"), ReadlineCmd::UpcaseWord),
-    make_md(L!("yank"), ReadlineCmd::Yank),
-    make_md(L!("yank-pop"), ReadlineCmd::YankPop),
-];
-assert_sorted_by_name!(INPUT_FUNCTION_METADATA);
-
-const fn _assert_sizes_match() {
-    let input_function_count = R_END_INPUT_FUNCTIONS;
-    assert!(
-        INPUT_FUNCTION_METADATA.len() == input_function_count,
-        concat!(
-            "input_function_metadata size mismatch with input_common. ",
-            "Did you forget to update INPUT_FUNCTION_METADATA?"
-        )
-    );
+define_readline_cmds! {
+    ("accept-autosuggestion", AcceptAutosuggestion),
+    ("and", FuncAnd),
+    ("backward-bigword", BackwardBigword),
+    ("backward-bigword-end", BackwardBigwordEnd),
+    ("backward-char", BackwardChar),
+    ("backward-char-passive", BackwardCharPassive),
+    ("backward-delete-char", BackwardDeleteChar),
+    ("backward-jump", BackwardJump),
+    ("backward-jump-till", BackwardJumpTill),
+    ("backward-kill-bigword", BackwardKillBigword),
+    ("backward-kill-line", BackwardKillLine),
+    ("backward-kill-path-component", BackwardKillPathComponent),
+    ("backward-kill-token", BackwardKillToken),
+    ("backward-kill-word", BackwardKillWord),
+    ("backward-path-component", BackwardPathComponent),
+    ("backward-token", BackwardToken),
+    ("backward-word", BackwardWord),
+    ("backward-word-end", BackwardWordEnd),
+    ("begin-selection", BeginSelection),
+    ("begin-undo-group", BeginUndoGroup),
+    ("beginning-of-buffer", BeginningOfBuffer),
+    ("beginning-of-history", BeginningOfHistory),
+    ("beginning-of-line", BeginningOfLine),
+    ("cancel", Cancel),
+    ("cancel-commandline", CancelCommandline),
+    ("capitalize-word", CapitalizeWord),
+    ("clear-commandline", ClearCommandline),
+    ("clear-screen", ClearScreenAndRepaint),
+    ("complete", Complete),
+    ("complete-and-search", CompleteAndSearch),
+    ("delete-char", DeleteChar),
+    ("delete-or-exit", DeleteOrExit),
+    ("down-line", DownLine),
+    ("downcase-selection", DowncaseSelection),
+    ("downcase-word", DowncaseWord),
+    ("end-of-buffer", EndOfBuffer),
+    ("end-of-history", EndOfHistory),
+    ("end-of-line", EndOfLine),
+    ("end-selection", EndSelection),
+    ("end-undo-group", EndUndoGroup),
+    ("execute", Execute),
+    ("exit", Exit),
+    ("expand-abbr", ExpandAbbr),
+    ("force-repaint", ForceRepaint),
+    ("forward-bigword", ForwardBigwordEmacs),
+    ("forward-bigword-end", ForwardBigwordEnd),
+    ("forward-bigword-vi", ForwardBigwordVi),
+    ("forward-char", ForwardChar),
+    ("forward-char-passive", ForwardCharPassive),
+    ("forward-jump", ForwardJump),
+    ("forward-jump-till", ForwardJumpTill),
+    ("forward-path-component", ForwardPathComponent),
+    ("forward-single-char", ForwardSingleChar),
+    ("forward-token", ForwardToken),
+    ("forward-word", ForwardWordEmacs),
+    ("forward-word-end", ForwardWordEnd),
+    ("forward-word-vi", ForwardWordVi),
+    ("get-key", GetKey),
+    ("history-delete", HistoryDelete),
+    ("history-last-token-search-backward", HistoryLastTokenSearchBackward),
+    ("history-last-token-search-forward", HistoryLastTokenSearchForward),
+    ("history-pager", HistoryPager),
+    ("history-pager-delete", HistoryPagerDelete),
+    ("history-prefix-search-backward", HistoryPrefixSearchBackward),
+    ("history-prefix-search-forward", HistoryPrefixSearchForward),
+    ("history-search-backward", HistorySearchBackward),
+    ("history-search-forward", HistorySearchForward),
+    ("history-token-search-backward", HistoryTokenSearchBackward),
+    ("history-token-search-forward", HistoryTokenSearchForward),
+    ("insert-line-over", InsertLineOver),
+    ("insert-line-under", InsertLineUnder),
+    ("jump-till-matching-bracket", JumpTillMatchingBracket),
+    ("jump-to-matching-bracket", JumpToMatchingBracket),
+    ("kill-a-bigword", KillABigWord),
+    ("kill-a-word", KillAWord),
+    ("kill-bigword", KillBigwordEmacs),
+    ("kill-bigword-vi", KillBigwordVi),
+    ("kill-inner-bigword", KillInnerBigWord),
+    ("kill-inner-line", KillInnerLine),
+    ("kill-inner-word", KillInnerWord),
+    ("kill-line", KillLine),
+    ("kill-path-component", KillPathComponent),
+    ("kill-selection", KillSelection),
+    ("kill-token", KillToken),
+    ("kill-whole-line", KillWholeLine),
+    ("kill-word", KillWordEmacs),
+    ("kill-word-vi", KillWordVi),
+    ("nextd-or-forward-word", NextdOrForwardWordEmacs),
+    ("or", FuncOr),
+    ("pager-toggle-search", PagerToggleSearch),
+    ("prevd-or-backward-word", PrevdOrBackwardWord),
+    ("redo", Redo),
+    ("repaint", Repaint),
+    ("repaint-mode", RepaintMode),
+    ("repeat-jump", RepeatJump),
+    ("repeat-jump-reverse", ReverseRepeatJump),
+    ("scrollback-push", ScrollbackPush),
+    ("self-insert", SelfInsert),
+    ("self-insert-notfirst", SelfInsertNotFirst),
+    ("suppress-autosuggestion", SuppressAutosuggestion),
+    ("swap-selection-start-stop", SwapSelectionStartStop),
+    ("togglecase-char", TogglecaseChar),
+    ("togglecase-selection", TogglecaseSelection),
+    ("transpose-chars", TransposeChars),
+    ("transpose-words", TransposeWords),
+    ("undo", Undo),
+    ("up-line", UpLine),
+    ("upcase-selection", UpcaseSelection),
+    ("upcase-word", UpcaseWord),
+    ("yank", Yank),
+    ("yank-pop", YankPop),
 }
-const _: () = _assert_sizes_match();
 
-/// The input mapping set is the set of mappings from character sequences to commands.
+/// The set of bindings from character sequences to commands.
 #[derive(Debug, Default)]
-pub struct InputMappingSet {
-    mapping_list: Vec<InputMapping>,
-    preset_mapping_list: Vec<InputMapping>,
+pub struct BindingSet {
+    bindings: Vec<Binding>,
+    preset_bindings: Vec<Binding>,
 }
 
-impl InputMappingSet {
+impl BindingSet {
     const fn new() -> Self {
         Self {
-            mapping_list: Vec::new(),
-            preset_mapping_list: Vec::new(),
+            bindings: Vec::new(),
+            preset_bindings: Vec::new(),
         }
     }
 }
 
-/// Access the singleton input mapping set.
-pub fn input_mappings() -> MutexGuard<'static, InputMappingSet> {
-    static INPUT_MAPPINGS: Mutex<InputMappingSet> = Mutex::new(InputMappingSet::new());
-    INPUT_MAPPINGS.lock().unwrap()
+/// Access the singleton binding set.
+pub fn bindings() -> MutexGuard<'static, BindingSet> {
+    static BINDINGS: Mutex<BindingSet> = Mutex::new(BindingSet::new());
+    BINDINGS.lock().unwrap()
 }
 
 /// Return the current bind mode.
@@ -281,18 +336,18 @@ fn input_function_arity(function: ReadlineCmd) -> usize {
     }
 }
 
-/// Inserts an input mapping at the correct position. We sort them in descending order by length, so
+/// Inserts a binding at the correct position. We sort them in descending order by length, so
 /// that we test longer sequences first.
-fn input_mapping_insert_sorted(ml: &mut Vec<InputMapping>, new_mapping: InputMapping) {
-    let new_mapping_len = new_mapping.seq.len();
+fn binding_insert_sorted(ml: &mut Vec<Binding>, new_binding: Binding) {
+    let binding_len = new_binding.seq.len();
     let pos = ml
-        .binary_search_by(|m| m.seq.len().cmp(&new_mapping_len).reverse())
+        .binary_search_by(|m| m.seq.len().cmp(&binding_len).reverse())
         .unwrap_or_else(|e| e);
-    ml.insert(pos, new_mapping);
+    ml.insert(pos, new_binding);
 }
 
-impl InputMappingSet {
-    /// Adds an input mapping.
+impl BindingSet {
+    /// Adds a binding.
     #[allow(clippy::too_many_arguments)]
     pub fn add(
         &mut self,
@@ -304,12 +359,12 @@ impl InputMappingSet {
         user: bool,
         definition_file: Option<FilenameRef>,
     ) {
-        // Update any existing mapping with this sequence.
+        // Update any existing binding with this sequence.
         // FIXME: this makes adding multiple bindings quadratic.
         let ml = if user {
-            &mut self.mapping_list
+            &mut self.bindings
         } else {
-            &mut self.preset_mapping_list
+            &mut self.preset_bindings
         };
         for m in ml.iter_mut() {
             if m.seq == sequence && m.mode == mode {
@@ -320,8 +375,8 @@ impl InputMappingSet {
             }
         }
 
-        // Add a new mapping, using the next order.
-        let new_mapping = InputMapping::new(
+        // Add a new binding, using the next order.
+        let new_binding = Binding::new(
             sequence,
             commands,
             mode,
@@ -329,12 +384,12 @@ impl InputMappingSet {
             key_name_style,
             definition_file,
         );
-        input_mapping_insert_sorted(ml, new_mapping);
+        binding_insert_sorted(ml, new_binding);
     }
 
     // Like add(), but takes a single command.
     #[allow(clippy::too_many_arguments)]
-    pub fn add1(
+    fn add1(
         &mut self,
         sequence: Vec<Key>,
         key_name_style: KeyNameStyle,
@@ -366,15 +421,15 @@ pub fn init_input() {
         return;
     }
 
-    let mut input_mapping = input_mappings();
+    let mut bindings = bindings();
 
     // If we have no keybindings, add a few simple defaults.
-    if input_mapping.preset_mapping_list.is_empty() {
+    if bindings.preset_bindings.is_empty() {
         // Helper for adding.
         let mut add = |key: Vec<Key>, cmd: &str| {
             let mode = DEFAULT_BIND_MODE.to_owned();
             let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
-            input_mapping.add1(
+            bindings.add1(
                 key,
                 KeyNameStyle::Plain,
                 cmd.into(),
@@ -408,7 +463,7 @@ pub fn init_input() {
         let mut add_raw = |escape_sequence: &str, cmd: &str| {
             let mode = DEFAULT_BIND_MODE.to_owned();
             let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
-            input_mapping.add1(
+            bindings.add1(
                 canonicalize_raw_escapes(escape_sequence.chars().map(Key::from_raw).collect()),
                 KeyNameStyle::RawEscapeSequence,
                 cmd.into(),
@@ -427,7 +482,7 @@ pub fn init_input() {
 
 /// A struct which allows accumulating input events, or returns them to the queue.
 /// This contains a list of events which have been dequeued, and a current index into that list.
-pub struct EventQueuePeeker<'q, Queuer: InputEventQueuer + ?Sized> {
+struct EventQueuePeeker<'q, Queuer: InputEventQueuer + ?Sized> {
     /// The list of events which have been dequeued.
     peeked: Vec<CharEvent>,
 
@@ -444,7 +499,7 @@ pub struct EventQueuePeeker<'q, Queuer: InputEventQueuer + ?Sized> {
 }
 
 impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
-    pub fn new(event_queue: &'q mut Queuer) -> Self {
+    fn new(event_queue: &'q mut Queuer) -> Self {
         EventQueuePeeker {
             peeked: Vec::new(),
             had_timeout: false,
@@ -595,7 +650,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
     }
 
     /// Reset our index back to 0.
-    pub fn restart(&mut self) {
+    fn restart(&mut self) {
         self.idx = 0;
         self.subidx = 0;
     }
@@ -611,16 +666,16 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             !seq.is_empty(),
             "Empty sequence passed to try_peek_sequence"
         );
-        let mut prev = Key::from_raw(key::INVALID);
+        let mut prev = None;
         for key in seq {
             // If we just read an escape, we need to add a timeout for the next char,
             // to distinguish between the actual escape key and an "alt"-modifier.
-            let escaped = *style != KeyNameStyle::Plain && prev == Key::from_raw(key::ESCAPE);
+            let escaped = *style != KeyNameStyle::Plain && prev == Some(Key::from_raw(key::ESCAPE));
             let Some(spec) = self.next_is_char(style, *key, escaped) else {
                 return false;
             };
             quality.push(spec);
-            prev = *key;
+            prev = Some(*key);
         }
         if self.subidx != 0 {
             flog!(
@@ -632,34 +687,34 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
         true
     }
 
-    /// Return the first mapping that matches from the given mapping set, walking first over the
-    /// user's mapping list, then the preset list.
+    /// Return the first binding that matches from the given binding set, walking first over the
+    /// user's binding list, then the preset list.
     /// Return none if nothing matches, or if we may have matched a longer sequence but it was
     /// interrupted by a readline event.
-    pub fn find_mapping<'a>(&mut self, ip: &'a InputMappingSet) -> Option<InputMapping> {
+    fn find_binding<'a>(&mut self, ip: &'a BindingSet) -> Option<Binding> {
         let bind_mode = self.event_queue.get_bind_mode();
 
-        struct MatchedMapping<'a> {
-            mapping: &'a InputMapping,
+        struct MatchedBinding<'a> {
+            binding: &'a Binding,
             quality: Vec<KeyMatchQuality>,
             idx: usize,
             subidx: usize,
         }
 
-        let mut deferred: Option<MatchedMapping<'a>> = None;
+        let mut deferred: Option<MatchedBinding<'a>> = None;
 
-        let ml = ip.mapping_list.iter().chain(ip.preset_mapping_list.iter());
+        let ml = ip.bindings.iter().chain(ip.preset_bindings.iter());
         let mut quality = vec![];
         for m in ml {
             if m.mode != bind_mode {
                 continue;
             }
 
-            // Defer generic mappings until the end.
+            // Defer generic bindings until the end.
             if m.is_generic() {
                 if deferred.is_none() {
-                    deferred = Some(MatchedMapping {
-                        mapping: m,
+                    deferred = Some(MatchedBinding {
+                        binding: m,
                         quality: vec![],
                         idx: self.idx,
                         subidx: self.subidx,
@@ -668,7 +723,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                 continue;
             }
 
-            // flog!(reader, "trying mapping", format!("{:?}", m));
+            // flog!(reader, "trying binding", format!("{:?}", m));
             if self.try_peek_sequence(&m.key_name_style, &m.seq, &mut quality) {
                 // // A binding for just escape should also be deferred
                 // // so escape sequences take precedence.
@@ -683,8 +738,8 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
                     .as_ref()
                     .is_none_or(|matched| !is_escape && quality >= matched.quality)
                 {
-                    deferred = Some(MatchedMapping {
-                        mapping: m,
+                    deferred = Some(MatchedBinding {
+                        binding: m,
                         quality: mem::take(&mut quality),
                         idx: self.idx,
                         subidx: self.subidx,
@@ -704,7 +759,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             .map(|matched| {
                 self.idx = matched.idx;
                 self.subidx = matched.subidx;
-                matched.mapping
+                matched.binding
             })
             .cloned()
     }
@@ -727,7 +782,7 @@ impl<'a> Reader<'a> {
         // Clear the interrupted flag.
         reader_reset_interrupted();
 
-        // Search for sequence in mapping tables.
+        // Search for sequence in binding tables.
         loop {
             let evt = self.readch();
             match evt {
@@ -801,7 +856,7 @@ impl<'a> Reader<'a> {
                         )
                     );
                     self.push_front(evt);
-                    self.mapping_execute_matching_or_generic();
+                    self.binding_execute_matching_or_generic();
                 }
                 CharEvent::Implicit(_) | CharEvent::QueryResult(_) => {
                     return evt;
@@ -810,20 +865,20 @@ impl<'a> Reader<'a> {
         }
     }
 
-    fn mapping_execute_matching_or_generic(&mut self) {
+    fn binding_execute_matching_or_generic(&mut self) {
         let mut peeker = EventQueuePeeker::new(self);
-        // Check for ordinary mappings.
-        let ip = input_mappings();
-        if let Some(mapping) = peeker.find_mapping(&ip) {
+        // Check for ordinary bindings.
+        let bindings = bindings();
+        if let Some(binding) = peeker.find_binding(&bindings) {
             flog!(
                 reader,
-                format!("Found mapping {:?} from {:?}", &mapping, &peeker.peeked)
+                format!("Found binding {:?} from {:?}", &binding, &peeker.peeked)
             );
             peeker.consume();
-            self.mapping_execute(&mapping);
+            self.binding_execute(&binding);
             return;
         }
-        std::mem::drop(ip);
+        std::mem::drop(bindings);
         peeker.restart();
 
         if peeker.char_sequence_interrupted() {
@@ -861,7 +916,7 @@ impl<'a> Reader<'a> {
     }
 
     /// Perform the action of the specified binding.
-    fn mapping_execute(&mut self, m: &InputMapping) {
+    fn binding_execute(&mut self, m: &Binding) {
         let has_command = m
             .commands
             .iter()
@@ -935,20 +990,20 @@ impl<'a> Reader<'a> {
     }
 }
 
-impl InputMappingSet {
-    /// Returns all mapping names and modes.
-    pub fn get_names(&self, user: bool) -> Vec<InputMappingName> {
-        // Sort the mappings by the user specification order, so we can return them in the same order
+impl BindingSet {
+    /// Returns all binding names and modes.
+    pub fn get_names(&self, user: bool) -> Vec<BindingName> {
+        // Sort the bindings by the user specification order, so we can return them in the same order
         // that the user specified them in.
         let mut local_list = if user {
-            self.mapping_list.clone()
+            self.bindings.clone()
         } else {
-            self.preset_mapping_list.clone()
+            self.preset_bindings.clone()
         };
         local_list.sort_unstable_by_key(|m| m.specification_order);
         local_list
             .into_iter()
-            .map(|m| InputMappingName {
+            .map(|m| BindingName {
                 seq: m.seq,
                 mode: m.mode,
             })
@@ -958,20 +1013,20 @@ impl InputMappingSet {
     /// Erase all bindings.
     pub fn clear(&mut self, mode: Option<&wstr>, user: bool) {
         let ml = if user {
-            &mut self.mapping_list
+            &mut self.bindings
         } else {
-            &mut self.preset_mapping_list
+            &mut self.preset_bindings
         };
-        let should_erase = |m: &InputMapping| mode.is_none_or(|x| x == m.mode);
+        let should_erase = |m: &Binding| mode.is_none_or(|x| x == m.mode);
         ml.retain(|m| !should_erase(m));
     }
 
     /// Erase binding for specified key sequence.
     pub fn erase(&mut self, sequence: &[Key], mode: &wstr, user: bool) -> bool {
         let ml = if user {
-            &mut self.mapping_list
+            &mut self.bindings
         } else {
-            &mut self.preset_mapping_list
+            &mut self.preset_bindings
         };
         let mut result = false;
         for (idx, m) in ml.iter().enumerate() {
@@ -992,23 +1047,23 @@ impl InputMappingSet {
         sequence: &[Key],
         bind_mode: Option<&wstr>,
         user: bool,
-    ) -> Vec<&'a InputMapping> {
+    ) -> Vec<&'a Binding> {
         let ml = if user {
-            &self.mapping_list
+            &self.bindings
         } else {
-            &self.preset_mapping_list
+            &self.preset_bindings
         };
 
-        let ml = ml.iter().filter(|mapping| mapping.seq == sequence);
-        let mut mappings: Vec<_>;
+        let ml = ml.iter().filter(|binding| binding.seq == sequence);
+        let mut bindings: Vec<_>;
         if let Some(mode) = bind_mode {
-            mappings = ml.filter(|mapping| mapping.mode == mode).collect();
-            assert!(mappings.len() <= 1);
+            bindings = ml.filter(|binding| binding.mode == mode).collect();
+            assert!(bindings.len() <= 1);
         } else {
-            mappings = ml.collect();
-            mappings.sort_unstable_by_key(|mapping| mapping.specification_order);
+            bindings = ml.collect();
+            bindings.sort_unstable_by_key(|binding| binding.specification_order);
         }
-        mappings
+        bindings
     }
 }
 
@@ -1029,30 +1084,137 @@ pub fn input_function_get_code(name: &wstr) -> Option<ReadlineCmd> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{EventQueuePeeker, InputMappingSet, KeyNameStyle};
-    use crate::input_common::{CharEvent, InputData, InputEventQueuer, KeyEvent};
-    use crate::key::Key;
-    use crate::prelude::*;
+pub(super) mod mock {
+    use crate::input::{InputData, InputEventQueuer};
 
-    struct TestInputEventQueuer {
-        input_data: InputData,
+    pub struct MockInputEventQueuer {
+        pub input_data: InputData,
+        pub pending_input: &'static [u8],
     }
 
-    impl InputEventQueuer for TestInputEventQueuer {
+    impl MockInputEventQueuer {
+        pub fn new() -> Self {
+            MockInputEventQueuer {
+                input_data: InputData::new(i32::MAX, None), // value doesn't matter since we don't read from it
+                pending_input: b"",
+            }
+        }
+    }
+
+    impl InputEventQueuer for MockInputEventQueuer {
         fn get_input_data(&self) -> &InputData {
             &self.input_data
         }
         fn get_input_data_mut(&mut self) -> &mut InputData {
             &mut self.input_data
         }
+        fn read_sequence_byte(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
+            let (head, tail) = self.pending_input.split_at_checked(1)?;
+            self.pending_input = tail;
+            let head = head[0];
+            buffer.push(head);
+            Some(head)
+        }
+    }
+}
+#[cfg(test)]
+pub(super) use mock::MockInputEventQueuer;
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        BindingSet, EventQueuePeeker, KeyMatchQuality, KeyNameStyle, MockInputEventQueuer,
+        match_key_event_to_key,
+    };
+    use crate::input::{CharEvent, InputEventQueuer as _, KeyEvent};
+    use crate::key::{Key, Modifiers};
+    use crate::prelude::*;
+
+    #[test]
+    fn test_match_key_event_to_key() {
+        macro_rules! validate {
+            ($evt:expr, $key:expr, $expected:expr) => {
+                assert_eq!(match_key_event_to_key(&$evt, &$key), $expected);
+            };
+        }
+
+        let none = Modifiers::default();
+        let shift = Modifiers::SHIFT;
+        let ctrl = Modifiers::CTRL;
+        let ctrl_shift = Modifiers {
+            ctrl: true,
+            shift: true,
+            ..Default::default()
+        };
+
+        let exact = KeyMatchQuality::Exact;
+        let modulo_shift = KeyMatchQuality::ModuloShift;
+        let base_layout = KeyMatchQuality::BaseLayout;
+        let base_layout_modulo_shift = KeyMatchQuality::BaseLayoutModuloShift;
+
+        validate!(KeyEvent::new(none, 'a'), Key::new(none, 'a'), Some(exact));
+        validate!(KeyEvent::new(none, 'a'), Key::new(none, 'A'), None);
+        validate!(KeyEvent::new(shift, 'a'), Key::new(shift, 'a'), Some(exact));
+        validate!(KeyEvent::new(shift, 'a'), Key::new(none, 'A'), None);
+        validate!(KeyEvent::new(shift, 'ä'), Key::new(none, 'Ä'), None);
+        // For historical reasons we canonicalize notation for ASCII keys like "shift-a" to "A",
+        // but not "shift-a" events - those should send a shifted key.
+        validate!(
+            KeyEvent::new(none, 'A'),
+            Key::new(shift, 'a'),
+            Some(modulo_shift)
+        );
+        validate!(KeyEvent::new(none, 'A'), Key::new(shift, 'A'), None);
+        validate!(KeyEvent::new(none, 'Ä'), Key::new(none, 'Ä'), Some(exact));
+        validate!(KeyEvent::new(none, 'Ä'), Key::new(shift, 'ä'), None);
+
+        // FYI: for codepoints that are not letters with uppercase/lowercase versions, we use
+        // the shifted key in the canonical notation, because the unshifted one may depend on the
+        // keyboard layout.
+        let ctrl_shift_equals = KeyEvent::new_with(ctrl_shift, true, '=', Some('+'), None);
+        validate!(ctrl_shift_equals, Key::new(ctrl_shift, '='), Some(exact));
+        validate!(ctrl_shift_equals, Key::new(ctrl, '+'), Some(modulo_shift)); // canonical notation
+        validate!(ctrl_shift_equals, Key::new(ctrl_shift, '+'), None);
+        validate!(ctrl_shift_equals, Key::new(ctrl, '='), None);
+
+        // A event like capslock-shift-ä may or may not include a shifted codepoint.
+        //
+        // Without a shifted codepoint, we cannot easily match ctrl-Ä.
+        let caps_ctrl_shift_ä = KeyEvent::new(ctrl_shift, 'ä');
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä'), Some(exact)); // canonical notation
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'), None);
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), None); // can't match without shifted key
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
+        // With a shifted codepoint, we can match the alternative notation too.
+        let caps_ctrl_shift_ä = KeyEvent::new_with(ctrl_shift, true, 'ä', Some('Ä'), None);
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä'), Some(exact)); // canonical notation
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'), None);
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), Some(modulo_shift)); // matched via shifted key
+        validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
+
+        let ctrl_ц = KeyEvent::new_with(ctrl, true, 'ц', None, Some('w'));
+        let ctrl_shift_ц = KeyEvent::new_with(ctrl_shift, true, 'ц', Some('Ц'), Some('w'));
+        validate!(ctrl_ц, Key::new(ctrl, 'ц'), Some(exact));
+        validate!(ctrl_ц, Key::new(ctrl, 'w'), Some(base_layout));
+        validate!(ctrl_ц, Key::new(ctrl_shift, 'ц'), None);
+        validate!(ctrl_ц, Key::new(ctrl_shift, 'w'), None);
+        validate!(
+            ctrl_shift_ц,
+            Key::new(ctrl, 'W'),
+            Some(base_layout_modulo_shift)
+        );
+        validate!(ctrl_shift_ц, Key::new(ctrl, 'w'), None);
+
+        // Note that "bind ctrl-Ц" will win over "bind ctrl-shift-w".
+        // This is because we consider shift transformation to be less magic than base-key
+        // transformation.
+        validate!(ctrl_shift_ц, Key::new(ctrl, 'Ц'), Some(modulo_shift));
+        validate!(ctrl_shift_ц, Key::new(ctrl_shift, 'w'), Some(base_layout));
     }
 
     #[test]
     fn test_input() {
-        let mut input = TestInputEventQueuer {
-            input_data: InputData::new(i32::MAX, None), // value doesn't matter since we don't read from it
-        };
+        let mut input = MockInputEventQueuer::new();
         // Ensure sequences are order independent. Here we add two bindings where the first is a prefix
         // of the second, and then emit the second key list. The second binding should be invoked, not
         // the first!
@@ -1062,8 +1224,8 @@ mod tests {
 
         let bind_mode = || input.get_bind_mode();
 
-        let mut input_mappings = InputMappingSet::default();
-        input_mappings.add1(
+        let mut bindings = BindingSet::default();
+        bindings.add1(
             prefix_binding,
             KeyNameStyle::Plain,
             L!("up-line").to_owned(),
@@ -1072,7 +1234,7 @@ mod tests {
             true,
             None,
         );
-        input_mappings.add1(
+        bindings.add1(
             desired_binding.clone(),
             KeyNameStyle::Plain,
             L!("down-line").to_owned(),
@@ -1090,9 +1252,9 @@ mod tests {
         }
 
         let mut peeker = EventQueuePeeker::new(&mut input);
-        let mapping = peeker.find_mapping(&input_mappings);
-        assert!(mapping.is_some());
-        assert_eq!(mapping.unwrap().commands, ["down-line"]);
+        let binding = peeker.find_binding(&bindings);
+        assert!(binding.is_some());
+        assert_eq!(binding.unwrap().commands, ["down-line"]);
         peeker.restart();
     }
 }

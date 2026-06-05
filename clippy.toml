@@ -1,1 +1,6 @@
 allow-print-in-tests = true
+disallowed-methods = [
+    # Not allowed to use libc::setlocale() directly, need to use the wrappers
+    # in src/locale.rs which takes a lock for the duration of the call.
+    "libc::setlocale",
+]

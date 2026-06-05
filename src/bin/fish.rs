@@ -20,16 +20,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 use fish::{
     ast,
     builtins::{
-        error::Error,
+        Error, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, VERSION_STRING_TEMPLATE,
         fish_indent, fish_key_reader,
-        shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, VERSION_STRING_TEMPLATE},
     },
     common::{PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME},
-    env::{
-        EnvMode, Statuses,
-        config_paths::ConfigPaths,
-        environment::{EnvStack, Environment as _, env_init},
-    },
+    env::{EnvMode, EnvStack, Environment as _, Statuses, config_paths::ConfigPaths, env_init},
     eprintf, err_fmt,
     event::{self, Event},
     fds::heightenize_fd,

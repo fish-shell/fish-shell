@@ -1,4 +1,4 @@
-use crate::{builtins::error::Error, err_fmt};
+use crate::{builtins::Error, err_fmt};
 
 use super::prelude::*;
 

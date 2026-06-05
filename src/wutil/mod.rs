@@ -1,11 +1,18 @@
 pub mod dir_iter;
-pub mod errors;
-pub mod fileid;
+mod errors;
+mod fileid;
 mod hex_float;
 #[macro_use]
 pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
+
+pub use errors::*;
+pub use fileid::*;
+pub use printf::{eprintf, fprintf, printf, sprintf};
+pub use wcstoi::{
+    fish_wcstoi, fish_wcstol, fish_wcstol_radix, fish_wcstoul, wcstoi, wcstoi_opts, wcstoi_partial,
+};
 
 use crate::{fds::BorrowedFdFile, flog, signal::SigChecker};
 use errno::{Errno, set_errno};
@@ -22,13 +29,6 @@ use std::{
     io,
     os::unix::prelude::*,
 };
-
-pub use crate::wutil::printf::{eprintf, fprintf, printf, sprintf};
-
-pub use fileid::{
-    DevInode, FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, file_id_for_path_narrow,
-};
-pub use wcstoi::*;
 
 /// Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by
 /// POSIX (hooray).

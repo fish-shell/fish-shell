@@ -98,7 +98,8 @@ impl<R: Send + 'static> Debounce<R> {
     /// enqueued, this overwrites it and that function will not be executed.
     ///
     /// The result is a token which is only of interest to the test suite.
-    pub fn perform_void(&self, handler: impl FnOnce() + 'static + Send) -> NonZeroU64 {
+    #[cfg(test)]
+    fn perform_void(&self, handler: impl FnOnce() + 'static + Send) -> NonZeroU64 {
         self.perform_inner(Box::new(handler))
     }
 

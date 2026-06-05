@@ -2,7 +2,7 @@
 
 use crate::{
     ast::{self, Node},
-    builtins::shared::STATUS_ILLEGAL_CMD,
+    builtins::STATUS_ILLEGAL_CMD,
     common::{CancelChecker, PROFILING_ACTIVE},
     complete::CompletionList,
     env::{

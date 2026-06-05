@@ -6,13 +6,9 @@ use crate::{
         unescape_keyword,
     },
     builtins::{
-        self,
-        error::Error,
-        shared::{
-            STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR,
-            STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE,
-            STATUS_UNMATCHED_WILDCARD, builtin_exists,
-        },
+        self, Error, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR,
+        STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_UNMATCHED_WILDCARD,
+        builtin_exists,
     },
     common::valid_var_name,
     complete::CompletionList,

@@ -2,7 +2,7 @@ use fish_widestring::L;
 use num_traits::pow;
 
 use super::prelude::*;
-use crate::{builtins::error::Error, err_fmt, tinyexpr::te_interp};
+use crate::{builtins::Error, err_fmt, tinyexpr::te_interp};
 
 /// The maximum number of points after the decimal that we'll print.
 const DEFAULT_SCALE: usize = 6;

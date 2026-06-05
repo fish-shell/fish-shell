@@ -1,7 +1,7 @@
 use super::prelude::*;
 use crate::{
     abbrs::{self, Abbreviation, Position},
-    builtins::error::Error,
+    builtins::Error,
     common::valid_func_name,
     env::{EnvMode, EnvStackSetResult},
     err_fmt, err_str,

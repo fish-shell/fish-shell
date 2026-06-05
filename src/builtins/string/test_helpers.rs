@@ -1,6 +1,6 @@
 use super::string;
 use crate::{
-    builtins::shared::BuiltinResultExt as _,
+    builtins::BuiltinResultExt as _,
     io::{IoChain, IoStreams, OutputStream, StringOutputStream},
     prelude::*,
     tests::prelude::*,

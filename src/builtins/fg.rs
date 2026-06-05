@@ -1,6 +1,6 @@
 //! Implementation of the fg builtin.
 
-use crate::builtins::error::Error;
+use crate::builtins::Error;
 use crate::fds::make_fd_blocking;
 use crate::parser::ParserEnvSetMode;
 use crate::reader::{reader_save_screen_state, reader_write_title};

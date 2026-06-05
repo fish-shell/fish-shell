@@ -16,9 +16,9 @@ function fish_update_completions --description "Update man-page based completion
         - \
         # Use the manpath
         --manpath \
+        --directory=$__fish_cache_dir/generated_completions \
         # Clean up old completions
-        --cleanup-in $__fish_user_data_dir/generated_completions \
-        --cleanup-in $__fish_cache_dir/generated_completions
+        --cleanup-in $__fish_user_data_dir/generated_completions
 
     status get-file tools/create_manpage_completions.py |
         if $detach

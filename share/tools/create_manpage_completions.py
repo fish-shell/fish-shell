@@ -2231,6 +2231,7 @@ if __name__ == "__main__":
         args.directory = os.path.expanduser(
             xdg_cache_home + "/fish/generated_completions/"
         )
+    if not args.stdout:
         try:
             os.makedirs(args.directory)
         except OSError as e:

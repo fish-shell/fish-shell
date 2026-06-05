@@ -24,7 +24,7 @@ end each output line with NUL, not newline
 '
 
 MANPATH=$PWD/man fish_update_completions
-# CHECK: Parsing man pages and writing completions to {{.*}}/generated_completions/
+# CHECK: Parsing man pages and writing completions to {{.*}}/generated_completions
 # CHECK: {{.*}}  1 / 1 : dirname.1{{.*}}
 
 cd $__fish_cache_dir

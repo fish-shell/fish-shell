@@ -15,20 +15,26 @@ use nix::unistd::AccessFlags;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
 use std::os::unix::prelude::*;
+use std::path::PathBuf;
 use std::sync::LazyLock;
+
+pub struct ValidatedPath<'a> {
+    pub path: &'a wstr,
+    pub ok: bool,
+}
 
 /// Returns the user configuration directory for fish. If the directory or one of its parents
 /// doesn't exist, they are first created.
-pub fn path_get_config() -> Option<WString> {
-    CONFIG_DIRECTORY.path()
+pub fn path_get_config() -> ValidatedPath<'static> {
+    CONFIG_DIRECTORY.validated_path()
 }
 
 /// Returns the user data directory for fish. If the directory or one of its parents doesn't exist,
 /// they are first created.
 ///
 /// Volatile files presumed to be local to the machine, such as the fish_history will be stored in this directory.
-pub fn path_get_data() -> Option<WString> {
-    DATA_DIRECTORY.path()
+pub fn path_get_data() -> ValidatedPath<'static> {
+    DATA_DIRECTORY.validated_path()
 }
 
 /// Returns the user cache directory for fish. If the directory or one of its parents doesn't exist,
@@ -36,8 +42,8 @@ pub fn path_get_data() -> Option<WString> {
 ///
 /// Volatile files presumed to be local to the machine such as all the
 /// generated_completions, will be stored in this directory.
-pub fn path_get_cache() -> Option<WString> {
-    CACHE_DIRECTORY.path()
+pub fn path_get_cache() -> ValidatedPath<'static> {
+    CACHE_DIRECTORY.validated_path()
 }
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -56,44 +62,43 @@ pub fn path_get_data_remoteness() -> DirRemoteness {
     DATA_DIRECTORY.remoteness
 }
 
-/// Like path_get_data_remoteness but for the config directory.
-pub fn path_get_config_remoteness() -> DirRemoteness {
-    CONFIG_DIRECTORY.remoteness
-}
-
 /// Emit any errors if config directories are missing.
 /// Use the given environment stack to ensure this only occurs once.
 pub fn path_emit_config_directory_messages(vars: &EnvStack) {
-    let data = &*DATA_DIRECTORY;
-    if let Some(error) = &data.err {
-        maybe_issue_path_warning(
+    for (base_directory, which_dir, custom_error_msg, xdg_var) in [
+        (
+            &*DATA_DIRECTORY,
             L!("data"),
             wgettext!("can not save history"),
-            data.used_xdg,
             L!("XDG_DATA_HOME"),
-            &data.path,
-            error,
-            vars,
-        );
-    }
-    if data.remoteness == DirRemoteness::Remote {
-        flog!(path, "data path appears to be on a network volume");
-    }
-
-    let config = &*CONFIG_DIRECTORY;
-    if let Some(error) = &data.err {
-        maybe_issue_path_warning(
+        ),
+        (
+            &*CONFIG_DIRECTORY,
             L!("config"),
             wgettext!("can not save universal variables or functions"),
-            config.used_xdg,
             L!("XDG_CONFIG_HOME"),
-            &config.path,
-            error,
-            vars,
-        );
-    }
-    if config.remoteness == DirRemoteness::Remote {
-        flog!(path, "config path appears to be on a network volume");
+        ),
+        (
+            &*CACHE_DIRECTORY,
+            L!("cache"),
+            wgettext!("can not save caching data"),
+            L!("XDG_CACHE_HOME"),
+        ),
+    ] {
+        if let Some(error) = &base_directory.err {
+            maybe_issue_path_warning(
+                which_dir,
+                custom_error_msg,
+                base_directory.used_xdg,
+                xdg_var,
+                &base_directory.path,
+                error,
+                vars,
+            );
+        }
+        if base_directory.remoteness == DirRemoteness::Remote {
+            flog!(path, which_dir, "path appears to be on a network volume");
+        }
     }
 }
 
@@ -543,6 +548,8 @@ pub fn path_apply_working_directory(path: &wstr, working_directory: &wstr) -> WS
 struct BaseDirectory {
     /// the path where we attempted to create the directory.
     path: WString,
+    /// whether we actually created the directory if it didn't exist
+    created: bool,
     /// whether the dir is remote
     remoteness: DirRemoteness,
     /// the error code if creating the directory failed, or 0 on success.
@@ -552,8 +559,11 @@ struct BaseDirectory {
 }
 
 impl BaseDirectory {
-    fn path(&self) -> Option<WString> {
-        self.err.is_none().then(|| self.path.clone())
+    fn validated_path(&self) -> ValidatedPath<'_> {
+        ValidatedPath {
+            path: &self.path,
+            ok: self.err.is_none(),
+        }
     }
 }
 
@@ -578,6 +588,7 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
 
         return BaseDirectory {
             path: osstr2wcstring(build_dir),
+            created: false,
             remoteness: DirRemoteness::Unknown,
             used_xdg: false,
             err,
@@ -601,35 +612,50 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
         used_xdg = false;
     }
 
-    let mut remoteness = DirRemoteness::Unknown;
-    let err = if path.is_empty() {
-        Some(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            "Path is empty",
-        ))
-    } else if let Err(io_error) = create_dir_all_with_mode(wcs2osstring(&path), 0o700) {
-        Some(io_error)
+    enum Success {
+        AlreadyExists,
+        CreatedDir,
+    }
+    let result = {
+        let path = PathBuf::from(wcs2osstring(&path));
+        use std::io::ErrorKind::{AlreadyExists, NotFound};
+        let mut recursive = false;
+        loop {
+            break match create_dir(&path, 0o700, recursive) {
+                Ok(()) => Ok(Success::CreatedDir),
+                Err(e) if e.kind() == AlreadyExists && path.is_dir() => Ok(Success::AlreadyExists),
+                Err(e) if e.kind() == NotFound => {
+                    recursive = true;
+                    continue;
+                }
+                Err(e) => Err(e),
+            };
+        }
+    };
+    let remoteness = if result.is_err() {
+        DirRemoteness::Unknown
     } else {
-        // Need to append a trailing slash to check the contents of the directory, not its parent.
-        let mut tmp = path.clone();
-        tmp.push('/');
-        remoteness = path_remoteness(&tmp);
-        None
+        path_remoteness(&path)
     };
 
     BaseDirectory {
         path,
+        created: matches!(result, Ok(Success::CreatedDir)),
         remoteness,
-        err,
+        err: result.err(),
         used_xdg,
     }
 }
 
 // Like std::fs::create_dir_all, but new directories are created using the given mode (e.g. 0o700).
-fn create_dir_all_with_mode<P: AsRef<std::path::Path>>(path: P, mode: u32) -> std::io::Result<()> {
+fn create_dir<P: AsRef<std::path::Path>>(
+    path: P,
+    mode: u32,
+    recursive: bool,
+) -> std::io::Result<()> {
     use std::os::unix::fs::DirBuilderExt as _;
     std::fs::DirBuilder::new()
-        .recursive(true)
+        .recursive(recursive)
         .mode(mode)
         .create(path.as_ref())
 }
@@ -719,8 +745,28 @@ static DATA_DIRECTORY: LazyLock<BaseDirectory> =
 static CACHE_DIRECTORY: LazyLock<BaseDirectory> =
     LazyLock::new(|| make_base_directory(L!("XDG_CACHE_HOME"), L!("/.cache/fish")));
 
-static CONFIG_DIRECTORY: LazyLock<BaseDirectory> =
-    LazyLock::new(|| make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish")));
+static CONFIG_DIRECTORY: LazyLock<BaseDirectory> = LazyLock::new(|| {
+    let config_dir = make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish"));
+    if config_dir.created {
+        let mut path = PathBuf::from(wcs2osstring(&config_dir.path));
+        for basename in ["completions", "conf.d", "functions"] {
+            path.push(basename);
+            let _ = create_dir(&path, 0o700, false);
+            path.pop();
+        }
+        path.push("config.fish");
+        let _ = std::fs::write(
+            path,
+            br#"
+if status is-interactive
+    # Commands to run in interactive sessions can go here
+end
+"#
+            .trim_ascii_start(),
+        );
+    }
+    config_dir
+});
 
 /// Appends a path component, with a / if necessary.
 pub fn append_path_component(path: &mut WString, component: &wstr) {

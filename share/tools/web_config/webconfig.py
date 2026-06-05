@@ -1299,7 +1299,7 @@ redirect_template_html = """
 """
 
 # find fish
-fish_bin_dir = os.environ.get("__fish_bin_dir")
+fish_bin_dir = os.environ.get("fish_bin_dir")
 fish_bin_path = None
 
 # only need the '.exe' extension on Windows

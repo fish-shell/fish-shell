@@ -1596,6 +1596,9 @@ msgstr "llamado con un argumento. Esto devolverá falso en el futuro."
 msgid "calling job for event handler not found"
 msgstr "no se encontró el trabajo asociado al manejador de eventos"
 
+msgid "can not save caching data"
+msgstr ""
+
 msgid "can not save history"
 msgstr "no se puede guardar el historial"
 

@@ -17,6 +17,8 @@ Interactive improvements
 Other improvements
 ------------------
 - ``cd`` supports the ``-L`` and ``-P`` options, like other shells, to allow specifying whether symbolic links (symlinks) are resolved when changing directories (:issue:`7206`).
+- fish no longer creates universal variables by default; specifically the ``__fish_initialized`` variable is no longer created.
+  If you don't expect to need to downgrade to earlier versions, you can remove it with ``set --erase __fish_initialized``.
 
 For distributors and developers
 -------------------------------

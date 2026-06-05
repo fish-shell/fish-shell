@@ -937,7 +937,7 @@ fn throwing_main() -> i32 {
     };
     #[cfg(feature = "localize-messages")]
     crate::localization::initialize_localization();
-    env_init(None, true, false);
+    env_init(None, false);
 
     // Only set these here so you can't set them via the builtin.
     if let Some(features_var) = EnvStack::globals().get(L!("fish_features")) {

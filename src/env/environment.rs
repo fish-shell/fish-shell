@@ -1,9 +1,6 @@
-use super::{
-    ElectricVar,
-    environment_impl::{
-        EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult, UVAR_SCOPE_IS_GLOBAL,
-        colon_split, uvars,
-    },
+use super::r#impl::environment::{
+    EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult, UVAR_SCOPE_IS_GLOBAL,
+    colon_split, uvars,
 };
 use crate::{
     abbrs::{Abbreviation, Position, abbrs_get_set},
@@ -11,6 +8,7 @@ use crate::{
     env::{
         EnvMode, EnvSetMode, EnvVar, Statuses,
         config_paths::{ConfigPaths, PREFIX},
+        r#impl::is_electric_var,
     },
     env_dispatch::{VarChangeMilieu, env_dispatch_init, env_dispatch_var_change},
     event::Event,
@@ -457,14 +455,14 @@ impl Environment for EnvStack {
 }
 
 /// Some configuration path environment variables.
-const FISH_DATADIR_VAR: &wstr = L!("__fish_data_dir");
-const FISH_SYSCONFDIR_VAR: &wstr = L!("__fish_sysconf_dir");
-const FISH_HELPDIR_VAR: &wstr = L!("__fish_help_dir");
-const FISH_MANDIR_VAR: &wstr = L!("__fish_man_dir");
-const FISH_BIN_DIR: &wstr = L!("__fish_bin_dir");
-const FISH_CONFIG_DIR: &wstr = L!("__fish_config_dir");
-const FISH_USER_DATA_DIR: &wstr = L!("__fish_user_data_dir");
-const FISH_CACHE_DIR: &wstr = L!("__fish_cache_dir");
+pub(super) const FISH_DATADIR_VAR: &wstr = L!("__fish_data_dir");
+pub(super) const FISH_SYSCONFDIR_VAR: &wstr = L!("__fish_sysconf_dir");
+pub(super) const FISH_HELPDIR_VAR: &wstr = L!("__fish_help_dir");
+pub(super) const FISH_MANDIR_VAR: &wstr = L!("__fish_man_dir");
+pub(super) const FISH_BIN_DIR: &wstr = L!("__fish_bin_dir");
+pub(super) const FISH_CONFIG_DIR: &wstr = L!("__fish_config_dir");
+pub(super) const FISH_USER_DATA_DIR: &wstr = L!("__fish_user_data_dir");
+pub(super) const FISH_CACHE_DIR: &wstr = L!("__fish_cache_dir");
 
 /// Set up the USER and HOME variable.
 fn setup_user(global_exported_mode: EnvSetMode, vars: &EnvStack) {
@@ -564,7 +562,7 @@ fn setup_path(global_exported_mode: EnvSetMode) {
 /// This is a simple key->value map and not e.g. cut into paths.
 pub static INHERITED_VARS: OnceLock<HashMap<WString, WString>> = OnceLock::new();
 
-pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
+pub fn env_init(paths: Option<&ConfigPaths>, no_config: bool) {
     let vars = EnvStack::globals();
 
     let global_mode = EnvSetMode::new_at_early_startup(EnvMode::GLOBAL);
@@ -584,13 +582,13 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         // PORTING: That assumption appears to be wrong https://github.com/rust-lang/rust/blob/2ceed0b6cb9e9866225d7cfcfcbb4a62db047163/library/std/src/sys/unix/os.rs#L584C30-L584C30
         // it appears they allow names starting with =, but do not turn malformed lines
         // into the variable name with an empty value
-        if ElectricVar::for_name(&key).is_none() {
+        if !is_electric_var(&key) && {
             // fish_user_paths should not be exported; attempting to re-import it from
             // a value we previously (due to user error) exported will cause impossibly
             // difficult to debug PATH problems.
-            if key != "fish_user_paths" {
-                vars.set(&key, global_exported_mode, vec![val.clone()]);
-            }
+            key != "fish_user_paths"
+        } {
+            vars.set(&key, global_exported_mode, vec![val.clone()]);
         }
         inherited_vars.insert(key, val);
     }
@@ -627,26 +625,14 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
         set_path(FISH_HELPDIR_VAR, paths.doc.as_ref());
     }
 
-    let user_config_dir = path_get_config();
-    vars.set_one(
-        FISH_CONFIG_DIR,
-        global_mode,
-        user_config_dir.unwrap_or_default(),
-    );
+    for (varname, validated_path) in [
+        (FISH_CACHE_DIR, path_get_cache()),
+        (FISH_CONFIG_DIR, path_get_config()),
+        (FISH_USER_DATA_DIR, path_get_data()),
+    ] {
+        vars.set_one(varname, global_mode, validated_path.path.to_owned());
+    }
 
-    let user_data_dir = path_get_data();
-    vars.set_one(
-        FISH_USER_DATA_DIR,
-        global_mode,
-        user_data_dir.unwrap_or_default(),
-    );
-
-    let user_cache_dir = path_get_cache();
-    vars.set_one(
-        FISH_CACHE_DIR,
-        global_mode,
-        user_cache_dir.unwrap_or_default(),
-    );
     // Set up a default PATH
     setup_path(global_exported_mode);
 
@@ -731,12 +717,12 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     init_input();
 
     // Complain about invalid config paths.
-    // HACK: Assume the defaults are correct (in practice this is only --no-config anyway).
-    if !default_paths {
+    // HACK: Assume the defaults are correct.
+    if !no_config {
         path_emit_config_directory_messages(vars);
     }
 
-    if !do_uvars {
+    if no_config {
         UVAR_SCOPE_IS_GLOBAL.store(true);
         return;
     }

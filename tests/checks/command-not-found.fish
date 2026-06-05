@@ -1,5 +1,5 @@
 #RUN: fish=%fish %fish %s
-__fish_migrate # make sure the interactive fish doesn't need mkdir in PATH
+__fish_theme_migrate # make sure the interactive fish doesn't need mkdir in PATH
 if __fish_is_cygwin
     # The Cygwin/MSYS DLLs must be in the path, otherwise fish cannot be
     # executed

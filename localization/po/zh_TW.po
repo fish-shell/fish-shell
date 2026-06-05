@@ -1591,6 +1591,9 @@ msgstr "帶一個引數呼叫。這在之後會回傳 false。"
 msgid "calling job for event handler not found"
 msgstr "找不到事件處理器要呼叫的作業"
 
+msgid "can not save caching data"
+msgstr ""
+
 msgid "can not save history"
 msgstr "無法儲存歷史紀錄"
 

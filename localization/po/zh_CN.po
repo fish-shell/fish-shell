@@ -1617,6 +1617,9 @@ msgstr "带一个参数调用。此操作在未来版本中将返回 false。"
 msgid "calling job for event handler not found"
 msgstr "未找到事件处理程序的调用作业"
 
+msgid "can not save caching data"
+msgstr ""
+
 msgid "can not save history"
 msgstr "无法保存历史"
 

@@ -36,8 +36,7 @@ fn create_temporary_file(original_path: &wstr) -> std::io::Result<(File, WString
                 error,
                 wgettext_fmt!(
                     "Unable to create temporary file '%s': %s",
-                    // TODO(MSRV>=1.87): use OsString::display()
-                    format!("{:?}", path),
+                    path.to_wstring(),
                     e
                 )
             );

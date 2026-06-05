@@ -143,28 +143,8 @@ end
 # PATH is possibly set above.
 __fish_reconstruct_path
 
-for jobbltn in bg wait disown
-    function $jobbltn -V jobbltn
-        set -l args (__fish_expand_pid_args $argv)
-        and builtin $jobbltn $args
-    end
-end
-function fg
-    set -l args (__fish_expand_pid_args $argv)
-    and builtin fg $args[-1]
-end
-
-if command -q kill
-    # Only define this if something to wrap exists
-    # this allows a nice "command not found" error to be triggered.
-    function kill
-        set -l args (__fish_expand_pid_args $argv)
-        and command kill $args
-    end
-end
-
 if status is-interactive
-    __fish_migrate
+    __fish_theme_migrate
 end
 if status is-interactive || set -qgx __fish_force_load_default_theme
     fish_config theme choose default --no-override

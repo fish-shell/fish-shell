@@ -1,27 +1,11 @@
 # localization: skip(private)
-function __fish_migrate
-    functions -e __fish_migrate
+function __fish_theme_migrate
+    functions -e __fish_theme_migrate
 
     set -l migration_version 4300
 
     # Maybe migrate.
-    if set -q __fish_initialized && test $__fish_initialized -ge $migration_version
-        return
-    end
-
-    # Create empty configuration directories if they do not already exist
-    test -e $__fish_config_dir/completions/ -a -e $__fish_config_dir/conf.d/ -a -e $__fish_config_dir/functions/ ||
-        mkdir -p $__fish_config_dir/{completions, conf.d, functions}
-
-    # Create config.fish with some boilerplate if it does not exist
-    test -e $__fish_config_dir/config.fish || echo "\
-if status is-interactive
-# Commands to run in interactive sessions can go here
-end" >$__fish_config_dir/config.fish
-
-    set -l mark_migration_done set -U __fish_initialized $migration_version
-    if not set -q __fish_initialized
-        $mark_migration_done
+    if not set -q __fish_initialized || test $__fish_initialized -ge $migration_version
         return
     end
 
@@ -40,7 +24,7 @@ end" >$__fish_config_dir/config.fish
             for varname in $theme_uvars
                 set -a theme_data "$(string escape -- $varname $$varname | string join " ")"
             end
-            __fish_theme_freeze __fish_migrate $theme_data
+            __fish_theme_freeze __fish_theme_migrate $theme_data
             set msg_suffix " by default."\n"  Migrated them to global variables set in $(set_color --underline)$(
                     __fish_unexpand_tilde $__fish_config_dir/conf.d/fish_frozen_theme.fish
                 )$(set_color --reset)"
@@ -81,7 +65,8 @@ set --erase --universal fish_key_bindings"
             (set_color --reset))
         source $__fish_config_dir/$relative_filename
     end
-    $mark_migration_done
+    # TODO In a few years, stop setting it.
+    set -U __fish_initialized $migration_version
     if $removing_uvars
         echo -s (set_color --bold) 'fish:' (set_color --reset) " upgraded to version >= 4.3.0:"
         string join \n -- $msg

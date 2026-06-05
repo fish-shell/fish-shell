@@ -30,7 +30,7 @@ pub fn test_init() {
         topic_monitor_init();
         crate::threads::init();
         proc_init();
-        env_init(None, true, false);
+        env_init(None, false);
 
         // Set default signal handlers, so we can ctrl-C out of this.
         signal_reset_handlers();

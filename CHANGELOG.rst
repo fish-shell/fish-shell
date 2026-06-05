@@ -3,7 +3,7 @@ fish ?.?.? (released ???)
 
 Deprecations and removed features
 ---------------------------------
-- `--command` and `--path` options in `complete` no longer unescape their value.
+- ``--command`` and ``--path`` options in `complete` no longer unescape their value.
 
 Interactive improvements
 ------------------------

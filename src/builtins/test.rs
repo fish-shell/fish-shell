@@ -68,6 +68,7 @@ mod test_expressions {
 
             $(
                 #[derive(Copy, Clone, PartialEq, Eq)]
+                #[allow(non_camel_case_types)]
                 pub(super) enum $sub_type { $($sub_variant,)+ }
 
                 impl From<$sub_type> for Token {

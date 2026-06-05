@@ -88,13 +88,13 @@ impl ExpandResult {
         Self { result, status: 0 }
     }
     pub fn ok() -> Self {
-        Self::new(ExpandResultCode::ok)
+        Self::new(ExpandResultCode::Ok)
     }
     /// Make an error value with the given status.
     pub fn make_error(status: libc::c_int) -> Self {
         assert_ne!(status, 0, "status cannot be 0 for an error result");
         Self {
-            result: ExpandResultCode::error,
+            result: ExpandResultCode::Error,
             status,
         }
     }
@@ -168,7 +168,7 @@ pub fn expand_one(
     let mut completions = CompletionList::new();
     let input = std::mem::take(s);
 
-    let ok = expand_string(input, &mut completions, flags, ctx, errors) == ExpandResultCode::ok;
+    let ok = expand_string(input, &mut completions, flags, ctx, errors) == ExpandResultCode::Ok;
 
     if ok && completions.len() == 1 {
         *s = std::mem::take(&mut completions[0].completion);
@@ -206,7 +206,7 @@ pub fn expand_to_command_and_args(
 
     let mut completions = CompletionList::new();
     let expand_err = expand_string(instr.to_owned(), &mut completions, eflags, ctx, errors);
-    if expand_err == ExpandResultCode::ok {
+    if expand_err == ExpandResultCode::Ok {
         // The first completion is the command, any remaining are arguments.
         let mut completions = completions.into_iter();
         if let Some(comp) = completions.next() {
@@ -758,7 +758,7 @@ fn expand_variables(
                 new_in.push_utfstr(&item);
                 new_in.push_utfstr(&instr[var_name_and_slice_stop..]);
                 let res = expand_variables(new_in, out, varexp_char_idx, vars, errors);
-                if res.result != ExpandResultCode::ok {
+                if res.result != ExpandResultCode::Ok {
                     return res;
                 }
             }
@@ -1232,14 +1232,14 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         for stage in stages {
             for comp in completions {
                 if expand.ctx.check_cancel() {
-                    total_result = ExpandResult::new(ExpandResultCode::cancel);
+                    total_result = ExpandResult::new(ExpandResultCode::Cancel);
                     break;
                 }
                 let this_result = (stage)(&mut expand, comp.completion, &mut output_storage);
                 total_result = this_result;
                 if matches!(
                     total_result.result,
-                    ExpandResultCode::error | ExpandResultCode::overflow
+                    ExpandResultCode::Error | ExpandResultCode::Overflow
                 ) {
                     break;
                 }
@@ -1249,7 +1249,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             completions = output_storage.take();
             if matches!(
                 total_result.result,
-                ExpandResultCode::error | ExpandResultCode::overflow
+                ExpandResultCode::Error | ExpandResultCode::Overflow
             ) {
                 break;
             }
@@ -1261,11 +1261,11 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         //   echo $dirs/*.txt
         // Here if ./a/*.txt matches and ./b/*.txt does not, then we don't want to report a failed
         // wildcard. So swallow failed-wildcard errors if we got any output.
-        if total_result == ExpandResultCode::wildcard_no_match && !completions.is_empty() {
+        if total_result == ExpandResultCode::WildcardNoMatch && !completions.is_empty() {
             total_result = ExpandResult::ok();
         }
 
-        if total_result == ExpandResultCode::ok {
+        if total_result == ExpandResultCode::Ok {
             // Unexpand tildes if we want to preserve them (see #647).
             if flags.contains(ExpandFlags::PRESERVE_HOME_TILDES) {
                 expand.unexpand_tildes(&input, &mut completions);
@@ -1430,7 +1430,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                 }
             }
 
-            result = ExpandResult::new(ExpandResultCode::wildcard_no_match);
+            result = ExpandResult::new(ExpandResultCode::WildcardNoMatch);
             let mut expanded_recv = out.subreceiver();
             for effective_working_dir in effective_working_dirs {
                 let expand_res = wildcard_expand_string(
@@ -1444,14 +1444,14 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                     WildcardResult::Match => result = ExpandResult::ok(),
                     WildcardResult::NoMatch => (),
                     WildcardResult::Overflow => return append_overflow_error(self.errors, None),
-                    WildcardResult::Cancel => return ExpandResult::new(ExpandResultCode::cancel),
+                    WildcardResult::Cancel => return ExpandResult::new(ExpandResultCode::Cancel),
                 }
             }
 
             let mut expanded = expanded_recv.take();
             expanded.sort_by(|a, b| wcsfilecmp_glob(&a.completion, &b.completion));
             if !out.extend(expanded) {
-                result = ExpandResult::new(ExpandResultCode::overflow);
+                result = ExpandResult::new(ExpandResultCode::Overflow);
             }
         } else {
             // Can't fully justify this check. I think it's that SKIP_WILDCARDS is used when completing
@@ -1521,16 +1521,16 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum ExpandResultCode {
     /// There was an error, for example, unmatched braces.
-    error,
+    Error,
     /// Expansion would exceed the maximum number of elements.
-    overflow,
+    Overflow,
     /// Expansion succeeded.
-    ok,
+    Ok,
     /// Expansion was cancelled (e.g. control-C).
-    cancel,
+    Cancel,
     /// Expansion succeeded, but a wildcard in the string matched no files,
     /// so the output is empty.
-    wildcard_no_match,
+    WildcardNoMatch,
 }
 
 /// These are the possible return values for expand_string.
@@ -1574,7 +1574,7 @@ mod tests {
         let ctx = &mut OperationContext::test_only_foreground(parser, &pwd, Box::new(no_cancel));
 
         if expand_string(input.to_owned(), &mut output, flags, ctx, Some(&mut errors))
-            == ExpandResultCode::error
+            == ExpandResultCode::Error
         {
             assert_ne!(
                 errors,
@@ -1927,7 +1927,7 @@ mod tests {
             Some(&mut errors),
         );
         assert_ne!(errors, vec![]);
-        assert_eq!(res, ExpandResultCode::error);
+        assert_eq!(res, ExpandResultCode::Error);
 
         ctx.parser().vars().pop(false);
     }

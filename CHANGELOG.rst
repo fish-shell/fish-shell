@@ -3,7 +3,7 @@ fish ?.?.? (released ???)
 
 Deprecations and removed features
 ---------------------------------
-- `--command` and `--path` options in `complete` no longer unescape their value.
+- ``--command`` and ``--path`` options in `complete` no longer unescape their argument.
 
 Interactive improvements
 ------------------------
@@ -24,13 +24,13 @@ For distributors and developers
   In particular, this means that both
   ``$CMAKE_INSTALL_PREFIX/share/fish/completions`` and
   ``$CMAKE_INSTALL_PREFIX/share/fish/functions``
-  should now be empty.
-  If another package installs completions or functions to those directories,
-  they should be changed to install to
-  ``extra_completionsdir`` (typically ``$CMAKE_INSTALL_PREFIX/share/fish/vendor_completions.d``) or
-  ``extra_functionsdir`` (typically ``$CMAKE_INSTALL_PREFIX/share/fish/vendor_functions.d``)
-  instead.
-  The old location has been ignored since fish 4.2.
+  should no longer exist.
+  These directories have been ignored since fish 4.2.
+  If another package installs fish scripts there, they should be corrected to install to
+  ``extra_completionsdir`` (typically ``$CMAKE_INSTALL_PREFIX/share/fish/vendor_completions.d``),
+  ``extra_functionsdir`` (typically ``$CMAKE_INSTALL_PREFIX/share/fish/vendor_functions.d``) or
+  ``extra_confdir`` (typically ``$CMAKE_INSTALL_PREFIX/share/fish/vendor_functions.d``) instead.
+  See also the output of ``for var in completions functions conf; pkgconf fish --variable="$var"dir; end``.
 
 Regression fixes:
 -----------------

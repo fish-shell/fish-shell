@@ -187,14 +187,14 @@ fn write_part(
                 )
                 .result
                 {
-                    ExpandResultCode::error
-                    | ExpandResultCode::overflow
-                    | ExpandResultCode::wildcard_no_match => {
+                    ExpandResultCode::Error
+                    | ExpandResultCode::Overflow
+                    | ExpandResultCode::WildcardNoMatch => {
                         // Maybe hit expansion limit, forward the unexpanded string.
                         args.push(Completion::from_completion(token_text.to_owned()));
                     }
-                    ExpandResultCode::cancel => {}
-                    ExpandResultCode::ok => (),
+                    ExpandResultCode::Cancel => {}
+                    ExpandResultCode::Ok => (),
                 }
             }
             TokenOutputMode::Raw => {

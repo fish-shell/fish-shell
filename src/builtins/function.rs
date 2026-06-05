@@ -15,7 +15,7 @@ use crate::{err_fmt, err_str, function};
 use nix::unistd::getpid;
 use std::sync::Arc;
 
-struct FunctionCmdOpts {
+struct Options {
     print_help: bool,
     shadow_scope: bool,
     description: WString,
@@ -25,7 +25,7 @@ struct FunctionCmdOpts {
     wrap_targets: Vec<WString>,
 }
 
-impl Default for FunctionCmdOpts {
+impl Default for Options {
     fn default() -> Self {
         Self {
             print_help: false,
@@ -73,7 +73,7 @@ fn job_id_for_pid(pid: Pid, parser: &Parser) -> Option<InternalJobId> {
 /// Parses options to builtin function, populating opts.
 /// Returns an exit status.
 fn parse_cmd_opts(
-    opts: &mut FunctionCmdOpts,
+    opts: &mut Options,
     argv: &mut [&wstr],
     parser: &Parser,
     streams: &mut IoStreams,
@@ -100,7 +100,7 @@ fn parse_cmd_opts(
     fn add_named_argument(
         validate_variable_name: &mut impl FnMut(&mut IoStreams, &wstr, bool) -> Result<(), i32>,
         streams: &mut IoStreams,
-        opts: &mut FunctionCmdOpts,
+        opts: &mut Options,
         varname: &wstr,
     ) -> Result<(), i32> {
         validate_variable_name(streams, varname, /*read_only_ok=*/ false)?;
@@ -308,7 +308,7 @@ pub fn function(
     validate_function_name(argv, &mut function_name, cmd, streams)?;
     let argv = &mut argv[1..];
 
-    let mut opts = FunctionCmdOpts::default();
+    let mut opts = Options::default();
     parse_cmd_opts(&mut opts, argv, parser, streams)?;
 
     if opts.print_help {

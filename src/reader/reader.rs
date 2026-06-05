@@ -82,7 +82,6 @@ use crate::{
     },
     reader::word_motion::bigword_class,
     screen::{CharOffset, Screen, is_dumb, screen_force_clear_to_end},
-    should_flog,
     signal::{
         signal_check_cancel, signal_clear_cancel, signal_reset_handlers, signal_set_handlers,
         signal_set_handlers_once,
@@ -2991,13 +2990,6 @@ impl<'a> Reader<'a> {
     }
 }
 
-fn send_xtgettcap_query(out: &mut Outputter, cap: &'static str) {
-    if should_flog!(reader) {
-        flog!(reader, format!("Sending XTGETTCAP request for {}:", cap));
-    }
-    out.write_command(QueryXtgettcap(cap));
-}
-
 fn query_capabilities_via_dcs(out: &mut Outputter, vars: &dyn Environment) {
     // TODO(term-workaround)
     if vars.get_unless_empty(L!("STY")).is_some()
@@ -3009,8 +3001,8 @@ fn query_capabilities_via_dcs(out: &mut Outputter, vars: &dyn Environment) {
         return;
     }
     out.write_command(DecsetAlternateScreenBuffer); // enable alternative screen buffer
-    send_xtgettcap_query(out, SCROLL_CONTENT_UP_TERMINFO_CODE);
-    send_xtgettcap_query(out, XTGETTCAP_QUERY_OS_NAME);
+    out.write_command(QueryXtgettcap(SCROLL_CONTENT_UP_TERMINFO_CODE));
+    out.write_command(QueryXtgettcap(XTGETTCAP_QUERY_OS_NAME));
     out.write_command(DecrstAlternateScreenBuffer); // disable alternative screen buffer
 }
 
@@ -6592,7 +6584,7 @@ fn try_expand_wildcard(
         comp_end += 1;
     }
     if !wildcard_has(&wc[comp_start..comp_end]) {
-        return ExpandResultCode::wildcard_no_match;
+        return ExpandResultCode::WildcardNoMatch;
     }
     result.clear();
     // Have a low limit on the number of matches, otherwise we will overwhelm the command line.
@@ -6614,7 +6606,7 @@ fn try_expand_wildcard(
         | ExpandFlags::PRESERVE_HOME_TILDES;
     let mut expanded = CompletionList::new();
     let ret = expand_string(wc, &mut expanded, flags, ctx, None);
-    if ret.result != ExpandResultCode::ok {
+    if ret.result != ExpandResultCode::Ok {
         return ret.result;
     }
 
@@ -6638,7 +6630,7 @@ fn try_expand_wildcard(
     }
 
     *result = joined;
-    ExpandResultCode::ok
+    ExpandResultCode::Ok
 }
 
 /// Test if the specified character in the specified string is backslashed. pos may be at the end of
@@ -6954,19 +6946,19 @@ impl<'a> Reader<'a> {
             position_in_token,
             &mut wc_expanded,
         ) {
-            ExpandResultCode::error => {}
-            ExpandResultCode::overflow => {
+            ExpandResultCode::Error => {}
+            ExpandResultCode::Overflow => {
                 // This may come about if we exceeded the max number of matches.
                 // Return "success" to suppress normal completions.
                 self.flash(token_range);
                 return;
             }
-            ExpandResultCode::wildcard_no_match => {}
-            ExpandResultCode::cancel => {
+            ExpandResultCode::WildcardNoMatch => {}
+            ExpandResultCode::Cancel => {
                 // e.g. the user hit control-C. Suppress normal completions.
                 return;
             }
-            ExpandResultCode::ok => {
+            ExpandResultCode::Ok => {
                 self.rls_mut().completion_action = None;
                 self.push_edit(
                     EditableLineTag::Commandline,

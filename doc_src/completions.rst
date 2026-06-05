@@ -112,7 +112,7 @@ As a more comprehensive example, here's a commented excerpt of the completions f
   complete -c timedatectl -l version -d 'Print a short version string and exit'
   complete -c timedatectl -l no-pager -d 'Do not pipe output into a pager'
 
-For examples of how to write your own complex completions, study the completions in ``/usr/share/fish/completions``. (The exact path depends on your chosen installation prefix and may be slightly different)
+For examples of how to write your own completions, study ``share/completions`` in the fish-shell source tree.
 
 Useful functions for writing completions
 ----------------------------------------

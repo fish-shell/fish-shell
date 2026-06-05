@@ -1285,6 +1285,7 @@ mod tests {
             "&& || & |",
             "Compress_Newlines\n  \n\t\n   \nInto_Just_One",
         ));
+        #[allow(non_camel_case_types)]
         type tt = TokenType;
         #[rustfmt::skip]
         let types = [

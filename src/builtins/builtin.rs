@@ -3,7 +3,7 @@ use crate::{builtins::Error, err_fmt};
 use super::prelude::*;
 
 #[derive(Default)]
-struct builtin_cmd_opts_t {
+struct Options {
     query: bool,
     list_names: bool,
 }
@@ -16,7 +16,7 @@ pub fn r#builtin(
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
-    let mut opts: builtin_cmd_opts_t = Default::default();
+    let mut opts: Options = Default::default();
 
     let shortopts: &wstr = L!("hnq");
     let longopts: &[WOption] = &[

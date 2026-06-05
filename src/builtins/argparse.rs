@@ -53,7 +53,7 @@ enum UnknownHandling {
 }
 
 #[derive(Default)]
-struct ArgParseCmdOpts<'args> {
+struct Options<'args> {
     unknown_handling: UnknownHandling,
     unknown_arguments: ArgType,
     strict_long_opts: bool,
@@ -71,7 +71,7 @@ struct ArgParseCmdOpts<'args> {
     exclusive_flag_sets: Vec<Vec<char>>,
 }
 
-impl ArgParseCmdOpts<'_> {
+impl Options<'_> {
     fn new() -> Self {
         Self {
             max_args: usize::MAX,
@@ -97,10 +97,7 @@ const LONG_OPTIONS: &[WOption] = &[
 
 // Check if any pair of mutually exclusive options was seen. Note that since every option must have
 // a short name we only need to check those.
-fn check_for_mutually_exclusive_flags(
-    opts: &ArgParseCmdOpts,
-    streams: &mut IoStreams,
-) -> BuiltinResult {
+fn check_for_mutually_exclusive_flags(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
     for opt_spec in opts.options.values() {
         if opt_spec.num_seen == 0 {
             continue;
@@ -166,7 +163,7 @@ fn check_for_mutually_exclusive_flags(
 
 // This should be called after all the option specs have been parsed. At that point we have enough
 // information to parse the values associated with any `--exclusive` flags.
-fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> BuiltinResult {
+fn parse_exclusive_args(opts: &mut Options, streams: &mut IoStreams) -> BuiltinResult {
     for raw_xflags in &opts.raw_exclusive_flags {
         let xflags: Vec<_> = raw_xflags.split(',').collect();
         if xflags.len() < 2 {
@@ -200,7 +197,7 @@ fn parse_exclusive_args(opts: &mut ArgParseCmdOpts, streams: &mut IoStreams) -> 
 }
 
 fn parse_flag_modifiers<'args>(
-    opts: &ArgParseCmdOpts<'args>,
+    opts: &Options<'args>,
     opt_spec: &mut OptionSpec<'args>,
     option_spec: &wstr,
     opt_spec_str: &mut &'args wstr,
@@ -282,7 +279,7 @@ fn parse_flag_modifiers<'args>(
 
 /// Parse the text following the short flag letter.
 fn parse_option_spec_sep<'args>(
-    opts: &mut ArgParseCmdOpts<'args>,
+    opts: &mut Options<'args>,
     opt_spec: &mut OptionSpec<'args>,
     option_spec: &'args wstr,
     opt_spec_str: &mut &'args wstr,
@@ -374,7 +371,7 @@ fn parse_option_spec_sep<'args>(
 }
 
 fn parse_option_spec<'args>(
-    opts: &mut ArgParseCmdOpts<'args>,
+    opts: &mut Options<'args>,
     option_spec: &'args wstr,
     counter: &mut u32,
     streams: &mut IoStreams,
@@ -445,7 +442,7 @@ fn parse_option_spec<'args>(
 }
 
 fn collect_option_specs<'args>(
-    opts: &mut ArgParseCmdOpts<'args>,
+    opts: &mut Options<'args>,
     optind: &mut usize,
     argc: usize,
     args: &[&'args wstr],
@@ -494,7 +491,7 @@ fn collect_option_specs<'args>(
 }
 
 fn parse_cmd_opts<'args>(
-    opts: &mut ArgParseCmdOpts<'args>,
+    opts: &mut Options<'args>,
     optind: &mut usize,
     argc: usize,
     args: &mut [&'args wstr],
@@ -635,7 +632,7 @@ fn parse_cmd_opts<'args>(
 }
 
 fn populate_option_strings<'args>(
-    opts: &ArgParseCmdOpts<'args>,
+    opts: &Options<'args>,
     short_options: &mut WString,
     long_options: &mut Vec<WOption<'args>>,
 ) {
@@ -720,7 +717,7 @@ fn validate_arg<'opts>(
 }
 
 /// Return whether the option 'opt' is an implicit integer option.
-fn is_implicit_int(opts: &ArgParseCmdOpts, val: &wstr) -> bool {
+fn is_implicit_int(opts: &Options, val: &wstr) -> bool {
     if opts.implicit_int_flag == '\0' {
         // There is no implicit integer option.
         return false;
@@ -733,7 +730,7 @@ fn is_implicit_int(opts: &ArgParseCmdOpts, val: &wstr) -> bool {
 // Store this value under the implicit int option.
 fn validate_and_store_implicit_int<'args>(
     parser: &mut Parser,
-    opts: &mut ArgParseCmdOpts<'args>,
+    opts: &mut Options<'args>,
     val: &'args wstr,
     w: &mut WGetopter,
     is_long_flag: bool,
@@ -824,7 +821,7 @@ fn delete_flag<'args>(w: &mut WGetopter<'_, 'args, '_>, is_long_flag: bool) -> C
 
 fn handle_flag<'args>(
     parser: &mut Parser,
-    opts: &mut ArgParseCmdOpts<'args>,
+    opts: &mut Options<'args>,
     opt: char,
     is_long_flag: bool,
     w: &mut WGetopter<'_, 'args, '_>,
@@ -875,7 +872,7 @@ fn handle_flag<'args>(
 
 fn argparse_parse_flags<'args>(
     parser: &mut Parser,
-    opts: &mut ArgParseCmdOpts<'args>,
+    opts: &mut Options<'args>,
     argc: usize,
     args: &mut [&'args wstr],
     optind: &mut usize,
@@ -1064,7 +1061,7 @@ fn argparse_parse_flags<'args>(
 // It's different in that the short and long option structures are constructed dynamically based on
 // arguments provided to the `argparse` command.
 fn argparse_parse_args<'args>(
-    opts: &mut ArgParseCmdOpts<'args>,
+    opts: &mut Options<'args>,
     args: &mut [&'args wstr],
     argc: usize,
     parser: &mut Parser,
@@ -1085,10 +1082,7 @@ fn argparse_parse_args<'args>(
     Ok(SUCCESS)
 }
 
-fn check_min_max_args_constraints(
-    opts: &ArgParseCmdOpts,
-    streams: &mut IoStreams,
-) -> BuiltinResult {
+fn check_min_max_args_constraints(opts: &Options, streams: &mut IoStreams) -> BuiltinResult {
     let cmd = &opts.name;
 
     if opts.args.len() < opts.min_args {
@@ -1109,7 +1103,7 @@ fn check_min_max_args_constraints(
 }
 
 /// Put the result of parsing the supplied args into the caller environment as local vars.
-fn set_argparse_result_vars(vars: &EnvStack, local_mode: EnvSetMode, opts: ArgParseCmdOpts) {
+fn set_argparse_result_vars(vars: &EnvStack, local_mode: EnvSetMode, opts: Options) {
     for opt_spec in opts.options.values() {
         if opt_spec.num_seen == 0 {
             continue;
@@ -1153,7 +1147,7 @@ pub fn argparse(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]
 
     let argc = args.len();
 
-    let mut opts = ArgParseCmdOpts::new();
+    let mut opts = Options::new();
     let mut optind = 0usize;
     let retval = parse_cmd_opts(&mut opts, &mut optind, argc, args, parser, streams);
     if retval.is_err() {

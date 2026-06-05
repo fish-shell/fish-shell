@@ -9,7 +9,7 @@ use crate::{
 use fish_widestring::bytes2wcstring;
 
 #[derive(Default)]
-struct type_cmd_opts_t {
+struct Options {
     all: bool,
     short_output: bool,
     no_functions: bool,
@@ -24,7 +24,7 @@ pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
-    let mut opts: type_cmd_opts_t = Default::default();
+    let mut opts: Options = Default::default();
 
     let shortopts: &wstr = L!("hasftpPq");
     let longopts: &[WOption] = &[

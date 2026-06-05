@@ -2,7 +2,7 @@ use super::prelude::*;
 use crate::path::{path_get_path, path_get_paths};
 
 #[derive(Default)]
-struct command_cmd_opts_t {
+struct Options {
     all: bool,
     quiet: bool,
     find_path: bool,
@@ -16,7 +16,7 @@ pub fn r#command(
     let cmd = argv[0];
     let argc = argv.len();
     let print_hints = false;
-    let mut opts: command_cmd_opts_t = Default::default();
+    let mut opts: Options = Default::default();
 
     let shortopts: &wstr = L!("hasqv");
     let longopts: &[WOption] = &[

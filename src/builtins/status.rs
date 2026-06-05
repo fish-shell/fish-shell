@@ -58,34 +58,34 @@ macro_rules! str_enum {
 use StatusCmd::*;
 str_enum!(
     StatusCmd,
-    (STATUS_BASENAME, "basename", "current-basename"),
-    (STATUS_BUILD_INFO, "build-info", "buildinfo"),
-    (STATUS_CURRENT_CMD, "current-command"),
-    (STATUS_CURRENT_COMMANDLINE, "current-commandline"),
-    (STATUS_DIRNAME, "dirname", "current-dirname"),
-    (STATUS_FEATURES, "features"),
-    (STATUS_FILENAME, "filename", "current-filename"),
-    (STATUS_FISH_PATH, "fish-path"),
-    (STATUS_FUNCTION, "function", "current-function"),
-    (STATUS_GET_FILE, "get-file"),
-    (STATUS_IS_BLOCK, "is-block"),
-    (STATUS_IS_BREAKPOINT, "is-breakpoint"),
-    (STATUS_IS_COMMAND_SUB, "is-command-substitution"),
-    (STATUS_IS_FULL_JOB_CTRL, "is-full-job-control"),
-    (STATUS_IS_INTERACTIVE, "is-interactive"),
-    (STATUS_IS_INTERACTIVE_JOB_CTRL, "is-interactive-job-control"),
-    (STATUS_IS_INTERACTIVE_READ, "is-interactive-read"),
-    (STATUS_IS_LOGIN, "is-login"),
-    (STATUS_IS_NO_JOB_CTRL, "is-no-job-control"),
-    (STATUS_LINE_NUMBER, "line-number", "current-line-number"),
-    (STATUS_LIST_FILES, "list-files"),
-    (STATUS_LANGUAGE, "language"),
-    (STATUS_SET_JOB_CONTROL, "job-control"),
-    (STATUS_STACK_TRACE, "stack-trace", "print-stack-trace"),
-    (STATUS_TERMINAL, "terminal"),
-    (STATUS_TERMINAL_OS, "terminal-os"),
-    (STATUS_TEST_FEATURE, "test-feature"),
-    (STATUS_TEST_TERMINAL_FEATURE, "test-terminal-feature"),
+    (Basename, "basename", "current-basename"),
+    (BuildInfo, "build-info", "buildinfo"),
+    (CurrentCommand, "current-command"),
+    (CurrentCommandline, "current-commandline"),
+    (Dirname, "dirname", "current-dirname"),
+    (Features, "features"),
+    (Filename, "filename", "current-filename"),
+    (FishPath, "fish-path"),
+    (Function, "function", "current-function"),
+    (GetFile, "get-file"),
+    (IsBlock, "is-block"),
+    (IsBreakpoint, "is-breakpoint"),
+    (IsCommandSubstitution, "is-command-substitution"),
+    (IsFullJobControl, "is-full-job-control"),
+    (IsInteractive, "is-interactive"),
+    (IsInteractiveJobControl, "is-interactive-job-control"),
+    (IsInteractiveRead, "is-interactive-read"),
+    (IsLogin, "is-login"),
+    (IsNoJobControl, "is-no-job-control"),
+    (LineNumber, "line-number", "current-line-number"),
+    (ListFiles, "list-files"),
+    (Language, "language"),
+    (JobControl, "job-control"),
+    (StackTrace, "stack-trace", "print-stack-trace"),
+    (Terminal, "terminal"),
+    (TerminalOs, "terminal-os"),
+    (TestFeature, "test-feature"),
+    (TestTerminalFeature, "test-terminal-feature"),
 );
 
 /// Values that may be returned from the test-feature option to status.
@@ -96,14 +96,14 @@ enum TestFeatureRetVal {
     NotRecognized,
 }
 
-struct StatusCmdOpts {
+struct Options {
     level: i32,
     new_job_control_mode: Option<JobControl>,
     status_cmd: Option<StatusCmd>,
     print_help: bool,
 }
 
-impl StatusCmdOpts {
+impl Options {
     // Set the status command to the given command.
     // Returns true on success, false if there's already a status command, in which case an error is printed.
     fn try_set_status_cmd(&mut self, subcmd: StatusCmd, streams: &mut IoStreams) -> bool {
@@ -123,7 +123,7 @@ impl StatusCmdOpts {
     }
 }
 
-impl Default for StatusCmdOpts {
+impl Default for Options {
     fn default() -> Self {
         Self {
             level: 1,
@@ -204,7 +204,7 @@ fn print_features(streams: &mut IoStreams) {
 }
 
 fn parse_cmd_opts(
-    opts: &mut StatusCmdOpts,
+    opts: &mut Options,
     optind: &mut usize,
     args: &mut [&wstr],
     parser: &Parser,
@@ -236,13 +236,13 @@ fn parse_cmd_opts(
             }
             flag @ ('c' | 'b' | 'i' | 'l' | 'f' | 'n' | 't') => {
                 let subcmd = match flag {
-                    'c' => STATUS_IS_COMMAND_SUB,
-                    'b' => STATUS_IS_BLOCK,
-                    'i' => STATUS_IS_INTERACTIVE,
-                    'l' => STATUS_IS_LOGIN,
-                    'f' => STATUS_FILENAME,
-                    'n' => STATUS_LINE_NUMBER,
-                    't' => STATUS_STACK_TRACE,
+                    'c' => IsCommandSubstitution,
+                    'b' => IsBlock,
+                    'i' => IsInteractive,
+                    'l' => IsLogin,
+                    'f' => Filename,
+                    'n' => LineNumber,
+                    't' => StackTrace,
                     _ => unreachable!(),
                 };
                 if !opts.try_set_status_cmd(subcmd, streams) {
@@ -250,7 +250,7 @@ fn parse_cmd_opts(
                 }
             }
             'j' => {
-                if !opts.try_set_status_cmd(STATUS_SET_JOB_CONTROL, streams) {
+                if !opts.try_set_status_cmd(JobControl, streams) {
                     return Err(STATUS_CMD_ERROR);
                 }
                 let Ok(job_mode) = w.woptarg.unwrap().try_into() else {
@@ -262,27 +262,27 @@ fn parse_cmd_opts(
                 opts.new_job_control_mode = Some(job_mode);
             }
             IS_FULL_JOB_CTRL_SHORT => {
-                if !opts.try_set_status_cmd(STATUS_IS_FULL_JOB_CTRL, streams) {
+                if !opts.try_set_status_cmd(IsFullJobControl, streams) {
                     return Err(STATUS_CMD_ERROR);
                 }
             }
             IS_INTERACTIVE_JOB_CTRL_SHORT => {
-                if !opts.try_set_status_cmd(STATUS_IS_INTERACTIVE_JOB_CTRL, streams) {
+                if !opts.try_set_status_cmd(IsInteractiveJobControl, streams) {
                     return Err(STATUS_CMD_ERROR);
                 }
             }
             IS_INTERACTIVE_READ_SHORT => {
-                if !opts.try_set_status_cmd(STATUS_IS_INTERACTIVE_READ, streams) {
+                if !opts.try_set_status_cmd(IsInteractiveRead, streams) {
                     return Err(STATUS_CMD_ERROR);
                 }
             }
             IS_NO_JOB_CTRL_SHORT => {
-                if !opts.try_set_status_cmd(STATUS_IS_NO_JOB_CTRL, streams) {
+                if !opts.try_set_status_cmd(IsNoJobControl, streams) {
                     return Err(STATUS_CMD_ERROR);
                 }
             }
             FISH_PATH_SHORT => {
-                if !opts.try_set_status_cmd(STATUS_FISH_PATH, streams) {
+                if !opts.try_set_status_cmd(FishPath, streams) {
                     return Err(STATUS_CMD_ERROR);
                 }
             }
@@ -344,7 +344,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
     let cmd = args[0];
     let argc = args.len();
 
-    let mut opts = StatusCmdOpts::default();
+    let mut opts = Options::default();
     let mut optind = 0usize;
     parse_cmd_opts(&mut opts, &mut optind, args, parser, streams)?;
 
@@ -396,7 +396,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
     };
 
     match subcmd {
-        c @ STATUS_SET_JOB_CONTROL => {
+        c @ JobControl => {
             let job_control_mode = match opts.new_job_control_mode {
                 Some(j) => {
                     // Flag form used
@@ -423,8 +423,8 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
             };
             set_job_control_mode(job_control_mode);
         }
-        STATUS_FEATURES => print_features(streams),
-        c @ STATUS_TEST_FEATURE => {
+        Features => print_features(streams),
+        c @ TestFeature => {
             if args.len() != 1 {
                 err_fmt!(builtins::Error::UNEXP_ARG_COUNT, 1, args.len())
                     .subcmd(cmd, c.to_wstr())
@@ -442,7 +442,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
             }
             return Err(retval as i32);
         }
-        c @ STATUS_GET_FILE => {
+        c @ GetFile => {
             if args.len() != 1 {
                 err_fmt!(builtins::Error::UNEXP_ARG_COUNT, 1, args.len())
                     .subcmd(cmd, c.to_wstr())
@@ -461,7 +461,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
             streams.out.append(&src);
             return Ok(SUCCESS);
         }
-        STATUS_LANGUAGE => {
+        Language => {
             cfg_if! {
                 if #[cfg(not(feature = "localize-messages"))] {
                     err_raw!(L!("fish was built with the `localize-messages` feature disabled. The `status language` command is unavailable.").to_owned())
@@ -503,7 +503,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                 }
             }
         }
-        STATUS_LIST_FILES => {
+        ListFiles => {
             let mut paths = vec![];
             let mut add = |arg| {
                 let arg = wcs2bytes(arg);
@@ -536,7 +536,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                 return Err(STATUS_CMD_ERROR);
             }
         }
-        c @ STATUS_TEST_TERMINAL_FEATURE => {
+        c @ TestTerminalFeature => {
             if args.len() != 1 {
                 err_fmt!(builtins::Error::UNEXP_ARG_COUNT, 1, args.len())
                     .subcmd(cmd, c.to_wstr())
@@ -564,7 +564,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                 return Err(STATUS_INVALID_ARGS);
             }
             match s {
-                STATUS_BUILD_INFO => {
+                BuildInfo => {
                     let version = str2wcstring(crate::BUILD_VERSION);
                     let target = str2wcstring(env!("BUILD_TARGET_TRIPLE"));
                     let host = str2wcstring(env!("BUILD_HOST_TRIPLE"));
@@ -602,25 +602,25 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                     streams.out.appendln("");
                     return Ok(SUCCESS);
                 }
-                STATUS_BASENAME | STATUS_DIRNAME | STATUS_FILENAME => {
+                Basename | Dirname | Filename => {
                     let res = parser.current_filename();
                     let function = res.unwrap_or_default();
                     let f = match (function.is_empty(), s) {
-                        (false, STATUS_DIRNAME) => wdirname(&function),
-                        (false, STATUS_BASENAME) => wbasename(&function),
+                        (false, Dirname) => wdirname(&function),
+                        (false, Basename) => wbasename(&function),
                         (true, _) => wgettext!("Standard input"),
                         (false, _) => &function,
                     };
                     streams.out.appendln(f);
                 }
-                STATUS_FUNCTION => {
+                Function => {
                     let f = match parser.get_function_name(opts.level) {
                         Some(f) => f,
                         None => wgettext!("Not a function").to_owned(),
                     };
                     streams.out.appendln(&f);
                 }
-                STATUS_LINE_NUMBER => {
+                LineNumber => {
                     // TBD is how to interpret the level argument when fetching the line number.
                     // See issue #4161.
                     // streams.out.append_format(L"%d\n", parser.get_lineno(opts.level));
@@ -628,72 +628,72 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                         .out
                         .appendln(&parser.lineno_for_display().to_wstring());
                 }
-                STATUS_IS_INTERACTIVE => {
+                IsInteractive => {
                     if is_interactive_session() {
                         return Ok(SUCCESS);
                     }
                     return Err(STATUS_CMD_ERROR);
                 }
-                STATUS_IS_COMMAND_SUB => {
+                IsCommandSubstitution => {
                     if parser.scope().is_subshell {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
                     }
                 }
-                STATUS_IS_BLOCK => {
+                IsBlock => {
                     if parser.is_block() {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
                     }
                 }
-                STATUS_IS_BREAKPOINT => {
+                IsBreakpoint => {
                     if parser.is_breakpoint() {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
                     }
                 }
-                STATUS_IS_LOGIN => {
+                IsLogin => {
                     if get_login() {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
                     }
                 }
-                STATUS_IS_FULL_JOB_CTRL => {
+                IsFullJobControl => {
                     if get_job_control_mode() == JobControl::All {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
                     }
                 }
-                STATUS_IS_INTERACTIVE_JOB_CTRL => {
+                IsInteractiveJobControl => {
                     if get_job_control_mode() == JobControl::Interactive {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
                     }
                 }
-                STATUS_IS_INTERACTIVE_READ => {
+                IsInteractiveRead => {
                     if reader_in_interactive_read() {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
                     }
                 }
-                STATUS_IS_NO_JOB_CTRL => {
+                IsNoJobControl => {
                     if get_job_control_mode() == JobControl::None {
                         return Ok(SUCCESS);
                     } else {
                         return Err(STATUS_CMD_ERROR);
                     }
                 }
-                STATUS_STACK_TRACE => {
+                StackTrace => {
                     streams.out.append(&parser.stack_trace());
                 }
-                STATUS_CURRENT_CMD => {
+                CurrentCommand => {
                     let command = &parser.libdata().status_vars.command;
                     if !command.is_empty() {
                         streams.out.appendln(command);
@@ -701,11 +701,11 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                         streams.out.appendln(get_program_name());
                     }
                 }
-                STATUS_CURRENT_COMMANDLINE => {
+                CurrentCommandline => {
                     let commandline = &parser.libdata().status_vars.commandline;
                     streams.out.appendln(commandline);
                 }
-                STATUS_FISH_PATH => {
+                FishPath => {
                     use crate::env::config_paths::FishPath::*;
                     let result = match get_fish_path() {
                         Absolute(path) => {
@@ -721,23 +721,18 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                     };
                     streams.out.appendln(&result);
                 }
-                STATUS_TERMINAL => {
+                Terminal => {
                     let xtversion = xtversion().unwrap_or_default();
                     streams.out.appendln(xtversion);
                 }
-                STATUS_TERMINAL_OS => {
+                TerminalOs => {
                     let Some(Some(terminal_os_name)) = TERMINAL_OS_NAME.get() else {
                         return Err(STATUS_CMD_ERROR);
                     };
                     streams.out.appendln(first_line(terminal_os_name));
                 }
-                STATUS_SET_JOB_CONTROL
-                | STATUS_FEATURES
-                | STATUS_TEST_FEATURE
-                | STATUS_GET_FILE
-                | STATUS_LIST_FILES
-                | STATUS_LANGUAGE
-                | STATUS_TEST_TERMINAL_FEATURE => {
+                JobControl | Features | TestFeature | GetFile | ListFiles | Language
+                | TestTerminalFeature => {
                     unreachable!("")
                 }
             }

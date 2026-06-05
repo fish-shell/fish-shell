@@ -30,6 +30,7 @@ pub type CallbackDataList = Vec<CallbackData>;
 
 // List of fish universal variable formats.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[allow(non_camel_case_types)]
 enum UvarFormat {
     Fish_2_x,
     Fish_3_0,

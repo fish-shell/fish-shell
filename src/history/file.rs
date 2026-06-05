@@ -21,6 +21,7 @@ use std::{
 
 /// History file types.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(non_camel_case_types)]
 pub enum HistoryFileType {
     Fish1_x, // old format with just timestamp and item
     Fish2_0, // YAML-style format

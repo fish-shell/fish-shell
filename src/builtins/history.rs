@@ -53,7 +53,7 @@ impl TryFrom<&wstr> for HistCmd {
 }
 
 #[derive(Default)]
-struct HistoryCmdOpts {
+struct Options {
     hist_cmd: HistCmd,
     search_type: Option<history::SearchType>,
     show_time_format: Option<String>,
@@ -110,7 +110,7 @@ fn set_hist_cmd(
 }
 
 fn check_for_unexpected_hist_args(
-    opts: &HistoryCmdOpts,
+    opts: &Options,
     cmd: &wstr,
     args: &[&wstr],
     streams: &mut IoStreams,
@@ -133,7 +133,7 @@ fn check_for_unexpected_hist_args(
 }
 
 fn parse_cmd_opts(
-    opts: &mut HistoryCmdOpts,
+    opts: &mut Options,
     optind: &mut usize,
     argv: &mut [&wstr],
     parser: &Parser,
@@ -238,7 +238,7 @@ fn parse_cmd_opts(
 
 /// Manipulate history of interactive commands executed by the user.
 pub fn history(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> BuiltinResult {
-    let mut opts = HistoryCmdOpts::default();
+    let mut opts = Options::default();
     let mut optind = 0;
 
     parse_cmd_opts(&mut opts, &mut optind, args, parser, streams)?;

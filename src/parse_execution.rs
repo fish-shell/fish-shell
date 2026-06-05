@@ -496,7 +496,7 @@ impl ExecutionContext {
             false,
         );
         match expand_err.result {
-            ExpandResultCode::error | ExpandResultCode::overflow => {
+            ExpandResultCode::Error | ExpandResultCode::Overflow => {
                 // Issue #5812 - the expansions were done on the command token,
                 // excluding prefixes such as " " or "if ".
                 // This means that the error positions are relative to the beginning
@@ -504,13 +504,13 @@ impl ExecutionContext {
                 parse_error_offset_source_start(&mut errors, pos_of_command_token);
                 return self.report_errors(ctx, STATUS_ILLEGAL_CMD, &errors);
             }
-            ExpandResultCode::wildcard_no_match => {
+            ExpandResultCode::WildcardNoMatch => {
                 return self.report_wildcard_error(ctx, statement);
             }
-            ExpandResultCode::cancel => {
+            ExpandResultCode::Cancel => {
                 return EndExecutionReason::Cancelled;
             }
-            ExpandResultCode::ok => {}
+            ExpandResultCode::Ok => {}
         }
 
         // Complain if the resulting expansion was empty, or expanded to an empty string.
@@ -623,14 +623,14 @@ impl ExecutionContext {
                 variable_assignment.range().unwrap().start() + equals_pos + 1,
             );
             match expand_ret.result {
-                ExpandResultCode::error|ExpandResultCode::overflow => {
+                ExpandResultCode::Error|ExpandResultCode::Overflow => {
                     return self.report_errors(ctx, expand_ret.status, &errors);
                 }
-                ExpandResultCode::cancel => {
+                ExpandResultCode::Cancel => {
                     return EndExecutionReason::Cancelled;
                 }
-                ExpandResultCode::wildcard_no_match // nullglob (equivalent to set)
-                    | ExpandResultCode::ok => {}
+                ExpandResultCode::WildcardNoMatch // nullglob (equivalent to set)
+                    | ExpandResultCode::Ok => {}
             }
             let vals: Vec<_> = expression_expanded
                 .into_iter()
@@ -1091,16 +1091,16 @@ impl ExecutionContext {
         parse_error_offset_source_start(&mut errors, statement.argument.range().unwrap().start());
 
         match expand_ret.result {
-            ExpandResultCode::error | ExpandResultCode::overflow => {
+            ExpandResultCode::Error | ExpandResultCode::Overflow => {
                 return self.report_errors(ctx, expand_ret.status, &errors);
             }
-            ExpandResultCode::cancel => {
+            ExpandResultCode::Cancel => {
                 return EndExecutionReason::Cancelled;
             }
-            ExpandResultCode::wildcard_no_match => {
+            ExpandResultCode::WildcardNoMatch => {
                 return self.report_wildcard_error(ctx, &statement.argument);
             }
-            ExpandResultCode::ok => {
+            ExpandResultCode::Ok => {
                 if switch_values_expanded.len() > 1 {
                     let mut error = wgettext_fmt!(
                         "switch: Expected at most one argument, got %u",
@@ -1374,13 +1374,13 @@ impl ExecutionContext {
             );
             parse_error_offset_source_start(&mut errors, arg_node.range().unwrap().start());
             match expand_ret.result {
-                ExpandResultCode::error | ExpandResultCode::overflow => {
+                ExpandResultCode::Error | ExpandResultCode::Overflow => {
                     return self.report_errors(ctx, expand_ret.status, &errors);
                 }
-                ExpandResultCode::cancel => {
+                ExpandResultCode::Cancel => {
                     return EndExecutionReason::Cancelled;
                 }
-                ExpandResultCode::wildcard_no_match => {
+                ExpandResultCode::WildcardNoMatch => {
                     if glob_behavior == WildcardNoMatchBehavior::Fail {
                         // For no_exec, ignore the error - this might work at runtime.
                         if no_exec() {
@@ -1390,7 +1390,7 @@ impl ExecutionContext {
                         return self.report_wildcard_error(ctx, arg_node);
                     }
                 }
-                ExpandResultCode::ok => {}
+                ExpandResultCode::Ok => {}
             }
 
             // Now copy over any expanded arguments.

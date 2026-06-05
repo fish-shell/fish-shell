@@ -133,13 +133,13 @@ trait InputEventQueuerExt: InputEventQueuer {
         buffer: &mut Vec<u8>,
         have_escape_prefix: &mut bool,
     ) -> Option<KeyEvent> {
-        assert!(buffer.len() <= 2);
+        assert!(matches!(buffer.as_slice(), b"\x1b" | b"\x1b\x1b"));
         let recursive_invocation = buffer.len() == 2;
         let Some(next) = self.read_sequence_byte(buffer) else {
             return Some(KeyEvent::from_raw(key::ESCAPE));
         };
         let invalid = KeyEvent::from_raw(key::INVALID);
-        if recursive_invocation && next == b'\x1b' {
+        if !recursive_invocation && next == b'\x1b' {
             return Some(
                 match self.parse_escape_sequence(buffer, have_escape_prefix) {
                     Some(mut nested_sequence) => {

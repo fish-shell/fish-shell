@@ -562,7 +562,7 @@ fn setup_path(global_exported_mode: EnvSetMode) {
 /// This is a simple key->value map and not e.g. cut into paths.
 pub static INHERITED_VARS: OnceLock<HashMap<WString, WString>> = OnceLock::new();
 
-pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool) {
+pub fn env_init(paths: Option<&ConfigPaths>, no_config: bool) {
     let vars = EnvStack::globals();
 
     let global_mode = EnvSetMode::new_at_early_startup(EnvMode::GLOBAL);
@@ -717,12 +717,12 @@ pub fn env_init(paths: Option<&ConfigPaths>, do_uvars: bool, default_paths: bool
     init_input();
 
     // Complain about invalid config paths.
-    // HACK: Assume the defaults are correct (in practice this is only --no-config anyway).
-    if !default_paths {
+    // HACK: Assume the defaults are correct.
+    if !no_config {
         path_emit_config_directory_messages(vars);
     }
 
-    if !do_uvars {
+    if no_config {
         UVAR_SCOPE_IS_GLOBAL.store(true);
         return;
     }

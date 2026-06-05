@@ -460,11 +460,7 @@ fn throwing_main() -> i32 {
     // If we're not executing, there's no need to find the config.
     let config_paths = if !opts.no_exec {
         let config_paths = ConfigPaths::new();
-        env_init(
-            Some(&config_paths),
-            /* do uvars */ !opts.no_config,
-            /* default paths */ opts.no_config,
-        );
+        env_init(Some(&config_paths), opts.no_config);
         Some(config_paths)
     } else {
         None

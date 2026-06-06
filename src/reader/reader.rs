@@ -53,7 +53,7 @@ use crate::{
         History, HistoryId, HistorySearch, MemoryHistoryId, PersistenceMode, SearchDirection,
         SearchFlags, SearchType, history_id, in_private_mode,
     },
-    input_common::{
+    input::{
         BackgroundColorQuery, CharEvent, CharInputStyle, CursorPositionQuery,
         CursorPositionQueryReason, ImplicitEvent, InputData, InputEventQueue,
         InputEventQueuer as _, LONG_READ_TIMEOUT, QueryResponse, QueryResultEvent, ReadlineCmd,

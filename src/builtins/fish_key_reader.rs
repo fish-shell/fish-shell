@@ -16,7 +16,7 @@ use crate::{
     common::{PROGRAM_NAME, get_program_name, shell_modes},
     env::{EnvStack, Environment as _, env_init},
     err_fmt, err_str,
-    input_common::{
+    input::{
         CharEvent, ImplicitEvent, InputEventQueue, InputEventQueuer as _, KeyEvent,
         QueryResultEvent, match_key_event_to_key,
     },

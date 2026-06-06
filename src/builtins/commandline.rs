@@ -6,8 +6,7 @@ use crate::{
     complete::Completion,
     err_fmt, err_str,
     expand::{ExpandFlags, ExpandResultCode, expand_string},
-    input::input_function_get_code,
-    input_common::{CharEvent, ReadlineCmd},
+    input::{CharEvent, ReadlineCmd, input_function_get_code},
     operation_context::{OperationContext, no_cancel},
     parse_constants::ParseTreeFlags,
     parse_util::{

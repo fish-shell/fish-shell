@@ -6,9 +6,7 @@ use crate::{
     common::valid_var_name,
     err_fmt, err_raw, err_str,
     highlight::{colorize, highlight_and_colorize, highlight_shell},
-    input::{
-        InputMapping, InputMappingSet, KeyNameStyle, input_function_get_names, input_mappings,
-    },
+    input::{Binding, BindingSet, KeyNameStyle, bindings, input_function_get_names},
     key::{
         self, KEY_NAMES, Key, MAX_FUNCTION_KEY, Modifiers, char_to_symbol, function_key, parse_keys,
     },
@@ -64,20 +62,19 @@ struct BuiltinBind {
     /// Note that BuiltinBind holds the singleton lock.
     /// It must not call out to anything which can execute fish shell code or attempt to acquire the
     /// lock again.
-    input_mappings: MutexGuard<'static, InputMappingSet>,
+    bindings: MutexGuard<'static, BindingSet>,
     opts: Options,
 }
-
 impl BuiltinBind {
     fn new() -> BuiltinBind {
         BuiltinBind {
-            input_mappings: input_mappings(),
+            bindings: bindings(),
             opts: Options::new(),
         }
     }
 
     /// Returns a WString for the output line of a bind
-    fn generate_output_string(seq: &[Key], user: bool, bind: &InputMapping) -> WString {
+    fn generate_output_string(seq: &[Key], user: bool, bind: &Binding) -> WString {
         let mut out = WString::new();
 
         out.push_str("bind");
@@ -155,7 +152,7 @@ impl BuiltinBind {
         parser: &mut Parser,
         streams: &mut IoStreams,
     ) -> bool {
-        let results = self.input_mappings.get(seq, bind_mode, user);
+        let results = self.bindings.get(seq, bind_mode, user);
 
         // no binds found
         if results.is_empty() {
@@ -209,7 +206,7 @@ impl BuiltinBind {
         parser: &mut Parser,
         streams: &mut IoStreams,
     ) {
-        let lst = self.input_mappings.get_names(user);
+        let lst = self.bindings.get_names(user);
         let mut cur_file = None;
 
         for binding in lst {
@@ -218,7 +215,7 @@ impl BuiltinBind {
             }
             let mut out = WString::new();
             let definition_file =
-                &self.input_mappings.get(&binding.seq, bind_mode, user)[0].definition_file;
+                &self.bindings.get(&binding.seq, bind_mode, user)[0].definition_file;
 
             if let Some(def_file) = definition_file {
                 if Some(def_file) != cur_file {
@@ -287,7 +284,7 @@ impl BuiltinBind {
             KeyNameStyle::Plain
         };
         let definition_file = parser.current_filename();
-        self.input_mappings.add(
+        self.bindings.add(
             key_seq,
             key_name_style,
             cmds,
@@ -320,7 +317,7 @@ impl BuiltinBind {
         let bind_mode = self.opts.bind_mode.as_deref();
 
         if all {
-            self.input_mappings.clear(bind_mode, user);
+            self.bindings.clear(bind_mode, user);
             return false;
         }
 
@@ -330,7 +327,7 @@ impl BuiltinBind {
             let Some(s) = self.compute_seq(streams, s) else {
                 return true;
             };
-            self.input_mappings.erase(&s, bind_mode, user);
+            self.bindings.erase(&s, bind_mode, user);
         }
         false
     }
@@ -428,8 +425,8 @@ impl BuiltinBind {
     /// List all current bind modes.
     fn list_modes(&mut self, streams: &mut IoStreams) {
         // List all known modes, even if they are only in preset bindings.
-        let lst = self.input_mappings.get_names(true);
-        let preset_lst = self.input_mappings.get_names(false);
+        let lst = self.bindings.get_names(true);
+        let preset_lst = self.bindings.get_names(false);
 
         // Extract the bind modes, uniqueize, and sort.
         let mut modes: Vec<WString> = lst.into_iter().chain(preset_lst).map(|m| m.mode).collect();

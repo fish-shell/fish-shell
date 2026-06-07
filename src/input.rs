@@ -23,9 +23,6 @@ use std::{
 pub const FISH_BIND_MODE_VAR: &wstr = L!("fish_bind_mode");
 pub const DEFAULT_BIND_MODE: &wstr = L!("default");
 
-/// A name for our own key mapping for nul.
-pub const NUL_MAPPING_NAME: &wstr = L!("nul");
-
 #[derive(Debug, Clone)]
 pub struct InputMappingName {
     pub seq: Vec<Key>,

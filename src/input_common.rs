@@ -289,26 +289,6 @@ pub(crate) fn match_key_event_to_key(event: &KeyEvent, key: &Key) -> Option<KeyM
     None
 }
 
-/// Represents an event on the character input stream.
-#[derive(Debug, Clone)]
-pub enum CharEventType {
-    /// A character was entered.
-    Char(KeyInputEvent),
-
-    /// A readline event.
-    Readline(ReadlineCmd),
-
-    /// A shell command.
-    Command(WString),
-
-    /// end-of-file was reached.
-    Eof,
-
-    /// An event was handled internally, or an interrupt was received. Check to see if the reader
-    /// loop should exit.
-    CheckExit,
-}
-
 #[derive(Debug, Clone)]
 pub struct ReadlineCmdEvent {
     pub cmd: ReadlineCmd,

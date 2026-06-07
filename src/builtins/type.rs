@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::{
-    builtins::error::Error,
+    builtins::Error,
     err_fmt, err_str, function,
     highlight::highlight_and_colorize,
     parse_util::{apply_indents, compute_indents},

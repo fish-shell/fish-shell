@@ -2,7 +2,7 @@
 
 use super::prelude::*;
 use crate::{
-    builtins::error::Error,
+    builtins::Error,
     common::valid_var_name,
     env::{EnvMode, EnvVar, EnvVarFlags, Environment as _, READ_BYTE_LIMIT},
     err_fmt, err_str,

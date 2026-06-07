@@ -3,7 +3,7 @@
 // Some of the code in this file is based on code from the Glibc manual, though the changes
 // performed have been massive.
 
-use crate::builtins::shared::{
+use crate::builtins::{
     ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_NOT_EXECUTABLE, STATUS_READ_TOO_MUCH,
     builtin_run,
 };

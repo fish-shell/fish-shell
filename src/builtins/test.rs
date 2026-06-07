@@ -7,11 +7,11 @@ mod test_expressions {
 
     use super::*;
 
-    use crate::builtins::error;
+    use crate::builtins;
     use crate::err_raw;
     use crate::nix::isatty;
     use crate::wutil::{
-        Error, Options, file_id_for_path, lwstat, waccess, wcstod::wcstod, wcstoi_opts, wstat,
+        self, file_id_for_path, lwstat, waccess, wcstod::wcstod, wcstoi, wcstoi_opts, wstat,
     };
     use fish_fallback::fish_wcswidth;
     use std::collections::HashMap;
@@ -721,7 +721,7 @@ mod test_expressions {
             }
         }
 
-        pub fn parse_args(args: &[WString]) -> Result<Box<dyn Expression>, error::Error<'_>> {
+        pub fn parse_args(args: &[WString]) -> Result<Box<dyn Expression>, builtins::Error<'_>> {
             let mut parser = TestParser {
                 strings: args,
                 errors: Vec::new(),
@@ -778,7 +778,7 @@ mod test_expressions {
     }
 
     // Parse a double from arg.
-    fn parse_double(argstr: &wstr) -> Result<f64, Error> {
+    fn parse_double(argstr: &wstr) -> Result<f64, wutil::Error> {
         let mut arg = argstr;
 
         // Consume leading spaces.
@@ -786,7 +786,7 @@ mod test_expressions {
             arg = arg.slice_from(1);
         }
         if arg.is_empty() {
-            return Err(Error::Empty);
+            return Err(wutil::Error::Empty);
         }
         let mut consumed = 0;
         let res = wcstod(arg, '.', &mut consumed)?;
@@ -799,7 +799,7 @@ mod test_expressions {
         if end.len() < argstr.len() && end.is_empty() {
             Ok(res)
         } else {
-            Err(Error::InvalidChar)
+            Err(wutil::Error::InvalidChar)
         }
     }
 
@@ -809,14 +809,14 @@ mod test_expressions {
     // since we allow trailing whitespace, with other implementations such as bash.
     fn parse_number(arg: &wstr, number: &mut Number, errors: &mut Vec<WString>) -> bool {
         let floating = parse_double(arg);
-        let integral: Result<i64, Error> = fish_wcstol(arg);
+        let integral: Result<i64, wutil::Error> = fish_wcstol(arg);
         if let Ok(int) = integral {
             // Here the value is just an integer; ignore the floating point parse because it may be
             // invalid (e.g. not a representable integer).
             *number = Number::new(int, 0.0);
             true
         } else if floating.is_ok_and(|f| f.is_finite())
-            && integral.is_err_and(|i| i != Error::Overflow)
+            && integral.is_err_and(|i| i != wutil::Error::Overflow)
         {
             // Here we parsed an (in range) floating point value that could not be parsed as an integer.
             // Break the floating point value into base and delta. Ensure that base is <= the floating
@@ -834,10 +834,10 @@ mod test_expressions {
             // Check for special fish_wcsto* value or show standard EINVAL/ERANGE error.
             // TODO: the C++ here was pretty confusing. In particular we used an errno of -1 to mean
             // "invalid char" but the input string may be something like "inf".
-            if integral == Err(Error::InvalidChar) && floating.is_err() {
+            if integral == Err(wutil::Error::InvalidChar) && floating.is_err() {
                 // Historically fish has printed a special message if a prefix of the invalid string was an integer.
                 // Compute that now.
-                let options = Options {
+                let options = wcstoi::Options {
                     mradix: Some(10),
                     ..Default::default()
                 };
@@ -856,7 +856,7 @@ mod test_expressions {
                 errors.push(wgettext!("Not a number").to_owned());
             } else if floating.is_ok_and(|x| x.is_infinite()) {
                 errors.push(wgettext!("Number is infinite").to_owned());
-            } else if integral == Err(Error::Overflow) {
+            } else if integral == Err(wutil::Error::Overflow) {
                 errors.push(wgettext_fmt!("Result too large: %s", arg));
             } else {
                 errors.push(wgettext_fmt!("Invalid number: %s", arg));

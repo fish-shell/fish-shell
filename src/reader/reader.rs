@@ -25,7 +25,7 @@ use super::{
 use crate::{
     abbrs::{self, abbrs_match},
     ast::{self, Kind, is_same_node},
-    builtins::shared::{ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_OK},
+    builtins::{ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_OK},
     common::{get_program_name, shell_modes},
     complete::{
         CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete,

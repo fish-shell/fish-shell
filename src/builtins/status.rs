@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::builtins::error;
+use crate::builtins;
 use crate::common::get_program_name;
 use crate::env::config_paths::get_fish_path;
 use crate::err_fmt;
@@ -10,7 +10,7 @@ use crate::proc::{
 };
 use crate::reader::reader_in_interactive_read;
 use crate::tty_handoff::{TERMINAL_OS_NAME, get_scroll_content_up_capability, xtversion};
-use crate::wutil::{Error, waccess, wbasename, wdirname, wrealpath};
+use crate::wutil::{self, waccess, wbasename, wdirname, wrealpath};
 use cfg_if::cfg_if;
 use fish_feature_flags::{self as features, feature_test};
 use fish_util::wcsfilecmp_glob;
@@ -110,7 +110,7 @@ impl StatusCmdOpts {
         match self.status_cmd.replace(subcmd) {
             Some(existing) => {
                 err_fmt!(
-                    error::Error::COMBO_EXCLUSIVE,
+                    builtins::Error::COMBO_EXCLUSIVE,
                     existing.to_wstr(),
                     subcmd.to_wstr(),
                 )
@@ -219,14 +219,14 @@ fn parse_cmd_opts(
                     let arg = w.woptarg.expect("Option -L requires an argument");
                     match fish_wcstoi(arg) {
                         Ok(level) if level >= 0 => level,
-                        Err(Error::Overflow) | Ok(_) => {
+                        Err(wutil::Error::Overflow) | Ok(_) => {
                             err_fmt!("Invalid level value '%s'", arg)
                                 .cmd(cmd)
                                 .finish(streams);
                             return Err(STATUS_INVALID_ARGS);
                         }
                         _ => {
-                            err_fmt!(error::Error::NOT_NUMBER, arg)
+                            err_fmt!(builtins::Error::NOT_NUMBER, arg)
                                 .cmd(cmd)
                                 .finish(streams);
                             return Err(STATUS_INVALID_ARGS);
@@ -364,7 +364,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                 optind += 1;
             }
             None => {
-                err_fmt!(error::Error::INVALID_SUBCMD)
+                err_fmt!(builtins::Error::INVALID_SUBCMD)
                     .subcmd(cmd, args[1])
                     .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
@@ -407,7 +407,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                 }
                 None => {
                     if args.len() != 1 {
-                        err_fmt!(error::Error::UNEXP_ARG_COUNT, 1, args.len())
+                        err_fmt!(builtins::Error::UNEXP_ARG_COUNT, 1, args.len())
                             .subcmd(cmd, c.to_wstr())
                             .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
@@ -426,7 +426,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         STATUS_FEATURES => print_features(streams),
         c @ STATUS_TEST_FEATURE => {
             if args.len() != 1 {
-                err_fmt!(error::Error::UNEXP_ARG_COUNT, 1, args.len())
+                err_fmt!(builtins::Error::UNEXP_ARG_COUNT, 1, args.len())
                     .subcmd(cmd, c.to_wstr())
                     .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
@@ -444,7 +444,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         }
         c @ STATUS_GET_FILE => {
             if args.len() != 1 {
-                err_fmt!(error::Error::UNEXP_ARG_COUNT, 1, args.len())
+                err_fmt!(builtins::Error::UNEXP_ARG_COUNT, 1, args.len())
                     .subcmd(cmd, c.to_wstr())
                     .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
@@ -494,7 +494,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                             return Ok(SUCCESS);
                         }
                         invalid => {
-                            err_fmt!(error::Error::INVALID_SUBSUBCMD,  invalid)
+                            err_fmt!(builtins::Error::INVALID_SUBSUBCMD,  invalid)
                                 .subcmd(cmd, subcmd.to_wstr())
                                 .finish(streams);
                             return Err(STATUS_INVALID_ARGS);
@@ -538,7 +538,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         }
         c @ STATUS_TEST_TERMINAL_FEATURE => {
             if args.len() != 1 {
-                err_fmt!(error::Error::UNEXP_ARG_COUNT, 1, args.len())
+                err_fmt!(builtins::Error::UNEXP_ARG_COUNT, 1, args.len())
                     .subcmd(cmd, c.to_wstr())
                     .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
@@ -558,7 +558,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
 
         ref s => {
             if !args.is_empty() {
-                err_fmt!(error::Error::UNEXP_ARG_COUNT, 0, args.len())
+                err_fmt!(builtins::Error::UNEXP_ARG_COUNT, 0, args.len())
                     .subcmd(cmd, s.to_wstr())
                     .finish(streams);
                 return Err(STATUS_INVALID_ARGS);

@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::builtins::error::Error;
+use crate::builtins::Error;
 use crate::parser::{Block, BlockType};
 use crate::reader::reader_read;
 use crate::{err_fmt, err_str};

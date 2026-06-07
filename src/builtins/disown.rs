@@ -1,8 +1,8 @@
 // Implementation of the disown builtin.
 
 use super::prelude::*;
-use crate::builtins::error::Error;
-use crate::builtins::shared::HelpOnlyCmdOpts;
+use crate::builtins::Error;
+use crate::builtins::HelpOnlyCmdOpts;
 use crate::io::IoStreams;
 use crate::parser::Parser;
 use crate::proc::{Job, add_disowned_job};

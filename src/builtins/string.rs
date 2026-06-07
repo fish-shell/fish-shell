@@ -1,4 +1,4 @@
-use crate::{err_fmt, err_raw, err_str, screen::escape_code_length};
+use crate::{builtins, err_fmt, err_raw, err_str, screen::escape_code_length};
 use fish_wcstringutil::fish_wcwidth_visible;
 // Forward some imports to make subcmd implementations easier
 use super::prelude::*;
@@ -202,8 +202,8 @@ impl RegexError {
     }
 }
 
-impl<'a> From<error::Error<'a>> for StringError<'a> {
-    fn from(error: error::Error<'a>) -> Self {
+impl<'a> From<builtins::Error<'a>> for StringError<'a> {
+    fn from(error: builtins::Error<'a>) -> Self {
         StringError::InvalidArgs(error)
     }
 }

@@ -1,6 +1,6 @@
 use super::prelude::*;
 
-use crate::builtins::error::Error;
+use crate::builtins::Error;
 use crate::{err_fmt, err_str, wutil};
 use fish_util::get_seeded_rng;
 use rand::rngs::SmallRng;

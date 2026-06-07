@@ -2,7 +2,7 @@
 
 use std::{collections::HashSet, rc::Rc};
 
-use crate::{builtins::error::Error, err_fmt, err_str, proc::Pid};
+use crate::{builtins::Error, err_fmt, err_str, proc::Pid};
 
 use super::prelude::*;
 

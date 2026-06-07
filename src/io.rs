@@ -1,5 +1,5 @@
 use crate::{
-    builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH},
+    builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_READ_TOO_MUCH},
     fd_monitor::{Callback, FdMonitor, FdMonitorItemId},
     fds::{BorrowedFdFile, PIPE_ERROR, make_autoclose_pipes, make_fd_nonblocking, wopen_cloexec},
     flog::{flog, flogf, should_flog},

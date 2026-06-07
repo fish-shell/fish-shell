@@ -1,4 +1,4 @@
-pub use super::errors::Error;
+pub use super::Error;
 use crate::prelude::*;
 use num_traits::{NumCast, PrimInt};
 use std::default::Default;

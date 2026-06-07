@@ -1,6 +1,6 @@
 //! Implementation of the history builtin.
 
-use crate::builtins::error::Error;
+use crate::builtins::Error;
 use crate::history::in_private_mode;
 use crate::history::{self, History, history_id};
 use crate::reader::commandline_get_state;

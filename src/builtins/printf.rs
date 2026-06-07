@@ -49,10 +49,10 @@
 // This file has been imported from source code of printf command in GNU Coreutils version 6.9.
 
 use super::prelude::*;
-use crate::builtins::error;
+use crate::builtins;
 use crate::locale::{Locale, get_numeric_locale};
 use crate::wutil::{
-    errors::Error,
+    self,
     wcstod::wcstod,
     wcstoi::{Options as WcstoiOpts, wcstoi_partial},
     wstr_offset_in,
@@ -105,7 +105,7 @@ trait RawStringToScalarType: Copy + std::convert::From<u32> {
         s: &'a wstr,
         locale: &Locale,
         end: &mut &'a wstr,
-    ) -> Result<Self, Error>;
+    ) -> Result<Self, wutil::Error>;
 
     /// Convert from a Unicode code point to this type.
     /// This supports printf's ability to convert from char to scalar via a leading quote.
@@ -124,7 +124,7 @@ impl RawStringToScalarType for i64 {
         s: &'a wstr,
         _locale: &Locale,
         end: &mut &'a wstr,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, wutil::Error> {
         let mut consumed = 0;
         let res = wcstoi_partial(s, WcstoiOpts::default(), &mut consumed);
         *end = s.slice_from(consumed);
@@ -137,7 +137,7 @@ impl RawStringToScalarType for u64 {
         s: &'a wstr,
         _locale: &Locale,
         end: &mut &'a wstr,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, wutil::Error> {
         let mut consumed = 0;
         let res = wcstoi_partial(
             s,
@@ -157,7 +157,7 @@ impl RawStringToScalarType for f64 {
         s: &'a wstr,
         locale: &Locale,
         end: &mut &'a wstr,
-    ) -> Result<Self, Error> {
+    ) -> Result<Self, wutil::Error> {
         let mut consumed: usize = 0;
         let mut result = wcstod(s, locale.decimal_point, &mut consumed);
         if result.is_ok() && consumed == s.chars().count() {
@@ -204,15 +204,16 @@ fn modify_allowed_format_specifiers(ok: &mut [bool; 256], str: &str, flag: bool)
 
 impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
     #[allow(clippy::partialeq_to_none)]
-    fn verify_numeric(&mut self, s: &wstr, end: &wstr, errcode: Option<Error>) {
+    fn verify_numeric(&mut self, s: &wstr, end: &wstr, errcode: Option<wutil::Error>) {
         // This check matches the historic `errcode != EINVAL` check from C++.
         // Note that empty or missing values will be silently treated as 0.
-        if errcode.is_some_and(|err| err != Error::InvalidChar && err != Error::Empty) {
+        if errcode.is_some_and(|err| err != wutil::Error::InvalidChar && err != wutil::Error::Empty)
+        {
             match errcode.unwrap() {
-                Error::Overflow => {
+                wutil::Error::Overflow => {
                     self.fatal_error(err_fmt!("%s: Number out of range", s));
                 }
-                Error::InvalidChar | Error::Empty => {
+                wutil::Error::InvalidChar | wutil::Error::Empty => {
                     unreachable!("Unreachable");
                 }
             }
@@ -559,7 +560,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         save_argc - argc
     }
 
-    fn nonfatal_error(&mut self, err: error::Error) {
+    fn nonfatal_error(&mut self, err: builtins::Error) {
         // Don't error twice.
         if self.early_exit {
             return;
@@ -582,7 +583,7 @@ impl<'a, 'b> builtin_printf_state_t<'a, 'b> {
         self.exit_code = Err(STATUS_CMD_ERROR);
     }
 
-    fn fatal_error(&mut self, err: error::Error) {
+    fn fatal_error(&mut self, err: builtins::Error) {
         self.nonfatal_error(err);
         self.early_exit = true;
     }

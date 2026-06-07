@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::{
-    builtins::error::Error,
+    builtins::Error,
     common::valid_var_name,
     env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, INHERITED_VARS},
     err_fmt, err_str,
@@ -9,7 +9,7 @@ use crate::{
     history::{History, history_id},
     parse_execution::varname_error,
     parser::ParserEnvSetMode,
-    wutil::wcstoi::wcstoi_partial,
+    wutil::wcstoi::{self, wcstoi_partial},
 };
 use fish_common::{EscapeFlags, EscapeStringStyle, escape, escape_string, help_section};
 use fish_widestring::ELLIPSIS_CHAR;
@@ -476,7 +476,7 @@ fn split_var_and_indexes_internal<'a>(
             // at the first item.
             l_ind = 1; // first index
         } else {
-            l_ind = wcstoi_partial(c, crate::wutil::Options::default(), &mut consumed)
+            l_ind = wcstoi_partial(c, wcstoi::Options::default(), &mut consumed)
                 .map_err(|_| EnvArrayParseError::InvalidIndex(c.slice_from(consumed).to_owned()))?;
             c = c.slice_from(consumed);
             // Skip trailing whitespace.
@@ -507,8 +507,8 @@ fn split_var_and_indexes_internal<'a>(
             if res.indexes.is_empty() && c.char_at(0) == ']' {
                 l_ind2 = -1;
             } else {
-                l_ind2 = wcstoi_partial(c, crate::wutil::Options::default(), &mut consumed)
-                    .map_err(|_| {
+                l_ind2 =
+                    wcstoi_partial(c, wcstoi::Options::default(), &mut consumed).map_err(|_| {
                         EnvArrayParseError::InvalidIndex(c.slice_from(consumed - tmp).to_owned())
                     })?;
                 c = c.slice_from(consumed);

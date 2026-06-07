@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::{
-    builtins::error::Error,
+    builtins::Error,
     complete::{
         CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, complete_add,
         complete_add_wrapper, complete_print, complete_remove, complete_remove_all,

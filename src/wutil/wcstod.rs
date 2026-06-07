@@ -1,4 +1,4 @@
-use super::errors::Error;
+use super::Error;
 use super::hex_float;
 use fish_widestring::IntoCharIter;
 

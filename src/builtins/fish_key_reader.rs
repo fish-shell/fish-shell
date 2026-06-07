@@ -12,7 +12,7 @@ use std::ops::ControlFlow;
 use libc::{STDIN_FILENO, VEOF, VINTR};
 
 use crate::{
-    builtins::error::Error,
+    builtins::Error,
     common::{PROGRAM_NAME, get_program_name, shell_modes},
     env::{EnvStack, Environment as _, env_init},
     err_fmt, err_str,

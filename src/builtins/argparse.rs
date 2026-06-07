@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::prelude::*;
 
-use crate::builtins::error::Error;
+use crate::builtins::Error;
 use crate::env::{EnvMode, EnvSetMode, EnvStack};
 use crate::exec::exec_subshell;
 use crate::parser::ParserEnvSetMode;

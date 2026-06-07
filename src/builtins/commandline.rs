@@ -2,7 +2,7 @@ use super::prelude::*;
 use super::read::TokenOutputMode;
 use crate::{
     ast::{self, Kind, Leaf as _},
-    builtins::error::Error,
+    builtins::Error,
     complete::Completion,
     err_fmt, err_str,
     expand::{ExpandFlags, ExpandResultCode, expand_string},

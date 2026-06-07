@@ -7,7 +7,7 @@ use super::{
 };
 use crate::{
     abbrs::{Abbreviation, Position, abbrs_get_set},
-    builtins::shared::{BuiltinResult, SUCCESS},
+    builtins::{BuiltinResult, SUCCESS},
     env::{
         EnvMode, EnvSetMode, EnvVar, Statuses,
         config_paths::{ConfigPaths, PREFIX},

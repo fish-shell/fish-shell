@@ -66,7 +66,7 @@ impl StringSubCommand<'_> for Escape {
 
 #[cfg(test)]
 mod tests {
-    use crate::builtins::shared::{STATUS_CMD_ERROR, STATUS_CMD_OK};
+    use crate::builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK};
     use crate::tests::prelude::*;
     use crate::validate;
 

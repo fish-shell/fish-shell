@@ -2,7 +2,7 @@
 
 use super::prelude::*;
 use crate::{
-    builtins::error::Error,
+    builtins::Error,
     common::valid_var_name,
     err_fmt, err_raw, err_str,
     highlight::{colorize, highlight_and_colorize, highlight_shell},

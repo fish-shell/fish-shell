@@ -2,7 +2,7 @@
 
 use std::ops::ControlFlow;
 
-use crate::{builtins::error::Error, err_fmt, err_str};
+use crate::{builtins::Error, err_fmt, err_str};
 
 use super::prelude::*;
 

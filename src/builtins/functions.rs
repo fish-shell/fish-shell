@@ -1,6 +1,6 @@
 use super::prelude::*;
 use crate::{
-    builtins::error::Error,
+    builtins::Error,
     common::{reformat_for_screen, valid_func_name},
     err_fmt, err_str,
     event::{self},

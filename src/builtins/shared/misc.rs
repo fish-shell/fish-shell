@@ -11,6 +11,7 @@ use crate::{
 };
 use errno::errno;
 use fish_common::{Named, assert_sorted_by_name, escape, get_by_sorted_name};
+use fish_fluent::{LocalizedMessage, ToFluentValue};
 use fish_widestring::{L, bytes2wcstring, str2wcstring};
 use std::io::{BufRead as _, BufReader, Read as _};
 
@@ -24,10 +25,15 @@ localizable_consts!(
     /// The send stuff to foreground message.
     pub FG_MSG
     "Send job %d (%s) to foreground"
-
-    pub VERSION_STRING_TEMPLATE
-    "%s, version %s"
 );
+
+pub fn localized_version_string<'a>(package_name: impl ToFluentValue<'a>) -> LocalizedMessage {
+    localize!(
+        "fish-version" = "{ $package_name }, version { $version }",
+        package_name = package_name,
+        version = crate::BUILD_VERSION,
+    )
+}
 
 // Return values (`$status` values for fish scripts) for various situations.
 

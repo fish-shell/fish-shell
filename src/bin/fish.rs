@@ -20,8 +20,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 use fish::{
     ast,
     builtins::{
-        Error, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, VERSION_STRING_TEMPLATE,
-        fish_indent, fish_key_reader,
+        Error, STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_CMD_UNKNOWN, fish_indent, fish_key_reader,
+        localized_version_string,
     },
     common::{PACKAGE_NAME, PROFILING_ACTIVE, PROGRAM_NAME},
     env::{EnvMode, EnvStack, Environment as _, Statuses, config_paths::ConfigPaths, env_init},
@@ -300,10 +300,7 @@ fn fish_parse_opt(args: &mut [WString], opts: &mut FishCmdOpts) -> ControlFlow<i
             }
             'P' => opts.enable_private_mode = true,
             'v' => {
-                printf!(
-                    "%s\n",
-                    wgettext_fmt!(VERSION_STRING_TEMPLATE, PACKAGE_NAME, fish::BUILD_VERSION)
-                );
+                printf!("%s\n", localized_version_string(PACKAGE_NAME));
                 return ControlFlow::Break(0);
             }
             'D' => {

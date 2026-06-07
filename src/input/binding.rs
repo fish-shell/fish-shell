@@ -1084,11 +1084,49 @@ pub fn input_function_get_code(name: &wstr) -> Option<ReadlineCmd> {
 }
 
 #[cfg(test)]
+pub(super) mod mock {
+    use crate::input::{InputData, InputEventQueuer};
+
+    pub struct MockInputEventQueuer {
+        pub input_data: InputData,
+        pub pending_input: &'static [u8],
+    }
+
+    impl MockInputEventQueuer {
+        pub fn new() -> Self {
+            MockInputEventQueuer {
+                input_data: InputData::new(i32::MAX, None), // value doesn't matter since we don't read from it
+                pending_input: b"",
+            }
+        }
+    }
+
+    impl InputEventQueuer for MockInputEventQueuer {
+        fn get_input_data(&self) -> &InputData {
+            &self.input_data
+        }
+        fn get_input_data_mut(&mut self) -> &mut InputData {
+            &mut self.input_data
+        }
+        fn read_sequence_byte(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
+            let (head, tail) = self.pending_input.split_at_checked(1)?;
+            self.pending_input = tail;
+            let head = head[0];
+            buffer.push(head);
+            Some(head)
+        }
+    }
+}
+#[cfg(test)]
+pub(super) use mock::MockInputEventQueuer;
+
+#[cfg(test)]
 mod tests {
     use super::{
-        BindingSet, EventQueuePeeker, KeyMatchQuality, KeyNameStyle, match_key_event_to_key,
+        BindingSet, EventQueuePeeker, KeyMatchQuality, KeyNameStyle, MockInputEventQueuer,
+        match_key_event_to_key,
     };
-    use crate::input::{CharEvent, InputData, InputEventQueuer, KeyEvent};
+    use crate::input::{CharEvent, InputEventQueuer as _, KeyEvent};
     use crate::key::{Key, Modifiers};
     use crate::prelude::*;
 
@@ -1133,7 +1171,7 @@ mod tests {
         // FYI: for codepoints that are not letters with uppercase/lowercase versions, we use
         // the shifted key in the canonical notation, because the unshifted one may depend on the
         // keyboard layout.
-        let ctrl_shift_equals = KeyEvent::new_with(ctrl_shift, '=', Some('+'), None);
+        let ctrl_shift_equals = KeyEvent::new_with(ctrl_shift, true, '=', Some('+'), None);
         validate!(ctrl_shift_equals, Key::new(ctrl_shift, '='), Some(exact));
         validate!(ctrl_shift_equals, Key::new(ctrl, '+'), Some(modulo_shift)); // canonical notation
         validate!(ctrl_shift_equals, Key::new(ctrl_shift, '+'), None);
@@ -1148,14 +1186,14 @@ mod tests {
         validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), None); // can't match without shifted key
         validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
         // With a shifted codepoint, we can match the alternative notation too.
-        let caps_ctrl_shift_ä = KeyEvent::new_with(ctrl_shift, 'ä', Some('Ä'), None);
+        let caps_ctrl_shift_ä = KeyEvent::new_with(ctrl_shift, true, 'ä', Some('Ä'), None);
         validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä'), Some(exact)); // canonical notation
         validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'), None);
         validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), Some(modulo_shift)); // matched via shifted key
         validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
 
-        let ctrl_ц = KeyEvent::new_with(ctrl, 'ц', None, Some('w'));
-        let ctrl_shift_ц = KeyEvent::new_with(ctrl_shift, 'ц', Some('Ц'), Some('w'));
+        let ctrl_ц = KeyEvent::new_with(ctrl, true, 'ц', None, Some('w'));
+        let ctrl_shift_ц = KeyEvent::new_with(ctrl_shift, true, 'ц', Some('Ц'), Some('w'));
         validate!(ctrl_ц, Key::new(ctrl, 'ц'), Some(exact));
         validate!(ctrl_ц, Key::new(ctrl, 'w'), Some(base_layout));
         validate!(ctrl_ц, Key::new(ctrl_shift, 'ц'), None);
@@ -1174,24 +1212,9 @@ mod tests {
         validate!(ctrl_shift_ц, Key::new(ctrl_shift, 'w'), Some(base_layout));
     }
 
-    struct TestInputEventQueuer {
-        input_data: InputData,
-    }
-
-    impl InputEventQueuer for TestInputEventQueuer {
-        fn get_input_data(&self) -> &InputData {
-            &self.input_data
-        }
-        fn get_input_data_mut(&mut self) -> &mut InputData {
-            &mut self.input_data
-        }
-    }
-
     #[test]
     fn test_input() {
-        let mut input = TestInputEventQueuer {
-            input_data: InputData::new(i32::MAX, None), // value doesn't matter since we don't read from it
-        };
+        let mut input = MockInputEventQueuer::new();
         // Ensure sequences are order independent. Here we add two bindings where the first is a prefix
         // of the second, and then emit the second key list. The second binding should be invoked, not
         // the first!

@@ -37,6 +37,7 @@ Regression fixes:
 - (from 4.4.0) Vi mode ``c,W`` key binding wrongly deleted trailing spaces (:issue:`12790`).
 - (from 4.4.0) Vi mode ``x`` in :doc:`builtin read <cmds/read>` (:issue:`12724`).
 - (from 4.3.3) Repeated tab would sometimes insert smartcase completions redundantly.
+- (from 4.3.0) Pressing escape during command input would insert garbage text into the command line (:issue:`12379`).
 
 fish 4.7.1 (released May 08, 2026)
 ==================================

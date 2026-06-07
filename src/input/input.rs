@@ -23,7 +23,7 @@ use std::{
     time::Duration,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ReadlineCmdEvent {
     pub cmd: ReadlineCmd,
     /// The sequence of characters in the input mapping which generated this event.
@@ -32,7 +32,7 @@ pub struct ReadlineCmdEvent {
     pub seq: WString,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct KeyInputEvent {
     // The key.
     pub key: KeyEvent,
@@ -44,7 +44,7 @@ pub struct KeyInputEvent {
     pub seq: WString,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ImplicitEvent {
     /// end-of-file was reached.
     Eof,
@@ -63,14 +63,14 @@ pub enum ImplicitEvent {
     NewWindowHeight,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum QueryResponse {
     PrimaryDeviceAttribute,
     BackgroundColor(xterm_color::Color),
     CursorPosition(ViewportPosition),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum QueryResultEvent {
     Response(QueryResponse),
     Timeout,
@@ -78,7 +78,7 @@ pub enum QueryResultEvent {
     Interrupted,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum CharEvent {
     /// A character was entered.
     Key(KeyInputEvent),
@@ -122,7 +122,6 @@ impl CharEvent {
             _ => None,
         }
     }
-
     pub fn get_key_mut(&mut self) -> Option<&mut KeyInputEvent> {
         match self {
             CharEvent::Key(kevt) => Some(kevt),
@@ -173,9 +172,10 @@ impl CharEvent {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct KeyEvent {
     pub key: Key,
+    pub(crate) explicit_modifiers: bool,
     pub shifted_codepoint: char,
     pub base_layout_codepoint: char,
 }
@@ -186,12 +186,14 @@ impl KeyEvent {
     }
     pub(super) fn new_with(
         modifiers: Modifiers,
+        explicit_modifiers: bool,
         codepoint: char,
         shifted_key: Option<char>,
         base_layout_key: Option<char>,
     ) -> Self {
         Self {
             key: Key::new(modifiers, codepoint),
+            explicit_modifiers,
             shifted_codepoint: shifted_key.unwrap_or_default(),
             base_layout_codepoint: base_layout_key.unwrap_or_default(),
         }
@@ -231,7 +233,7 @@ impl KeyEvent {
 
 impl From<Key> for KeyEvent {
     fn from(key: Key) -> Self {
-        Self::new_with(key.modifiers, key.codepoint, None, None)
+        Self::new_with(key.modifiers, false, key.codepoint, None, None)
     }
 }
 
@@ -479,9 +481,7 @@ pub trait InputEventQueuer {
                 }
 
                 InputEventTrigger::Byte(read_byte) => {
-                    if let Some(evt) = on_byte_read(self, read_byte) {
-                        return evt;
-                    }
+                    on_byte_read(self, read_byte);
                 }
                 InputEventTrigger::TimeoutElapsed => {
                     return CharEvent::QueryResult(QueryResultEvent::Timeout);

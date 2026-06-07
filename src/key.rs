@@ -42,8 +42,6 @@ define_special_keys! {
     SPACE: 14
     MENU: 15
     PRINT_SCREEN: 16
-
-    INVALID: 255
 }
 
 pub(crate) const MAX_FUNCTION_KEY: u8 = 12;

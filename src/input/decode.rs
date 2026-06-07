@@ -23,36 +23,40 @@ use std::time::Duration;
 
 pub(crate) const LONG_READ_TIMEOUT: Duration = Duration::from_secs(10);
 
-pub(super) fn on_byte_read<Queuer: InputEventQueuer + ?Sized>(
-    queuer: &mut Queuer,
-    read_byte: u8,
-) -> Option<CharEvent> {
-    queuer.on_byte_read(read_byte)
+#[derive(Debug)]
+enum EscapeSequenceParseState {
+    Incomplete,
+    Complete(CharEvent),
+    Error,
+}
+#[derive(Debug)]
+struct EscapeSequenceParseResult {
+    state: EscapeSequenceParseState,
+    unconsumed_escapes: u8,
+}
+
+pub(super) fn on_byte_read<Queuer: InputEventQueuer + ?Sized>(queuer: &mut Queuer, read_byte: u8) {
+    queuer.on_byte_read(read_byte);
 }
 
 impl<T: InputEventQueuer + ?Sized> InputEventQueuerExt for T {}
 
 trait InputEventQueuerExt: InputEventQueuer {
-    fn on_byte_read(&mut self, read_byte: u8) -> Option<CharEvent> {
-        let mut have_escape_prefix = false;
+    fn on_byte_read(&mut self, read_byte: u8) {
         let mut buffer = vec![read_byte];
-        let evt = if read_byte == b'\x1b' {
-            self.parse_escape_sequence(&mut buffer, &mut have_escape_prefix)
+        let escape_sequence = if read_byte == b'\x1b' {
+            self.parse_escape_sequence(&mut buffer, false)
         } else {
             if self.paste_is_buffering() {
                 self.paste_push_char(read_byte);
-                return None;
+                return;
             }
-            None
+            EscapeSequenceParseResult {
+                state: EscapeSequenceParseState::Incomplete,
+                unconsumed_escapes: 0,
+            }
         };
-        if evt.as_ref().is_some_and(|key_evt| {
-            key_evt
-                .get_key()
-                .is_some_and(|key_evt| key_evt.key.codepoint == key::INVALID)
-        }) {
-            return None;
-        }
-        let decoded_buffer = match decode_utf8_at_least_one(&mut buffer, |buffer| {
+        let (decoded_buffer, mut is_err) = match decode_utf8_at_least_one(&mut buffer, |buffer| {
             buffer.push(
                 match next_input_event(self.get_in_fd(), self.get_ioport_fd(), Timeout::Forever) {
                     InputEventTrigger::Byte(b) => b,
@@ -60,12 +64,19 @@ trait InputEventQueuerExt: InputEventQueuer {
                 },
             );
         }) {
-            Ok(decoded) => decoded,
+            Ok(decoded) => (decoded, false),
             Err(evt) => {
-                return Some(evt);
+                self.enqueue_event(evt);
+                (Default::default(), true)
             }
         };
-        let mut evt = evt
+        is_err |= matches!(escape_sequence.state, EscapeSequenceParseState::Error);
+        let mut evt = (!is_err).then(|| {
+            match escape_sequence.state {
+                EscapeSequenceParseState::Incomplete => None,
+                EscapeSequenceParseState::Complete(evt) => Some(evt),
+                EscapeSequenceParseState::Error => unreachable!(),
+            }
             .or_else(|| {
                 let code_unit_first_byte = *buffer.last().unwrap();
                 canonicalize_control_char(code_unit_first_byte)
@@ -76,90 +87,105 @@ trait InputEventQueuerExt: InputEventQueuer {
                 let codepoint = decoded_buffer.chars().next_back().unwrap();
                 let key_evt = KeyEvent::from_raw(codepoint);
                 CharEvent::from_key_seq(key_evt, decoded_buffer)
-            });
-        if have_escape_prefix {
-            if let Some(key) = evt.get_key_mut() {
-                key.key.modifiers.alt = true;
+            })
+        });
+        if escape_sequence.unconsumed_escapes != 0 {
+            let escapes = escape_sequence.unconsumed_escapes;
+            if evt.as_mut().is_none_or(|evt| {
+                evt.get_key_mut().is_none_or(|key_evt| {
+                    let have_legacy_escape =
+                        if !key_evt.key.modifiers.alt && !key_evt.key.explicit_modifiers {
+                            key_evt.key.modifiers.alt = true;
+                            escapes == 2
+                        } else {
+                            assert!(escapes == 1);
+                            true
+                        };
+                    if have_legacy_escape {
+                        key_evt.seq.remove(0);
+                    }
+                    have_legacy_escape
+                })
+            }) {
+                self.enqueue_event(CharEvent::from_key_seq(
+                    KeyEvent::from_raw(key::ESCAPE),
+                    WString::from_str("\x1b"),
+                ));
             }
         }
-        if self.is_blocked_querying() && is_event_blocked_when_querying(&evt) {
-            if {
-                let vintr = shell_modes().control_chars[libc::VINTR];
-                vintr != 0
-                    && evt.get_key().is_some_and(|key| {
-                        match_key_event_to_key(&key.key, &Key::from_single_byte(vintr)).is_some()
-                    })
-            } {
-                flog!(
-                    reader,
-                    "Received interrupt key, giving up waiting for response from terminal"
-                );
-                let ok = stop_query(self.blocking_query_mut());
-                assert!(ok);
-                self.get_input_data_mut().queue.clear();
-                self.push_front(CharEvent::QueryResult(QueryResultEvent::Interrupted));
-                return None;
-            }
+        if let Some(evt) = evt {
+            self.enqueue_event(evt);
+        }
+    }
+
+    fn enqueue_event(&mut self, evt: CharEvent) {
+        if !self.is_blocked_querying() || !is_event_blocked_when_querying(&evt) {
+            self.push_front(evt);
+            return;
+        }
+        let vintr = shell_modes().control_chars[libc::VINTR];
+        if vintr != 0
+            && evt.get_key().is_some_and(|key_evt| {
+                match_key_event_to_key(&key_evt.key, &Key::from_single_byte(vintr)).is_some()
+            })
+        {
+            flog!(
+                reader,
+                "Received interrupt key, giving up waiting for response from terminal"
+            );
+            let ok = stop_query(self.blocking_query_mut());
+            assert!(ok);
+            self.get_input_data_mut().queue.clear();
+            self.push_front(CharEvent::QueryResult(QueryResultEvent::Interrupted));
             flog!(
                 reader,
                 "Still blocked on response from terminal, deferring key event",
                 evt
             );
-            self.push_back(evt);
-            return None;
+            return;
         }
-        Some(evt)
+        self.push_back(evt);
     }
 
     fn parse_escape_sequence(
         &mut self,
         buffer: &mut Vec<u8>,
-        have_escape_prefix: &mut bool,
-    ) -> Option<CharEvent> {
-        assert!(matches!(buffer.as_slice(), b"\x1b" | b"\x1b\x1b"));
-        let recursive_invocation = buffer.len() == 2;
-        let Some(next) = self.read_sequence_byte(buffer) else {
-            return char_event(buffer, KeyEvent::from_raw(key::ESCAPE));
-        };
-        let invalid = CharEvent::from_key(KeyEvent::from_raw(key::INVALID));
-        if !recursive_invocation && next == b'\x1b' {
-            return match self.parse_escape_sequence(buffer, have_escape_prefix) {
-                Some(mut nested_sequence) => {
-                    if nested_sequence
-                        .get_key()
-                        .is_some_and(|key_evt| key_evt.key.codepoint == key::INVALID)
-                    {
-                        return char_event(buffer, KeyEvent::from_raw(key::ESCAPE));
+        recursive: bool,
+    ) -> EscapeSequenceParseResult {
+        assert!(buffer.as_slice() == b"\x1b");
+        use EscapeSequenceParseState::*;
+        let parsed_sequence = if let Some(next) = self.read_sequence_byte(buffer) {
+            match next {
+                b'\x1b' if !recursive => {
+                    assert_eq!(buffer.as_slice(), b"\x1b\x1b");
+                    buffer.pop();
+                    let mut inner = self.parse_escape_sequence(buffer, true);
+                    match &mut inner.state {
+                        Incomplete => buffer.insert(0, b'\x1b'),
+                        Complete(CharEvent::Key(key_evt)) => key_evt.seq.insert(0, '\x1b'),
+                        _ => (),
                     }
-                    if let Some(key_evt) = nested_sequence.get_key_mut() {
-                        key_evt.key.modifiers.alt = true;
-                    }
-                    Some(nested_sequence)
+                    inner.unconsumed_escapes += 1;
+                    return inner;
                 }
-                _ => Some(invalid),
-            };
-        }
-        if next == b'[' {
-            // potential CSI
-            return Some(self.parse_csi(buffer).unwrap_or(invalid));
-        }
-        if next == b'O' {
-            // potential SS3
-            return Some(self.parse_ss3(buffer).unwrap_or(invalid));
-        }
-        if !recursive_invocation {
-            if next == b']' {
-                // OSC
-                self.parse_osc(buffer);
-                return Some(invalid);
+                b'[' => self.parse_csi(buffer),
+                b'O' => self.parse_ss3(buffer),
+                b']' => self.parse_osc(buffer),
+                b'P' => self.parse_dcs(buffer),
+                _ => {
+                    return EscapeSequenceParseResult {
+                        state: Incomplete,
+                        unconsumed_escapes: 1,
+                    };
+                }
             }
-            if next == b'P' {
-                // potential DCS
-                return Some(self.parse_dcs(buffer).unwrap_or(invalid));
-            }
+        } else {
+            char_event(buffer, KeyEvent::from_raw(key::ESCAPE))
+        };
+        EscapeSequenceParseResult {
+            state: parsed_sequence.map_or(Error, Complete),
+            unconsumed_escapes: 0,
         }
-        *have_escape_prefix = true;
-        None
     }
 
     fn parse_csi(&mut self, buffer: &mut Vec<u8>) -> Option<CharEvent> {
@@ -223,6 +249,7 @@ trait InputEventQueuerExt: InputEventQueuer {
 
         let kitty_key = |key: char, shifted_key: Option<char>, base_layout_key: Option<char>| {
             let mask = params[1][0].saturating_sub(1);
+            let explicit_modifiers = params[1][0] != 0;
             let (mut modifiers, caps_lock) = parse_mask(mask);
 
             // An event like "capslock-shift-=" should have a shifted codepoint ("+") to enable
@@ -246,7 +273,13 @@ trait InputEventQueuerExt: InputEventQueuer {
             if caps_lock && modifiers == Modifiers::SHIFT && !key.to_uppercase().eq(Some(key)) {
                 modifiers.shift = false;
             }
-            KeyEvent::new_with(modifiers, key, shifted_key, base_layout_key)
+            KeyEvent::new_with(
+                modifiers,
+                explicit_modifiers,
+                key,
+                shifted_key,
+                base_layout_key,
+            )
         };
         let masked_key = |key: char| kitty_key(key, None, None);
 
@@ -782,9 +815,66 @@ fn parse_hex_into(out: &mut [u8], hex: &[u8]) -> Option<()> {
 #[cfg(test)]
 mod tests {
     use super::parse_hex;
+    use crate::{
+        input::{
+            CharEvent, KeyEvent, MockInputEventQueuer, QueryResponse,
+            decode::{InputEventQueuerExt as _, query_response},
+        },
+        key::{self, Key, Modifiers, alt},
+    };
 
     #[test]
     fn test_parse_hex() {
         assert_eq!(parse_hex(b"3d"), Some(vec![61]));
+    }
+
+    #[test]
+    fn test_on_byte_read() {
+        fn parse_input(input: &'static [u8]) -> Vec<CharEvent> {
+            let mut queuer = MockInputEventQueuer::new();
+            queuer.pending_input = &input[1..];
+            queuer.on_byte_read(input[0]);
+            queuer.input_data.queue.drain(..).rev().collect()
+        }
+        macro_rules! validate (
+            ( $input:expr, $events:expr ) => {
+                assert_eq!(&parse_input($input), $events);
+            }
+        );
+
+        fn e(kevt: impl Into<KeyEvent>, seq: &str) -> CharEvent {
+            CharEvent::from_key_seq(kevt.into(), seq.into())
+        }
+
+        let legacy_escape = || e(Key::from_raw(key::ESCAPE), "\x1b");
+        let legacy_alt_escape = || e(alt(key::ESCAPE), "\x1b\x1b");
+        let kitty_a = KeyEvent::new_with(Modifiers::default(), true, 'a', None, None);
+        let kitty_alt_a = KeyEvent::new_with(Modifiers::ALT, true, 'a', None, None);
+        validate!(b"A", &[e(Key::from_single_char('A'), "A")]);
+        validate!(b"\x1b", &[legacy_escape()]);
+        validate!(b"\x1bA", &[e(alt('A'), "\x1bA")]);
+        validate!(b"\x1b\x1b", &[legacy_alt_escape()]);
+        validate!(b"\x1b\x1b\x1b", &[legacy_escape(), legacy_alt_escape()]);
+        validate!(b"\x1bP", &[e(alt('P'), "\x1bP")]);
+        validate!(b"\x1b\x1bP", &[legacy_escape(), e(alt('P'), "\x1bP")]);
+        validate!(b"\x1b\x1b[D", &[e(alt(key::LEFT), "\x1b\x1b[D")]);
+        validate!(b"\x1b\x1bOD", &[e(alt(key::LEFT), "\x1b\x1bOD")]);
+        validate!(
+            b"\x1b\x1b[97;1u",
+            &[legacy_escape(), e(kitty_a, "\x1b[97;1u")]
+        );
+        validate!(
+            b"\x1b\x1b[97;3u",
+            &[legacy_escape(), e(kitty_alt_a, "\x1b[97;3u")]
+        );
+        validate!(
+            b"\x1b\x1b]11;rgb:ffff/ffff/ffff\x1b\\",
+            &[
+                legacy_escape(),
+                query_response(QueryResponse::BackgroundColor(
+                    xterm_color::Color::parse(b"rgb:ffff/ffff/ffff").unwrap()
+                )),
+            ]
+        );
     }
 }

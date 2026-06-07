@@ -853,10 +853,6 @@ msgid "Invalid number: %s"
 msgstr "Número inválido: %s"
 
 #, c-format
-msgid "Invalid option spec '%s' at char '%c'"
-msgstr "Especificación de opción no válida '%s' en el carácter '%c'"
-
-#, c-format
 msgid "Invalid padding character of width zero '%s'"
 msgstr "Carácter de relleno no válido de ancho cero '%s'"
 

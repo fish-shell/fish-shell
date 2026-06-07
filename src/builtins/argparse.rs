@@ -171,9 +171,13 @@ fn parse_exclusive_args(opts: &mut Options, streams: &mut IoStreams) -> BuiltinR
     for raw_xflags in &opts.raw_exclusive_flags {
         let xflags: Vec<_> = raw_xflags.split(',').collect();
         if xflags.len() < 2 {
-            err_fmt!("exclusive flag string '%s' is not valid", raw_xflags)
-                .cmd(&opts.name)
-                .finish(streams);
+            Error::from(&localize!(
+                "argparse-exclusive-flag-string-invalid" =
+                    "exclusive flag string '{ $flag_string }' is not valid",
+                flag_string = raw_xflags,
+            ))
+            .cmd(&opts.name)
+            .finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
 
@@ -187,9 +191,12 @@ fn parse_exclusive_args(opts: &mut Options, streams: &mut IoStreams) -> BuiltinR
                 // It's a long flag we store as its short flag equivalent.
                 exclusive_set.push(*short_equiv);
             } else {
-                err_fmt!("exclusive flag '%s' is not valid", flag)
-                    .cmd(&opts.name)
-                    .finish(streams);
+                Error::from(&localize!(
+                    "argparse-exclusive-flag-invalid" = "exclusive flag '{ $flag }' is not valid",
+                    flag = flag,
+                ))
+                .cmd(&opts.name)
+                .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
         }
@@ -290,9 +297,11 @@ fn parse_option_spec_sep<'args>(
     counter: &mut u32,
     streams: &mut IoStreams,
 ) -> bool {
-    localizable_consts! {
-        IMPLICIT_INT_FLAG_ALREADY_DEFINED
-        "Implicit int flag '%c' already defined"
+    localize_fn! {
+        localize_implicit_int_flag_already_defined,
+        "argparse-implicit-int-flag-already-defined" =
+            "Implicit int flag '{ $flag }' already defined",
+        flag,
     }
     let mut s = *opt_spec_str;
     let mut i = 1usize;
@@ -305,9 +314,11 @@ fn parse_option_spec_sep<'args>(
             *counter += 1;
         }
         if opts.implicit_int_flag != '\0' {
-            err_fmt!(IMPLICIT_INT_FLAG_ALREADY_DEFINED, opts.implicit_int_flag)
-                .cmd(&opts.name)
-                .finish(streams);
+            Error::from(&localize_implicit_int_flag_already_defined(
+                opts.implicit_int_flag,
+            ))
+            .cmd(&opts.name)
+            .finish(streams);
             return false;
         }
         opts.implicit_int_flag = opt_spec.short_flag;
@@ -339,9 +350,11 @@ fn parse_option_spec_sep<'args>(
         }
         '#' => {
             if opts.implicit_int_flag != '\0' {
-                err_fmt!(IMPLICIT_INT_FLAG_ALREADY_DEFINED, opts.implicit_int_flag)
-                    .cmd(&opts.name)
-                    .finish(streams);
+                Error::from(&localize_implicit_int_flag_already_defined(
+                    opts.implicit_int_flag,
+                ))
+                .cmd(&opts.name)
+                .finish(streams);
                 return false;
             }
             opts.implicit_int_flag = opt_spec.short_flag;

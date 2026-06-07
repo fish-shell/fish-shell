@@ -876,10 +876,6 @@ msgid "Illegal instruction"
 msgstr "Instruction illégale"
 
 #, c-format
-msgid "Implicit int flag '%c' already defined"
-msgstr "Le sémaphore implicitement entier « %c » est déjà défini"
-
-#, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
 msgstr "Le sémaphore court implicitement entier « %c » n’autorise pas de modificateurs comme « %c »"
 
@@ -1766,14 +1762,6 @@ msgstr ""
 
 msgid "error"
 msgstr ""
-
-#, c-format
-msgid "exclusive flag '%s' is not valid"
-msgstr "le sémaphore exclusif « %s » est invalide"
-
-#, c-format
-msgid "exclusive flag string '%s' is not valid"
-msgstr "le sémaphore texte exclusif « %s » est invalide"
 
 #, c-format
 msgid "expected %d arguments; got %d"

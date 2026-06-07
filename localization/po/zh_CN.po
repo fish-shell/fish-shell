@@ -768,10 +768,6 @@ msgid "Illegal instruction"
 msgstr "非法指令"
 
 #, c-format
-msgid "Implicit int flag '%c' already defined"
-msgstr "隐式整形标识 '%c' 已被定义"
-
-#, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
 msgstr "隐式整形短标识 '%c' 不能带有形如 '%c' 的修饰符"
 
@@ -1658,14 +1654,6 @@ msgstr "目录"
 
 msgid "error"
 msgstr "错误"
-
-#, c-format
-msgid "exclusive flag '%s' is not valid"
-msgstr "排他标识 '%s' 无效"
-
-#, c-format
-msgid "exclusive flag string '%s' is not valid"
-msgstr "排他标识字符串 '%s' 无效"
 
 #, c-format
 msgid "expected %d arguments; got %d"

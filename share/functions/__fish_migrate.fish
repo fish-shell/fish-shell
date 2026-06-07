@@ -16,7 +16,7 @@ function __fish_migrate
     # Create config.fish with some boilerplate if it does not exist
     test -e $__fish_config_dir/config.fish || echo "\
 if status is-interactive
-# Commands to run in interactive sessions can go here
+    # Commands to run in interactive sessions can go here
 end" >$__fish_config_dir/config.fish
 
     set -l mark_migration_done set -U __fish_initialized $migration_version

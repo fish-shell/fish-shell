@@ -2181,6 +2181,8 @@ complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasin
 complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l abort -d 'Abort the rebase operation'
 complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l edit-todo -d 'Edit the todo list'
 complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l skip -d 'Restart the rebasing process by skipping the current patch'
+complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l show-current-patch -d 'Show the patch file being applied or merged'
+complete -f -c git -n '__fish_git_using_command rebase' -n __fish_git_is_rebasing -l quit -d 'Abort the rebase operation but keep HEAD where it is'
 complete -f -c git -n '__fish_git_using_command rebase' -l keep-empty -d "Keep the commits that don't change anything"
 complete -f -c git -n '__fish_git_using_command rebase' -l keep-base -d 'Keep the base commit as-is'
 complete -f -c git -n '__fish_git_using_command rebase' -s m -l merge -d 'Use merging strategies to rebase'

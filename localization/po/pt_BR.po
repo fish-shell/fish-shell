@@ -748,10 +748,6 @@ msgid "Illegal instruction"
 msgstr "Instrução ilegal"
 
 #, c-format
-msgid "Implicit int flag '%c' already defined"
-msgstr ""
-
-#, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
 msgstr ""
 
@@ -1637,14 +1633,6 @@ msgid "directory"
 msgstr ""
 
 msgid "error"
-msgstr ""
-
-#, c-format
-msgid "exclusive flag '%s' is not valid"
-msgstr ""
-
-#, c-format
-msgid "exclusive flag string '%s' is not valid"
 msgstr ""
 
 #, c-format

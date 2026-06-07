@@ -746,10 +746,6 @@ msgid "Illegal instruction"
 msgstr "不正な命令(Illegal instruction)"
 
 #, c-format
-msgid "Implicit int flag '%c' already defined"
-msgstr "暗黙的な整数フラグ '%c' はすでに定義されています"
-
-#, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
 msgstr "暗黙的な整数の短縮フラグ '%c' では '%c' のような修飾子は使用できません"
 
@@ -1636,14 +1632,6 @@ msgstr "ディレクトリ"
 
 msgid "error"
 msgstr "エラー"
-
-#, c-format
-msgid "exclusive flag '%s' is not valid"
-msgstr "排他的なフラグ '%s' は有効ではありません"
-
-#, c-format
-msgid "exclusive flag string '%s' is not valid"
-msgstr "排他的なフラグ文字列 '%s' は有効ではありません"
 
 #, c-format
 msgid "expected %d arguments; got %d"

@@ -747,10 +747,6 @@ msgid "Illegal instruction"
 msgstr "Illegale Instruktion"
 
 #, c-format
-msgid "Implicit int flag '%c' already defined"
-msgstr "Implizite Zahloption '%c' ist schon definiert"
-
-#, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
 msgstr "Implizite Zahloption '%c' darf keine Modifikatoren wie '%c' haben"
 
@@ -1637,14 +1633,6 @@ msgstr "Verzeichnis"
 
 msgid "error"
 msgstr "Fehler"
-
-#, c-format
-msgid "exclusive flag '%s' is not valid"
-msgstr "Exklusive Option '%s' ist ungültig"
-
-#, c-format
-msgid "exclusive flag string '%s' is not valid"
-msgstr "Exklusive Option '%s' ist ungültig"
 
 #, c-format
 msgid "expected %d arguments; got %d"

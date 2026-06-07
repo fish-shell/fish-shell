@@ -5198,6 +5198,9 @@ msgstr "Annuler la résolution de conflits en cours"
 msgid "Abort the rebase operation"
 msgstr "Annuler le rebasage"
 
+msgid "Abort the rebase operation but keep HEAD where it is"
+msgstr ""
+
 msgid "Abort without restoring branch"
 msgstr ""
 
@@ -60357,6 +60360,9 @@ msgid "Show the package files for PKG"
 msgstr ""
 
 msgid "Show the package source RPM name"
+msgstr ""
+
+msgid "Show the patch file being applied or merged"
 msgstr ""
 
 msgid "Show the plain metadata.xml file"

@@ -616,14 +616,11 @@ pub trait InputEventQueuer {
         }
     }
 
-    fn blocking_query(&self) -> &Option<TerminalQuery> {
-        &self.get_input_data().blocking_query
-    }
     fn blocking_query_mut(&mut self) -> &mut Option<TerminalQuery> {
         &mut self.get_input_data_mut().blocking_query
     }
     fn is_blocked_querying(&self) -> bool {
-        self.blocking_query().is_some()
+        self.get_input_data().blocking_query.is_some()
     }
 
     /// Override point for when we are about to (potentially) block in select(). The default does

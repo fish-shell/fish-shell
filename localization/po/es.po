@@ -120,10 +120,6 @@ msgid "%s variable"
 msgstr "variable %s"
 
 #, c-format
-msgid "%s, version %s"
-msgstr "%s, versión %s"
-
-#, c-format
 msgid "%s: %s"
 msgstr ""
 

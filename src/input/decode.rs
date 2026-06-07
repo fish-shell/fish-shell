@@ -274,12 +274,12 @@ trait InputEventQueuerExt: InputEventQueuer {
                 subcount = 0;
             } else {
                 // Unexpected character or unrecognized CSI
-                return None;
+                return invalid_sequence(buffer);
             }
             c = next_char(self);
         }
         if c != b'$' && !(0x40..=0x7e).contains(&c) {
-            return None;
+            return invalid_sequence(buffer);
         }
 
         let kitty_key = |key: char, shifted_key: Option<char>, base_layout_key: Option<char>| {

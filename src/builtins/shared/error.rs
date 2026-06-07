@@ -7,6 +7,7 @@ use crate::{
     wgettext_fmt,
 };
 
+use fish_fluent::LocalizedMessage;
 use fish_widestring::wstr;
 
 #[macro_export]
@@ -257,5 +258,16 @@ impl<'a> Error<'a> {
             "(Type 'help %s' for related documentation)",
             cmd
         ));
+    }
+}
+
+impl<'a> From<&'a LocalizedMessage> for Error<'a> {
+    fn from(value: &LocalizedMessage) -> Self {
+        // Perform a simple conversion to a widestring.
+        // Needing to allocate here is not ideal, but this is mostly intended as a temporary
+        // interoperability layer until we have ported all users of this error module to Fluent.
+        // Here it is important that we do a plain conversion between encodings, rather than
+        // encoding again, because the `localized_msg` will already use our PUA encoding.
+        Self::new(Cow::Owned(WString::from_str(value)))
     }
 }

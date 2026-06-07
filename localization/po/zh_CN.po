@@ -874,10 +874,6 @@ msgid "Invalid number: %s"
 msgstr "无效的数字：%s"
 
 #, c-format
-msgid "Invalid option spec '%s' at char '%c'"
-msgstr "无效的选项规范 '%s' 于字符 '%c'"
-
-#, c-format
 msgid "Invalid padding character of width zero '%s'"
 msgstr "宽度为零的无效的填充字符 '%s'"
 

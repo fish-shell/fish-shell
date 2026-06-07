@@ -852,10 +852,6 @@ msgid "Invalid number: %s"
 msgstr "数値が無効です: %s"
 
 #, c-format
-msgid "Invalid option spec '%s' at char '%c'"
-msgstr "オプション仕様 '%s' の文字 '%c' が無効です"
-
-#, c-format
 msgid "Invalid padding character of width zero '%s'"
 msgstr "幅がゼロのパディング文字 '%s' は無効です"
 

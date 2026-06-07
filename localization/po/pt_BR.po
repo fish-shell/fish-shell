@@ -854,10 +854,6 @@ msgid "Invalid number: %s"
 msgstr ""
 
 #, c-format
-msgid "Invalid option spec '%s' at char '%c'"
-msgstr ""
-
-#, c-format
 msgid "Invalid padding character of width zero '%s'"
 msgstr ""
 

@@ -9,6 +9,12 @@ echo x-{1,2}
 echo foo-{1,2{3,4}}
 #CHECK: foo-1 foo-23 foo-24
 
+# Nested brace entries also strip unquoted leading/trailing spaces.
+echo foo-{bar, baz-{far, faz}}
+#CHECK: foo-bar foo-baz-far foo-baz-faz
+echo foo-{bar, baz-{far ,faz}}
+#CHECK: foo-bar foo-baz-far foo-baz-faz
+
 echo foo-{} # literal "{}" expands to itself
 #CHECK: foo-{}
 

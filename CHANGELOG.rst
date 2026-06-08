@@ -21,6 +21,7 @@ Other improvements
 - ``cd`` with a relative path will now retry using the real current directory, if ``$PWD`` has been moved or deleted (:issue:`12700`).
 - fish no longer creates universal variables by default; specifically the ``__fish_initialized`` variable is no longer created.
   If you don't expect to need to downgrade to earlier versions, you can remove it with ``set --erase __fish_initialized``.
+- Nested brace expansions now strip unquoted leading and trailing spaces from entries consistently (:issue:`12794`).
 
 For distributors and developers
 -------------------------------

@@ -126,6 +126,20 @@ function __fish_zpool_complete_vdevs
     end
 end
 
+# List all devices not associated with a pool, unless $except_pool is provided in which case
+# list all devices, including those associated with any pool other than $except_pool.
+function __fish_zpool_list_free_vdevs -a except_pool
+    set exclude_regex (
+        __fish_zpool_list_used_vdevs $except_pool \
+            | string escape --style=regex \
+            | string replace -r "(.*)" '^$1\$' \
+            | string join "|"
+    )
+    __fish_zpool_list_available_vdevs |
+        string match -vr $exclude_regex
+end
+
+
 function __fish_zpool_list_get_fields
     echo -e "name\tPool full name"
     echo -e "property\tProperty"
@@ -240,7 +254,7 @@ complete -c zpool -x -n '__fish_zpool_using_command add; and __fish_is_nth_token
 # complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs)'
 # Exclude devices already part of this pool, and devices already in any other pool unless
 # `zpool add -f` was used.
-complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -k -d 'Virtual device to add' -a '(__fish_zpool_complete_vdevs | string match -vr (__fish_zpool_list_used_vdevs (__fish_seen_argument -s f && __fish_nth_token 2) | string escape --style regex | string replace -r \'(.*)\' \'^$1\\\\\\$\' | string join "|"))' # the insane number of backslashes is unfortunate
+complete -c zpool -x -n '__fish_zpool_using_command add; and not __fish_prev_arg_in add' -k -d 'Virtual device to add' -a '(__fish_zpool_list_free_vdevs (__fish_seen_argument -s f && __fish_nth_token 2))'
 
 # attach completions
 complete -c zpool -f -n '__fish_zpool_using_command attach' -s f -d 'Force use of virtual device'
@@ -257,7 +271,7 @@ complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_to
 # These latter can be forcefully added, so we only exclude them if we don't introspect the presence
 # of a `-f` argument to `zpool attach` (but still exclude any devices already part of the same pool
 # that we're attaching to, "obviously").
-complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 4' -d 'Device to be attached' -a '(__fish_zpool_list_available_vdevs | string match -vr (__fish_zpool_list_used_vdevs (__fish_seen_argument -s f && __fish_nth_token 2) | string escape --style regex | string replace -r \'(.*)\' \'^$1\\\\\\$\' | string join "|"))' # the insane number of backslashes is unfortunate
+complete -c zpool -x -n '__fish_zpool_using_command attach; and __fish_is_nth_token 4' -d 'Device to be attached' -a '(__fish_zpool_list_free_vdevs (__fish_seen_argument -s f && __fish_nth_token 2))'
 
 # clear completions
 if test $OS = FreeBSD

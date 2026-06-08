@@ -37,13 +37,13 @@ trait InputEventQueuerExt: InputEventQueuer {
     fn on_byte_read(&mut self, read_byte: u8) -> Option<CharEvent> {
         let mut have_escape_prefix = false;
         let mut buffer = vec![read_byte];
-        let mut key = if read_byte == 0x1b {
+        let mut key = if read_byte == b'\x1b' {
             self.parse_escape_sequence(&mut buffer, &mut have_escape_prefix)
         } else {
             canonicalize_control_char(read_byte).map(KeyEvent::from)
         };
         if self.paste_is_buffering() {
-            if read_byte != 0x1b {
+            if read_byte != b'\x1b' {
                 self.paste_push_char(read_byte);
             }
             return None;

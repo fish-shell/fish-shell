@@ -47,6 +47,7 @@ pub unsafe fn set_libc_locales(log_ok: bool) -> bool {
 fn setlocale(category: libc::c_int, locale: Option<&CStr>) -> Option<&'static CStr> {
     let loc_ptr = {
         let locale = locale.map_or(std::ptr::null(), |loc| loc.as_ptr());
+        #[allow(clippy::disallowed_methods)]
         unsafe { libc::setlocale(category, locale) }
     };
     (!loc_ptr.is_null()).then(||

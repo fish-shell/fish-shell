@@ -39,14 +39,12 @@ trait InputEventQueuerExt: InputEventQueuer {
         let evt = if read_byte == b'\x1b' {
             self.parse_escape_sequence(&mut buffer, &mut have_escape_prefix)
         } else {
+            if self.paste_is_buffering() {
+                self.paste_push_char(read_byte);
+                return None;
+            }
             None
         };
-        if self.paste_is_buffering() {
-            if read_byte != b'\x1b' {
-                self.paste_push_char(read_byte);
-            }
-            return None;
-        }
         if evt.as_ref().is_some_and(|key_evt| {
             key_evt
                 .get_key()

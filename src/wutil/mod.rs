@@ -7,6 +7,12 @@ pub mod printf;
 pub mod wcstod;
 pub mod wcstoi;
 
+pub use crate::wutil::printf::{eprintf, fprintf, printf, sprintf};
+pub use fileid::{
+    DevInode, FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, file_id_for_path_narrow,
+};
+pub use wcstoi::*;
+
 use crate::{fds::BorrowedFdFile, flog, signal::SigChecker};
 use errno::{Errno, set_errno};
 use fish_util::{perror, write_to_fd};
@@ -22,13 +28,6 @@ use std::{
     io,
     os::unix::prelude::*,
 };
-
-pub use crate::wutil::printf::{eprintf, fprintf, printf, sprintf};
-
-pub use fileid::{
-    DevInode, FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, file_id_for_path_narrow,
-};
-pub use wcstoi::*;
 
 /// Wide character version of opendir(). Note that opendir() is guaranteed to set close-on-exec by
 /// POSIX (hooray).

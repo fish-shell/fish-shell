@@ -403,14 +403,14 @@ complete -c zpool -x -n '__fish_zpool_using_command remove' -d 'Physical device 
 # reopen completions
 complete -c zpool -x -n '__fish_zpool_using_command reopen' -d 'Pool which devices are to be reopened' -a '(__fish_complete_zfs_pools)'
 
-# replace completions
+# replace completions (same semantics as attach)
 complete -c zpool -f -n '__fish_zpool_using_command replace' -s f -d 'Force use of virtual device'
 if __fish_is_openzfs
     complete -c zpool -x -n '__fish_zpool_using_command replace' -s o -d 'Pool property' -a '(__fish_zpool_list_device_properties)'
 end
-complete -c zpool -x -n '__fish_zpool_using_command replace' -d 'Pool to replace device' -a '(__fish_complete_zfs_pools)'
-complete -c zpool -x -n '__fish_zpool_using_command replace' -d 'Pool device to be replaced' -a '(__fish_zpool_list_used_vdevs)'
-complete -c zpool -f -n '__fish_zpool_using_command replace' -d 'Device to use for replacement' -a '(__fish_zpool_list_available_vdevs)'
+complete -c zpool -x -n '__fish_zpool_using_command replace; and __fish_is_nth_token 2' -d 'Pool to replace device of' -a '(__fish_complete_zfs_pools)'
+complete -c zpool -x -n '__fish_zpool_using_command replace; and __fish_is_nth_token 3' -d 'Existing pool device to replace' -a '(__fish_zpool_list_used_vdevs (__fish_nth_token 2))'
+complete -c zpool -x -n '__fish_zpool_using_command replace; and __fish_is_nth_token 4' -d 'Replacement device' -a '(__fish_zpool_list_free_vdevs (__fish_seen_argument -s f && __fish_nth_token 2))'
 
 # scrub completions
 complete -c zpool -f -n '__fish_zpool_using_command scrub' -s s -d 'Stop scrubbing'

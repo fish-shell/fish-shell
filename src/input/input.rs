@@ -1,4 +1,7 @@
-use super::{binding::ReadlineCmd, decode::on_byte_read};
+use super::{
+    binding::ReadlineCmd,
+    decode::{DisplayBytes, LONG_READ_TIMEOUT, on_byte_read},
+};
 use crate::{
     common::{WSL, is_windows_subsystem_for_linux, shell_modes},
     env::{EnvStack, Environment as _},
@@ -11,6 +14,7 @@ use crate::{
     wutil::{fish_is_pua, fish_wcstol},
 };
 use fish_common::read_blocked;
+use fish_feature_flags::{FeatureFlag, feature_test};
 use nix::sys::{select::FdSet, signal::SigSet, time::TimeSpec};
 use std::{
     collections::VecDeque,
@@ -658,6 +662,46 @@ pub trait InputEventQueuer {
     /// Get the function status.
     fn function_status(&self) -> bool {
         self.get_input_data().function_status
+    }
+
+    fn read_sequence_byte(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
+        let fd = self.get_in_fd();
+        let strict = feature_test(FeatureFlag::OmitTermWorkarounds);
+        let historical_millis = |ms| {
+            if strict {
+                LONG_READ_TIMEOUT
+            } else {
+                Duration::from_millis(ms)
+            }
+        };
+        if !check_fd_readable(
+            unsafe { BorrowedFd::borrow_raw(fd) },
+            if self.paste_is_buffering() || self.is_blocked_querying() {
+                historical_millis(300)
+            } else if buffer == b"\x1b" {
+                Duration::from_millis(1) // distinguish legacy escape
+            } else {
+                historical_millis(30)
+            },
+        ) {
+            flog!(
+                reader,
+                format!("Incomplete escape sequence: {}", DisplayBytes(buffer))
+            );
+            if buffer != b"\x1b" && strict {
+                flog!(
+                    error,
+                    format!(
+                        "Incomplete escape sequence seen (logging because omit-term-workarounds is on): {}",
+                        DisplayBytes(buffer)
+                    )
+                );
+            }
+            return None;
+        }
+        let next = readb(fd)?;
+        buffer.push(next);
+        Some(next)
     }
 
     /// Return if we have any lookahead.

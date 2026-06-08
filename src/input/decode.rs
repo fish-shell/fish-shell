@@ -2,7 +2,7 @@ use super::{
     binding::match_key_event_to_key,
     input::{
         CharEvent, ImplicitEvent, InputEventQueuer, InputEventTrigger, KeyEvent, QueryResponse,
-        QueryResultEvent, check_fd_readable, next_input_event, readb, stop_query,
+        QueryResultEvent, next_input_event, stop_query,
     },
 };
 use crate::{
@@ -18,9 +18,8 @@ use crate::{
         maybe_set_kitty_keyboard_capability, maybe_set_scroll_content_up_capability,
     },
 };
-use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_widestring::{WString, bytes2wcstring, encode_byte_to_char, fish_reserved_codepoint};
-use std::{os::fd::BorrowedFd, time::Duration};
+use std::time::Duration;
 
 pub(crate) const LONG_READ_TIMEOUT: Duration = Duration::from_secs(10);
 
@@ -182,46 +181,6 @@ trait InputEventQueuerExt: InputEventQueuer {
                 None
             }
         }
-    }
-
-    fn read_sequence_byte(&mut self, buffer: &mut Vec<u8>) -> Option<u8> {
-        let fd = self.get_in_fd();
-        let strict = feature_test(FeatureFlag::OmitTermWorkarounds);
-        let historical_millis = |ms| {
-            if strict {
-                LONG_READ_TIMEOUT
-            } else {
-                Duration::from_millis(ms)
-            }
-        };
-        if !check_fd_readable(
-            unsafe { BorrowedFd::borrow_raw(fd) },
-            if self.paste_is_buffering() || self.is_blocked_querying() {
-                historical_millis(300)
-            } else if buffer == b"\x1b" {
-                Duration::from_millis(1) // distinguish legacy escape
-            } else {
-                historical_millis(30)
-            },
-        ) {
-            flog!(
-                reader,
-                format!("Incomplete escape sequence: {}", DisplayBytes(buffer))
-            );
-            if buffer != b"\x1b" && strict {
-                flog!(
-                    error,
-                    format!(
-                        "Incomplete escape sequence seen (logging because omit-term-workarounds is on): {}",
-                        DisplayBytes(buffer)
-                    )
-                );
-            }
-            return None;
-        }
-        let next = readb(fd)?;
-        buffer.push(next);
-        Some(next)
     }
 
     fn parse_csi(&mut self, buffer: &mut Vec<u8>) -> Option<KeyEvent> {
@@ -778,7 +737,7 @@ fn invalid_sequence(buffer: &[u8]) -> Option<KeyEvent> {
     None
 }
 
-struct DisplayBytes<'a>(&'a [u8]);
+pub(super) struct DisplayBytes<'a>(pub(super) &'a [u8]);
 
 impl<'a> std::fmt::Display for DisplayBytes<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

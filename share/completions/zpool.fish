@@ -60,7 +60,13 @@ function __fish_zpool_list_available_vdevs -V OS
     if test $OS = Linux
         find /dev -type b | string replace /dev/ ''
     else if test $OS = FreeBSD
-        sysctl -an kern.disks | string split ' '
+        # all adaXX/daXX/etc block device identifiers, no leading /dev/, cds and floppies excluded (e.g. emulated)
+        printf "%s\n" /dev/(sysctl -an kern.disks | string split ' ')* | string replace -rf "/dev/((?!cd|fd).*)" '$1'
+        # serial-based disk paths (e.g. /dev/diskid/DISK-XXXX printed as diskid/DISK-XXXX)
+        if path is -d /dev/diskid
+            # Not using wildcards to prevent an error if empty
+            printf "diskid/%s\n" (ls /dev/diskid)
+        end
     else if test $OS = SunOS
         find /dev/dsk -type b | string replace /dev/ ''
     end

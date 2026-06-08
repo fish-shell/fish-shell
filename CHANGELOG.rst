@@ -17,6 +17,7 @@ Interactive improvements
 Other improvements
 ------------------
 - ``cd`` supports the ``-L`` and ``-P`` options, like other shells, to allow specifying whether symbolic links (symlinks) are resolved when changing directories (:issue:`7206`).
+- Nested brace expansions now strip unquoted leading and trailing spaces from entries consistently (:issue:`12794`).
 
 For distributors and developers
 -------------------------------

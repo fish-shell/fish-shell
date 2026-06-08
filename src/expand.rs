@@ -836,7 +836,14 @@ fn expand_braces(
     }
 
     let Some(brace_begin) = brace_begin else {
-        // No more brace expansions left; we can return the value as-is.
+        // No more brace expansions left; restore spaces that were protected while
+        // expanding braces and return the value as-is.
+        let mut input = input;
+        for c in input.as_char_slice_mut() {
+            if *c == BRACE_SPACE {
+                *c = ' ';
+            }
+        }
         if !out.add(input) {
             return append_overflow_error(errors, None);
         }
@@ -853,12 +860,7 @@ fn expand_braces(
             assert!(pos >= item_begin);
             let item_len = pos - item_begin;
             let item = input[item_begin..pos].to_owned();
-            let mut item = trim(item, Some(wstr::from_char_slice(&[BRACE_SPACE, '\0'])));
-            for c in item.as_char_slice_mut() {
-                if *c == BRACE_SPACE {
-                    *c = ' ';
-                }
-            }
+            let item = trim(item, Some(wstr::from_char_slice(&[BRACE_SPACE, '\0'])));
 
             // `whole_item` is a whitespace- and brace-stripped member of a single pass of brace
             // expansion, e.g. in `{ alpha , b,{c, d }}`, `alpha`, `b`, and `c, d` will, in the

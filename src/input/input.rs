@@ -123,6 +123,13 @@ impl CharEvent {
         }
     }
 
+    pub fn get_key_mut(&mut self) -> Option<&mut KeyInputEvent> {
+        match self {
+            CharEvent::Key(kevt) => Some(kevt),
+            _ => None,
+        }
+    }
+
     pub fn get_readline(&self) -> ReadlineCmd {
         let CharEvent::Readline(c) = self else {
             panic!("Not a readline type");
@@ -404,22 +411,28 @@ pub enum TerminalQuery {
     Recurrent(RecurrentQuery),
 }
 
+pub(super) fn is_event_blocked_when_querying(evt: &CharEvent) -> bool {
+    use ImplicitEvent::*;
+    match evt {
+        CharEvent::QueryResult(_) | CharEvent::Implicit(CheckExit | Eof) => false,
+        CharEvent::Key(_)
+        | CharEvent::Readline(_)
+        | CharEvent::Command(_)
+        | CharEvent::Implicit(_) => {
+            true // No code execution while blocked.
+        }
+    }
+}
+
 /// A trait which knows how to produce a stream of input events.
 /// Note this is conceptually a "base class" with override points.
 pub trait InputEventQueuer {
     /// Return the next event in the queue, or none if the queue is empty.
     fn try_pop(&mut self) -> Option<CharEvent> {
-        if self.is_blocked_querying() {
-            use ImplicitEvent::*;
-            match self.get_input_data().queue.front()? {
-                CharEvent::QueryResult(_) | CharEvent::Implicit(CheckExit | Eof) => {}
-                CharEvent::Key(_)
-                | CharEvent::Readline(_)
-                | CharEvent::Command(_)
-                | CharEvent::Implicit(_) => {
-                    return None; // No code execution while blocked.
-                }
-            }
+        if self.is_blocked_querying()
+            && is_event_blocked_when_querying(self.get_input_data().queue.front()?)
+        {
+            return None;
         }
         self.get_input_data_mut().queue.pop_front()
     }
@@ -562,10 +575,6 @@ pub trait InputEventQueuer {
     /// will be the next character returned by readch.
     fn push_front(&mut self, ch: CharEvent) {
         self.get_input_data_mut().queue.push_front(ch);
-    }
-
-    fn push_query_response(&mut self, response: QueryResponse) {
-        self.push_front(CharEvent::QueryResult(QueryResultEvent::Response(response)));
     }
 
     /// Find the first sequence of non-char events, and promote them to the front.

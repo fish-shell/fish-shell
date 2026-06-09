@@ -9,9 +9,7 @@ use crate::{
     path::path_apply_cdpath,
     wutil::{normalize_path, wreadlink, wrealpath},
 };
-use errno::Errno;
-use libc::{EACCES, ELOOP, ENOENT, ENOTDIR, EPERM};
-use nix::unistd::fchdir;
+use nix::{errno::Errno, unistd::fchdir};
 
 // cd is highlighted specially in src/highlight/highlight.rs - new options also need to be added
 // there
@@ -59,6 +57,7 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         return Err(STATUS_INVALID_ARGS);
     };
 
+    // Validate arguments.
     let argc = args.len();
     let mut deref_symlink = false;
     let mut w = WGetopter::new(SHORT_OPTIONS, LONG_OPTIONS, args);
@@ -121,6 +120,7 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         return Err(STATUS_CMD_ERROR);
     }
 
+    // If given -P, deref PWD before applying any CDPATH.
     let mut pwd = vars.get_pwd_slash();
     if deref_symlink {
         if let Some(mut real_pwd) = wrealpath(&pwd) {
@@ -143,30 +143,28 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
     }
 
+    // Walk over candidate directories, respecting CDPATH.
     let dirs = path_apply_cdpath(dir_in, &pwd, vars);
     assert!(
         !dirs.is_empty(),
         "dirs should always contains a least an abs path, or a rel path, or '<PWD>/...'"
     );
 
-    let mut best_errno = 0;
-    let mut broken_symlink = WString::new();
-    let mut broken_symlink_target = WString::new();
+    // Because we may have multiple candidate directories, we have to be choosy about
+    // which error to report.
+    let mut best_errno: Option<Errno> = None;
+
+    // If the error is a broken symlink, keep track of that here.
+    // This is a tuple of the path to the symlink, and what the symlink was trying to point to.
+    // Note if broken_symlink is set, so is best_errno; however it may not be ENOENT.
+    let mut broken_symlink: Option<(WString, WString)> = None;
 
     for dir in dirs {
         let norm_dir = normalize_path(&dir, true);
-
-        errno::set_errno(Errno(0));
-
-        let res = wopen_dir(&norm_dir, BEST_O_SEARCH).map_err(|err| err as i32);
-
-        let res = res.and_then(|fd| {
-            fchdir(&fd)
-                .map_err(|_|
-                // nix::Result::Err contains nix::errno::Errno, which does not offer an API for
-                // converting to a raw int.
-                errno::errno().0)
-                .map(|()| fd)
+        // Try opening the directory and invoking fchdir().
+        let res = wopen_dir(&norm_dir, BEST_O_SEARCH).and_then(|fd| {
+            fchdir(&fd)?;
+            Ok(fd)
         });
 
         let _fd = match res {
@@ -176,20 +174,26 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
                 // ENOENT in particular is very low priority
                 // - if in another directory there was a *file* by the correct name
                 // we prefer *that* error because it's more specific
-                if err == ENOENT {
-                    let tmp = wreadlink(&norm_dir);
-                    if let Some(tmp) = tmp.filter(|_| broken_symlink.is_empty()) {
-                        broken_symlink = norm_dir;
-                        broken_symlink_target = tmp;
-                    } else if best_errno == 0 {
-                        best_errno = errno::errno().0;
+                if err == Errno::ENOENT {
+                    // If this is the first broken symlink, record it.
+                    if broken_symlink.is_none() {
+                        if let Some(symlink_dest) = wreadlink(&norm_dir) {
+                            broken_symlink = Some((norm_dir, symlink_dest));
+                        }
+                    }
+                    if best_errno.is_none() {
+                        best_errno = Some(err);
                     }
                     continue;
-                } else if err == ENOTDIR {
-                    best_errno = err;
+                } else if err == Errno::ENOTDIR {
+                    best_errno = Some(err);
                     continue;
                 }
-                best_errno = err;
+                // Hard error - stop the search.
+                // This most likely indicates that the user tried to cd into a directory that exists, but the cd failed.
+                // We don't keep trying further directories in CDPATH: this directory is probably what the user intended and
+                // an error is better than a worse directory choice.
+                best_errno = Some(err);
                 break;
             }
         };
@@ -199,22 +203,25 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
     }
 
-    let mut err = if best_errno == ENOTDIR {
+    // If we got here, we failed to cd to any of the directories.
+    // Report the best error, which must exist.
+    let best_errno = best_errno.expect("best_errno should be set");
+    let mut err = if best_errno == Errno::ENOTDIR {
         err_fmt!("'%s' is not a directory", dir_in)
-    } else if !broken_symlink.is_empty() {
+    } else if let Some((symlink, symlink_dest)) = &broken_symlink {
         err_fmt!(
             "'%s' is a broken symbolic link to '%s'",
-            broken_symlink,
-            broken_symlink_target
+            symlink,
+            symlink_dest
         )
-    } else if best_errno == ELOOP {
+    } else if best_errno == Errno::ELOOP {
         err_fmt!("Too many levels of symbolic links: '%s'", dir_in)
-    } else if best_errno == ENOENT {
+    } else if best_errno == Errno::ENOENT {
         err_fmt!(DIR_DOES_NOT_EXIST, dir_in)
-    } else if best_errno == EACCES || best_errno == EPERM {
+    } else if best_errno == Errno::EACCES || best_errno == Errno::EPERM {
         err_fmt!("Permission denied: '%s'", dir_in)
     } else {
-        errno::set_errno(Errno(best_errno));
+        Errno::set(best_errno);
         err_raw!(builtin_strerror()).cmd(L!("cd")).finish(streams);
         err_fmt!("Unknown error trying to locate directory '%s'", dir_in)
     };

@@ -436,13 +436,34 @@ if __fish_is_cygwin
     # Not supported on Cygwin/MSYS. Satisfy the CHECK below.
     echo "cd after move succeeded"
 else
-        set -l tmp (mktemp -d)
-        set -l tmp_moved {$tmp}_moved
-        cd $tmp
-        mv $tmp $tmp_moved
-        cd .
-        test $PWD = $tmp_moved
-        and echo "cd after move succeeded"
-        cd $tmp_moved
+    # cd is updated to the real PWD if PWD is moved.
+    set -l tmp (mktemp -d)
+    set -l tmp_moved {$tmp}_moved
+    cd $tmp
+    mv $tmp $tmp_moved
+    cd .
+    test $PWD = $tmp_moved
+    and echo "cd after move succeeded"
 end
 # CHECK: cd after move succeeded
+
+if not __fish_is_cygwin
+    # If updating to the real PWD is possible, but cd still fails, fish reports an error
+    # and keeps $PWD the same.
+    set tmp (mktemp -d)
+    set tmp_moved {$tmp}_moved
+    cd $tmp
+    mv $tmp $tmp_moved
+    touch $tmp_moved/not_a_directory
+    # Now we have two problems: $tmp has been moved to $tmp_moved, AND we can't cd into the directory
+    # even after repairing $PWD because it's not a directory.
+    # Here we should print an error about the failed target and NOT change $PWD.
+    cd ./not_a_directory 2>$tmp_moved/log.txt
+    if not string match -q "cd: './not_a_directory' is not a directory" <$tmp_moved/log.txt
+        echo "Expected error message not found in log"
+    end
+    # Note we stay in the old $PWD because of the error.
+    if test $PWD != $tmp
+        echo "PWD was changed unexpectedly to $PWD"
+    end
+end

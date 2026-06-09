@@ -10,6 +10,115 @@ use crate::{
     wutil::{normalize_path, wreadlink, wrealpath},
 };
 use nix::{errno::Errno, unistd::fchdir};
+use std::sync::Arc;
+
+// Return whether a cd path is relative to the current directory.
+fn is_relative_cd_path(path: &wstr) -> bool {
+    path == "." || path == ".." || path.starts_with("./") || path.starts_with("../")
+}
+
+// Attempt to chdir to a given directory.
+// If deref_symlink is set, also resolve symlinks in the new PWD before setting the variable.
+// If successful, update the parser's variables and return a builtin status code of SUCCESS.
+// On failure, return an error.
+// The fd is stashed in the parser for eventual support for thread-backed subshells
+// with distinct CWDs.
+fn try_chdir(parser: &mut Parser, dir: &wstr, deref_symlink: bool) -> Result<(), Errno> {
+    let norm_dir = normalize_path(dir, true);
+    // Try opening the directory and invoking fchdir().
+    let fd = wopen_dir(&norm_dir, BEST_O_SEARCH)?;
+    fchdir(&fd)?;
+
+    // We successfully changed directories.
+    // Stash the fd for the cwd in the parser so it stays open.
+    // Eventually fish will support distinct CWDs for different parsers in different threads.
+    parser.libdata_mut().cwd_fd = Some(Arc::new(fd));
+
+    let mut new_pwd = norm_dir;
+    if deref_symlink {
+        if let Some(real_dir) = wrealpath(&new_pwd) {
+            new_pwd = real_dir;
+        }
+    }
+
+    parser.set_var_and_fire(
+        L!("PWD"),
+        ParserEnvSetMode::new(EnvMode::EXPORT | EnvMode::GLOBAL),
+        vec![new_pwd],
+    );
+    Ok(())
+}
+
+// An error returned when trying to cd to one of many candidate directories.
+struct TryCdError {
+    // The "best" error.
+    error: Errno,
+    // If the error is a broken symlink, the path to the symlink and what it was trying to point to.
+    broken_symlink: Option<(WString, WString)>,
+}
+
+// Attempt to cd to each of the candidate directories in turn.
+// If any succeeds, update the parser's environment variables, stash the fd, and return a builtin status code of SUCCESS.
+// If all fail, return the "best" error, along with information about a broken symlink if relevant.
+fn try_cd_to_dirs(
+    parser: &mut Parser,
+    dirs: &[WString],
+    deref_symlink: bool,
+) -> Result<Success, TryCdError> {
+    assert!(!dirs.is_empty(), "dirs should not be empty");
+    // Because we may have multiple candidate directories, we have to be choosy about
+    // which error to report.
+    let mut best_errno: Option<Errno> = None;
+
+    // If the error is a broken symlink, keep track of that here.
+    // This is a tuple of the path to the symlink, and what the symlink was trying to point to.
+    // Note if broken_symlink is set, so is best_errno; however it may not be ENOENT.
+    let mut broken_symlink: Option<(WString, WString)> = None;
+
+    for dir in dirs {
+        let norm_dir = normalize_path(dir, true);
+        // Try opening the directory and invoking fchdir().
+        // If this succeeds then we're done!
+        let res = try_chdir(parser, &norm_dir, deref_symlink);
+        let Err(err) = res else {
+            return Ok(SUCCESS);
+        };
+
+        // We got an error.
+        // Some errors we skip and only report if nothing worked.
+        // ENOENT in particular is very low priority
+        // - if in another directory there was a *file* by the correct name
+        // we prefer *that* error because it's more specific
+        if err == Errno::ENOENT {
+            // If this is the first broken symlink, record it.
+            if broken_symlink.is_none() {
+                if let Some(symlink_dest) = wreadlink(&norm_dir) {
+                    broken_symlink = Some((norm_dir, symlink_dest));
+                }
+            }
+            if best_errno.is_none() {
+                best_errno = Some(err);
+            }
+            continue;
+        } else if err == Errno::ENOTDIR {
+            best_errno = Some(err);
+            continue;
+        }
+        // Hard error - stop the search.
+        // This most likely indicates that the user tried to cd into a directory that exists, but the cd failed.
+        // We don't keep trying further directories in CDPATH: this directory is probably what the user intended and
+        // an error is better than a worse directory choice.
+        best_errno = Some(err);
+        break;
+    }
+
+    // We failed to cd to any of the directories. Return the best error, which must exist.
+    let error = best_errno.expect("best_errno should be set");
+    Err(TryCdError {
+        error,
+        broken_symlink,
+    })
+}
 
 // cd is highlighted specially in src/highlight/highlight.rs - new options also need to be added
 // there
@@ -19,31 +128,6 @@ const LONG_OPTIONS: &[WOption] = &[
     wopt(L!("no-dereference"), ArgType::NoArgument, 'L'),
     wopt(L!("dereference"), ArgType::NoArgument, 'P'),
 ];
-
-fn try_chdir(dirs: Vec<WString>, parser: &mut Parser, deref_symlink: bool) -> bool {
-    for dir in dirs {
-        let norm_dir = normalize_path(&dir, true);
-        if let Ok(fd) = wopen_dir(&norm_dir, BEST_O_SEARCH) {
-            if fchdir(&fd).is_ok() {
-                parser.libdata_mut().cwd_fd = Some(std::sync::Arc::new(fd));
-
-                let mut new_pwd = norm_dir;
-                if deref_symlink {
-                    if let Some(real_dir) = wrealpath(&new_pwd) {
-                        new_pwd = real_dir;
-                    }
-                }
-                parser.set_var_and_fire(
-                    L!("PWD"),
-                    ParserEnvSetMode::new(EnvMode::EXPORT | EnvMode::GLOBAL),
-                    vec![new_pwd],
-                );
-                return true;
-            }
-        }
-    }
-    false
-}
 
 // The cd builtin. Changes the current directory to the one specified or to $HOME if none is
 // specified. The directory can be relative to any directory in the CDPATH variable.
@@ -131,82 +215,42 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
         }
     }
 
-    let is_relative_to_cwd = [L!("."), L!("..")].contains(&dir_in)
-        || dir_in.starts_with(L!("./"))
-        || dir_in.starts_with(L!("../"));
-    if is_relative_to_cwd && wopen_dir(&normalize_path(&pwd, true), BEST_O_SEARCH).is_err() {
+    // Walk over candidate directories, respecting CDPATH.
+    let dirs = path_apply_cdpath(dir_in, &pwd, vars);
+    let mut err = match try_cd_to_dirs(parser, &dirs, deref_symlink) {
+        Ok(res) => return Ok(res), // Success
+        Err(err) => err,
+    };
+
+    // cd failed, so try falling back to a "real" PWD as distinct from our virtual one.
+    // If $PWD no longer exists (e.g. it was moved), retry against the kernel's
+    // actual cwd via realpath("."). We only do this for arguments that explicitly refer to the
+    // current directory; absolute paths and bare relative names are reported as
+    // ordinary errors. zsh's `cd_try_chdir` has an equivalent fallback.
+    if err.error == Errno::ENOENT && is_relative_cd_path(dir_in) {
         if let Some(mut real_pwd) = wrealpath(L!(".")) {
             if !real_pwd.ends_with('/') {
                 real_pwd.push('/');
             }
-            pwd = real_pwd;
-        }
-    }
-
-    // Walk over candidate directories, respecting CDPATH.
-    let dirs = path_apply_cdpath(dir_in, &pwd, vars);
-    assert!(
-        !dirs.is_empty(),
-        "dirs should always contains a least an abs path, or a rel path, or '<PWD>/...'"
-    );
-
-    // Because we may have multiple candidate directories, we have to be choosy about
-    // which error to report.
-    let mut best_errno: Option<Errno> = None;
-
-    // If the error is a broken symlink, keep track of that here.
-    // This is a tuple of the path to the symlink, and what the symlink was trying to point to.
-    // Note if broken_symlink is set, so is best_errno; however it may not be ENOENT.
-    let mut broken_symlink: Option<(WString, WString)> = None;
-
-    for dir in dirs {
-        let norm_dir = normalize_path(&dir, true);
-        // Try opening the directory and invoking fchdir().
-        let res = wopen_dir(&norm_dir, BEST_O_SEARCH).and_then(|fd| {
-            fchdir(&fd)?;
-            Ok(fd)
-        });
-
-        let _fd = match res {
-            Ok(fd) => fd,
-            Err(err) => {
-                // Some errors we skip and only report if nothing worked.
-                // ENOENT in particular is very low priority
-                // - if in another directory there was a *file* by the correct name
-                // we prefer *that* error because it's more specific
-                if err == Errno::ENOENT {
-                    // If this is the first broken symlink, record it.
-                    if broken_symlink.is_none() {
-                        if let Some(symlink_dest) = wreadlink(&norm_dir) {
-                            broken_symlink = Some((norm_dir, symlink_dest));
-                        }
-                    }
-                    if best_errno.is_none() {
-                        best_errno = Some(err);
-                    }
-                    continue;
-                } else if err == Errno::ENOTDIR {
-                    best_errno = Some(err);
-                    continue;
-                }
-                // Hard error - stop the search.
-                // This most likely indicates that the user tried to cd into a directory that exists, but the cd failed.
-                // We don't keep trying further directories in CDPATH: this directory is probably what the user intended and
-                // an error is better than a worse directory choice.
-                best_errno = Some(err);
-                break;
+            if real_pwd != pwd {
+                let dirs = path_apply_cdpath(dir_in, &real_pwd, parser.vars());
+                // If the real PWD is different, then any new errors are likely to be better,
+                // so overwrite the old error.
+                err = match try_cd_to_dirs(parser, &dirs, deref_symlink) {
+                    Ok(res) => return Ok(res), // Success
+                    Err(err) => err,
+                };
             }
-        };
-
-        if try_chdir(vec![dir], parser, deref_symlink) {
-            return Ok(SUCCESS);
         }
     }
 
-    // If we got here, we failed to cd to any of the directories.
-    // Report the best error, which must exist.
-    let best_errno = best_errno.expect("best_errno should be set");
-    let mut err = if best_errno == Errno::ENOTDIR {
+    // Report any error.
+    let TryCdError {
+        error: errno,
+        broken_symlink,
+    } = err;
+
+    let mut err = if errno == Errno::ENOTDIR {
         err_fmt!("'%s' is not a directory", dir_in)
     } else if let Some((symlink, symlink_dest)) = &broken_symlink {
         err_fmt!(
@@ -214,14 +258,14 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
             symlink,
             symlink_dest
         )
-    } else if best_errno == Errno::ELOOP {
+    } else if errno == Errno::ELOOP {
         err_fmt!("Too many levels of symbolic links: '%s'", dir_in)
-    } else if best_errno == Errno::ENOENT {
+    } else if errno == Errno::ENOENT {
         err_fmt!(DIR_DOES_NOT_EXIST, dir_in)
-    } else if best_errno == Errno::EACCES || best_errno == Errno::EPERM {
+    } else if errno == Errno::EACCES || errno == Errno::EPERM {
         err_fmt!("Permission denied: '%s'", dir_in)
     } else {
-        Errno::set(best_errno);
+        Errno::set(errno);
         err_raw!(builtin_strerror()).cmd(L!("cd")).finish(streams);
         err_fmt!("Unknown error trying to locate directory '%s'", dir_in)
     };

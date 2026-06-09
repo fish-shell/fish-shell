@@ -333,6 +333,8 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
     // We blocked execution of code and mappings so input function args must be empty.
     assert!(input_data.input_function_args.is_empty());
     assert!(input_data.event_storage.is_empty());
+    // N.B We might drop bracketed paste data here but that's unlikely since we didn't ask for
+    // it yet.
     flogf!(
         reader,
         "Returning %u pending input events",

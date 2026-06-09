@@ -1,4 +1,5 @@
 # RUN: fish=%fish %fish %s
+# REQUIRES: %fish -c 'not __fish_is_cygwin'
 
 mkdir cache-home config-home data-home
 chmod 000 cache-home config-home data-home

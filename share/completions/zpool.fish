@@ -139,7 +139,6 @@ function __fish_zpool_list_free_vdevs -a except_pool
         string match -vr $exclude_regex
 end
 
-
 function __fish_zpool_list_get_fields
     echo -e "name\tPool full name"
     echo -e "property\tProperty"

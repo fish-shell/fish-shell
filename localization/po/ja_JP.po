@@ -15743,9 +15743,6 @@ msgstr ""
 msgid "Device to disconnect"
 msgstr ""
 
-msgid "Device to use for replacement"
-msgstr ""
-
 msgid "DevicesMojo lists all attached devices and emulators found with the android debug bridge"
 msgstr ""
 
@@ -25767,6 +25764,9 @@ msgid "Existing date."
 msgstr ""
 
 msgid "Existing pool device to attach to"
+msgstr ""
+
+msgid "Existing pool device to replace"
 msgstr ""
 
 msgid "Existing revision/tag."
@@ -43283,9 +43283,6 @@ msgstr ""
 msgid "Polling interval"
 msgstr ""
 
-msgid "Pool device to be replaced"
-msgstr ""
-
 msgid "Pool information in XML"
 msgstr ""
 
@@ -43346,7 +43343,7 @@ msgstr ""
 msgid "Pool to remove device from"
 msgstr ""
 
-msgid "Pool to replace device"
+msgid "Pool to replace device of"
 msgstr ""
 
 msgid "Pool to retrieve I/O stats from"
@@ -50502,6 +50499,9 @@ msgid "Replace revision's log message."
 msgstr ""
 
 msgid "Replace the default HTML title and H1 header with string"
+msgstr ""
+
+msgid "Replacement device"
 msgstr ""
 
 msgid "Replacement for dot in _templates etc"

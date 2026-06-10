@@ -5937,7 +5937,6 @@ impl ReaderData {
         let search_term = self.pager.search_field_line.text().to_owned();
         // Get a performer that produces the history pager result.
         let history = self.history.clone();
-        let search_term = search_term.clone();
         let performer = move || -> iothreads::Callback {
             let result = history_pager_search(&history, direction, motion, index, &search_term);
             Box::new(move |r: &mut Reader| {

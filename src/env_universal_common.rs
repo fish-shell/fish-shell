@@ -864,7 +864,7 @@ mod tests {
         }
 
         let mut uvars = EnvUniversal::new();
-        uvars.initialize_at_path(test_path.clone());
+        uvars.initialize_at_path(test_path);
 
         for i in 0..threads {
             for j in 0..UVARS_PER_THREAD {
@@ -1032,7 +1032,7 @@ mod tests {
             .unwrap_or_default();
         callbacks.append(
             &mut uvars2
-                .initialize_at_path(test_path.clone())
+                .initialize_at_path(test_path)
                 .unwrap_or_default(),
         );
 

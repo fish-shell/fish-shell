@@ -1030,11 +1030,7 @@ mod tests {
         let mut callbacks = uvars1
             .initialize_at_path(test_path.clone())
             .unwrap_or_default();
-        callbacks.append(
-            &mut uvars2
-                .initialize_at_path(test_path)
-                .unwrap_or_default(),
-        );
+        callbacks.append(&mut uvars2.initialize_at_path(test_path).unwrap_or_default());
 
         macro_rules! sync {
             ($uvars:expr) => {

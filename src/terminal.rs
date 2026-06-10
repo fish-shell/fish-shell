@@ -1,3 +1,4 @@
+use crate::tty_handoff::XTVERSION;
 // Generic output functions.
 use crate::{flog, prelude::*, should_flog};
 use crate::{
@@ -10,6 +11,7 @@ use fish_color::{Color, Color24};
 use fish_common::{EscapeStringStyle, escape_string, write_loop};
 use fish_feature_flags::FeatureFlag;
 use fish_widestring::{wcs2bytes, wcs2bytes_appending};
+use std::sync::LazyLock;
 use std::{
     cell::{RefCell, RefMut},
     ops::{Deref, DerefMut},
@@ -182,40 +184,42 @@ fn osc_0_or_1_terminal_title(out: &mut Outputter, is_1: bool, title: &[WString])
     true
 }
 
+fn want_to_mark_prompt() -> bool {
+    static IN_KONSOLE: LazyLock<bool> =
+        LazyLock::new(|| XTVERSION.get().unwrap().starts_with("Konsole "));
+    fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) && !*IN_KONSOLE
+}
+
 fn osc_133_prompt_start(out: &mut Outputter) -> bool {
-    if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
-        return false;
+    want_to_mark_prompt() && {
+        write_to_output!(out, "\x1b]133;A;click_events=1\x1b\\");
+        true
     }
-    write_to_output!(out, "\x1b]133;A;click_events=1\x1b\\");
-    true
 }
 
 fn osc_133_prompt_end(out: &mut Outputter) -> bool {
-    if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
-        return false;
+    want_to_mark_prompt() && {
+        write_to_output!(out, "\x1b]133;B\x1b\\");
+        true
     }
-    write_to_output!(out, "\x1b]133;B\x1b\\");
-    true
 }
 
 fn osc_133_command_start(out: &mut Outputter, command: &wstr) -> bool {
-    if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
-        return false;
+    want_to_mark_prompt() && {
+        write_to_output!(
+            out,
+            "\x1b]133;C;cmdline_url={}\x1b\\",
+            escape_string(command, EscapeStringStyle::Url),
+        );
+        true
     }
-    write_to_output!(
-        out,
-        "\x1b]133;C;cmdline_url={}\x1b\\",
-        escape_string(command, EscapeStringStyle::Url),
-    );
-    true
 }
 
 fn osc_133_command_finished(out: &mut Outputter, exit_status: libc::c_int) -> bool {
-    if !fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) {
-        return false;
+    want_to_mark_prompt() && {
+        write_to_output!(out, "\x1b]133;D;{}\x1b\\", exit_status);
+        true
     }
-    write_to_output!(out, "\x1b]133;D;{}\x1b\\", exit_status);
-    true
 }
 
 fn scroll_content_up(out: &mut Outputter, lines: usize) -> bool {

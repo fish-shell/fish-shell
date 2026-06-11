@@ -9,7 +9,7 @@ end
 set -l all_subcmds update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove autopurge depends rdepends why-not satisfy history-list history-rollback history-info history-redo history-undo help
 
 # subcommands that take a package name as an argument
-set -l pkg_subcmds install upgrade full-upgrade show search purge changelog policy depends rdepends why-not # why-not subcmd makes more sense with only non installed packages
+set -l pkg_subcmds install upgrade full-upgrade show search changelog policy depends rdepends why-not # why-not subcmd makes more sense with only non installed packages, but figuring out how to list those is left as an exercise to the reader
 # subcommands that take a package name as an argument but cannot or don't make sense to operate on non insatlled packages, should be mutually exclusive with the above list
 set -l installed_pkg_subcmds reinstall purge remove autoremove autopurge why
 
@@ -38,10 +38,22 @@ function __fish_apt_list_repos
     # wildcard glob may complain loudly if no files match the pattern so we use `find`.
     # The trailing `sort -u` is largely decorative.
     # cat (find /etc/apt/sources.list /etc/apt/sources.list.d/ -name "*.list") | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1' | sort -u
-    set -l old_format_repos (cat (find /etc/apt/sources.list /etc/apt/sources.list.d/ -name "*.list") | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1' | sort -u)
-    # Old format and new format repo files may coexist
-    set -l new_format_repos (cat (find /etc/apt/sources.list.d/ -name "*.sources") | string replace -rf '^Suites: +([^ ]+)' '$1')
-    set -l result $old_format_repos $new_format_repos
+    set -l repos
+    if test -f /etc/apt/sources.list
+        set -a repos (cat /etc/apt/sources.list | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1')
+    end
+
+    set -l lists (find /etc/apt/sources.list.d/ -name "*.list")
+    if test -n $lists
+        set -a repos (cat $lists | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1')
+    end
+
+    # New format of apt sources, the old one and the new one may coexist in a given system
+    # TODO for the given input `Suites: sid experimental` this line doesn't work properly
+    set -a repos (cat (find /etc/apt/sources.list.d/ -name "*.sources") | string replace -rf '^Suites: +([^ ]+)' '$1')
+
+    echo $repos | string replace ' ' '
+' | sort -u
 end
 
 complete -c apt -f

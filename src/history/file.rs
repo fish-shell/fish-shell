@@ -2,7 +2,8 @@
 
 use super::HistoryItem;
 use super::yaml_backend::{
-    decode_item_fish_2_0, escape_yaml_fish_2_0, offset_of_next_item_fish_2_0,
+    FIRST_ADDED_TIMESTAMP_KEY, LAST_ADDED_TIMESTAMP_KEY, decode_item_fish_2_0,
+    escape_yaml_fish_2_0, offset_of_next_item_fish_2_0,
 };
 use crate::{
     flog::flog,
@@ -285,7 +286,22 @@ impl HistoryItem {
         writer.write_all(b"- cmd: ")?;
         writer.write_all(&cmd)?;
         writer.write_all(b"\n")?;
-        writeln!(writer, "  when: {}", time_to_seconds(self.timestamp()))?;
+        let last_added = self.last_added_timestamp();
+        let first_added = self.first_added_timestamp();
+        writeln!(
+            writer,
+            "  {}: {}",
+            LAST_ADDED_TIMESTAMP_KEY,
+            time_to_seconds(last_added)
+        )?;
+        if first_added != last_added {
+            writeln!(
+                writer,
+                "  {}: {}",
+                FIRST_ADDED_TIMESTAMP_KEY,
+                time_to_seconds(first_added)
+            )?;
+        }
 
         let paths = self.get_required_paths();
         if !paths.is_empty() {

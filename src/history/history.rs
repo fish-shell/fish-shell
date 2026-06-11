@@ -259,18 +259,18 @@ impl HistoryItem {
 
     /// We can merge two items if they are the same command. We use the more recent timestamp, more
     /// recent identifier, and the longer list of required paths.
-    fn merge(&mut self, item: &HistoryItem) -> bool {
+    fn merge(&mut self, item: HistoryItem) -> Result<(), HistoryItem> {
         // We can only merge items if they agree on their text and persistence mode.
         if self.contents != item.contents || self.persist_mode != item.persist_mode {
-            return false;
+            return Err(item);
         }
 
         // Ok, merge this item.
         self.creation_timestamp = self.creation_timestamp.max(item.creation_timestamp);
         if self.required_paths.len() < item.required_paths.len() {
-            self.required_paths.clone_from(&item.required_paths);
+            self.required_paths = item.required_paths;
         }
-        true
+        Ok(())
     }
 }
 
@@ -380,14 +380,19 @@ impl HistoryImpl {
         }
 
         // Try merging with the last item.
-        if let Some(last) = self.new_items.last_mut() {
-            if last.merge(&item) {
-                // We merged, so we don't have to add anything. Maybe this item was pending, but it just got
-                // merged with an item that is not pending, so pending just becomes false.
-                self.has_pending_item = false;
-                return;
+        let item = if let Some(last) = self.new_items.last_mut() {
+            match last.merge(item) {
+                Ok(()) => {
+                    // We merged, so we don't have to add anything. Maybe this item was pending, but it just got
+                    // merged with an item that is not pending, so pending just becomes false.
+                    self.has_pending_item = false;
+                    return;
+                }
+                Err(item) => item,
             }
-        }
+        } else {
+            item
+        };
 
         // We have to add a new item.
         self.new_items.push(item);

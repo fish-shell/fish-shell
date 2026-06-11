@@ -1774,6 +1774,7 @@ mod tests {
         tests::prelude::test_init,
     };
     use fish_build_helper::workspace_root;
+    use fish_tempfile::TempDir;
     use fish_wcstringutil::{string_prefixes_string, string_prefixes_string_case_insensitive};
     use fish_widestring::{osstr2wcstring, wcs2bytes};
     use rand::{RngExt as _, rngs::ThreadRng};
@@ -2115,33 +2116,89 @@ mod tests {
         hist.clear();
     }
 
+    struct Test {
+        history_name: &'static wstr,
+        _temp_dir: TempDir,
+        temp_dir_wcstring: WString,
+        next_unique_id: usize,
+    }
+    impl Test {
+        fn new(history_name: &'static wstr) -> Self {
+            // Place history in a temp directory.
+            let _temp_dir = fish_tempfile::new_dir().unwrap();
+            let temp_dir_wcstring = osstr2wcstring(_temp_dir.path());
+            Self {
+                history_name,
+                _temp_dir,
+                temp_dir_wcstring,
+                next_unique_id: 0,
+            }
+        }
+        fn create_history(&self) -> Arc<History> {
+            create_test_history(self.history_name, &self.temp_dir_wcstring)
+        }
+        fn trigger_vacuum(&mut self, hist: &History) {
+            for _i in 0..VACUUM_FREQUENCY {
+                hist.add_commandline(sprintf!("maybe vacuum %d", self.next_unique_id));
+                self.next_unique_id += 1;
+            }
+        }
+    }
+
     #[test]
     fn test_history_external_rewrites() {
-        // Place history in a temp directory.
-        let tmpdir = fish_tempfile::new_dir().unwrap();
-        let hist_dir = osstr2wcstring(tmpdir.path());
+        let mut test = Test::new(L!("interleave_test"));
 
-        // Write some history to disk.
         {
-            let hist = write_history_entries(&hist_dir, VACUUM_FREQUENCY / 2, 0);
+            let hist = test.create_history();
+            test.trigger_vacuum(&hist);
             hist.add_commandline("needle".into());
             hist.save();
         }
         std::thread::sleep(Duration::from_secs(1));
 
         // Read history from disk.
-        let hist = create_test_history(L!("race_test"), &hist_dir);
+        let hist = test.create_history();
         assert_eq!(hist.item_at_index(1).unwrap().str(), "needle");
 
         // Add items until we rewrite the file.
         // In practice this might be done by another shell.
-        write_history_entries(&hist_dir, VACUUM_FREQUENCY, 0);
+        test.trigger_vacuum(&hist);
 
-        for i in 1.. {
-            if hist.item_at_index(i).unwrap().str() == "needle" {
-                break;
-            }
-        }
+        assert!(history_contains(&hist, L!("needle")));
+    }
+
+    /// Test that we read back all items, and in the correct order, even after an external
+    /// rewrite changed the order of history items that we already loaded earlier.
+    #[test]
+    fn test_history_external_rewrite_read_back_with_correct_ordering() {
+        let mut test = Test::new(L!("interleave_test_2"));
+
+        let hist1 = test.create_history();
+        let item1 = L!("item 1");
+        let item2 = L!("item 2");
+        let item3 = L!("item 3");
+        hist1.add_commandline(item1.into());
+        hist1.add_commandline(item2.into());
+        hist1.add_commandline(item3.into());
+
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        let hist2 = test.create_history();
+
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        hist1.add_commandline(item1.into());
+        hist1.add_commandline(item3.into());
+        hist1.add_commandline(item2.into());
+        test.trigger_vacuum(&hist1);
+
+        let trigger_reload = L!("trigger-reload");
+        hist2.add_commandline(trigger_reload.into());
+
+        assert_eq!(hist2.item_at_index(1).unwrap().str(), trigger_reload);
+        assert_eq!(hist2.item_at_index(2).unwrap().str(), item2);
+        assert_eq!(hist2.item_at_index(3).unwrap().str(), item3);
+        assert_eq!(hist2.item_at_index(4).unwrap().str(), item1);
+        assert!(hist2.item_at_index(5).is_none());
     }
 
     #[test]

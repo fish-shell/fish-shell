@@ -7,6 +7,7 @@ use std::{
 
 use rand::distr::{Alphanumeric, Distribution as _};
 
+#[must_use]
 pub struct TempFile {
     file: File,
     path: PathBuf,
@@ -32,6 +33,7 @@ impl Drop for TempFile {
     }
 }
 
+#[must_use]
 pub struct TempDir {
     path: PathBuf,
 }
@@ -119,7 +121,7 @@ mod tests {
 
     #[test]
     fn create_tempfile() {
-        super::new_file().unwrap();
+        let _ = super::new_file().unwrap();
     }
 
     #[test]
@@ -145,7 +147,7 @@ mod tests {
 
     #[test]
     fn create_tempdir() {
-        super::new_dir().unwrap();
+        let _ = super::new_dir().unwrap();
     }
 
     #[test]

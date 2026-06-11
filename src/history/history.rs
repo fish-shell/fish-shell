@@ -2484,7 +2484,6 @@ mod tests {
         let test_history_imported_from_corrupted = create_test_history(name, &hist_dir);
         let expected: Vec<WString> = vec![
             "no_newline_at_end_of_file".into(),
-            "corrupt_prefix".into(),
             "this_command_is_ok".into(),
         ];
         assert_eq!(test_history_imported_from_corrupted.get_history(), expected);

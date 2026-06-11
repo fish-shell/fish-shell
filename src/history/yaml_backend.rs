@@ -245,19 +245,6 @@ pub fn offset_of_next_item_fish_2_0(
             continue;
         }
 
-        // Hackish: fish 1.x rewriting a fish 2.0 history file can produce lines with lots of
-        // leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:".
-        while line.starts_with(b"- cmd: - cmd: ") {
-            // Skip over just one of the - cmd. In the end there will be just one left.
-            line = line.strip_prefix(b"- cmd: ").unwrap();
-        }
-
-        // Hackish: fish 1.x rewriting a fish 2.0 history file can produce commands like "when:
-        // 123456". Ignore those.
-        if line.starts_with(b"- cmd:    when:") {
-            continue;
-        }
-
         if line.starts_with(b"\0") {
             flog!(
                 error,

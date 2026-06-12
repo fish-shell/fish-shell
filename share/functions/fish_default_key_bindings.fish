@@ -24,6 +24,19 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv right forward-char
     bind --preset $argv left backward-char
 
+    # Shift+movement starts a selection if needed, then extends it via the trailing movement.
+    bind --preset $argv shift-right begin-selection-if-none forward-single-char
+    bind --preset $argv shift-left begin-selection-if-none backward-char
+    bind --preset $argv shift-home begin-selection-if-none beginning-of-line
+    bind --preset $argv shift-end begin-selection-if-none end-of-line
+    # Alt+Shift+Arrow extends by word, matching Alt+Arrow (token on macOS).
+    __fish_per_os_bind --preset $argv alt-shift-right \
+        'commandline -f begin-selection-if-none forward-token' \
+        'commandline -f begin-selection-if-none forward-word'
+    __fish_per_os_bind --preset $argv alt-shift-left \
+        'commandline -f begin-selection-if-none backward-token' \
+        'commandline -f begin-selection-if-none backward-word'
+
     bind --preset $argv delete delete-char
     bind --preset $argv backspace backward-delete-char
     bind --preset $argv shift-backspace backward-delete-char

@@ -2746,6 +2746,10 @@ impl<'a> Reader<'a> {
 
         if !accumulated_chars.is_empty() {
             let (elt, _el) = self.active_edit_line();
+            // Typing over a selection replaces it.
+            if elt == EditableLineTag::Commandline {
+                self.replace_selection();
+            }
             self.insert_string(elt, accumulated_chars);
 
             // End paging upon inserting into the normal command line.
@@ -2874,6 +2878,10 @@ impl<'a> Reader<'a> {
                     // Regular character.
                     let (elt, _el) = self.active_edit_line();
                     if let Some(cs) = kevt.key.text_to_insert() {
+                        // Typing over a selection replaces it.
+                        if elt == EditableLineTag::Commandline {
+                            self.replace_selection();
+                        }
                         self.insert_string(elt, WString::from_iter(cs));
 
                         if elt == EditableLineTag::Commandline {
@@ -3370,7 +3378,12 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::BackwardDeleteChar => {
-                self.delete_char(true);
+                // Backspace over a selection removes it.
+                let consumed = self.active_edit_line_tag() == EditableLineTag::Commandline
+                    && self.replace_selection();
+                if !consumed {
+                    self.delete_char(true);
+                }
             }
             rl::Exit => {
                 // This is by definition a successful exit, override the status
@@ -3379,16 +3392,19 @@ impl<'a> Reader<'a> {
                 check_exit_loop_maybe_warning(Some(self));
             }
             rl::DeleteOrExit | rl::DeleteChar => {
-                // Remove the current character in the character buffer and on the screen using
-                // syntax highlighting, etc.
-                let (_elt, el) = self.active_edit_line();
-                if el.position() < el.len() {
-                    self.delete_char(false);
-                } else if c == rl::DeleteOrExit && el.is_empty() {
-                    // This is by definition a successful exit, override the status
-                    self.parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
-                    self.exit_loop_requested = true;
-                    check_exit_loop_maybe_warning(Some(self));
+                // Delete the selection if there is one, otherwise the character under the cursor.
+                let consumed = self.active_edit_line_tag() == EditableLineTag::Commandline
+                    && self.replace_selection();
+                if !consumed {
+                    let (_elt, el) = self.active_edit_line();
+                    if el.position() < el.len() {
+                        self.delete_char(false);
+                    } else if c == rl::DeleteOrExit && el.is_empty() {
+                        // This is by definition a successful exit, override the status
+                        self.parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
+                        self.exit_loop_requested = true;
+                        check_exit_loop_maybe_warning(Some(self));
+                    }
                 }
             }
             rl::Execute => {
@@ -4562,6 +4578,9 @@ impl<'a> Reader<'a> {
         // Delete any autosuggestion.
         self.autosuggestion.clear();
 
+        // Don't carry a selection over to the next command line.
+        self.selection = None;
+
         self.add_to_history();
         self.rls_mut().finished = true;
         self.command_line.pending_position = Some(self.command_line.position());
@@ -4619,6 +4638,17 @@ impl ReaderData {
             return None;
         }
         Some(start..end)
+    }
+
+    /// Erase the active selection, if any, returning whether it did, so typing or deleting
+    /// replaces it. `get_selection` treats an empty selection as none.
+    fn replace_selection(&mut self) -> bool {
+        let Some(selection) = self.get_selection() else {
+            return false;
+        };
+        self.erase_substring(EditableLineTag::Commandline, selection);
+        self.selection = None;
+        true
     }
 
     fn selection_is_at_top(&self) -> bool {

@@ -166,9 +166,6 @@ jobs:
       shell: cmd
       run: |
         "%MSYS2_LOCATION%\usr\bin\dash" /usr/bin/rebaseall -p -v
-    - name: cargo build
-      run: |
-        cargo build
     - name: tests
       env:
         FISH_CHECK_LINT: false

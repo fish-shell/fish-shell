@@ -32,6 +32,9 @@ function fish_default_key_bindings -d "emacs-like key binds"
     # Alt+Shift+Arrow extends by word, matching Alt+Arrow.
     bind --preset $argv alt-shift-right begin-selection-if-none forward-word
     bind --preset $argv alt-shift-left begin-selection-if-none backward-word
+    # Ctrl+Shift+Arrow extends by token, matching Ctrl+Arrow.
+    bind --preset $argv ctrl-shift-right begin-selection-if-none forward-token
+    bind --preset $argv ctrl-shift-left begin-selection-if-none backward-token
 
     bind --preset $argv delete delete-char
     bind --preset $argv backspace backward-delete-char

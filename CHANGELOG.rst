@@ -57,6 +57,7 @@ Interactive improvements
 - On the first run after upgrading from an older version, fish will try harder to check if the current theme matches a historical default.
   If it does match, fish won't create ``~/.config/fish/conf.d/fish_frozen_theme.fish`` when upgrading from fish < 4.3.
   In particular, on systems where fish version 3.x was installed originally, fish will now avoid creating that file on upgrade (:issue:`12725`).
+- In the default (emacs) key bindings, Shift and the cursor-movement keys now select text the way a graphical editor does: :kbd:`shift-left`/:kbd:`shift-right` extend a selection by a character, :kbd:`alt-shift-left`/:kbd:`alt-shift-right` by a word, :kbd:`ctrl-shift-left`/:kbd:`ctrl-shift-right` by a token and :kbd:`shift-home`/:kbd:`shift-end` to the line edges. Typing replaces the selection, :kbd:`backspace`/:kbd:`delete` remove it and plain cursor movement clears it (:issue:`8677`). A new ``begin-selection-if-none`` input function makes this composable in custom bindings.
 
 Scripting improvements
 ----------------------

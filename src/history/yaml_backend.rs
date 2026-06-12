@@ -318,7 +318,7 @@ pub fn offset_of_next_item_fish_2_0(
             offset.try_into().unwrap()
         }
 
-        // Advance the cursor past the last line of this entry
+        // Advance the cursor past the first line of this entry
         *cursor = match lines.next() {
             Some(next_line) => unsafe { offset(contents, next_line) },
             None => contents.len(),

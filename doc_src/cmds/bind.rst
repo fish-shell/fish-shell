@@ -181,6 +181,9 @@ The following special input functions are available:
 ``begin-selection``
     start selecting text
 
+``begin-selection-if-none``
+    start selecting text, but only if there is no selection already; an existing selection (and its anchor) is left untouched. Combine with a movement function to extend a selection on each keystroke, e.g. ``bind shift-right begin-selection-if-none forward-single-char``
+
 ``cancel``
     close the pager if it is open, or undo the most recent completion if one was just inserted
 

@@ -4162,6 +4162,23 @@ impl<'a> Reader<'a> {
                     };
                 self.selection = Some(selection);
             }
+            rl::BeginSelectionIfNone => {
+                // Begin a selection only if none is active, leaving an existing one's anchor
+                // intact, so shift+movement can start a selection and then extend it.
+                if self.selection.is_none() {
+                    let pos = self.command_line.position();
+                    self.selection = Some(SelectionData {
+                        begin: pos,
+                        start: pos,
+                        stop: pos
+                            + if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
+                                1
+                            } else {
+                                0
+                            },
+                    });
+                }
+            }
             rl::EndSelection => {
                 self.selection = None;
             }

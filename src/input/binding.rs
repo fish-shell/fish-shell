@@ -200,6 +200,7 @@ define_readline_cmds! {
     ("backward-word", BackwardWord),
     ("backward-word-end", BackwardWordEnd),
     ("begin-selection", BeginSelection),
+    ("begin-selection-if-none", BeginSelectionIfNone),
     ("begin-undo-group", BeginUndoGroup),
     ("beginning-of-buffer", BeginningOfBuffer),
     ("beginning-of-history", BeginningOfHistory),

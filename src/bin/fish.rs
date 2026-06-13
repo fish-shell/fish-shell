@@ -125,8 +125,8 @@ fn print_rusage_self() {
     let signals = usage.signals();
 
     eprintf!("  rusage self:\n");
-    eprintf!("      user time: %s ms\n", sys_time.to_string());
-    eprintf!("       sys time: %s ms\n", user_time.to_string());
+    eprintf!("      user time: %s ms\n", user_time.to_string());
+    eprintf!("       sys time: %s ms\n", sys_time.to_string());
     eprintf!("     total time: %s ms\n", total_time.to_string());
     eprintf!("        max rss: %s KiB\n", rss_KiB.to_string());
     eprintf!("        signals: %s\n", signals.to_string());

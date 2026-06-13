@@ -166,7 +166,7 @@ jobs:
       shell: cmd
       run: |
         "%MSYS2_LOCATION%\usr\bin\dash" /usr/bin/rebaseall -p -v
-    - name: tests
+    - name: check
       env:
         FISH_CHECK_LINT: false
       run: |

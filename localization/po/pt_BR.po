@@ -28944,9 +28944,6 @@ msgstr ""
 msgid "Generate compiler predefines and select a startfile for the specified UNIX standard"
 msgstr ""
 
-msgid "Generate completion file for a shell"
-msgstr ""
-
 msgid "Generate compressed stream"
 msgstr ""
 

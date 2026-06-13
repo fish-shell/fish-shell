@@ -2278,7 +2278,7 @@ mod tests {
         let test_vars = EnvStack::new();
         let global_mode = EnvSetMode::new(EnvMode::GLOBAL, false);
         test_vars.set_one(L!("PWD"), global_mode, wdir_path.clone());
-        test_vars.set_one(L!("HOME"), global_mode, wdir_path.clone());
+        test_vars.set_one(L!("HOME"), global_mode, wdir_path);
 
         let history =
             create_test_history(L!("path_detection"), &osstr2wcstring(hist_tmpdir.path()));

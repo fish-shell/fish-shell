@@ -1,7 +1,7 @@
 //! Prototypes for various functions, mostly string utilities, that are used by most parts of fish.
 
 use crate::{
-    global_safety::{AtomicRef, RelaxedAtomicBool},
+    global_safety::RelaxedAtomicBool,
     prelude::*,
     terminal::Outputter,
     termsize::Termsize,
@@ -10,9 +10,10 @@ use crate::{
 use fish_fallback::fish_wcwidth;
 use fish_widestring::subslice_position;
 use nix::sys::termios::Termios;
+use once_cell::sync::Lazy;
 use std::{
     env,
-    sync::{MutexGuard, OnceLock, atomic::Ordering},
+    sync::{Mutex, MutexGuard, OnceLock, atomic::Ordering},
 };
 
 use fish_common::*;
@@ -25,12 +26,17 @@ pub fn shell_modes() -> MutexGuard<'static, Termios> {
     crate::reader::SHELL_MODES.lock().unwrap()
 }
 
-/// Character representing an omitted newline at the end of text.
-pub fn get_omitted_newline_str() -> &'static str {
-    OMITTED_NEWLINE_STR.load()
+/// Indicator shown when output doesn't end with a newline. Defaults to platform-specific symbol;
+/// overridden by $fish_omitted_newline_indicator.
+pub fn get_omitted_newline_str() -> String {
+    OMITTED_NEWLINE_STR.lock().unwrap().clone()
 }
 
-static OMITTED_NEWLINE_STR: AtomicRef<str> = AtomicRef::new(&"");
+pub fn set_omitted_newline_str(s: &str) {
+    *OMITTED_NEWLINE_STR.lock().unwrap() = s.to_owned();
+}
+
+static OMITTED_NEWLINE_STR: Lazy<Mutex<String>> = Lazy::new(|| Mutex::new(String::new()));
 
 /// Profiling flag. True if commands should be profiled.
 pub static PROFILING_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
@@ -62,17 +68,26 @@ pub fn has_working_tty_timestamps() -> bool {
 /// todo!("Maybe remove the box? It is only needed for get_bg_context.")
 pub type CancelChecker = Box<dyn Fn() -> bool>;
 
+/// Reset the omitted-newline indicator to the platform default (⏎ / ¶ / ^J).
+pub fn reset_omitted_newline_str_to_default() {
+    if is_windows_subsystem_for_linux(WSL::Any) {
+        set_omitted_newline_str("\u{00b6}"); // "pilcrow" (¶)
+    } else if is_console_session() {
+        set_omitted_newline_str("^J");
+    } else {
+        set_omitted_newline_str("\u{23CE}"); // "return symbol" (⏎)
+    }
+}
+
 pub fn init_special_chars_once() {
+    reset_omitted_newline_str_to_default();
     if is_windows_subsystem_for_linux(WSL::Any) {
         // neither of \u23CE and \u25CF can be displayed in the default fonts on Windows, though
         // they can be *encoded* just fine. Use alternative glyphs.
-        OMITTED_NEWLINE_STR.store(&"\u{00b6}"); // "pilcrow"
         OBFUSCATION_READ_CHAR.store(u32::from('\u{2022}'), Ordering::Relaxed); // "bullet" (•)
     } else if is_console_session() {
-        OMITTED_NEWLINE_STR.store(&"^J");
         OBFUSCATION_READ_CHAR.store(u32::from('*'), Ordering::Relaxed);
     } else {
-        OMITTED_NEWLINE_STR.store(&"\u{23CE}"); // "return symbol" (⏎)
         OBFUSCATION_READ_CHAR.store(
             u32::from(
                 '\u{25CF}', // "black circle" (●)

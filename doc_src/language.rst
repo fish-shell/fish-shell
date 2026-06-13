@@ -1575,6 +1575,22 @@ You can change the settings of fish by changing the values of certain variables.
 
    controls whether fish assumes emoji render as 2 cells or 1 cell wide. This is necessary because the correct value changed from 1 to 2 in Unicode 9, and some terminals may not be aware. Set this if you see graphical glitching related to emoji (or other "special" characters). It defaults to 2.
 
+.. envvar:: fish_omitted_newline_indicator
+
+   sets the string displayed when a command's output does not end with a newline. The default depends on the environment: ``⏎`` (U+23CE) in a regular terminal, ``¶`` (U+00B6) under WSL, and ``^J`` in a console session.
+
+   Set it to a custom string to change the indicator::
+
+      set -g fish_omitted_newline_indicator "↵"
+
+   Set it to an empty string to hide the indicator entirely::
+
+      set -g fish_omitted_newline_indicator ""
+
+   Erase the variable to restore the platform default::
+
+      set -e fish_omitted_newline_indicator
+
 .. envvar:: fish_autosuggestion_enabled
 
    controls if :ref:`autosuggestions` are enabled. Set it to 0 to disable, anything else to enable. By default they are on.

@@ -42,6 +42,10 @@ Regression fixes:
 - (from 4.3.3) Repeated tab would sometimes insert smartcase completions redundantly.
 - (from 4.3.0) Pressing escape during command input would insert garbage text into the command line (:issue:`12379`).
 
+Other improvements
+------------------
+- New ``mkcd`` function to create a directory and ``cd`` into it.
+
 fish 4.7.1 (released May 08, 2026)
 ==================================
 

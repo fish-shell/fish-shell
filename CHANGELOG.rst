@@ -13,6 +13,7 @@ Interactive improvements
 - The sample informative and minimalist prompts now use ``prompt_pwd`` instead of printing ``$PWD`` directly.
 - ``bind`` shows the file where bindings were defined (:issue:`12504`).
 - Abbreviations with ``--position=anywhere`` can now be completed in argument position, not just in command position (:issue:`12630`).
+- In the default (emacs) key bindings, Shift and the cursor-movement keys now select text the way a graphical editor does: :kbd:`shift-left`/:kbd:`shift-right` extend a selection by a character, :kbd:`alt-shift-left`/:kbd:`alt-shift-right` by a word and :kbd:`shift-home`/:kbd:`shift-end` to the line edges. Typing replaces the selection, :kbd:`backspace`/:kbd:`delete` remove it and plain cursor movement clears it (:issue:`8677`). A new ``begin-selection-if-none`` input function makes this composable in custom bindings.
 
 Other improvements
 ------------------

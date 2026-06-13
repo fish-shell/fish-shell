@@ -854,9 +854,15 @@ fn expand_braces(
             let item_len = pos - item_begin;
             let item = input[item_begin..pos].to_owned();
             let mut item = trim(item, Some(wstr::from_char_slice(&[BRACE_SPACE, '\0'])));
-            for c in item.as_char_slice_mut() {
-                if *c == BRACE_SPACE {
-                    *c = ' ';
+            // Only convert BRACE_SPACE back to regular space if there are no more
+            // nested braces to expand. Otherwise the inner expansion would see a
+            // regular space and fail to trim it from the item edges (#12794).
+            let has_nested_braces = item.contains(BRACE_BEGIN) || item.contains(BRACE_END);
+            if !has_nested_braces {
+                for c in item.as_char_slice_mut() {
+                    if *c == BRACE_SPACE {
+                        *c = ' ';
+                    }
                 }
             }
 

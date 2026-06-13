@@ -709,6 +709,8 @@ impl Parser {
         let sig = signal_check_cancel();
         if sig != 0 {
             EvalRes::new(ProcStatus::from_signal(RawSignal::new(sig)))
+        } else if let Some(sig) = execution_context.cancel_signal() {
+            EvalRes::new(ProcStatus::from_signal(sig))
         } else {
             let status = ProcStatus::from_exit_code(self.last_status());
             let break_expand = reason == EndExecutionReason::Error;

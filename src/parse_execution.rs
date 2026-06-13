@@ -132,6 +132,10 @@ impl ExecutionContext {
         &self.pstree
     }
 
+    pub fn cancel_signal(&self) -> Option<RawSignal> {
+        self.cancel_signal
+    }
+
     pub fn eval_node(
         &mut self,
         ctx: &mut OperationContext<'_>,

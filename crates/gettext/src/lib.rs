@@ -1,12 +1,13 @@
 use fish_gettext_maps::CATALOGS;
+use fish_localization::{Language, LocalizationLanguage, define_localization_language_type};
 use std::{
-    collections::HashMap,
+    collections::HashSet,
     sync::{LazyLock, Mutex},
 };
 
 type Catalog = &'static phf::Map<&'static str, &'static str>;
 
-static LANGUAGE_PRECEDENCE: Mutex<Vec<(&'static str, Catalog)>> = Mutex::new(Vec::new());
+static LANGUAGE_PRECEDENCE: Mutex<Vec<(Language, Catalog)>> = Mutex::new(Vec::new());
 
 pub fn gettext(message_str: &'static str) -> Option<&'static str> {
     let language_precedence = LANGUAGE_PRECEDENCE.lock().unwrap();
@@ -20,21 +21,17 @@ pub fn gettext(message_str: &'static str) -> Option<&'static str> {
     None
 }
 
-#[derive(Clone, Copy)]
-pub struct GettextLocalizationLanguage {
-    language: &'static str,
-}
+define_localization_language_type! {GettextLocalizationLanguage}
 
-static AVAILABLE_LANGUAGES: LazyLock<HashMap<&'static str, GettextLocalizationLanguage>> =
-    LazyLock::new(|| {
-        HashMap::from_iter(
-            CATALOGS
-                .entries()
-                .map(|(&language, _)| (language, GettextLocalizationLanguage { language })),
-        )
-    });
+static AVAILABLE_LANGUAGES: LazyLock<HashSet<GettextLocalizationLanguage>> = LazyLock::new(|| {
+    HashSet::from_iter(
+        CATALOGS
+            .entries()
+            .map(|(&language, _)| GettextLocalizationLanguage(language)),
+    )
+});
 
-pub fn get_available_languages() -> &'static HashMap<&'static str, GettextLocalizationLanguage> {
+pub fn get_available_languages() -> &'static HashSet<GettextLocalizationLanguage> {
     &AVAILABLE_LANGUAGES
 }
 
@@ -43,9 +40,9 @@ pub fn set_language_precedence(new_precedence: &[GettextLocalizationLanguage]) {
         .iter()
         .map(|lang| {
             (
-                lang.language,
+                lang.into(),
                 *CATALOGS
-                    .get(lang.language)
+                    .get(lang.as_ref())
                     .expect("Only languages for which catalogs exist may be passed to gettext."),
             )
         })
@@ -53,7 +50,7 @@ pub fn set_language_precedence(new_precedence: &[GettextLocalizationLanguage]) {
     *LANGUAGE_PRECEDENCE.lock().unwrap() = catalogs;
 }
 
-pub fn get_language_precedence() -> Vec<&'static str> {
+pub fn get_language_precedence() -> Vec<Language<'static>> {
     let language_precedence = LANGUAGE_PRECEDENCE.lock().unwrap();
     language_precedence.iter().map(|&(lang, _)| lang).collect()
 }

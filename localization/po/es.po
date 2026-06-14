@@ -120,10 +120,6 @@ msgid "%s variable"
 msgstr "variable %s"
 
 #, c-format
-msgid "%s, version %s"
-msgstr "%s, versión %s"
-
-#, c-format
 msgid "%s: %s"
 msgstr ""
 
@@ -751,10 +747,6 @@ msgid "Illegal instruction"
 msgstr "Instrucción ilegal"
 
 #, c-format
-msgid "Implicit int flag '%c' already defined"
-msgstr "La opción entera implícita '%c' ya está definida"
-
-#, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
 msgstr "La opción corta entera implícita '%c' no permite modificadores como '%c'"
 
@@ -855,10 +847,6 @@ msgstr "Valor máximo no válido '%s'"
 #, c-format
 msgid "Invalid number: %s"
 msgstr "Número inválido: %s"
-
-#, c-format
-msgid "Invalid option spec '%s' at char '%c'"
-msgstr "Especificación de opción no válida '%s' en el carácter '%c'"
 
 #, c-format
 msgid "Invalid padding character of width zero '%s'"
@@ -1645,14 +1633,6 @@ msgstr "directorio"
 
 msgid "error"
 msgstr "error"
-
-#, c-format
-msgid "exclusive flag '%s' is not valid"
-msgstr "la opción exclusiva '%s' no es válida"
-
-#, c-format
-msgid "exclusive flag string '%s' is not valid"
-msgstr "el string de opciones exclusivas '%s' no es válido"
 
 #, c-format
 msgid "expected %d arguments; got %d"

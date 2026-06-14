@@ -42,6 +42,16 @@ fn l10n_dir() -> Cow<'static, Path> {
     workspace_root().join("localization").into()
 }
 
+pub fn ftl_dir() -> Cow<'static, Path> {
+    l10n_dir().join("fluent").into()
+}
+
+pub static DEFAULT_LANGUAGE: &str = "en";
+
+pub fn default_ftl_file() -> Cow<'static, Path> {
+    ftl_dir().join(format!("{DEFAULT_LANGUAGE}.ftl")).into()
+}
+
 pub fn po_dir() -> Cow<'static, Path> {
     l10n_dir().join("po").into()
 }

@@ -249,10 +249,6 @@ msgid "%s variable"
 msgstr ""
 
 #, c-format
-msgid "%s, version %s"
-msgstr "%s, version %s"
-
-#, c-format
 msgid "%s: %s"
 msgstr "%s : %s"
 
@@ -880,10 +876,6 @@ msgid "Illegal instruction"
 msgstr "Instruction illégale"
 
 #, c-format
-msgid "Implicit int flag '%c' already defined"
-msgstr "Le sémaphore implicitement entier « %c » est déjà défini"
-
-#, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
 msgstr "Le sémaphore court implicitement entier « %c » n’autorise pas de modificateurs comme « %c »"
 
@@ -984,10 +976,6 @@ msgstr "Valeur maximale « %s » invalide"
 #, c-format
 msgid "Invalid number: %s"
 msgstr ""
-
-#, c-format
-msgid "Invalid option spec '%s' at char '%c'"
-msgstr "Option invalide « %s » au caractère « %c »"
 
 #, c-format
 msgid "Invalid padding character of width zero '%s'"
@@ -1774,14 +1762,6 @@ msgstr ""
 
 msgid "error"
 msgstr ""
-
-#, c-format
-msgid "exclusive flag '%s' is not valid"
-msgstr "le sémaphore exclusif « %s » est invalide"
-
-#, c-format
-msgid "exclusive flag string '%s' is not valid"
-msgstr "le sémaphore texte exclusif « %s » est invalide"
 
 #, c-format
 msgid "expected %d arguments; got %d"

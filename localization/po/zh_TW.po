@@ -114,10 +114,6 @@ msgid "%s variable"
 msgstr ""
 
 #, c-format
-msgid "%s, version %s"
-msgstr "%s，%s 版"
-
-#, c-format
 msgid "%s: %s"
 msgstr "%s：%s"
 
@@ -745,10 +741,6 @@ msgid "Illegal instruction"
 msgstr "非法的指令"
 
 #, c-format
-msgid "Implicit int flag '%c' already defined"
-msgstr "定義過隱式整數旗標「%c」了"
-
-#, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
 msgstr "隱式整數短旗標「%c」不允許加上「%c」等修飾"
 
@@ -849,10 +841,6 @@ msgstr "無效的最大值「%s」"
 #, c-format
 msgid "Invalid number: %s"
 msgstr "無效的數字：%s"
-
-#, c-format
-msgid "Invalid option spec '%s' at char '%c'"
-msgstr "無效的選項規格「%s」，在「%c」處"
 
 #, c-format
 msgid "Invalid padding character of width zero '%s'"
@@ -1640,14 +1628,6 @@ msgstr "目錄"
 
 msgid "error"
 msgstr "錯誤"
-
-#, c-format
-msgid "exclusive flag '%s' is not valid"
-msgstr "互斥旗標「%s」無效"
-
-#, c-format
-msgid "exclusive flag string '%s' is not valid"
-msgstr "互斥旗標字串「%s」無效"
 
 #, c-format
 msgid "expected %d arguments; got %d"

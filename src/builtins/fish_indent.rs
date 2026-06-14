@@ -1011,11 +1011,9 @@ fn do_indent(
                 return Ok(SUCCESS);
             }
             'v' => {
-                streams.out.appendln(&wgettext_fmt!(
-                    VERSION_STRING_TEMPLATE,
-                    get_program_name(),
-                    crate::BUILD_VERSION
-                ));
+                streams
+                    .out
+                    .appendln(&localized_version_string(get_program_name()));
                 return Ok(SUCCESS);
             }
             'w' => output_type = OutputType::File,

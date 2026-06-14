@@ -3,7 +3,10 @@ use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::CompleteEnv;
 use fish_build_helper::as_os_strs;
 use std::{path::PathBuf, process::Command};
-use xtask::{CommandExt, cargo, format::FormatArgs, gettext::GettextArgs, shellcheck::shellcheck};
+use xtask::{
+    CommandExt, cargo, fluent::FluentCommandArgs, format::FormatArgs, gettext::GettextArgs,
+    shellcheck::shellcheck,
+};
 
 #[derive(Parser)]
 #[command(
@@ -20,6 +23,9 @@ struct Cli {
 enum Task {
     /// Run various checks on the repo.
     Check,
+    /// Run Fluent-related tools.
+    #[command(subcommand)]
+    Fluent(FluentCommandArgs),
     /// Format files or check if they are correctly formatted.
     Format(FormatArgs),
     /// Work on the gettext PO files.
@@ -63,6 +69,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.task {
         Task::Check => run_checks(),
+        Task::Fluent(fluent_command_args) => xtask::fluent::fluent(fluent_command_args),
         Task::Format(format_args) => xtask::format::format(format_args),
         Task::Gettext(gettext_args) => xtask::gettext::gettext(gettext_args),
         Task::HtmlDocs { fish_indent } => build_html_docs(fish_indent),

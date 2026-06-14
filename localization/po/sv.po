@@ -117,10 +117,6 @@ msgid "%s variable"
 msgstr ""
 
 #, c-format
-msgid "%s, version %s"
-msgstr ""
-
-#, c-format
 msgid "%s: %s"
 msgstr ""
 
@@ -748,10 +744,6 @@ msgid "Illegal instruction"
 msgstr "Ogiltig instruktion"
 
 #, c-format
-msgid "Implicit int flag '%c' already defined"
-msgstr ""
-
-#, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
 msgstr ""
 
@@ -851,10 +843,6 @@ msgstr ""
 
 #, c-format
 msgid "Invalid number: %s"
-msgstr ""
-
-#, c-format
-msgid "Invalid option spec '%s' at char '%c'"
 msgstr ""
 
 #, c-format
@@ -1641,14 +1629,6 @@ msgid "directory"
 msgstr ""
 
 msgid "error"
-msgstr ""
-
-#, c-format
-msgid "exclusive flag '%s' is not valid"
-msgstr ""
-
-#, c-format
-msgid "exclusive flag string '%s' is not valid"
 msgstr ""
 
 #, c-format

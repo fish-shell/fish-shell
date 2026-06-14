@@ -168,14 +168,6 @@ impl RawHistoryFile {
         decode_item_fish_2_0(contents)
     }
 
-    /// Support for iterating item offsets.
-    /// The cursor should initially be 0.
-    /// If cutoff is given, skip items whose timestamp is newer than cutoff.
-    /// Returns the offset of the next item, or [`None`] on end.
-    fn offset_of_next_item(&self, cursor: &mut usize, cutoff: Option<SystemTime>) -> Option<usize> {
-        offset_of_next_item_fish_2_0(self.contents(), cursor, cutoff)
-    }
-
     /// Returns an iterator over item offsets with an optional cutoff time.
     /// If cutoff is given, skip items whose timestamp is newer than cutoff.
     pub fn offsets(&self, cutoff: Option<SystemTime>) -> impl Iterator<Item = usize> + '_ {
@@ -249,8 +241,9 @@ impl<'a> Iterator for HistoryFileOffsetIter<'a> {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.contents
-            .offset_of_next_item(&mut self.cursor, self.cutoff)
+        let cursor: &mut usize = &mut self.cursor;
+        let cutoff = self.cutoff;
+        offset_of_next_item_fish_2_0(self.contents.contents(), cursor, cutoff)
     }
 }
 

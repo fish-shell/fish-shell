@@ -495,7 +495,8 @@ impl ExecutionContext {
             out_cmd,
             Some(out_args),
             Some(&mut errors),
-            false,
+            /*skip_cmdsubs=*/ false,
+            /*skip_wildcards=*/ false,
         );
         match expand_err.result {
             ExpandResultCode::Error | ExpandResultCode::Overflow => {

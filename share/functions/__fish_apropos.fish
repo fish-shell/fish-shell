@@ -35,8 +35,7 @@ if test (__fish_uname) = Darwin
         MANPATH="$dir" __fish_without_manpager /usr/bin/apropos "$argv"
 
         if test $age -ge $max_age
-            set -l sh (__fish_posix_shell)
-            $sh -c '( "$@" ) >/dev/null 2>&1 </dev/null &' -- \
+            $(__fish_posix_shell) -c '( "$@" ) >/dev/null 2>&1 </dev/null &' -- \
                 /usr/libexec/makewhatis -o "$whatis" \
                 (/usr/bin/manpath | string split : | xargs realpath)
         end

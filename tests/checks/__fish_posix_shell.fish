@@ -1,5 +1,4 @@
 # RUN: %fish %s
 
-set -l sh (__fish_posix_shell)
-command -v $sh
+command -v (__fish_posix_shell)
 # CHECK: {{.*/sh}}

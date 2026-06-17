@@ -486,7 +486,7 @@ impl ExecutionContext {
     ) -> EndExecutionReason {
         // Here we're expanding a command, for example $HOME/bin/stuff or $randomthing. The first
         // completion becomes the command itself, everything after becomes arguments. Command
-        // substitutions are not supported.
+        // substitutions with the `$()` form can produce the command and its arguments.
         let mut errors = ParseErrorList::new();
 
         // Get the unexpanded command string. We expect to always get it here.
@@ -500,7 +500,8 @@ impl ExecutionContext {
             out_cmd,
             Some(out_args),
             Some(&mut errors),
-            false,
+            /*skip_cmdsubs=*/ false,
+            /*skip_wildcards=*/ false,
         );
         match expand_err.result {
             ExpandResultCode::Error | ExpandResultCode::Overflow => {

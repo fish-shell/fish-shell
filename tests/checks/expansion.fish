@@ -329,7 +329,7 @@ $fish -c 'echo {}}'
 #CHECKERR: {{^}}echo {}}
 #CHECKERR: {{^}}       ^
 $fish -c 'command (asd)'
-#CHECKERR: fish: command substitutions not allowed in command position. Try var=(your-cmd) $var ...
+#CHECKERR: fish: Only `$()` command substitutions are allowed in command position. Try `$(your-cmd) ...`
 #CHECKERR: {{^}}command (asd)
 #CHECKERR: {{^}}        ^~~~^
 true

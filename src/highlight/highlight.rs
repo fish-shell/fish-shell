@@ -810,14 +810,13 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
             HighlightSpec::with_fg(role),
             &mut self.color_array[source_range.as_usize()],
         );
+        self.color_cmdsubs(node);
     }
     // Color a node as if it were an argument.
     fn color_as_argument(&mut self, node: &dyn ast::Node, options_allowed: bool /* = true */) {
         // node does not necessarily have type symbol_argument here.
         let source_range = node.source_range();
         let arg_str = self.get_source(source_range);
-
-        let arg_start = source_range.start();
 
         // Color this argument without concern for command substitutions.
         if options_allowed && arg_str.char_at(0) == '-' {
@@ -834,7 +833,13 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
             );
         }
 
-        // Now do command substitutions.
+        self.color_cmdsubs(node);
+    }
+
+    fn color_cmdsubs(&mut self, node: &dyn ast::Node) {
+        let source_range = node.source_range();
+        let arg_str = self.get_source(source_range);
+        let arg_start = source_range.start();
         let mut cmdsub_cursor = 0;
         let mut is_quoted = false;
         while let Ok(Some(cmdsub)) = locate_cmdsubst_range(
@@ -1053,25 +1058,28 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
 
         let mut expanded_cmd = WString::new();
         let mut cmd_role = None;
-        if !self.io_still_ok() {
-            // We cannot check if the command is invalid, so just assume it's valid.
-            cmd_role = Some(HighlightRole::Command);
-        } else if variable_assignment_equals_pos(cmd).is_some() {
-            cmd_role = Some(HighlightRole::Command);
-        } else {
-            // Check to see if the command is valid.
-            // Try expanding it. If we cannot, it's an error.
-            if let Some(expanded) =
-                statement_get_expanded_command(self.buff, stmt, self.file_tester.ctx)
+        if !has_cmdsub_without_dollar(cmd) {
+            // We cannot check a command substitution without executing it, so assume it is valid.
+            if !self.io_still_ok()
+                || variable_assignment_equals_pos(cmd).is_some()
+                || has_cmdsub(cmd)
             {
-                expanded_cmd = expanded;
-                if !has_expand_reserved(&expanded_cmd) {
-                    cmd_role = command_role(
-                        &expanded_cmd,
-                        stmt.decoration(),
-                        self.working_directory,
-                        self.file_tester.ctx.vars(),
-                    );
+                cmd_role = Some(HighlightRole::Command);
+            } else {
+                // Check to see if the command is valid.
+                // Try expanding it. If we cannot, it's an error.
+                if let Some(expanded) =
+                    statement_get_expanded_command(self.buff, stmt, self.file_tester.ctx)
+                {
+                    expanded_cmd = expanded;
+                    if !has_expand_reserved(&expanded_cmd) {
+                        cmd_role = command_role(
+                            &expanded_cmd,
+                            stmt.decoration(),
+                            self.working_directory,
+                            self.file_tester.ctx.vars(),
+                        );
+                    }
                 }
             }
         }
@@ -1141,6 +1149,25 @@ fn has_cmdsub(src: &wstr) -> bool {
     }
 }
 
+fn has_cmdsub_without_dollar(src: &wstr) -> bool {
+    let mut cursor = 0;
+    let mut is_quoted = false;
+    loop {
+        let mut has_dollar = false;
+        match locate_cmdsubst_range(
+            src,
+            &mut cursor,
+            true,
+            Some(&mut is_quoted),
+            Some(&mut has_dollar),
+        ) {
+            Err(()) | Ok(None) => return false,
+            Ok(Some(_)) if !has_dollar => return true,
+            Ok(Some(_)) => {}
+        }
+    }
+}
+
 fn contains_pending_variable(pending_variables: &[&wstr], haystack: &wstr) -> bool {
     for var_name in pending_variables {
         let mut nextpos = 0;
@@ -1206,7 +1233,15 @@ fn statement_get_expanded_command(
     // Get the command. Try expanding it. If we cannot, it's an error.
     let cmd = stmt.command.try_source(src)?;
     let mut out_cmd = WString::new();
-    let err = expand_to_command_and_args(cmd, ctx, &mut out_cmd, None, None, false);
+    let err = expand_to_command_and_args(
+        cmd,
+        ctx,
+        &mut out_cmd,
+        None,
+        None,
+        /*skip_cmdsubs=*/ true,
+        /*skip_wildcards=*/ false,
+    );
     (err == ExpandResultCode::Ok).then_some(out_cmd)
 }
 
@@ -1625,6 +1660,18 @@ mod tests {
                 (">", fg(HighlightRole::Redirection)),
                 ("-filename-starting-with-dash", redirection_valid_path),
             );
+
+            validate!(
+                ("$(", fg(HighlightRole::Operat)),
+                ("true", fg(HighlightRole::Builtin)),
+                (")", fg(HighlightRole::Operat)),
+            );
+            validate!(
+                ("(", fg(HighlightRole::Error)),
+                ("true", fg(HighlightRole::Error)),
+                (")", fg(HighlightRole::Error)),
+            );
+            validate!(("$(echo echo)(echo invalid)", fg(HighlightRole::Error)));
 
             validate!(
                 ("for", fg(HighlightRole::Keyword)),

@@ -1,4 +1,4 @@
-#RUN: %fish %s
+#RUN: fish=%fish %fish %s
 
 echo $(echo 1\n2)
 # CHECK: 1 2
@@ -78,3 +78,22 @@ echo "\$$(echo 1)"
 # Make sure we don't error on an escaped $@ inside a quoted cmdsub.
 echo "$(echo '$@')"
 # CHECK: $@
+
+$(printf '%s\n' echo 1 2 3)
+# CHECK: 1 2 3
+
+$(printf e)$(printf cho) from-two-substitutions
+# CHECK: from-two-substitutions
+
+$fish -c '$(printf echo)(printf bad) should-not-run'
+# CHECKERR: {{^}}fish: Only `$()` command substitutions are allowed in command position. Try `$(your-cmd) ...`
+# CHECKERR: {{^}}$(printf echo)(printf bad) should-not-run
+# CHECKERR: {{^}}              ^~~~~~~~~~~^
+
+$fish -c '
+    (printf "%s\n" echo 1 2 3)
+    echo not-executed-due-to-syntax-error
+'
+# CHECKERR: fish: Only `$()` command substitutions are allowed in command position. Try `$(your-cmd) ...`
+# CHECKERR: (printf "%s\n" echo 1 2 3)
+# CHECKERR: ^~~~~~~~~~~~~~~~~~~~~~~~~^

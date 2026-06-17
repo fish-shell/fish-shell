@@ -46,6 +46,23 @@ pub enum CmdsubstMode {
     Fail,
     /// Forward command substitutions as-is.
     Skip,
+    /// Allow only `$()` command substitutions.
+    DollarOnly {
+        /// Forward `$()` command substitutions as-is.
+        skip_expansion: bool,
+    },
+}
+
+impl CmdsubstMode {
+    fn is_skip(&self) -> bool {
+        use CmdsubstMode::*;
+        matches!(
+            self,
+            Skip | DollarOnly {
+                skip_expansion: true
+            }
+        )
+    }
 }
 
 /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
@@ -251,6 +268,7 @@ pub fn expand_to_command_and_args(
     out_cmd: &mut WString,
     mut out_args: Option<&mut Vec<WString>>,
     errors: Option<&mut ParseErrorList>,
+    skip_cmdsubs: bool,
     skip_wildcards: bool,
 ) -> ExpandResult {
     // Fast path.
@@ -259,10 +277,13 @@ pub fn expand_to_command_and_args(
         return ExpandResult::ok();
     }
 
-    let mut eflags = ExpandFlags::FAIL_ON_CMDSUBST;
-    if skip_wildcards {
-        eflags.skip_wildcards = true;
-    }
+    let eflags = ExpandFlags {
+        cmdsubst: CmdsubstMode::DollarOnly {
+            skip_expansion: skip_cmdsubs,
+        },
+        skip_wildcards,
+        ..Default::default()
+    };
 
     let mut completions = CompletionList::new();
     let expand_err = expand_string(instr.to_owned(), &mut completions, eflags, ctx, errors);
@@ -1292,7 +1313,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         mut errors: Option<&'a mut ParseErrorList>,
     ) -> ExpandResult {
         assert!(
-            flags.cmdsubst == CmdsubstMode::Fail || ctx.has_parser(),
+            flags.cmdsubst == CmdsubstMode::Fail || flags.cmdsubst.is_skip() || ctx.has_parser(),
             "Must have a parser when expanding command substitutions"
         );
         // Early out. If we're not completing, and there's no magic in the input, we're done.
@@ -1366,44 +1387,49 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
     }
 
     fn stage_cmdsubst(&mut self, input: WString, out: &mut CompletionReceiver) -> ExpandResult {
-        match self.flags.cmdsubst {
-            CmdsubstMode::Skip => {
-                if out.add(input).is_err() {
-                    return append_overflow_error(self.errors, None);
+        if matches!(
+            self.flags.cmdsubst,
+            CmdsubstMode::Fail | CmdsubstMode::DollarOnly { .. }
+        ) {
+            let mut cursor = 0;
+            let mut is_quoted = false;
+            loop {
+                let mut has_dollar = false;
+                let cmdsub = match locate_cmdsubst_range(
+                    &input,
+                    &mut cursor,
+                    true,
+                    Some(&mut is_quoted),
+                    Some(&mut has_dollar),
+                ) {
+                    Err(()) => return ExpandResult::make_error(STATUS_EXPAND_ERROR),
+                    Ok(None) => break,
+                    Ok(Some(cmdsub)) => cmdsub,
+                };
+                if self.flags.cmdsubst == CmdsubstMode::Fail || !has_dollar {
+                    append_cmdsub_error!(
+                        self.errors,
+                        cmdsub.opening_paren_offset(),
+                        cmdsub.end() - 1,
+                        WString::from_str(&localize!(
+                            "command-substitution-in-command-position" = "Only `$()` command substitutions are allowed in command position. Try `$(your-cmd) ...`"
+                        ))
+                    );
+                    return ExpandResult::make_error(STATUS_EXPAND_ERROR);
                 }
-                ExpandResult::ok()
-            }
-            CmdsubstMode::Fail => {
-                let mut cursor = 0;
-                match locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
-                    Err(()) => ExpandResult::make_error(STATUS_EXPAND_ERROR),
-                    Ok(None) => {
-                        if out.add(input).is_err() {
-                            return append_overflow_error(self.errors, None);
-                        }
-                        ExpandResult::ok()
-                    }
-                    Ok(Some(cmdsub)) => {
-                        append_cmdsub_error!(
-                            self.errors,
-                            cmdsub.opening_paren_offset(),
-                            cmdsub.end() - 1,
-                            WString::from_str(&localize!(
-                                "command-substitution-in-command-position" = "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-                            ))
-                        );
-                        ExpandResult::make_error(STATUS_EXPAND_ERROR)
-                    }
-                }
-            }
-            CmdsubstMode::Expand => {
-                assert!(
-                    self.ctx.has_parser(),
-                    "Must have a parser to expand command substitutions"
-                );
-                expand_cmdsubst(input, self.ctx, out, self.errors)
             }
         }
+        if self.flags.cmdsubst.is_skip() || self.flags.cmdsubst == CmdsubstMode::Fail {
+            if out.add(input).is_err() {
+                return append_overflow_error(self.errors, None);
+            }
+            return ExpandResult::ok();
+        }
+        assert!(
+            self.ctx.has_parser(),
+            "Must have a parser to expand command substitutions"
+        );
+        expand_cmdsubst(input, self.ctx, out, self.errors)
     }
 
     // We pass by value to match other stages. NOLINTNEXTLINE(performance-unnecessary-value-param)

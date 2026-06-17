@@ -24,7 +24,7 @@ FOO=BAR (true one)
 
 # more things
 '
-# CHECKERR: fish: command substitutions not allowed in command position. Try var=(your-cmd) $var ...
+# CHECKERR: fish: Only `$()` command substitutions are allowed in command position. Try `$(your-cmd) ...`
 # CHECKERR: {{^}}FOO=BAR (true one)
 # CHECKERR: {{^}}        ^~~~~~~~~^
 

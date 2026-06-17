@@ -209,13 +209,13 @@ fn locate_cmdsub(
     let mut escaped = false;
     let mut is_token_begin = true;
     let mut syntax_error = false;
-    let mut paran_count = 0;
+    let mut paren_count = 0;
     let mut quoted_cmdsubs = vec![];
 
     let mut pos = cursor;
     let mut last_dollar = None;
-    let mut paran_begin = None;
-    let mut paran_end = None;
+    let mut paren_begin = None;
+    let mut paren_end = None;
     enum Quote {
         Real(char),
         VirtualDouble,
@@ -223,7 +223,7 @@ fn locate_cmdsub(
     fn process_opening_quote(
         input: &[char],
         inout_is_quoted: &mut Option<&mut bool>,
-        paran_count: i32,
+        paren_count: i32,
         quoted_cmdsubs: &mut Vec<i32>,
         mut pos: usize,
         last_dollar: &mut Option<usize>,
@@ -241,11 +241,11 @@ fn locate_cmdsub(
         if input[q_end] == '$' {
             // The closing quote is another quoted command substitution.
             *last_dollar = Some(q_end);
-            quoted_cmdsubs.push(paran_count);
+            quoted_cmdsubs.push(paren_count);
         }
         // We want to report whether the outermost command substitution between
-        // paran_begin..paran_end is quoted.
-        if paran_count == 0 {
+        // paren_begin..paren_end is quoted.
+        if paren_count == 0 {
             inout_is_quoted
                 .as_mut()
                 .map(|is_quoted| **is_quoted = input[q_end] == '$');
@@ -261,7 +261,7 @@ fn locate_cmdsub(
         pos = process_opening_quote(
             input,
             &mut inout_is_quoted,
-            paran_count,
+            paren_count,
             &mut quoted_cmdsubs,
             pos,
             &mut last_dollar,
@@ -277,7 +277,7 @@ fn locate_cmdsub(
                 match process_opening_quote(
                     input,
                     &mut inout_is_quoted,
-                    paran_count,
+                    paren_count,
                     &mut quoted_cmdsubs,
                     pos,
                     &mut last_dollar,
@@ -293,37 +293,37 @@ fn locate_cmdsub(
             } else if c == '$' {
                 last_dollar = Some(pos);
             } else if c == '(' {
-                if paran_count == 0 && paran_begin.is_none() {
-                    paran_begin = Some(pos);
+                if paren_count == 0 && paren_begin.is_none() {
+                    paren_begin = Some(pos);
                     out_has_dollar
                         .as_mut()
                         .map(|has_dollar| **has_dollar = last_dollar == Some(pos.wrapping_sub(1)));
                 }
 
-                paran_count += 1;
+                paren_count += 1;
             } else if c == ')' {
-                paran_count -= 1;
+                paren_count -= 1;
 
-                if paran_count == 0 {
-                    assert!(paran_end.is_none());
-                    paran_end = Some(pos);
+                if paren_count == 0 {
+                    assert!(paren_end.is_none());
+                    paren_end = Some(pos);
                     break;
                 }
 
-                if paran_count < 0 {
+                if paren_count < 0 {
                     syntax_error = true;
                     break;
                 }
 
                 // Check if the ) did complete a quoted command substitution.
-                if quoted_cmdsubs.last() == Some(&paran_count) {
+                if quoted_cmdsubs.last() == Some(&paren_count) {
                     quoted_cmdsubs.pop();
                     // Quoted command substitutions temporarily close double quotes.
                     // In "foo$(bar)baz$(qux)", after the ), we need to act as if there was a double quote.
                     match process_opening_quote(
                         input,
                         &mut inout_is_quoted,
-                        paran_count,
+                        paren_count,
                         &mut quoted_cmdsubs,
                         pos,
                         &mut last_dollar,
@@ -342,26 +342,26 @@ fn locate_cmdsub(
         pos += 1;
     }
 
-    syntax_error |= paran_count < 0;
-    syntax_error |= paran_count > 0 && !allow_incomplete;
+    syntax_error |= paren_count < 0;
+    syntax_error |= paren_count > 0 && !allow_incomplete;
 
     if syntax_error {
         return Err(());
     }
 
-    let Some(paran_begin) = paran_begin else {
+    let Some(paren_begin) = paren_begin else {
         return Ok(None);
     };
 
-    let end = if paran_count != 0 {
+    let end = if paren_count != 0 {
         input.len()
     } else {
-        paran_end.unwrap() + 1
+        paren_end.unwrap() + 1
     };
 
     let cmdsub = CommandSubstitution {
-        range: paran_begin..end,
-        num_closing: if paran_count == 0 { 1 } else { 0 },
+        range: paren_begin..end,
+        num_closing: if paren_count == 0 { 1 } else { 0 },
     };
 
     Ok(Some(cmdsub))

@@ -2877,6 +2877,11 @@ mod tests {
             r"le",
             "touch test/complete_test/{testfile",
         );
+        unique_completion_applies_as!(
+            "touch test/complete_test/{something,testfi",
+            r"le",
+            "touch test/complete_test/{something,testfile",
+        );
 
         // Brackets - see #5831
         unique_completion_applies_as!(

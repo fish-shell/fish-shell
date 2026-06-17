@@ -825,7 +825,6 @@ fn expand_braces(
                 synth.push(BRACE_END);
             }
 
-            // Note: this code looks very fishy, apparently it has never worked.
             return expand_braces(synth, ExpandFlags::FAIL_ON_CMDSUBST, out, errors);
         }
     }

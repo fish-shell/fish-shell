@@ -11,7 +11,6 @@ runs:
         set -x
         sudo pip install uv --break-system-packages
         command -v uv
-        command -v uvx
         # Check that pyproject.toml and the lock file are in sync.
         uv lock --check --exclude-newer="$(awk -F'"' <uv.lock '/^exclude-newer[[:space:]]*=/ {print $2}')"
         uv venv ~/.local --allow-existing

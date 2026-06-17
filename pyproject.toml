@@ -11,6 +11,9 @@ dev = [
   "sphinx>=9.1", # updatecli.d/python.yml
   "sphinx-markdown-builder",
 ]
+test = [
+    "vermin>=1.8.0",
+]
 
 [tool.uv.sources]
 sphinx-markdown-builder = { git = "https://github.com/liran-funaro/sphinx-markdown-builder", rev = "7c4daaf39a92f93deec948ecc1772e23bac44588" }

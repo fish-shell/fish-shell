@@ -3,16 +3,17 @@ fish ?.?.? (released ???)
 
 Deprecations and removed features
 ---------------------------------
-- ``--command`` and ``--path`` options in `complete` no longer unescape their argument.
+- The ``--command`` and ``--path`` options in :doc:`complete <cmds/complete>` no longer unescape their argument.
 
 Interactive improvements
 ------------------------
 - On the first run after upgrading from an older version, fish will try harder to check if the current theme matches a historical default, in which case fish won't create ``~/.config/fish/conf.d/fish_frozen_theme.fish``.
-  This means that on systems where fish version 3.x was installed originally, the update will avoid creating that file (:issue:`12725`).
+  This means that on systems where fish version 3.x was installed originally, fish 4.8 will avoid creating that file on upgrade (:issue:`12725`).
 - ``fish_hg_prompt``, ``fish_git_prompt`` and ``fish_fossil_prompt`` now strip control characters from VCS state read off disk, matching ``prompt_pwd``.
 - The sample informative and minimalist prompts now use ``prompt_pwd`` instead of printing ``$PWD`` directly.
-- ``bind`` shows the file where bindings were defined (:issue:`12504`).
+- :doc:`bind <cmds/bind>` shows the file where bindings were defined (:issue:`12504`).
 - Abbreviations with ``--position=anywhere`` can now be completed in argument position, not just in command position (:issue:`12630`).
+- Path component movement (:kbd:`ctrl-w`) skips escaped characters.
 
 Other improvements
 ------------------

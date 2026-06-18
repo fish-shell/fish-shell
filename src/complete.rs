@@ -902,6 +902,45 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         conditions.iter().all(|c| self.condition_test(c))
     }
 
+    /// Return the position of the short option that may take the rest of the token as its
+    /// parameter. If no such option exists, return the last valid short option in the token.
+    fn short_option_pos(&mut self, arg: &wstr, options: &[CompleteEntryOpt]) -> Option<usize> {
+        if arg.len() <= 1 || leading_dash_count(arg) != 1 {
+            return None;
+        }
+
+        let mut seen_short_options = HashSet::new();
+        for (pos, arg_char) in arg.chars().enumerate().skip(1) {
+            let mut matched = None;
+            for o in options {
+                if o.typ == CompleteOptionType::Short
+                    && o.option.char_at(0) == arg_char
+                    && self.conditions_test(&o.conditions)
+                {
+                    matched = Some(o);
+                    break;
+                }
+            }
+
+            if let Some(matched) = matched {
+                if matched.result_mode.requires_param {
+                    return Some(pos);
+                }
+                if !seen_short_options.insert(arg_char) {
+                    return None;
+                }
+            } else {
+                // The first character after the dash is not a valid option.
+                if pos == 1 {
+                    return None;
+                }
+                return Some(pos - 1);
+            }
+        }
+
+        Some(arg.len() - 1)
+    }
+
     /// Copy any strings in `possible_comp` which have the specified prefix to the
     /// completer's completion array. The prefix may contain wildcards. The output
     /// will consist of [`Completion`] structs.
@@ -1310,7 +1349,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // Now release the lock and test each option that we captured above. We have to do this outside
         // the lock because callouts (like the condition) may add or remove completions. See issue #2.
         for options in all_options {
-            let short_opt_pos = short_option_pos(s, &options);
+            let short_opt_pos = self.short_option_pos(s, &options);
             // We want last_option_requires_param to default to false but distinguish between when
             // a previous completion has set it to false and when it has its default value.
             let mut last_option_requires_param = None;
@@ -1390,7 +1429,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     // No old style option matched, or we are not using old style options. We check if
                     // any short (or gnu style) options do.
                     if !old_style_match {
-                        let prev_short_opt_pos = short_option_pos(popt, &options);
+                        let prev_short_opt_pos = self.short_option_pos(popt, &options);
                         for o in &options {
                             // Gnu-style options with _optional_ arguments must be specified as a single
                             // token, so that it can be differed from a regular argument.
@@ -2211,36 +2250,6 @@ fn param_match2(e: &CompleteEntryOpt, optstr: &wstr) -> Option<usize> {
     }
     cursor += 1;
     Some(cursor)
-}
-
-/// Parses a token of short options plus one optional parameter like
-/// '-xzPARAM', where x and z are short options.
-///
-/// Returns the position of the last option character (e.g. the position of z which is 2).
-/// Everything after that is assumed to be part of the parameter.
-/// Returns wcstring::npos if there is no valid short option.
-fn short_option_pos(arg: &wstr, options: &[CompleteEntryOpt]) -> Option<usize> {
-    if arg.len() <= 1 || leading_dash_count(arg) != 1 {
-        return None;
-    }
-    for (pos, arg_char) in arg.chars().enumerate().skip(1) {
-        let r#match = options
-            .iter()
-            .find(|o| o.typ == CompleteOptionType::Short && o.option.char_at(0) == arg_char);
-        if let Some(r#match) = r#match {
-            if r#match.result_mode.requires_param {
-                return Some(pos);
-            }
-        } else {
-            // The first character after the dash is not a valid option.
-            if pos == 1 {
-                return None;
-            }
-            return Some(pos - 1);
-        }
-    }
-
-    Some(arg.len() - 1)
 }
 
 fn expand_command_token(ctx: &mut OperationContext<'_>, cmd_tok: &mut WString) -> bool {

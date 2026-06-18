@@ -60,9 +60,6 @@ bitflags! {
         const PRESERVE_HOME_TILDES = 1 << 7;
         /// Allow fuzzy matching.
         const FUZZY_MATCH = 1 << 8;
-        /// Disallow directory abbreviations like /u/l/b for /usr/local/bin. Only applicable if
-        /// fuzzy_match is set.
-        const NO_FUZZY_DIRECTORIES = 1 << 9;
         /// Allows matching a leading dot even if the wildcard does not contain one.
         /// By default, wildcards only match a leading dot literally; this is why e.g. '*' does not
         /// match hidden files.

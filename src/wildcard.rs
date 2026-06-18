@@ -554,10 +554,7 @@ mod expander {
                 // Maybe try a fuzzy match (#94) if nothing was found with the literal match. Respect
                 // EXPAND_NO_DIRECTORY_ABBREVIATIONS (issue #2413).
                 // Don't do fuzzy matches if the literal segment was valid (#3211)
-                let allow_fuzzy = self.flags.contains(ExpandFlags::FUZZY_MATCH)
-                    && !self.flags.contains(ExpandFlags::NO_FUZZY_DIRECTORIES);
-
-                if allow_fuzzy
+                if self.flags.contains(ExpandFlags::FUZZY_MATCH)
                     && self.resolved_completions.len() == before
                     && waccess(&intermediate_dirpath, AccessFlags::F_OK).is_err()
                 {

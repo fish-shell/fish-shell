@@ -1,5 +1,7 @@
 //! Helper functions for working with wcstring.
 
+use std::{borrow::Cow, mem};
+
 use fish_fallback::{fish_wcwidth, lowercase, lowercase_rev, wcscasecmp, wcscasecmp_fuzzy};
 use fish_widestring::{ELLIPSIS_CHAR, prelude::*};
 
@@ -458,19 +460,22 @@ pub fn truncate(input: &wstr, max_len: usize) -> WString {
     output
 }
 
-pub fn trim(input: WString, any_of: Option<&wstr>) -> WString {
+pub fn trim<'a>(input: &'a mut WString, any_of: Option<&wstr>) -> Cow<'a, wstr> {
     let any_of = any_of.unwrap_or(L!("\t\x0B \r\n"));
-    let mut result = input;
+    let result = input;
     let Some(suffix) = result.chars().rposition(|c| !any_of.contains(c)) else {
-        return WString::new();
+        return Cow::Borrowed(L!(""));
     };
-    result.truncate(suffix + 1);
-
     let prefix = result
         .chars()
         .position(|c| !any_of.contains(c))
         .expect("Should have one non-trimmed character");
-    result.split_off(prefix)
+    result.truncate(suffix + 1);
+    if prefix == 0 {
+        Cow::Owned(mem::take(result))
+    } else {
+        Cow::Borrowed(result.slice_from(prefix))
+    }
 }
 
 /// Return the number of escaping backslashes before a character.

@@ -1,33 +1,41 @@
 fish ?.?.? (released ???)
 =========================
 
+Notable improvements and fixes
+------------------------------
+- Translatable messages defined in Rust source code may now be localized using `Fluent <https://projectfluent.org/>`__ instead of GNU gettext.
+  To make Fluent easy to work with, we have added tooling based on the new `fluent-ftl-tools <https://codeberg.org/danielrainer/fluent-ftl-tools>`__ library.
+  See :ref:`Contributing Translations <localization>` (:issue:`11928`).
+
 Deprecations and removed features
 ---------------------------------
 - The ``--command`` and ``--path`` options in :doc:`complete <cmds/complete>` no longer unescape their argument.
 
 Interactive improvements
 ------------------------
-- On the first run after upgrading from an older version, fish will try harder to check if the current theme matches a historical default, in which case fish won't create ``~/.config/fish/conf.d/fish_frozen_theme.fish``.
-  This means that on systems where fish version 3.x was installed originally, fish 4.8 will avoid creating that file on upgrade (:issue:`12725`).
+- History search would sometimes forget about commands after those were re-run in concurrent sessions. This has been fixed (:issue:`10300`).
+- On the first run after upgrading from an older version, fish will try harder to check if the current theme matches a historical default. If it does match, fish won't create ``~/.config/fish/conf.d/fish_frozen_theme.fish`` when upgrading from fish < 4.3.
+  Specifically, on systems where fish version 3.x was installed originally, fish 4.8 will avoid creating that file on upgrade (:issue:`12725`).
 - ``fish_hg_prompt``, ``fish_git_prompt`` and ``fish_fossil_prompt`` now strip control characters from VCS state read off disk, matching ``prompt_pwd``.
-- The sample informative and minimalist prompts now use ``prompt_pwd`` instead of printing ``$PWD`` directly.
 - :doc:`bind <cmds/bind>` shows the file where bindings were defined (:issue:`12504`).
 - Abbreviations with ``--position=anywhere`` can now be completed in argument position, not just in command position (:issue:`12630`).
 - Path component movement (:kbd:`ctrl-w`) skips escaped characters.
 - Completions no longer offer repeated short options (:issue:`12821`).
 - Fixed an issue where control-C might fail to cancel certain functions (:issue:`12802`).
 
-Other improvements
-------------------
+Scripting improvements
+----------------------
 - ``cd`` supports the ``-L`` and ``-P`` options, like other shells, to allow specifying whether symbolic links (symlinks) are resolved when changing directories (:issue:`7206`).
 - ``cd`` with a relative path will now retry using the real current directory, if ``$PWD`` has been moved or deleted (:issue:`12700`).
-- fish no longer creates universal variables by default; specifically the ``__fish_initialized`` variable is no longer created.
-  If you don't expect to need to downgrade to earlier versions, you can remove it with ``set --erase __fish_initialized``.
 - Nested brace expansions now strip unquoted leading and trailing spaces from entries consistently (:issue:`12794`).
+
+Other improvements
+------------------
+- fish no longer creates universal variables by default; specifically, the ``__fish_initialized`` variable is no longer created.
+  If you don't expect to need to downgrade to earlier versions, you can remove it with ``set --erase __fish_initialized``.
 
 For distributors and developers
 -------------------------------
-- Messages defined in Rust source code may now be localized using `Fluent <https://projectfluent.org/>`__. To make this easy to work with, we have added Fluent tooling based on the new `fluent-ftl-tools <https://codeberg.org/danielrainer/fluent-ftl-tools>`__ Rust crate, see :ref:`Contributing Translations <localization>` (:issue:`11928`).
 - With the exception of the ``$CMAKE_INSTALL_PREFIX/share/fish/man`` directory, fish no longer installs files to ``$CMAKE_INSTALL_PREFIX/share/fish``.
   In particular, this means that both
   ``$CMAKE_INSTALL_PREFIX/share/fish/completions`` and

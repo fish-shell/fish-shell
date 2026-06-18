@@ -7,8 +7,8 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
-phf.workspace = true
 fish-localization.workspace = true
+phf.workspace = true
 
 [build-dependencies]
 fish-build-helper.workspace = true

@@ -873,8 +873,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     }
 
     /// Test if the specified script returns zero. The result is cached, so that if multiple completions
-    /// use the same condition, it needs only be evaluated once. condition_cache_clear must be called
-    /// after a completion run to make sure that there are no stale completions.
+    /// use the same condition, it needs only be evaluated once.
     fn condition_test(&mut self, condition: &wstr) -> bool {
         if condition.is_empty() {
             return true;

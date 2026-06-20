@@ -40,7 +40,7 @@ use crate::{
 };
 use bitflags::bitflags;
 use fish_common::{UnescapeStringStyle, unescape_string};
-use fish_wcstringutil::{subsequence_in_string, trim};
+use fish_wcstringutil::{subsequence_in_string, trim_in_place};
 use fish_widestring::{ANY_STRING, bytes2wcstring, cstr2wcstring, subslice_position};
 use lru::LruCache;
 use rand::RngExt as _;
@@ -903,7 +903,8 @@ impl HistoryImpl {
             let Ok(line) = line else {
                 break;
             };
-            let wide_line = trim(bytes2wcstring(&line), None);
+            let mut wide_line = bytes2wcstring(&line);
+            trim_in_place(&mut wide_line, None);
             // Add this line if it doesn't contain anything we know we can't handle.
             if should_import_bash_history_line(&wide_line) {
                 self.add(

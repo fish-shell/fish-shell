@@ -14,6 +14,7 @@ Interactive improvements
 - :doc:`bind <cmds/bind>` shows the file where bindings were defined (:issue:`12504`).
 - Abbreviations with ``--position=anywhere`` can now be completed in argument position, not just in command position (:issue:`12630`).
 - Path component movement (:kbd:`ctrl-w`) skips escaped characters.
+- Completions no longer offer repeated short options (:issue:`12821`).
 
 Other improvements
 ------------------

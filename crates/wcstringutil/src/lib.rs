@@ -1,7 +1,5 @@
 //! Helper functions for working with wcstring.
 
-use std::{borrow::Cow, mem};
-
 use fish_fallback::{fish_wcwidth, lowercase, lowercase_rev, wcscasecmp, wcscasecmp_fuzzy};
 use fish_widestring::{ELLIPSIS_CHAR, prelude::*};
 
@@ -460,22 +458,21 @@ pub fn truncate(input: &wstr, max_len: usize) -> WString {
     output
 }
 
-pub fn trim<'a>(input: &'a mut WString, any_of: Option<&wstr>) -> Cow<'a, wstr> {
+// Remove leading and trailing characters in `any_of` from the string.
+// By default, trim whitespace.
+pub fn trim(input: impl Into<WString>, any_of: Option<&wstr>) -> WString {
     let any_of = any_of.unwrap_or(L!("\t\x0B \r\n"));
-    let result = input;
+    let mut result = input.into();
     let Some(suffix) = result.chars().rposition(|c| !any_of.contains(c)) else {
-        return Cow::Borrowed(L!(""));
+        return WString::new();
     };
     let prefix = result
         .chars()
         .position(|c| !any_of.contains(c))
         .expect("Should have one non-trimmed character");
     result.truncate(suffix + 1);
-    if prefix == 0 {
-        Cow::Owned(mem::take(result))
-    } else {
-        Cow::Borrowed(result.slice_from(prefix))
-    }
+    result.drain(0..prefix);
+    result
 }
 
 /// Return the number of escaping backslashes before a character.
@@ -539,7 +536,7 @@ mod tests {
     use super::{
         CaseSensitivity, ContainType, LineIterator, count_newlines, ifind, join_strings,
         split_string_tok, string_fuzzy_match_string, string_prefixes_string_case_insensitive,
-        string_suffixes_string_case_insensitive,
+        string_suffixes_string_case_insensitive, trim,
     };
     use fish_widestring::prelude::*;
 
@@ -751,5 +748,13 @@ mod tests {
         assert_eq!(count_newlines(L!("foo\nbar\nbaz")), 2);
         assert_eq!(count_newlines(L!("\n")), 1);
         assert_eq!(count_newlines(L!("\n\n")), 2);
+    }
+
+    #[test]
+    fn test_trim() {
+        assert_eq!(trim(L!("foo"), None), L!("foo"));
+        assert_eq!(trim(L!("fooff"), Some(L!("f"))), L!("oo"));
+        assert_eq!(trim(L!("  foo  "), None), L!("foo"));
+        assert_eq!(trim(L!(""), None), L!(""));
     }
 }

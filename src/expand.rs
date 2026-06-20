@@ -858,8 +858,8 @@ fn expand_braces(
         if brace_count == 0 && (c == BRACE_SEP || pos == brace_end) {
             assert!(pos >= item_begin);
             let item_len = pos - item_begin;
-            let mut item = input[item_begin..pos].to_owned();
-            let item = trim(&mut item, Some(wstr::from_char_slice(&[BRACE_SPACE, '\0'])));
+            let item = &input[item_begin..pos];
+            let item = trim(item, Some(wstr::from_char_slice(&[BRACE_SPACE, '\0'])));
 
             // `whole_item` is a whitespace- and brace-stripped member of a single pass of brace
             // expansion, e.g. in `{ alpha , b,{c, d }}`, `alpha`, `b`, and `c, d` will, in the

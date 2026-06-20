@@ -903,16 +903,11 @@ impl HistoryImpl {
             let Ok(line) = line else {
                 break;
             };
-            let mut wide_line = bytes2wcstring(&line);
-            let wide_line = trim(&mut wide_line, None);
+            let wide_line = trim(bytes2wcstring(&line), None);
             // Add this line if it doesn't contain anything we know we can't handle.
             if should_import_bash_history_line(&wide_line) {
                 self.add(
-                    HistoryItem::new(
-                        wide_line.into_owned(),
-                        timestamps.clone(),
-                        PersistenceMode::Disk,
-                    ),
+                    HistoryItem::new(wide_line, timestamps.clone(), PersistenceMode::Disk),
                     /*pending=*/ false,
                     /*do_save=*/ false,
                 );

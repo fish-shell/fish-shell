@@ -1105,6 +1105,7 @@ fn exec_block_or_func_process(
     };
     let status = performer(parser, None, None);
     p.status.set(status);
+    // Match the behavior of handle_child_status to cancel a job group.
     if status.signal_exited() {
         let sig = status.signal_code();
         if is_interactive_session() && [SIGINT, SIGQUIT].contains(&sig) {

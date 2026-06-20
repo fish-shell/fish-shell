@@ -15,6 +15,7 @@ Interactive improvements
 - Abbreviations with ``--position=anywhere`` can now be completed in argument position, not just in command position (:issue:`12630`).
 - Path component movement (:kbd:`ctrl-w`) skips escaped characters.
 - Completions no longer offer repeated short options (:issue:`12821`).
+- Fixed an issue where control-C might fail to cancel certain functions (:issue:`12802`).
 
 Other improvements
 ------------------

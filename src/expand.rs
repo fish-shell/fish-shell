@@ -1460,7 +1460,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             // to mean don't do file expansions, so if we're not doing file expansions, just drop this
             // completion on the floor.
             #[allow(clippy::collapsible_if)]
-            if !self.flags.contains(ExpandFlags::FOR_COMPLETIONS) {
+            if !for_completions {
                 if !out.add(path_to_expand) {
                     return append_overflow_error(self.errors, None);
                 }

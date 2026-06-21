@@ -495,6 +495,7 @@ HOME=$path_to_cat/.. complete -C '~/cat '
 
 # Do not expand command substitutions.
 complete -C '(echo cat) ' | string match +pet
+complete -C '(echo $PWD)/'
 # Give up if we expand to multiple arguments (we'd need to handle the arguments).
 complete -C '{cat,arg1,arg2} ' | string match +pet
 # Don't expand wildcards though we could.

@@ -980,7 +980,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     }
 
     fn completion_expand_flags(&self) -> ExpandFlags {
-        self.expand_flags() | ExpandFlags::FOR_COMPLETIONS | ExpandFlags::PRESERVE_HOME_TILDES
+        self.expand_flags()
+            | ExpandFlags::FAIL_ON_CMDSUBST
+            | ExpandFlags::FOR_COMPLETIONS
+            | ExpandFlags::PRESERVE_HOME_TILDES
     }
 
     /// If command to complete is short enough, substitute the description with the whatis information
@@ -1580,7 +1583,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         if self.ctx.check_cancel() {
             return;
         }
-        let mut flags = self.completion_expand_flags() | ExpandFlags::FAIL_ON_CMDSUBST;
+        let mut flags = self.completion_expand_flags();
         if !do_file {
             flags |= ExpandFlags::SKIP_WILDCARDS;
         }

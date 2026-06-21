@@ -1615,9 +1615,6 @@ msgstr "コマンド"
 msgid "command link"
 msgstr "コマンドリンク"
 
-msgid "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-msgstr "コマンドの位置にコマンド置換を置くことはできません。 var=(your-cmd) $var ... を試してください"
-
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr "補完が最大再帰深度に達しました。循環参照の可能性がありますか？"
 

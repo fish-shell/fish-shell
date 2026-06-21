@@ -1612,9 +1612,6 @@ msgstr ""
 msgid "command link"
 msgstr ""
 
-msgid "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-msgstr ""
-
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr ""
 

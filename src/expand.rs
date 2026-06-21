@@ -1300,9 +1300,9 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                         self.errors,
                         cmdsub.opening_paren_offset(),
                         cmdsub.end() - 1,
-                        wgettext!(
-                            "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-                        )
+                        WString::from_str(&localize!(
+                            "command-substitution-in-command-position" = "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
+                        ))
                     );
                     ExpandResult::make_error(STATUS_EXPAND_ERROR)
                 }

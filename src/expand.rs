@@ -343,17 +343,6 @@ macro_rules! append_syntax_error {
 macro_rules! append_cmdsub_error {
     (
         $errors:expr, $source_start:expr, $source_end:expr,
-        $fmt:expr $(, $arg:expr )* $(,)?
-    ) => {
-        append_cmdsub_error_formatted!(
-            $errors, $source_start, $source_end,
-            wgettext_fmt!($fmt $(, $arg)*));
-    }
-}
-
-macro_rules! append_cmdsub_error_formatted {
-    (
-        $errors:expr, $source_start:expr, $source_end:expr,
         $text:expr $(,)?
     ) => {
         if let Some(ref mut errors) = $errors.as_mut() {
@@ -361,7 +350,7 @@ macro_rules! append_cmdsub_error_formatted {
             error.source_start = $source_start;
             error.source_length = $source_end - $source_start + 1;
             error.code = ParseErrorCode::CmdSubst;
-            error.text = $text;
+            error.text = $text.to_owned();
             if !errors.iter().any(|e| e.text == error.text) {
                 errors.push(error);
             }
@@ -973,12 +962,7 @@ pub fn expand_cmdsubst(
                 wgettext!("Unknown error while evaluating command substitution")
             }
         };
-        append_cmdsub_error_formatted!(
-            errors,
-            cmdsub.opening_paren_offset(),
-            cmdsub.end() - 1,
-            err.to_owned()
-        );
+        append_cmdsub_error!(errors, cmdsub.opening_paren_offset(), cmdsub.end() - 1, err);
         return ExpandResult::make_error(subshell_status);
     }
 
@@ -1316,7 +1300,9 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                         self.errors,
                         cmdsub.opening_paren_offset(),
                         cmdsub.end() - 1,
-                        "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
+                        wgettext!(
+                            "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
+                        )
                     );
                     ExpandResult::make_error(STATUS_EXPAND_ERROR)
                 }

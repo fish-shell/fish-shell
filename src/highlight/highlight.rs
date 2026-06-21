@@ -1358,6 +1358,7 @@ mod tests {
         std::fs::create_dir_all("cdpath-entry/dir-in-cdpath").unwrap();
         std::fs::write("foo", []).unwrap();
         std::fs::write("bar", []).unwrap();
+        std::fs::write("-filename-starting-with-dash", []).unwrap();
 
         // Here are the components of our source and the colors we expect those to be.
         #[derive(Debug)]
@@ -1600,6 +1601,14 @@ mod tests {
                 (")", fg(HighlightRole::Operat)),
                 // Just another param.
                 ("param2", fg(HighlightRole::Param)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Command)),
+                (">", fg(HighlightRole::Redirection)),
+                ("-no-such-file", fg(HighlightRole::Redirection)),
+                (">", fg(HighlightRole::Redirection)),
+                ("-filename-starting-with-dash", redirection_valid_path),
             );
 
             validate!(

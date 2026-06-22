@@ -30,9 +30,7 @@ runs:
         sudo apt install \
           diffutils $(: "for diff") \
           git \
-          gettext \
           less \
-          $(if ${{ inputs.include_pcre }}; then echo libpcre2-dev; fi) \
           python3-pexpect \
           tmux \
           wget \

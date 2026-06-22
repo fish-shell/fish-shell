@@ -35,6 +35,7 @@ update_gh_action dessant/lock-threads
 update_gh_action EmbarkStudios/cargo-deny-action
 update_gh_action msys2/setup-msys2
 update_gh_action softprops/action-gh-release
+update_gh_action vmactions/freebsd-vm
 
 updatecli "${@:-apply}"
 

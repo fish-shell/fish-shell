@@ -5,7 +5,7 @@ import signal
 import sys
 from pexpect_helper import SpawnedProc
 
-if "CI" in os.environ and platform.system() in ["Darwin", "FreeBSD"]:
+if "CI" in os.environ and platform.system() == "Darwin":
     sys.exit(127)
 
 sp = SpawnedProc()

@@ -54,8 +54,9 @@ docker build \
     "$workspace_root"/docker/context/
 
 # Run tests in it, allowing them to fail without failing this script.
+# shellcheck disable=SC2046  # for the isatty snippet
 # shellcheck disable=SC2086  # $DOCKER_EXTRA_ARGS should have globbing and splitting applied.
-docker run -it \
+docker run -i $(isatty 0 && printf %s -t) \
     --mount type=bind,source="$workspace_root",target=/fish-source,readonly \
     $DOCKER_EXTRA_ARGS \
     "$IMG_TAGNAME"

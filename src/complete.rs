@@ -1003,6 +1003,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         result
     }
 
+    fn completion_expand_flags(&self) -> ExpandFlags {
+        self.expand_flags() | ExpandFlags::FOR_COMPLETIONS | ExpandFlags::PRESERVE_HOME_TILDES
+    }
+
     /// If command to complete is short enough, substitute the description with the whatis information
     /// for the executable.
     fn complete_cmd_desc(&mut self, s: &wstr) {
@@ -1127,10 +1131,8 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     fn complete_cmd(&mut self, str_cmd: WString) {
         // Append all possible executables
         let result = {
-            let expand_flags = self.expand_flags()
+            let expand_flags = self.completion_expand_flags()
                 | ExpandFlags::SPECIAL_FOR_COMMAND
-                | ExpandFlags::FOR_COMPLETIONS
-                | ExpandFlags::PRESERVE_HOME_TILDES
                 | ExpandFlags::EXECUTABLES_ONLY;
             expand_to_receiver(
                 str_cmd.clone(),
@@ -1152,10 +1154,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // updated with choices for the user.
         let _ = {
             // Append all matching directories
-            let expand_flags = self.expand_flags()
-                | ExpandFlags::FOR_COMPLETIONS
-                | ExpandFlags::PRESERVE_HOME_TILDES
-                | ExpandFlags::DIRECTORIES_ONLY;
+            let expand_flags = self.completion_expand_flags() | ExpandFlags::DIRECTORIES_ONLY;
             expand_to_receiver(
                 str_cmd.clone(),
                 &mut self.completions,
@@ -1608,10 +1607,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         if self.ctx.check_cancel() {
             return;
         }
-        let mut flags = self.expand_flags()
-            | ExpandFlags::FAIL_ON_CMDSUBST
-            | ExpandFlags::FOR_COMPLETIONS
-            | ExpandFlags::PRESERVE_HOME_TILDES;
+        let mut flags = self.completion_expand_flags() | ExpandFlags::FAIL_ON_CMDSUBST;
         if !do_file {
             flags |= ExpandFlags::SKIP_WILDCARDS;
         }

@@ -1294,7 +1294,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         let mut use_files = true;
         let mut has_force = false;
 
-        let CmdString { cmd, path } = parse_cmd_string(cmd_orig, self.ctx.vars());
+        let CmdString { cmd, path } = CmdString::new(cmd_orig, self.ctx.vars());
 
         // Don't use cmd_orig here for paths. It's potentially pathed,
         // so that command might exist, but the completion script
@@ -2176,27 +2176,29 @@ struct CmdString {
     path: WString,
 }
 
-/// Find the full path and commandname from a command string `s`.
-fn parse_cmd_string(s: &wstr, vars: &dyn Environment) -> CmdString {
-    let path_result = path_try_get_path(s, vars);
-    let found = path_result.err.is_none();
-    let mut path = path_result.path;
-    // Resolve commands that use relative paths because we compare full paths with "complete -p".
-    if found && !path.is_empty() && path.as_char_slice().first() != Some(&'/') {
-        if let Some(full_path) = wrealpath(&path) {
-            path = full_path;
+impl CmdString {
+    /// Find the full path and commandname from a command string `cmd_orig`.
+    fn new(cmd_orig: &wstr, vars: &dyn Environment) -> Self {
+        let path_result = path_try_get_path(cmd_orig, vars);
+        let found = path_result.err.is_none();
+        let mut path = path_result.path;
+        // Resolve commands that use relative paths because we compare full paths with "complete -p".
+        if found && !path.is_empty() && path.as_char_slice().first() != Some(&'/') {
+            if let Some(full_path) = wrealpath(&path) {
+                path = full_path;
+            }
         }
-    }
 
-    // Make sure the path is not included in the command.
-    let cmd = if let Some(last_slash) = s.chars().rposition(|c| c == '/') {
-        &s[last_slash + 1..]
-    } else {
-        s
-    }
-    .to_owned();
+        // Make sure the path is not included in the command.
+        let cmd = if let Some(last_slash) = cmd_orig.chars().rposition(|c| c == '/') {
+            &cmd_orig[last_slash + 1..]
+        } else {
+            cmd_orig
+        }
+        .to_owned();
 
-    CmdString { cmd, path }
+        Self { cmd, path }
+    }
 }
 
 /// Returns a description for the specified function, or an empty string if none.

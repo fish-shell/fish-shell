@@ -32,6 +32,9 @@ update_gh_action actions/download-artifact
 update_gh_action actions/github-script
 update_gh_action actions/upload-artifact
 update_gh_action dessant/lock-threads
+update_gh_action docker/build-push-action
+update_gh_action docker/login-action
+update_gh_action docker/metadata-action
 update_gh_action EmbarkStudios/cargo-deny-action
 update_gh_action msys2/setup-msys2
 update_gh_action softprops/action-gh-release

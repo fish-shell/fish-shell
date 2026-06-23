@@ -1,0 +1,56 @@
+name: Build Docker test images
+
+on:
+  push:
+    paths:
+      - 'docker/**'
+  workflow_dispatch:
+
+concurrency:
+  group: docker-builds
+
+env:
+  REGISTRY: ghcr.io
+  NAMESPACE: fish-ci
+
+jobs:
+  docker-build:
+    if: github.repository_owner == 'fish-shell'
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: alpine
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+      - name: Login to Container registry
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0, build_tools/update-dependencies.sh
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@80c7e94dd9b9319bd5eb7a0e0fe9291e23a2a2e9 # v6.1.0, build_tools/update-dependencies.sh
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.NAMESPACE }}/${{ matrix.target }}
+          flavor: |
+            latest=true
+      - name: Build and push
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0, build_tools/update-dependencies.sh
+        with:
+          context: docker/context
+          push: true
+          file: docker/${{ matrix.target }}.Dockerfile
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.NAMESPACE }}/${{ matrix.target }}:latest
+          cache-to: type=inline

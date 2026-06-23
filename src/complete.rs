@@ -908,7 +908,6 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             return None;
         }
 
-        let mut seen_short_options = HashSet::new();
         for (pos, arg_char) in arg.chars().enumerate().skip(1) {
             let matched = options.iter().find(|o| {
                 o.typ == CompleteOptionType::Short
@@ -919,9 +918,6 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             if let Some(matched) = matched {
                 if matched.result_mode.requires_param {
                     return Some(pos);
-                }
-                if !seen_short_options.insert(arg_char) {
-                    return None;
                 }
             } else {
                 // The first character after the dash is not a valid option.

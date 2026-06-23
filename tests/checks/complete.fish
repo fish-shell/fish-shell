@@ -153,10 +153,11 @@ end
 complete -c repeated_short_options -f -s h
 complete -c repeated_short_options -f -s v
 complete -c repeated_short_options -f -s x
-complete -C'repeated_short_options -xx' | count
-# CHECK: 0
-complete -C'repeated_short_options -xxh' | count
-# CHECK: 0
+complete -C'repeated_short_options -xx'
+# CHECK: -xxh
+# CHECK: -xxv
+complete -C'repeated_short_options -xxh'
+# CHECK: -xxhv
 complete -C'repeated_short_options -x'
 # CHECK: -xh
 # CHECK: -xv

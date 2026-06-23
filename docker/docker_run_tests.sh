@@ -48,7 +48,9 @@ test -n "$DOCKERFILE" || usage
 
 # Construct a docker image.
 IMG_TAGNAME="ghcr.io/fish-shell/fish-ci/$(basename -s .Dockerfile "$DOCKERFILE"):latest"
+docker pull "$IMG_TAGNAME" || true
 docker build \
+    --cache-from "$IMG_TAGNAME" \
     -t "$IMG_TAGNAME" \
     -f "$DOCKERFILE" \
     "$workspace_root"/docker/context/

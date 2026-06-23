@@ -31,7 +31,6 @@ function __fish_apt_option
     complete -f -c apt -n "__fish_seen_subcommand_from $subcommand" $argv
 end
 
-# TODO fix this for the new version of source list format
 function __fish_apt_list_repos
     # A single `string` invocation can't read from multiple files and so we use `cat`
     # but /etc/apt/sources.list.d/ may or may not contain any files so using a fish

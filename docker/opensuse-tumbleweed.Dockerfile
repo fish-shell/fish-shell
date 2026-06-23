@@ -7,7 +7,6 @@ ENV LC_ALL=C.UTF-8
 RUN zypper --non-interactive install \
     bash \
     diffutils \
-    gcc-c++ \
     git-core \
     pcre2-devel \
     python311 \

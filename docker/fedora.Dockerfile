@@ -2,15 +2,17 @@ FROM fedora:latest
 LABEL org.opencontainers.image.source=https://github.com/fish-shell/fish-shell
 
 RUN dnf install --assumeyes \
+        cargo \
         diffutils \
-        gcc-c++ \
         git-core \
+        openssl \
         pcre2-devel \
+        procps \
         python3 \
         python3-pip \
-        openssl \
-        procps \
-        sudo && \
+        rust \
+        sudo \
+    && \
     dnf clean all
 
 RUN pip3 install pexpect

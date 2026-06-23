@@ -18,9 +18,13 @@ update_gh_action() {
     [ -n "$version" ]
     tag_oid=$(git ls-remote "https://github.com/$repo.git" "refs/tags/$version" | cut -f1)
     [ -n "$tag_oid" ]
-    find .github/workflows -name '*.yml' -type f -exec \
-        sed -i "s|uses: $repo@\S\+\( \+#.*\)\?|\
-uses: $repo@$tag_oid # $version, build_tools/update-dependencies.sh|g" {} +
+    workflow_files=$(find .github/workflows -name '*.yml' -type f)
+    # shellcheck disable=2086
+    grep "\buses: $repo@\S\+\( \+#.*\)\?" $workflow_files
+    # shellcheck disable=2086
+    sed -i "s|\buses: $repo@\S\+\( \+#.*\)\?|\
+uses: $repo@$tag_oid # $version, build_tools/update-dependencies.sh|g" \
+        $workflow_files
 }
 
 update_gh_action actions/checkout
@@ -28,9 +32,6 @@ update_gh_action actions/download-artifact
 update_gh_action actions/github-script
 update_gh_action actions/upload-artifact
 update_gh_action dessant/lock-threads
-update_gh_action docker/build-push-action
-update_gh_action docker/login-action
-update_gh_action docker/metadata-action
 update_gh_action EmbarkStudios/cargo-deny-action
 update_gh_action msys2/setup-msys2
 update_gh_action softprops/action-gh-release

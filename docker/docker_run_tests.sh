@@ -19,7 +19,7 @@ export DOCKER_BUILDKIT=1
 set -e
 
 # Get fish source directory.
-FISH_SRC_DIR=$(cd "$( dirname "$0" )"/.. >/dev/null && pwd)
+workspace_root=$(cd "$( dirname "$0" )"/.. >/dev/null && pwd)
 
 # Parse args.
 while [ $# -gt 1 ]; do
@@ -51,11 +51,11 @@ IMG_TAGNAME="ghcr.io/fish-shell/fish-ci/$(basename -s .Dockerfile "$DOCKERFILE")
 docker build \
     -t "$IMG_TAGNAME" \
     -f "$DOCKERFILE" \
-    "$FISH_SRC_DIR"/docker/context/
+    "$workspace_root"/docker/context/
 
 # Run tests in it, allowing them to fail without failing this script.
 # shellcheck disable=SC2086  # $DOCKER_EXTRA_ARGS should have globbing and splitting applied.
 docker run -it \
-    --mount type=bind,source="$FISH_SRC_DIR",target=/fish-source,readonly \
+    --mount type=bind,source="$workspace_root",target=/fish-source,readonly \
     $DOCKER_EXTRA_ARGS \
     "$IMG_TAGNAME"

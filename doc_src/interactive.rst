@@ -129,6 +129,8 @@ Variable                                          Meaning
 ==========================================        =====================================================================
 .. envvar:: fish_color_normal                     default color
 .. envvar:: fish_color_command                    commands like echo
+.. envvar:: fish_color_builtin                    builtin commands like cd and set - this falls back on the command color if unset
+.. envvar:: fish_color_function                   user-defined functions - this falls back on the command color if unset
 .. envvar:: fish_color_keyword                    keywords like if - this falls back on the command color if unset
 .. envvar:: fish_color_quote                      quoted text like ``"abc"``
 .. envvar:: fish_color_redirection                IO redirections like >/dev/null
@@ -157,6 +159,7 @@ Variable                                          Meaning
 If a variable isn't set or is empty after subtracting any ``--theme=THEME`` options,
 fish usually tries ``$fish_color_normal``, except for:
 
+- ``$fish_color_builtin`` and ``$fish_color_function``, where they try ``$fish_color_command`` first.
 - ``$fish_color_keyword``, where it tries ``$fish_color_command`` first.
 - ``$fish_color_option``, where it tries ``$fish_color_param`` first.
 - For ``$fish_color_valid_path``, if that doesn't have a color, but only modifiers, it adds those to the color that would otherwise be used,

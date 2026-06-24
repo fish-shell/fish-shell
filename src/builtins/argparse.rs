@@ -1,23 +1,27 @@
-use std::collections::HashMap;
-
 use super::prelude::*;
-
 use crate::builtins::Error;
 use crate::env::{EnvMode, EnvSetMode, EnvStack};
 use crate::exec::exec_subshell;
 use crate::parser::ParserEnvSetMode;
 use crate::wutil::fish_iswalnum;
 use crate::{err_fmt, err_str};
+use fish_fluent::localize_fn;
+use std::collections::HashMap;
 
 const VAR_NAME_PREFIX: &wstr = L!("_flag_");
 
 localizable_consts!(
-    BUILTIN_ERR_INVALID_OPT_SPEC
-    "Invalid option spec '%s' at char '%c'"
-
     MISSING_DOUBLE_HYPHEN_SEPARATOR
     "Missing -- separator"
 );
+
+localize_fn! {
+    err_invalid_opt_spec,
+    "argparse-invalid-option-spec" =
+        "Invalid option spec '{ $option_spec }' at char '{ $bad_char }'",
+    option_spec,
+    bad_char,
+}
 
 #[derive(Default)]
 struct OptionSpec<'args> {
@@ -167,9 +171,13 @@ fn parse_exclusive_args(opts: &mut Options, streams: &mut IoStreams) -> BuiltinR
     for raw_xflags in &opts.raw_exclusive_flags {
         let xflags: Vec<_> = raw_xflags.split(',').collect();
         if xflags.len() < 2 {
-            err_fmt!("exclusive flag string '%s' is not valid", raw_xflags)
-                .cmd(&opts.name)
-                .finish(streams);
+            Error::from(&localize!(
+                "argparse-exclusive-flag-string-invalid" =
+                    "exclusive flag string '{ $flag_string }' is not valid",
+                flag_string = raw_xflags,
+            ))
+            .cmd(&opts.name)
+            .finish(streams);
             return Err(STATUS_CMD_ERROR);
         }
 
@@ -183,9 +191,12 @@ fn parse_exclusive_args(opts: &mut Options, streams: &mut IoStreams) -> BuiltinR
                 // It's a long flag we store as its short flag equivalent.
                 exclusive_set.push(*short_equiv);
             } else {
-                err_fmt!("exclusive flag '%s' is not valid", flag)
-                    .cmd(&opts.name)
-                    .finish(streams);
+                Error::from(&localize!(
+                    "argparse-exclusive-flag-invalid" = "exclusive flag '{ $flag }' is not valid",
+                    flag = flag,
+                ))
+                .cmd(&opts.name)
+                .finish(streams);
                 return Err(STATUS_CMD_ERROR);
             }
         }
@@ -246,7 +257,7 @@ fn parse_flag_modifiers<'args>(
 
     if s.char_at(0) == '!' {
         if opt_spec.arg_type == ArgType::NoArgument {
-            err_fmt!(BUILTIN_ERR_INVALID_OPT_SPEC, option_spec, s.char_at(0))
+            Error::from(&err_invalid_opt_spec(option_spec, s.char_at(0)))
                 .cmd(&opts.name)
                 .finish(streams);
         }
@@ -255,7 +266,7 @@ fn parse_flag_modifiers<'args>(
         // Move cursor to the end so we don't expect a long flag.
         s = s.slice_from(s.char_count());
     } else if !s.is_empty() {
-        err_fmt!(BUILTIN_ERR_INVALID_OPT_SPEC, option_spec, s.char_at(0))
+        Error::from(&err_invalid_opt_spec(option_spec, s.char_at(0)))
             .cmd(&opts.name)
             .finish(streams);
         return false;
@@ -286,9 +297,11 @@ fn parse_option_spec_sep<'args>(
     counter: &mut u32,
     streams: &mut IoStreams,
 ) -> bool {
-    localizable_consts! {
-        IMPLICIT_INT_FLAG_ALREADY_DEFINED
-        "Implicit int flag '%c' already defined"
+    localize_fn! {
+        localize_implicit_int_flag_already_defined,
+        "argparse-implicit-int-flag-already-defined" =
+            "Implicit int flag '{ $flag }' already defined",
+        flag,
     }
     let mut s = *opt_spec_str;
     let mut i = 1usize;
@@ -301,9 +314,11 @@ fn parse_option_spec_sep<'args>(
             *counter += 1;
         }
         if opts.implicit_int_flag != '\0' {
-            err_fmt!(IMPLICIT_INT_FLAG_ALREADY_DEFINED, opts.implicit_int_flag)
-                .cmd(&opts.name)
-                .finish(streams);
+            Error::from(&localize_implicit_int_flag_already_defined(
+                opts.implicit_int_flag,
+            ))
+            .cmd(&opts.name)
+            .finish(streams);
             return false;
         }
         opts.implicit_int_flag = opt_spec.short_flag;
@@ -318,7 +333,7 @@ fn parse_option_spec_sep<'args>(
             opt_spec.short_flag_valid = false;
             i += 1;
             if i == s.char_count() {
-                err_fmt!(BUILTIN_ERR_INVALID_OPT_SPEC, option_spec, s.char_at(i - 1))
+                Error::from(&err_invalid_opt_spec(option_spec, s.char_at(i - 1)))
                     .cmd(&opts.name)
                     .finish(streams);
                 return false;
@@ -327,7 +342,7 @@ fn parse_option_spec_sep<'args>(
         '/' => {
             i += 1; // the struct is initialized assuming short_flag_valid should be true
             if i == s.char_count() {
-                err_fmt!(BUILTIN_ERR_INVALID_OPT_SPEC, option_spec, s.char_at(i - 1))
+                Error::from(&err_invalid_opt_spec(option_spec, s.char_at(i - 1)))
                     .cmd(&opts.name)
                     .finish(streams);
                 return false;
@@ -335,9 +350,11 @@ fn parse_option_spec_sep<'args>(
         }
         '#' => {
             if opts.implicit_int_flag != '\0' {
-                err_fmt!(IMPLICIT_INT_FLAG_ALREADY_DEFINED, opts.implicit_int_flag)
-                    .cmd(&opts.name)
-                    .finish(streams);
+                Error::from(&localize_implicit_int_flag_already_defined(
+                    opts.implicit_int_flag,
+                ))
+                .cmd(&opts.name)
+                .finish(streams);
                 return false;
             }
             opts.implicit_int_flag = opt_spec.short_flag;

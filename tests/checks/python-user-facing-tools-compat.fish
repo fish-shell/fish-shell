@@ -1,5 +1,5 @@
 #RUN: %fish %s
-#REQUIRES: command -v uvx
+#REQUIRES: command -v vermin
 
 set -l webconfig (status dirname)/../../share/tools/web_config/webconfig.py
 set -l create_manpage (status dirname)/../../share/tools/create_manpage_completions.py
@@ -9,7 +9,7 @@ set -l min_version 3.5
 # features enabled:
 #   - union-types: catch `str | None` syntax (3.10+)
 #   - fstring-self-doc: catch f'{var=}' syntax (3.8+)
-set -l output (uvx vermin \
+set -l output (vermin \
     --no-tips \
     --violations \
     --feature union-types \

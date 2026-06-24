@@ -1,25 +1,44 @@
 fish ?.?.? (released ???)
 =========================
 
+fish 4.8.0 (released June 24, 2026)
+===================================
+
+Notable improvements and fixes
+------------------------------
+- Translatable messages defined in Rust source code can and should now be translated using `Fluent <https://projectfluent.org/>`__ instead of GNU gettext.
+  To make Fluent easy to work with, we have added tooling based on the new `fluent-ftl-tools <https://codeberg.org/danielrainer/fluent-ftl-tools>`__ library.
+  See :ref:`Contributing Translations <localization>` (:issue:`11928`).
+
 Deprecations and removed features
 ---------------------------------
-- ``--command`` and ``--path`` options in `complete` no longer unescape their argument.
+- Builtin :doc:`complete's <cmds/complete>` ``--command`` and ``--path`` options no longer unescape their argument.
 
 Interactive improvements
 ------------------------
-- On the first run after upgrading from an older version, fish will try harder to check if the current theme matches a historical default, in which case fish won't create ``~/.config/fish/conf.d/fish_frozen_theme.fish``.
-  This means that on systems where fish version 3.x was installed originally, the update will avoid creating that file (:issue:`12725`).
+- History search would sometimes forget about commands after those were re-run in concurrent sessions. This has been fixed (:issue:`10300`).
 - ``fish_hg_prompt``, ``fish_git_prompt`` and ``fish_fossil_prompt`` now strip control characters from VCS state read off disk, matching ``prompt_pwd``.
-- The sample informative and minimalist prompts now use ``prompt_pwd`` instead of printing ``$PWD`` directly.
-- ``bind`` shows the file where bindings were defined (:issue:`12504`).
 - Abbreviations with ``--position=anywhere`` can now be completed in argument position, not just in command position (:issue:`12630`).
 - In the default (emacs) key bindings, Shift and the cursor-movement keys now select text the way a graphical editor does: :kbd:`shift-left`/:kbd:`shift-right` extend a selection by a character, :kbd:`alt-shift-left`/:kbd:`alt-shift-right` by a word and :kbd:`shift-home`/:kbd:`shift-end` to the line edges. Typing replaces the selection, :kbd:`backspace`/:kbd:`delete` remove it and plain cursor movement clears it (:issue:`8677`). A new ``begin-selection-if-none`` input function makes this composable in custom bindings.
+- Path component movement (:kbd:`ctrl-w`) skips escaped characters.
+- Completion of short option groups will now handle ``--condition`` correctly (:issue:`12821`).
+- Fixed an issue where :kbd:`ctrl-c` might fail to cancel certain functions (:issue:`12802`).
+- On the first run after upgrading from an older version, fish will try harder to check if the current theme matches a historical default.
+  If it does match, fish won't create ``~/.config/fish/conf.d/fish_frozen_theme.fish`` when upgrading from fish < 4.3.
+  In particular, on systems where fish version 3.x was installed originally, fish will now avoid creating that file on upgrade (:issue:`12725`).
+
+Scripting improvements
+----------------------
+- ``cd`` supports the ``-L`` and ``-P`` options, like other shells, to allow specifying whether symbolic links (symlinks) are resolved when changing directories (:issue:`7206`).
+- ``cd`` with a relative path will now retry using the real current directory, if ``$PWD`` has been moved (:issue:`12700`).
+- Nested brace expansions now strip unquoted leading and trailing spaces from entries consistently (:issue:`12794`).
+- :doc:`bind <cmds/bind>` shows the files where bindings were defined (:issue:`12504`).
 
 Other improvements
 ------------------
-- ``cd`` supports the ``-L`` and ``-P`` options, like other shells, to allow specifying whether symbolic links (symlinks) are resolved when changing directories (:issue:`7206`).
-- fish no longer creates universal variables by default; specifically the ``__fish_initialized`` variable is no longer created.
+- fish no longer creates the ``__fish_initialized`` universal variable on startup.
   If you don't expect to need to downgrade to earlier versions, you can remove it with ``set --erase __fish_initialized``.
+  This means that fish now only creates universal variables if instructed by the user.
 
 For distributors and developers
 -------------------------------
@@ -40,7 +59,7 @@ Regression fixes:
 - (from 4.4.0) Vi mode ``c,W`` key binding wrongly deleted trailing spaces (:issue:`12790`).
 - (from 4.4.0) Vi mode ``x`` in :doc:`builtin read <cmds/read>` (:issue:`12724`).
 - (from 4.3.3) Repeated tab would sometimes insert smartcase completions redundantly.
-- (from 4.3.0) Pressing escape during command input would insert garbage text into the command line (:issue:`12379`).
+- (from 4.3.0) Pressing escape during command execution could insert garbage text into the command line (:issue:`12379`).
 
 fish 4.7.1 (released May 08, 2026)
 ==================================

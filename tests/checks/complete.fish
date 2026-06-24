@@ -136,6 +136,32 @@ complete -C'foo -y' | string match -- -y-single-long
 # CHECK: -zARGZ
 complete -C'foo -z'
 
+function conditional_short_options
+end
+complete -c conditional_short_options -f -n false -s x
+complete -c conditional_short_options -f -s h
+complete -c conditional_short_options -f -s v
+complete -C'conditional_short_options -x' | count
+# CHECK: 0
+complete -C'conditional_short_options -xv' | count
+# CHECK: 0
+complete -C'conditional_short_options -v'
+# CHECK: -vh
+
+function repeated_short_options
+end
+complete -c repeated_short_options -f -s h
+complete -c repeated_short_options -f -s v
+complete -c repeated_short_options -f -s x
+complete -C'repeated_short_options -xx'
+# CHECK: -xxh
+# CHECK: -xxv
+complete -C'repeated_short_options -xxh'
+# CHECK: -xxhv
+complete -C'repeated_short_options -x'
+# CHECK: -xh
+# CHECK: -xv
+
 function foo2
 end
 complete -c foo2 -s s -l long -xa "hello-world goodbye-friend"

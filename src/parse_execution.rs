@@ -31,9 +31,7 @@ use crate::{
         ParseTokenType, StatementDecoration, parse_error_offset_source_start,
     },
     parse_tree::{NodeRef, ParsedSourceRef},
-    parse_util::{
-        MaybeParentheses::CommandSubstitution, locate_cmdsubst_range, unescape_wildcards,
-    },
+    parse_util::{locate_cmdsubst_range, unescape_wildcards},
     parser::{
         Block, BlockData, BlockId, BlockType, LoopStatus, Parser, ParserEnvSetMode, ProfileItem,
     },
@@ -130,6 +128,10 @@ impl ExecutionContext {
 
     pub fn pstree(&self) -> &ParsedSourceRef {
         &self.pstree
+    }
+
+    pub fn cancel_signal(&self) -> Option<RawSignal> {
+        self.cancel_signal
     }
 
     pub fn eval_node(
@@ -1474,7 +1476,7 @@ impl ExecutionContext {
                             None,
                             None,
                         ) {
-                            CommandSubstitution(p) => p.start() == 0,
+                            Ok(Some(cmdsub)) => cmdsub.opening_paren_offset() == 0,
                             _ => false,
                         }
                 } {

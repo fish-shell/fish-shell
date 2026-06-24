@@ -8,6 +8,7 @@ license.workspace = true
 
 [dependencies]
 fish-gettext-maps.workspace = true
+fish-localization.workspace = true
 phf.workspace = true
 
 [lints]

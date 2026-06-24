@@ -203,11 +203,9 @@ fn parse_flags(
                 return ControlFlow::Break(Ok(SUCCESS));
             }
             'v' => {
-                streams.out.appendln(&wgettext_fmt!(
-                    VERSION_STRING_TEMPLATE,
-                    get_program_name(),
-                    crate::BUILD_VERSION
-                ));
+                streams
+                    .out
+                    .appendln(&localized_version_string(get_program_name()));
                 return ControlFlow::Break(Ok(SUCCESS));
             }
             'V' => {

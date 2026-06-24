@@ -5,6 +5,7 @@ use std::{
 };
 
 use fish_build_helper::env_var;
+use fish_localization::Language;
 
 fn main() {
     let cache_dir =
@@ -54,16 +55,16 @@ fn embed_localizations(cache_dir: &Path) {
                 if po_file_path.extension() != Some(OsStr::new("po")) {
                     continue;
                 }
-                let lang = po_file_path
+                let language = po_file_path
                     .file_stem()
                     .expect("All entries in the po directory must be regular files.");
-                let language = lang.to_str().unwrap().to_owned();
+                let language = language.to_str().unwrap();
 
                 // Each language gets its own static map for the mapping from message in the source code to
                 // the localized version.
                 let map_name = format!("LANG_MAP_{language}");
 
-                let cached_map_path = cache_dir.join(lang);
+                let cached_map_path = cache_dir.join(language);
 
                 // Include the file containing the map for this language in the main generated file.
                 writeln!(
@@ -74,7 +75,10 @@ fn embed_localizations(cache_dir: &Path) {
                 .unwrap();
                 // Map from the language identifier to the map containing the localizations for this
                 // language.
-                catalogs.entry(language, format!("&{map_name}"));
+                catalogs.entry(
+                    Language(Box::leak(Box::new(language.to_owned()))),
+                    format!("&{map_name}"),
+                );
 
                 if let Ok(metadata) = std::fs::metadata(&cached_map_path) {
                     // Cached map file exists, but might be outdated.
@@ -150,7 +154,8 @@ fn embed_localizations(cache_dir: &Path) {
 
     write!(
         &mut localization_map_file,
-        "pub static CATALOGS: phf::Map<&str, &phf::Map<&str, &str>> = {}",
+        "use fish_localization::Language;\n\
+         pub static CATALOGS: phf::Map<Language, &phf::Map<&str, &str>> = {}",
         catalogs.build()
     )
     .unwrap();

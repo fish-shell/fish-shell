@@ -117,6 +117,9 @@ dev = [
     { name = "sphinx" },
     { name = "sphinx-markdown-builder" },
 ]
+test = [
+    { name = "vermin" },
+]
 
 [package.metadata]
 
@@ -125,6 +128,7 @@ dev = [
     { name = "sphinx", specifier = ">=9.1" },
     { name = "sphinx-markdown-builder", git = "https://github.com/liran-funaro/sphinx-markdown-builder?rev=7c4daaf39a92f93deec948ecc1772e23bac44588" },
 ]
+test = [{ name = "vermin", specifier = ">=1.8.0" }]
 
 [[package]]
 name = "idna"
@@ -367,4 +371,13 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/53/0c/06f8b233b8fd13b9e5ee11424ef85419ba0d8ba0b3138bf360be2ff56953/urllib3-2.7.0.tar.gz", hash = "sha256:231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c", size = 433602, upload-time = "2026-05-07T16:13:18.596Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl", hash = "sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897", size = 131087, upload-time = "2026-05-07T16:13:17.151Z" },
+]
+
+[[package]]
+name = "vermin"
+version = "1.8.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/24/7b/2c1b403f2a844e1acb36694fc336e323df742f7f752edb4188311ad43f9e/vermin-1.8.0.tar.gz", hash = "sha256:3621955ac2a2950175c5b4a9b2fc3bd24bd416da0388893c9eb6971264e4ca1f", size = 99913, upload-time = "2025-11-20T17:29:31.509Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e6/fd/6d2167767488e162efd01300a679c7f7d913dbb65baa0b15760ebb369854/vermin-1.8.0-py3-none-any.whl", hash = "sha256:6f2b98ad697a16ed3442e81a0f0baabfc38c185b78aaab1b1fecd87bdd6640b8", size = 98030, upload-time = "2025-11-20T17:29:29.931Z" },
 ]

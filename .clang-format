@@ -2,7 +2,12 @@
 #
 # 1) lines can be up to 100 chars long rather than 80, and
 # 2) use a four space indent rather than two spaces.
+# 3) for C files, put * on the right.
 #
-BasedOnStyle: Google
+---
+Language: C
+BasedOnStyle: LLVM
 ColumnLimit: 100
 IndentWidth: 4
+PointerAlignment: Right
+---

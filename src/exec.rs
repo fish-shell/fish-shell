@@ -38,6 +38,7 @@ use crate::proc::{
 };
 use crate::reader::{reader_run_count, restore_term_mode};
 use crate::redirection::{Dup2List, dup2_list_resolve_chain};
+use crate::signal::RawSignal;
 use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
@@ -46,8 +47,8 @@ use errno::{errno, set_errno};
 use fish_common::{ScopeGuard, exit_without_destructors, truncate_at_nul, write_loop};
 use fish_widestring::{ToWString as _, bytes2wcstring, wcs2bytes, wcs2zstring};
 use libc::{
-    EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, STDERR_FILENO,
-    STDIN_FILENO, STDOUT_FILENO,
+    EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, SIGINT, SIGQUIT,
+    STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
 };
 use nix::{
     fcntl::OFlag,
@@ -1102,7 +1103,15 @@ fn exec_block_or_func_process(
         // Note this may fail if the function was erased.
         get_performer_for_function(p, j, &io_chain)?
     };
-    p.status.set(performer(parser, None, None));
+    let status = performer(parser, None, None);
+    p.status.set(status);
+    // Match the behavior of handle_child_status to cancel a job group.
+    if status.signal_exited() {
+        let sig = status.signal_code();
+        if is_interactive_session() && [SIGINT, SIGQUIT].contains(&sig) {
+            j.group().cancel_with_signal(RawSignal::new(sig));
+        }
+    }
 
     // If we have a block output buffer, populate it now.
     let mut buffer_contents = vec![];

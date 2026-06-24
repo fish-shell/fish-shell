@@ -229,6 +229,8 @@ contains -i string a b c d; or echo nothing
 #CHECK: nothing
 contains -i -- string a b c string d
 #CHECK: 4
+contains -i a -q -- a b c
+#CHECK: 3
 contains -i -- -- a b c; or echo nothing
 #CHECK: nothing
 contains -i -- -- a b c -- v

@@ -17,9 +17,7 @@ use crate::{
     parse_constants::{
         ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
     },
-    parse_util::{
-        MaybeParentheses, get_process_first_token_offset, locate_cmdsubst_range, slice_length,
-    },
+    parse_util::{get_process_first_token_offset, locate_cmdsubst_range, slice_length},
     path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file},
     terminal::Outputter,
     text_face::{ResettableStyle, SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face},
@@ -839,7 +837,7 @@ impl<'src, 'ctx> Highlighter<'src, 'ctx> {
         // Now do command substitutions.
         let mut cmdsub_cursor = 0;
         let mut is_quoted = false;
-        while let MaybeParentheses::CommandSubstitution(parens) = locate_cmdsubst_range(
+        while let Ok(Some(cmdsub)) = locate_cmdsubst_range(
             arg_str,
             &mut cmdsub_cursor,
             /*accept_incomplete=*/ true,
@@ -848,17 +846,17 @@ impl<'src, 'ctx> Highlighter<'src, 'ctx> {
         ) {
             // Highlight the parens. The open parens must exist; the closed paren may not if it was
             // incomplete.
-            assert!(parens.start() < arg_str.len());
-            self.color_array[arg_start..][parens.opening()]
+            assert!(cmdsub.opening_paren_offset() < arg_str.len());
+            self.color_array[arg_start..][cmdsub.opening_paren_range()]
                 .fill(HighlightSpec::with_fg(HighlightRole::Operat));
-            self.color_array[arg_start..][parens.closing()]
+            self.color_array[arg_start..][cmdsub.closing_paren_range()]
                 .fill(HighlightSpec::with_fg(HighlightRole::Operat));
 
             // Highlight it recursively.
             let arg_cursor = self
                 .cursor
-                .map(|c| c.wrapping_sub(arg_start + parens.start()));
-            let cmdsub_contents = &arg_str[parens.command()];
+                .map(|c| c.wrapping_sub(arg_start + cmdsub.opening_paren_offset()));
+            let cmdsub_contents = &arg_str[cmdsub.command_range()];
             let mut cmdsub_highlighter = Highlighter::new(
                 cmdsub_contents,
                 arg_cursor,
@@ -870,7 +868,7 @@ impl<'src, 'ctx> Highlighter<'src, 'ctx> {
 
             // Copy out the subcolors back into our array.
             assert_eq!(subcolors.len(), cmdsub_contents.len());
-            self.color_array[arg_start..][parens.command()].copy_from_slice(&subcolors);
+            self.color_array[arg_start..][cmdsub.command_range()].copy_from_slice(&subcolors);
         }
     }
     // Colors the source range of a node with a given color.
@@ -1135,9 +1133,8 @@ impl<'src, 'ctx> Highlighter<'src, 'ctx> {
 fn has_cmdsub(src: &wstr) -> bool {
     let mut cursor = 0;
     match locate_cmdsubst_range(src, &mut cursor, true, None, None) {
-        MaybeParentheses::Error => false,
-        MaybeParentheses::None => false,
-        MaybeParentheses::CommandSubstitution(_) => true,
+        Err(()) | Ok(None) => false,
+        Ok(Some(_)) => true,
     }
 }
 
@@ -1361,6 +1358,7 @@ mod tests {
         std::fs::create_dir_all("cdpath-entry/dir-in-cdpath").unwrap();
         std::fs::write("foo", []).unwrap();
         std::fs::write("bar", []).unwrap();
+        std::fs::write("-filename-starting-with-dash", []).unwrap();
 
         // Here are the components of our source and the colors we expect those to be.
         #[derive(Debug)]
@@ -1603,6 +1601,14 @@ mod tests {
                 (")", fg(HighlightRole::Operat)),
                 // Just another param.
                 ("param2", fg(HighlightRole::Param)),
+            );
+
+            validate!(
+                ("echo", fg(HighlightRole::Command)),
+                (">", fg(HighlightRole::Redirection)),
+                ("-no-such-file", fg(HighlightRole::Redirection)),
+                (">", fg(HighlightRole::Redirection)),
+                ("-filename-starting-with-dash", redirection_valid_path),
             );
 
             validate!(

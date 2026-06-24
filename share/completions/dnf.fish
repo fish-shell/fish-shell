@@ -2,15 +2,15 @@
 # Completions for the dnf command
 #
 
-function __dnf_is_dnf5
+function __fish_dnf_is_dnf5
     path resolve -- $PATH/dnf | path filter | string match -q -- '*/dnf5'
 end
 
-function __dnf_list_installed_packages
+function __fish_dnf_list_installed_packages
     dnf repoquery --cacheonly "$cur*" --qf "%{name}\n" --installed </dev/null
 end
 
-function __dnf_list_copr_repos
+function __fish_dnf_list_copr_repos
     set -l copr_repos (dnf copr list)
 
     switch $argv[1]
@@ -23,7 +23,7 @@ function __dnf_list_copr_repos
     end
 end
 
-function __dnf_list_available_packages
+function __fish_dnf_list_available_packages
     set -l tok (commandline -ct | string collect)
     set -l files (__fish_complete_suffix .rpm)
     if string match -q -- '*/*' $tok
@@ -32,7 +32,7 @@ function __dnf_list_available_packages
         return
     end
     set -l results
-    if __dnf_is_dnf5
+    if __fish_dnf_is_dnf5
         # dnf5 provides faster completions than repoquery, but does not maintain the
         # same sqlite db as dnf4
         set results (dnf --complete=2 dnf install "$tok*")
@@ -58,8 +58,8 @@ function __dnf_list_available_packages
     string join \n $results
 end
 
-function __dnf_list_transactions
-    if not __dnf_is_dnf5 && type -q sqlite3
+function __fish_dnf_list_transactions
+    if not __fish_dnf_is_dnf5 && type -q sqlite3
         sqlite3 /var/lib/dnf/history.sqlite "SELECT id, cmdline FROM trans" 2>/dev/null | string replace "|" \t
     end
 end
@@ -78,7 +78,7 @@ complete -c dnf -n "__fish_seen_subcommand_from alias" -xa delete -d "Delete an 
 
 # Autoremove
 complete -c dnf -n __fish_use_subcommand -xa autoremove -d "Removes unneeded packages"
-complete -c dnf -n "__fish_seen_subcommand_from autoremove" -xa "(__dnf_list_installed_packages)"
+complete -c dnf -n "__fish_seen_subcommand_from autoremove" -xa "(__fish_dnf_list_installed_packages)"
 
 # Check
 complete -c dnf -n __fish_use_subcommand -xa check -d "Check for problems in packagedb"
@@ -110,7 +110,7 @@ complete -c dnf -n "__fish_seen_subcommand_from copr; and not __fish_seen_subcom
 complete -c dnf -n "__fish_seen_subcommand_from copr; and not __fish_seen_subcommand_from $coprcommands" -l hub -d "Copr hub hostname"
 
 for i in enable disable remove
-    complete -c dnf -n "__fish_seen_subcommand_from copr; and __fish_seen_subcommand_from $i" -xa "(__dnf_list_copr_repos $i)"
+    complete -c dnf -n "__fish_seen_subcommand_from copr; and __fish_seen_subcommand_from $i" -xa "(__fish_dnf_list_copr_repos $i)"
 end
 
 # Distro-sync
@@ -118,7 +118,7 @@ complete -c dnf -n __fish_use_subcommand -xa distro-sync -d "Synchronizes packag
 
 # Downgrade
 complete -c dnf -n __fish_use_subcommand -xa downgrade -d "Downgrades the specified package"
-complete -c dnf -n "__fish_seen_subcommand_from downgrade" -xa "(__dnf_list_installed_packages)"
+complete -c dnf -n "__fish_seen_subcommand_from downgrade" -xa "(__fish_dnf_list_installed_packages)"
 
 # Group
 complete -c dnf -n __fish_use_subcommand -xa group -d "Manage groups"
@@ -156,18 +156,18 @@ complete -c dnf -n "__fish_seen_subcommand_from history" -xa undo -d "Undoes the
 complete -c dnf -n "__fish_seen_subcommand_from history" -xa userinstalled -d "Lists all user installed packages"
 
 for i in info redo rollback undo
-    complete -c dnf -n "__fish_seen_subcommand_from history; and  __fish_seen_subcommand_from $i" -xa "(__dnf_list_transactions)"
+    complete -c dnf -n "__fish_seen_subcommand_from history; and  __fish_seen_subcommand_from $i" -xa "(__fish_dnf_list_transactions)"
 end
 
 # Info
 complete -c dnf -n __fish_use_subcommand -xa "$dnf_info_cmds" -d "Describes the given package"
 complete -c dnf -n "__fish_seen_subcommand_from $dnf_info_cmds; and not __fish_seen_subcommand_from history" \
-    -k -xa "(__dnf_list_available_packages)"
+    -k -xa "(__fish_dnf_list_available_packages)"
 
 # Install
 complete -c dnf -n __fish_use_subcommand -xa "$dnf_install_cmds" -d "Install package"
 complete -c dnf -n "__fish_seen_subcommand_from $dnf_install_cmds" \
-    -k -xa "(__dnf_list_available_packages)"
+    -k -xa "(__fish_dnf_list_available_packages)"
 
 # List
 complete -c dnf -n __fish_use_subcommand -xa list -d "Lists all packages"
@@ -227,12 +227,12 @@ complete -c dnf -n __fish_use_subcommand -xa provides -d "Finds packages providi
 # Reinstall
 complete -c dnf -n __fish_use_subcommand -xa "$dnf_reinstall_cmds" -d "Reinstalls a package"
 complete -c dnf -n "__fish_seen_subcommand_from $dnf_reinstall_cmds" \
-    -xa "(__dnf_list_installed_packages)"
+    -xa "(__fish_dnf_list_installed_packages)"
 
 # Remove
 complete -c dnf -n __fish_use_subcommand -xa "$dnf_remove_cmds" -d "Remove packages"
 complete -c dnf -n "__fish_seen_subcommand_from $dnf_remove_cmds" \
-    -xa "(__dnf_list_installed_packages)"
+    -xa "(__fish_dnf_list_installed_packages)"
 complete -c dnf -n "__fish_seen_subcommand_from remove" -l duplicates -d "Removes older version of duplicated packages"
 complete -c dnf -n "__fish_seen_subcommand_from remove" -l oldinstallonly -d "Removes old installonly packages"
 
@@ -340,28 +340,28 @@ complete -c dnf -n "__fish_seen_subcommand_from updateinfo" -l updates
 
 # Upgrade
 complete -c dnf -n __fish_use_subcommand -xa upgrade -d "Updates packages"
-complete -c dnf -n "__fish_seen_subcommand_from upgrade" -xa "(__dnf_list_installed_packages)"
+complete -c dnf -n "__fish_seen_subcommand_from upgrade" -xa "(__fish_dnf_list_installed_packages)"
 
 # Upgrade-Minimal
 complete -c dnf -n __fish_use_subcommand -xa upgrade-minimal -d "Updates packages"
-complete -c dnf -n "__fish_seen_subcommand_from upgrade-minimal" -xa "(__dnf_list_installed_packages)"
+complete -c dnf -n "__fish_seen_subcommand_from upgrade-minimal" -xa "(__fish_dnf_list_installed_packages)"
 
 # Versionlock
 if test -f /etc/dnf/plugins/versionlock.conf
-    function __dnf_current_versionlock_list
+    function __fish_dnf_current_versionlock_list
         dnf versionlock list | grep -v metadata
     end
 
     complete -c dnf -n __fish_use_subcommand -xa versionlock -d "DNF versionlock plugin"
     # - add
     complete -c dnf -n "__fish_seen_subcommand_from versionlock" -xa add -d "Add  a versionlock for all available packages matching the spec"
-    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from add" -xa "(__dnf_list_installed_packages)"
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from add" -xa "(__fish_dnf_list_installed_packages)"
     # - exclude
     complete -c dnf -n "__fish_seen_subcommand_from versionlock" -xa exclude -d "Add an exclude (within  versionlock) for the available packages matching the spec"
-    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from exclude" -xa "(__dnf_list_installed_packages)"
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from exclude" -xa "(__fish_dnf_list_installed_packages)"
     # - delete
     complete -c dnf -n "__fish_seen_subcommand_from versionlock" -xa delete -d "Remove any matching versionlock entries"
-    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from delete" -xa "(__dnf_current_versionlock_list)"
+    complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from delete" -xa "(__fish_dnf_current_versionlock_list)"
     # - list
     complete -c dnf -n "__fish_seen_subcommand_from versionlock" -xa list -d "List the current versionlock entries"
     complete -c dnf -n "__fish_seen_subcommand_from versionlock; and  __fish_seen_subcommand_from list" -xa "(false)"

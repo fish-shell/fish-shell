@@ -1,7 +1,7 @@
 //! Implementation of the YAML-like history file format.
 
 use super::{HistoryItem, PersistenceMode};
-use crate::flog::flog;
+use crate::{flog::flog, history::Timestamps};
 use fish_widestring::{bytes2wcstring, subslice_position};
 use std::{
     borrow::Cow,
@@ -12,6 +12,7 @@ use std::{
 //
 //   - cmd: ssh blah blah blah
 //     when: 2348237
+//     added_when: 2348238
 //     paths:
 //       - /path/to/something
 //       - /path/to/something_else
@@ -137,6 +138,9 @@ fn time_from_seconds(offset: i64) -> SystemTime {
     }
 }
 
+pub(super) const LAST_ADDED_TIMESTAMP_KEY: &str = "when";
+pub(super) const FIRST_ADDED_TIMESTAMP_KEY: &str = "added_when";
+
 /// Decode an item via the fish 2.0 format.
 pub fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
     let (advance, line) = read_line(data);
@@ -152,7 +156,8 @@ pub fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
 
     // Read the remaining lines.
     let mut indent = None;
-    let mut when = UNIX_EPOCH;
+    let mut timestamp_last_added = None;
+    let mut timestamp_first_added = None;
     let mut paths = Vec::new();
     loop {
         let (advance, line) = read_line(data);
@@ -170,14 +175,18 @@ pub fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
         // We are definitely going to consume this line.
         data = &data[advance..];
 
-        if *key == *b"when" {
-            // Parse an int from the timestamp. Should this fail, 0 is acceptable.
-            when = time_from_seconds(
-                std::str::from_utf8(&value)
-                    .ok()
-                    .and_then(|s| s.parse().ok())
-                    .unwrap_or(0),
-            );
+        let parse_timestamp_value = |value| {
+            std::str::from_utf8(value)
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .map(time_from_seconds)
+        };
+
+        if *key == *LAST_ADDED_TIMESTAMP_KEY.as_bytes() {
+            timestamp_last_added = parse_timestamp_value(&value);
+            timestamp_first_added = timestamp_first_added.or(timestamp_last_added);
+        } else if *key == *FIRST_ADDED_TIMESTAMP_KEY.as_bytes() {
+            timestamp_first_added = parse_timestamp_value(&value);
         } else if *key == *b"paths" {
             // Read lines starting with " - " until we can't read any more.
             loop {
@@ -200,16 +209,21 @@ pub fn decode_item_fish_2_0(mut data: &[u8]) -> Option<HistoryItem> {
         }
     }
 
-    let mut result = HistoryItem::new(cmd, when, PersistenceMode::Disk);
+    let timestamps = Timestamps {
+        last_added: timestamp_last_added.unwrap_or(UNIX_EPOCH),
+        first_added: timestamp_first_added.unwrap_or(UNIX_EPOCH),
+    };
+    let mut result = HistoryItem::new(cmd, timestamps, PersistenceMode::Disk);
     result.set_required_paths(paths);
     Some(result)
 }
 
-/// Parse a timestamp line that looks like this: spaces, "when:", spaces, timestamp, newline
+/// Parse a timestamp line that looks like this: spaces, "$key:", spaces, timestamp, newline
 /// We know the string contains a newline, so stop when we reach it.
-fn parse_timestamp(s: &[u8]) -> Option<SystemTime> {
+fn parse_timestamp_line(key: &str, s: &[u8]) -> Option<SystemTime> {
     let s = trim_start(s);
-    let s = s.strip_prefix(b"when:")?;
+    let s = s.strip_prefix(key.as_bytes())?;
+    let s = s.strip_prefix(b":")?;
     let s = trim_start(s);
 
     let t = std::str::from_utf8(s).ok()?.parse().ok()?;
@@ -234,7 +248,7 @@ pub fn offset_of_next_item_fish_2_0(
     cutoff_timestamp: Option<SystemTime>,
 ) -> Option<usize> {
     let mut lines = complete_lines(&contents[*cursor..]).peekable();
-    while let Some(mut line) = lines.next() {
+    while let Some(line) = lines.next() {
         // Skip lines with a leading space, since these are in the interior of one of our items.
         if line.starts_with(b" ") {
             continue;
@@ -242,19 +256,6 @@ pub fn offset_of_next_item_fish_2_0(
 
         // Try to be a little YAML compatible. Skip lines with leading %, ---, or ...
         if line.starts_with(b"%") || line.starts_with(b"---") || line.starts_with(b"...") {
-            continue;
-        }
-
-        // Hackish: fish 1.x rewriting a fish 2.0 history file can produce lines with lots of
-        // leading "- cmd: - cmd: - cmd:". Trim all but one leading "- cmd:".
-        while line.starts_with(b"- cmd: - cmd: ") {
-            // Skip over just one of the - cmd. In the end there will be just one left.
-            line = line.strip_prefix(b"- cmd: ").unwrap();
-        }
-
-        // Hackish: fish 1.x rewriting a fish 2.0 history file can produce commands like "when:
-        // 123456". Ignore those.
-        if line.starts_with(b"- cmd:    when:") {
             continue;
         }
 
@@ -287,18 +288,21 @@ pub fn offset_of_next_item_fish_2_0(
             // changes. So we'll read all subsequent items.
             // Walk over lines that we think are interior. These lines are not null terminated, but
             // are guaranteed to contain a newline.
-            let mut timestamp = None;
+            let mut timestamp_first_added = None;
+            let mut timestamp_last_added = None;
             while let Some(interior_line) = lines.next_if(|l| l.starts_with(b" ")) {
                 // Try parsing a timestamp from this line. If we succeed, the loop will break.
-                timestamp = parse_timestamp(interior_line);
-                if timestamp.is_some() {
+                timestamp_first_added = timestamp_first_added
+                    .or_else(|| parse_timestamp_line(FIRST_ADDED_TIMESTAMP_KEY, interior_line));
+                if timestamp_first_added.is_some() {
                     break;
                 }
+                timestamp_last_added = timestamp_last_added
+                    .or_else(|| parse_timestamp_line(LAST_ADDED_TIMESTAMP_KEY, interior_line));
             }
 
-            // Skip this item if the timestamp is past our cutoff.
-            if let Some(timestamp) = timestamp {
-                if timestamp > cutoff_timestamp {
+            if let Some(timestamp_first_added) = timestamp_first_added.or(timestamp_last_added) {
+                if timestamp_first_added > cutoff_timestamp {
                     continue;
                 }
             }
@@ -318,7 +322,7 @@ pub fn offset_of_next_item_fish_2_0(
             offset.try_into().unwrap()
         }
 
-        // Advance the cursor past the last line of this entry
+        // Advance the cursor past the first line of this entry
         *cursor = match lines.next() {
             Some(next_line) => unsafe { offset(contents, next_line) },
             None => contents.len(),

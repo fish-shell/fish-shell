@@ -120,10 +120,6 @@ msgid "%s variable"
 msgstr "variable %s"
 
 #, c-format
-msgid "%s, version %s"
-msgstr "%s, versión %s"
-
-#, c-format
 msgid "%s: %s"
 msgstr ""
 
@@ -751,10 +747,6 @@ msgid "Illegal instruction"
 msgstr "Instrucción ilegal"
 
 #, c-format
-msgid "Implicit int flag '%c' already defined"
-msgstr "La opción entera implícita '%c' ya está definida"
-
-#, c-format
 msgid "Implicit int short flag '%c' does not allow modifiers like '%c'"
 msgstr "La opción corta entera implícita '%c' no permite modificadores como '%c'"
 
@@ -855,10 +847,6 @@ msgstr "Valor máximo no válido '%s'"
 #, c-format
 msgid "Invalid number: %s"
 msgstr "Número inválido: %s"
-
-#, c-format
-msgid "Invalid option spec '%s' at char '%c'"
-msgstr "Especificación de opción no válida '%s' en el carácter '%c'"
 
 #, c-format
 msgid "Invalid padding character of width zero '%s'"
@@ -1645,14 +1633,6 @@ msgstr "directorio"
 
 msgid "error"
 msgstr "error"
-
-#, c-format
-msgid "exclusive flag '%s' is not valid"
-msgstr "la opción exclusiva '%s' no es válida"
-
-#, c-format
-msgid "exclusive flag string '%s' is not valid"
-msgstr "el string de opciones exclusivas '%s' no es válido"
 
 #, c-format
 msgid "expected %d arguments; got %d"
@@ -5141,6 +5121,9 @@ msgstr ""
 msgid "Access repository settings"
 msgstr ""
 
+msgid "Account for library link-level deps during --depclean and --prune (default: y)"
+msgstr ""
+
 msgid "Account to be altered"
 msgstr ""
 
@@ -5927,6 +5910,9 @@ msgstr ""
 msgid "Add packages"
 msgstr ""
 
+msgid "Add packages to @world (inverse of --oneshot)"
+msgstr ""
+
 msgid "Add parts on top of the section hierarchy"
 msgstr ""
 
@@ -6587,10 +6573,19 @@ msgstr ""
 msgid "Allow automatically filling CAPTCHA"
 msgstr ""
 
+msgid "Allow autounmask to create package.license changes"
+msgstr ""
+
+msgid "Allow autounmask to create package.use changes (enabled by default)"
+msgstr ""
+
 msgid "Allow backspace and carriage return"
 msgstr ""
 
 msgid "Allow backspace, tab and carriage return"
+msgstr ""
+
+msgid "Allow backtracking after autounmask detects necessary changes"
 msgstr ""
 
 msgid "Allow binary files to be diffed"
@@ -7691,6 +7686,9 @@ msgstr ""
 msgid "Apply automated posting rules to modify txns"
 msgstr ""
 
+msgid "Apply autounmask changes and continue to execute command"
+msgstr ""
+
 msgid "Apply changes from a Differential diff"
 msgstr ""
 
@@ -7815,6 +7813,9 @@ msgid "Apply option to this zone"
 msgstr ""
 
 msgid "Apply options to a portion of the image [geometry]"
+msgstr ""
+
+msgid "Apply package moves when necessary (default: y; do not disable normally)"
 msgstr ""
 
 msgid "Apply packagefiles to the subproject"
@@ -8210,6 +8211,9 @@ msgstr ""
 msgid "Assume no to all questions"
 msgstr ""
 
+msgid "Assume packages may have implicit deps on @system (default: y)"
+msgstr ""
+
 msgid "Assume patches were created with old/new files swapped"
 msgstr ""
 
@@ -8346,6 +8350,9 @@ msgid "Assume yes when asked for confirmation"
 msgstr ""
 
 msgid "Assumes that structures should have 8 byte alignment"
+msgstr ""
+
+msgid "Atoms for which no binary packages should be built"
 msgstr ""
 
 msgid "Attach a USB device to the host"
@@ -8540,6 +8547,12 @@ msgstr ""
 msgid "Auto-confirm non-security prompts"
 msgstr ""
 
+msgid "Auto-detect regex in search strings (default: y)"
+msgstr ""
+
+msgid "Auto-enable --with-bdeps for installation actions (default: y)"
+msgstr ""
+
 msgid "Auto-gen package cache"
 msgstr ""
 
@@ -8667,6 +8680,9 @@ msgid "Automatically sync the repository"
 msgstr ""
 
 msgid "Automatically trust and import new repository signing keys"
+msgstr ""
+
+msgid "Automatically unmasks packages and generates package.use settings"
 msgstr ""
 
 msgid "Automatically update the packet display as packets are coming in"
@@ -9038,6 +9054,9 @@ msgstr ""
 msgid "Binary input mode"
 msgstr ""
 
+msgid "Binary package format to create"
+msgstr ""
+
 msgid "Binary-only mode, abort if no archive available"
 msgstr ""
 
@@ -9326,7 +9345,7 @@ msgstr ""
 msgid "Build a Windows executable"
 msgstr ""
 
-msgid "Build a binary pkg additionally"
+msgid "Build a binary package in addition to merging"
 msgstr ""
 
 msgid "Build a console executable"
@@ -10355,6 +10374,9 @@ msgstr ""
 msgid "Check and fix problems in the world file"
 msgstr ""
 
+msgid "Check and update the dependency cache of all ebuilds in repository"
+msgstr ""
+
 msgid "Check and wait until a group of devices of a filesystem is ready for mount"
 msgstr ""
 
@@ -11157,6 +11179,9 @@ msgid "Clean up cache directory"
 msgstr ""
 
 msgid "Clean up releases, stemcells, disks, etc."
+msgstr ""
+
+msgid "Clean up temp files after a build failure (useful with PORTAGE_TMPDIR on tmpfs)"
 msgstr ""
 
 msgid "Clean up the files that Cobertura Maven Plugin has created during instrumentation"
@@ -12518,6 +12543,9 @@ msgstr ""
 msgid "Consider case when comparing file names"
 msgstr ""
 
+msgid "Consider deep deps of all @world packages; bail if the operation would break any"
+msgstr ""
+
 msgid "Consider files as separate"
 msgstr ""
 
@@ -12621,6 +12649,9 @@ msgid "Continue after an error"
 msgstr ""
 
 msgid "Continue as much as possible after an error"
+msgstr ""
+
+msgid "Continue as much as possible after an error; recalculate deps for remaining packages"
 msgstr ""
 
 msgid "Continue conversation with given id"
@@ -12804,6 +12835,9 @@ msgid "Control whether GCC places uninitialized local variables into the \"bss\"
 msgstr ""
 
 msgid "Control whether RTC is in local time"
+msgstr ""
+
+msgid "Control whether build-time deps go into ROOT or /"
 msgstr ""
 
 msgid "Control whether color is used"
@@ -17345,6 +17379,9 @@ msgstr ""
 msgid "Display a help page"
 msgstr ""
 
+msgid "Display a list of available package sets"
+msgstr ""
+
 msgid "Display a list of speedtest.net servers sorted by distance"
 msgstr ""
 
@@ -17442,6 +17479,9 @@ msgid "Display all values currently available"
 msgstr ""
 
 msgid "Display an archive's list to console"
+msgstr ""
+
+msgid "Display ancillary information required for bug reports"
 msgstr ""
 
 msgid "Display answers as exclamation points and missing packets as dots"
@@ -18662,6 +18702,9 @@ msgstr ""
 msgid "Display toolbar or menubar"
 msgstr ""
 
+msgid "Display total of unread GLEP 42 news items"
+msgstr ""
+
 msgid "Display untracked files in columns"
 msgstr ""
 
@@ -19817,6 +19860,9 @@ msgstr ""
 msgid "Do not install files from given subprojects"
 msgstr ""
 
+msgid "Do not install from binary packages for live ebuilds"
+msgstr ""
+
 msgid "Do not install recommended packages"
 msgstr ""
 
@@ -20177,6 +20223,12 @@ msgstr ""
 msgid "Do not rebuild before running tests"
 msgstr ""
 
+msgid "Do not rebuild matching packages due to --rebuild"
+msgstr ""
+
+msgid "Do not rebuild packages that depend on matching packages due to --rebuild"
+msgstr ""
+
 msgid "Do not recalculate the effective rights mask"
 msgstr ""
 
@@ -20523,6 +20575,9 @@ msgid "Do not start ghostscript in safe mode"
 msgstr ""
 
 msgid "Do not start ghostscript with the -dQUIET option"
+msgstr ""
+
+msgid "Do not start new builds if load average is at least LOAD"
 msgstr ""
 
 msgid "Do not start the commit message editor"
@@ -28943,9 +28998,6 @@ msgstr ""
 msgid "Generate compiler predefines and select a startfile for the specified UNIX standard"
 msgstr ""
 
-msgid "Generate completion file for a shell"
-msgstr ""
-
 msgid "Generate compressed stream"
 msgstr ""
 
@@ -30959,6 +31011,9 @@ msgstr ""
 msgid "Ignore 'Content-Length' header"
 msgstr ""
 
+msgid "Ignore @world deps; may break installed packages (use with --ask)"
+msgstr ""
+
 msgid "Ignore CD/DVD repositories"
 msgstr ""
 
@@ -31047,6 +31102,12 @@ msgid "Ignore any balance assertions"
 msgstr ""
 
 msgid "Ignore any saved configuration"
+msgstr ""
+
+msgid "Ignore binary packages whose USE flags differ from current config"
+msgstr ""
+
+msgid "Ignore binary packages whose ebuild dependencies changed since the build"
 msgstr ""
 
 msgid "Ignore bogus module names"
@@ -31211,6 +31272,9 @@ msgstr ""
 msgid "Ignore logical volume identity"
 msgstr ""
 
+msgid "Ignore matching binary packages"
+msgstr ""
+
 msgid "Ignore md5sum"
 msgstr ""
 
@@ -31251,6 +31315,9 @@ msgid "Ignore non-authenticated packages"
 msgstr ""
 
 msgid "Ignore non-existing files on receiving side"
+msgstr ""
+
+msgid "Ignore non-matching binary packages"
 msgstr ""
 
 msgid "Ignore nonexistent files"
@@ -31305,6 +31372,12 @@ msgid "Ignore safety checks"
 msgstr ""
 
 msgid "Ignore scissor lines"
+msgstr ""
+
+msgid "Ignore slot/sub-slot := operator deps recorded at build time (debug only)"
+msgstr ""
+
+msgid "Ignore soname dependencies of binary and installed packages (default: y)"
 msgstr ""
 
 msgid "Ignore spaces after function names"
@@ -31913,6 +31986,9 @@ msgstr ""
 msgid "Include inherited options"
 msgstr ""
 
+msgid "Include install-time deps when --onlydeps and --onlydeps-with-rdeps=n are used"
+msgstr ""
+
 msgid "Include installed pkgs with changed USE flags"
 msgstr ""
 
@@ -32013,6 +32089,9 @@ msgid "Include residual signal in text output"
 msgstr ""
 
 msgid "Include reverse dependencies in the output"
+msgstr ""
+
+msgid "Include run-time deps when using --onlydeps (default: y)"
 msgstr ""
 
 msgid "Include secret key comment packets when exporting secret keys"
@@ -33714,6 +33793,15 @@ msgid "Like --method=md5crypt"
 msgstr ""
 
 msgid "Like --reuse-message, but allow editing commit message"
+msgstr ""
+
+msgid "Like --search, but also matches package descriptions"
+msgstr ""
+
+msgid "Like --unmerge but with CLEAN_DELAY=0; can remove critical packages"
+msgstr ""
+
+msgid "Like --update but only for packages already installed"
 msgstr ""
 
 msgid "Like --write-batch but w/o updating dest"
@@ -35642,6 +35730,9 @@ msgstr ""
 msgid "List packages by provider"
 msgstr ""
 
+msgid "List packages causing slot rebuilds in emerge output (default: y)"
+msgstr ""
+
 msgid "List packages depending on"
 msgstr ""
 
@@ -37430,6 +37521,9 @@ msgstr ""
 msgid "Make zipfile as old as the latest entry"
 msgstr ""
 
+msgid "Makes --ask reject single Enter keypresses as answers"
+msgstr ""
+
 msgid "Makes COM type information in specified assemblies available to the project"
 msgstr ""
 
@@ -37931,6 +38025,9 @@ msgstr ""
 msgid "Match pattern against full command line"
 msgstr ""
 
+msgid "Match search strings approximately; auto-disabled for regex searches (default: y)"
+msgstr ""
+
 msgid "Match secondary date instead"
 msgstr ""
 
@@ -37959,6 +38056,9 @@ msgid "Max memory, as scaled integer (default KiB)"
 msgstr ""
 
 msgid "Max num of children"
+msgstr ""
+
+msgid "Max number of times to backtrack on dependency conflicts (default: 20)"
 msgstr ""
 
 msgid "Max objects per response"
@@ -38276,6 +38376,9 @@ msgstr ""
 msgid "Minimum drive buffer fill ratio for the ATAPI wait mode"
 msgstr ""
 
+msgid "Minimum free GiB in PORTAGE_TMPDIR before starting more jobs (default: 18)"
+msgstr ""
+
 msgid "Minimum height when --height is given in percent"
 msgstr ""
 
@@ -38298,6 +38401,9 @@ msgid "Minimum payload size for sweeping pings"
 msgstr ""
 
 msgid "Minimum port to listen to"
+msgstr ""
+
+msgid "Minimum similarity percentage for fuzzy search results (default: 80)"
 msgstr ""
 
 msgid "Minimum stability (empty or one of: stable, RC, beta, alpha, dev)"
@@ -39506,6 +39612,9 @@ msgstr ""
 msgid "Number of octets per line"
 msgstr ""
 
+msgid "Number of packages to build simultaneously (0 = CPU count)"
+msgstr ""
+
 msgid "Number of pages to scan before the shared memory service goes to sleep"
 msgstr ""
 
@@ -39713,6 +39822,9 @@ msgstr ""
 msgid "Offensive fortunes only"
 msgstr ""
 
+msgid "Offer to read unread news via eselect when --ask is active"
+msgstr ""
+
 msgid "Offline migration"
 msgstr ""
 
@@ -39896,6 +40008,9 @@ msgstr ""
 msgid "Only connect if safe console handling is supported"
 msgstr ""
 
+msgid "Only consider rebuilt binaries with BUILD_TIME newer than TIMESTAMP"
+msgstr ""
+
 msgid "Only consider tags matching the given glob pattern"
 msgstr ""
 
@@ -39984,6 +40099,9 @@ msgid "Only expire unused working trees older than <time>"
 msgstr ""
 
 msgid "Only fail the build afterwards; allow all non-impacted builds to continue"
+msgstr ""
+
+msgid "Only fetch remote binary packages matching these atoms"
 msgstr ""
 
 msgid "Only fixate disk "
@@ -40380,6 +40498,9 @@ msgid "Only this package's library"
 msgstr ""
 
 msgid "Only uninstall the binary NAME"
+msgstr ""
+
+msgid "Only unmask and generate package.use settings without building anything"
 msgstr ""
 
 msgid "Only update the manifest"
@@ -43496,6 +43617,9 @@ msgstr ""
 msgid "Prefer lowest versions of dependencies"
 msgstr ""
 
+msgid "Prefer matching binary packages over newer unbuilt ebuilds"
+msgstr ""
+
 msgid "Prefer reading from other devices than these"
 msgstr ""
 
@@ -43845,6 +43969,12 @@ msgid "Prevent adding rpath for each used dynamic library"
 msgstr ""
 
 msgid "Prevent any configuration changes to domain until migration ends"
+msgstr ""
+
+msgid "Prevent autounmask from creating package.accept_keywords changes"
+msgstr ""
+
+msgid "Prevent autounmask from creating package.unmask or ** keyword changes"
 msgstr ""
 
 msgid "Prevent floating point registers from being used in any manner"
@@ -47393,6 +47523,9 @@ msgstr ""
 msgid "Pull in changes from another branch"
 msgstr ""
 
+msgid "Pull in test-conditional deps for matched packages even if test is not in FEATURES"
+msgstr ""
+
 msgid "Pull list of shunned references from server"
 msgstr ""
 
@@ -48464,6 +48597,18 @@ msgstr ""
 msgid "Rebuild modules installed in node_modules in current working directory"
 msgstr ""
 
+msgid "Rebuild packages when a new slot can satisfy := deps (default: y)"
+msgstr ""
+
+msgid "Rebuild packages when build-time deps are built from source"
+msgstr ""
+
+msgid "Rebuild packages when build-time deps are installed with a new revision"
+msgstr ""
+
+msgid "Rebuild packages when build-time deps are installed with a new version"
+msgstr ""
+
 msgid "Rebuild ports containing broken binaries"
 msgstr ""
 
@@ -48504,6 +48649,9 @@ msgid "Recognize Boost format strings (only language C++)"
 msgstr ""
 
 msgid "Recognize Qt format strings (only language C++)"
+msgstr ""
+
+msgid "Recompile a package if it is now pulled from a different repository"
 msgstr ""
 
 msgid "Recompile every Sass file, even if the CSS file is newer"
@@ -48728,6 +48876,9 @@ msgstr ""
 msgid "Redeploy artifact on Weblogic server(s) or cluster(s)"
 msgstr ""
 
+msgid "Redirect all build output to logs; display on failure"
+msgstr ""
+
 msgid "Redirect all messages into a file"
 msgstr ""
 
@@ -48902,6 +49053,9 @@ msgstr ""
 msgid "Regenerate library dependency metadata"
 msgstr ""
 
+msgid "Regenerate package manifests (prefer repoman manifest)"
+msgstr ""
+
 msgid "Regex flags: use `--help` instead of `-h` to see details"
 msgstr ""
 
@@ -49023,6 +49177,9 @@ msgid "Reinstall packages"
 msgstr ""
 
 msgid "Reinstall packages required by this package"
+msgstr ""
+
+msgid "Reinstall packages whose active USE flags changed since installation (ignores added/removed disabled flags)"
 msgstr ""
 
 msgid "Reinstall the app keeping its data"
@@ -49182,6 +49339,9 @@ msgid "Remote Path"
 msgstr ""
 
 msgid "Remote alias"
+msgstr ""
+
+msgid "Remote binary packages matching these atoms are not fetched"
 msgstr ""
 
 msgid "Remote branch ref used by `git push`"
@@ -49406,6 +49566,9 @@ msgstr ""
 msgid "Remove all but the given number of backups"
 msgstr ""
 
+msgid "Remove all but the most recently installed version in each slot"
+msgstr ""
+
 msgid "Remove all classes attributes"
 msgstr ""
 
@@ -49440,6 +49603,9 @@ msgid "Remove all gz files from cache"
 msgstr ""
 
 msgid "Remove all lines matching key"
+msgstr ""
+
+msgid "Remove all matching packages without checking dependencies"
 msgstr ""
 
 msgid "Remove all mutations"
@@ -49539,6 +49705,9 @@ msgid "Remove artifacts that cargo has generated in the past"
 msgstr ""
 
 msgid "Remove associated storage volumes"
+msgstr ""
+
+msgid "Remove atoms/sets from @world. Implied by uninstall actions (use --deselect=n to prevent)"
 msgstr ""
 
 msgid "Remove auto-generated configuration files left over by the daemon"
@@ -49766,6 +49935,9 @@ msgstr ""
 msgid "Remove matching variables"
 msgstr ""
 
+msgid "Remove merge-order constraint from --tree output for readability"
+msgstr ""
+
 msgid "Remove module"
 msgstr ""
 
@@ -49815,6 +49987,9 @@ msgid "Remove only ignored files"
 msgstr ""
 
 msgid "Remove only locks with specified repository"
+msgstr ""
+
+msgid "Remove orphaned dependencies (packages not in @world and not required by other packages)"
 msgstr ""
 
 msgid "Remove orphaned libraries (not required by installed packages)"
@@ -50133,6 +50308,9 @@ msgid "Removes a package from the require-dev section"
 msgstr ""
 
 msgid "Removes a remote"
+msgstr ""
+
+msgid "Removes all but the highest installed version of a package from your system"
 msgstr ""
 
 msgid "Removes all cache"
@@ -50474,6 +50652,9 @@ msgstr ""
 msgid "Replace include directories"
 msgstr ""
 
+msgid "Replace installed packages with binary packages that have been rebuilt"
+msgstr ""
+
 msgid "Replace non-graphic characters with '?'"
 msgstr ""
 
@@ -50481,6 +50662,12 @@ msgid "Replace only the last occurrence"
 msgstr ""
 
 msgid "Replace packages in the base layer"
+msgstr ""
+
+msgid "Replace packages whose ebuild SLOT metadata changed since they were built"
+msgstr ""
+
+msgid "Replace packages whose ebuild dependencies changed since they were built"
 msgstr ""
 
 msgid "Replace patch header"
@@ -50679,6 +50866,9 @@ msgid "Report on mode of file"
 msgstr ""
 
 msgid "Report outstanding replies"
+msgstr ""
+
+msgid "Report packages whose ebuild dependencies changed since installation"
 msgstr ""
 
 msgid "Report processor frequency and idle statistics"
@@ -51416,6 +51606,9 @@ msgstr ""
 msgid "Restow: delete and then stow again"
 msgstr ""
 
+msgid "Restrict --sync to specified submodule (rsync only); repeatable"
+msgstr ""
+
 msgid "Restrict access"
 msgstr ""
 
@@ -51504,6 +51697,9 @@ msgid "Resume previously canceled or interrupted scrub"
 msgstr ""
 
 msgid "Resume reactor from specified project"
+msgstr ""
+
+msgid "Resumes the most recent merge list that aborted due to an error"
 msgstr ""
 
 msgid "Resync package contents from source"
@@ -52037,6 +52233,9 @@ msgstr ""
 msgid "Root source tree"
 msgstr ""
 
+msgid "Root to use as --quickpkg-direct source (default: /)"
+msgstr ""
+
 msgid "Rotate log every kbytes, requires -f"
 msgstr ""
 
@@ -52554,6 +52753,9 @@ msgid "Run package manager within chroot"
 msgstr ""
 
 msgid "Run package manager within jail"
+msgstr ""
+
+msgid "Run package-specific actions after emerge (usually config setup)"
 msgstr ""
 
 msgid "Run patch phase of a port"
@@ -53688,6 +53890,9 @@ msgid "Search directory for makefile"
 msgstr ""
 
 msgid "Search documentation"
+msgstr ""
+
+msgid "Search ebuilds for <string>. Use `%<string>` for regex"
 msgstr ""
 
 msgid "Search files according to the specified search mask"
@@ -54956,6 +55161,9 @@ msgstr ""
 msgid "Set EDNS0 Max UDP packet size"
 msgstr ""
 
+msgid "Set EPREFIX"
+msgstr ""
+
 msgid "Set GDB's working directory"
 msgstr ""
 
@@ -54992,6 +55200,9 @@ msgstr ""
 msgid "Set NDOTS value"
 msgstr ""
 
+msgid "Set PORTAGE_CONFIGROOT"
+msgstr ""
+
 msgid "Set PTRACE_O_EXITKILL ptrace option to all tracee processes"
 msgstr ""
 
@@ -55011,6 +55222,9 @@ msgid "Set RAW writing mode"
 msgstr ""
 
 msgid "Set REQUESTER PAYS for operations"
+msgstr ""
+
+msgid "Set ROOT (target root filesystem)"
 msgstr ""
 
 msgid "Set Rails environment"
@@ -55035,6 +55249,9 @@ msgid "Set SMART data for a drive"
 msgstr ""
 
 msgid "Set SO_DEBUG socket option"
+msgstr ""
+
+msgid "Set SYSROOT (root for DEPEND build-time deps)"
 msgstr ""
 
 msgid "Set TAO (Track At Once) writing mode"
@@ -58331,9 +58548,6 @@ msgstr ""
 msgid "Show camera driver manual"
 msgstr ""
 
-msgid "Show changelog of pkg. Use with --pretend"
-msgstr ""
-
 msgid "Show changes between commits and working tree"
 msgstr ""
 
@@ -59840,6 +60054,9 @@ msgstr ""
 msgid "Show signatures and descriptions for the available functions"
 msgstr ""
 
+msgid "Show similar package names when a package is not found (default: y)"
+msgstr ""
+
 msgid "Show sizes in GiB, or GB with --si"
 msgstr ""
 
@@ -61343,6 +61560,9 @@ msgstr ""
 msgid "Skip package installation for this run"
 msgstr ""
 
+msgid "Skip packages already installed (same as --noreplace; use =n to force disable)"
+msgstr ""
+
 msgid "Skip pre/post hook scripts"
 msgstr ""
 
@@ -61622,6 +61842,9 @@ msgstr ""
 msgid "Sort files by name"
 msgstr ""
 
+msgid "Sort flag lists alphabetically"
+msgstr ""
+
 msgid "Sort languages based on column"
 msgstr ""
 
@@ -61770,6 +61993,9 @@ msgid "Source-only mode"
 msgstr ""
 
 msgid "Space or comma separated list of features to activate"
+msgstr ""
+
+msgid "Space-separated atoms to never install"
 msgstr ""
 
 msgid "Space-separated options to exclude from search"
@@ -65183,6 +65409,9 @@ msgstr ""
 msgid "Substitute %{var}% variables"
 msgstr ""
 
+msgid "Substitute installed-package deps with current ebuild deps during calculations (default: y)"
+msgstr ""
+
 msgid "Substitute one word for another"
 msgstr ""
 
@@ -65270,6 +65499,9 @@ msgstr ""
 msgid "Suppress --noImplicitAny errors for indexing objects lacking index signatures"
 msgstr ""
 
+msgid "Suppress ::repository in merge list; use numbers instead"
+msgstr ""
+
 msgid "Suppress SNAPSHOT updates"
 msgstr ""
 
@@ -65301,6 +65533,9 @@ msgid "Suppress any output"
 msgstr ""
 
 msgid "Suppress battery information"
+msgstr ""
+
+msgid "Suppress build log display on failure (show only die message and log path)"
 msgstr ""
 
 msgid "Suppress checkout"
@@ -65445,6 +65680,9 @@ msgid "Suppress the warning about missing MDC integrity protection"
 msgstr ""
 
 msgid "Suppress the warning about unsafe file and home directory (--homedir) permissions"
+msgstr ""
+
+msgid "Suppress the warning shown before --unmerge actions"
 msgstr ""
 
 msgid "Suppress thermal information"
@@ -66120,6 +66358,12 @@ msgid "Temporarily lock an active home area"
 msgstr ""
 
 msgid "Temporarily offline"
+msgstr ""
+
+msgid "Temporarily override ACCEPT_PROPERTIES (e.g. =-interactive)"
+msgstr ""
+
+msgid "Temporarily override ACCEPT_RESTRICT (e.g. =-bindist)"
 msgstr ""
 
 msgid "Temporary mount point property"
@@ -67598,6 +67842,9 @@ msgstr ""
 msgid "Treat keyboard as standard US keyboard"
 msgstr ""
 
+msgid "Treat matching packages as not installed and reinstall them"
+msgstr ""
+
 msgid "Treat newlines as hard line breaks"
 msgstr ""
 
@@ -67674,6 +67921,12 @@ msgid "Treated as MOZ_LOG_FILE=<file> environment variable, overrides it"
 msgstr ""
 
 msgid "Tree location"
+msgstr ""
+
+msgid "Trigger --complete-graph when USE or IUSE changes for an installed package (default: y)"
+msgstr ""
+
+msgid "Trigger --complete-graph when an installed package version changes (default: y)"
 msgstr ""
 
 msgid "Trigger DHCP reconfiguration of all connected clients"
@@ -68831,6 +69084,9 @@ msgstr ""
 msgid "Update packages"
 msgstr ""
 
+msgid "Update packages to best available version"
+msgstr ""
+
 msgid "Update parts of an existing network's configuration"
 msgstr ""
 
@@ -68856,6 +69112,9 @@ msgid "Update remote repositories"
 msgstr ""
 
 msgid "Update remote state from local state"
+msgstr ""
+
+msgid "Update repositories. Use without arguments to update all autosync repos"
 msgstr ""
 
 msgid "Update repository indexes"
@@ -70280,6 +70539,9 @@ msgstr ""
 msgid "Use dot character instead of braille"
 msgstr ""
 
+msgid "Use ebuilds for deps; binary packages only for explicitly named atoms"
+msgstr ""
+
 msgid "Use editor to modify kernel arguments"
 msgstr ""
 
@@ -70497,6 +70759,9 @@ msgid "Use input from pipe of emerge -pv"
 msgstr ""
 
 msgid "Use insecure TLS connection"
+msgstr ""
+
+msgid "Use installed packages directly as binary packages"
 msgstr ""
 
 msgid "Use instead of host if you want to address 255.255.255.255"
@@ -71204,6 +71469,9 @@ msgstr ""
 msgid "Use the dynamic section info when displaying symbols"
 msgstr ""
 
+msgid "Use the egencache-built search index (default: y)"
+msgstr ""
+
 msgid "Use the file's modification time as the time of import."
 msgstr ""
 
@@ -71487,6 +71755,9 @@ msgid "Use translations under given directory"
 msgstr ""
 
 msgid "Use uglier formatting"
+msgstr ""
+
+msgid "Use unbuilt ebuild metadata for visibility checks on built packages"
 msgstr ""
 
 msgid "Use unicode characters in the output"
@@ -72467,6 +72738,9 @@ msgstr ""
 msgid "Warn if variadic macros are used in pedantic mode"
 msgstr ""
 
+msgid "Warn on @world packages with no available ebuild (default: y)"
+msgstr ""
+
 msgid "Warn on lint"
 msgstr ""
 
@@ -73196,6 +73470,9 @@ msgstr ""
 msgid "Write attribute value"
 msgstr ""
 
+msgid "Write autounmask changes to config files (implied by --ask)"
+msgstr ""
+
 msgid "Write column names in results"
 msgstr ""
 
@@ -73248,6 +73525,9 @@ msgid "Write index to a file"
 msgstr ""
 
 msgid "Write index to specified file"
+msgstr ""
+
+msgid "Write keyword/mask changes using >= operators instead of ="
 msgstr ""
 
 msgid "Write line numbers for errors"

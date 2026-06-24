@@ -7,11 +7,13 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+fish-localization.workspace = true
 phf.workspace = true
 
 [build-dependencies]
 fish-build-helper.workspace = true
 fish-gettext-mo-file-parser.workspace = true
+fish-localization.workspace = true
 phf_codegen.workspace = true
 rsconf.workspace = true
 

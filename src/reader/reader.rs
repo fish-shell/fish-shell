@@ -68,10 +68,10 @@ use crate::{
     panic::AT_EXIT,
     parse_constants::{ParseIssue, ParseTreeFlags, SourceRange},
     parse_util::{
-        MaybeParentheses, SPACES_PER_INDENT, compute_indents, contains_wildcards,
-        detect_parse_errors, escape_wildcards, get_cmdsubst_extent, get_line_from_offset,
-        get_offset, get_offset_from_line, get_process_extent, get_process_first_token_offset,
-        get_token_extent, lineno, locate_cmdsubst_range,
+        SPACES_PER_INDENT, compute_indents, contains_wildcards, detect_parse_errors,
+        escape_wildcards, get_cmdsubst_extent, get_line_from_offset, get_offset,
+        get_offset_from_line, get_process_extent, get_process_first_token_offset, get_token_extent,
+        lineno, locate_cmdsubst_range,
     },
     parser::{BlockType, EvalRes, Parser, ParserEnvSetMode},
     portable_atomic::AtomicU64,
@@ -5984,7 +5984,6 @@ impl ReaderData {
         let search_term = self.pager.search_field_line.text().to_owned();
         // Get a performer that produces the history pager result.
         let history = self.history.clone();
-        let search_term = search_term.clone();
         let performer = move || -> iothreads::Callback {
             let result = history_pager_search(&history, direction, motion, index, &search_term);
             Box::new(move |r: &mut Reader| {
@@ -6131,14 +6130,14 @@ fn extract_tokens(s: &wstr) -> Vec<PositionedToken> {
                 None,
                 None,
             ) {
-                MaybeParentheses::Error | MaybeParentheses::None => break,
-                MaybeParentheses::CommandSubstitution(parens) => {
-                    if parens.start() >= range.end() {
+                Err(()) | Ok(None) => break,
+                Ok(Some(cmdsub)) => {
+                    if cmdsub.opening_paren_offset() >= range.end() {
                         break;
                     }
                     has_cmd_subs = true;
-                    for mut t in extract_tokens(&s[parens.command()]) {
-                        t.range.start += u32::try_from(parens.command().start).unwrap();
+                    for mut t in extract_tokens(&s[cmdsub.command_range()]) {
+                        t.range.start += u32::try_from(cmdsub.command_range().start).unwrap();
                         result.push(t);
                     }
                 }

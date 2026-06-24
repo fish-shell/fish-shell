@@ -635,7 +635,7 @@ impl<'c> Tokenizer<'c> {
     /// Read the next token as a string.
     fn read_string(&mut self) -> Tok {
         let mut mode = TOK_MODE_REGULAR_TEXT;
-        let mut paran_offsets = vec![];
+        let mut paren_offsets = vec![];
         let mut brace_offsets = vec![];
         let mut expecting = vec![];
         let mut quoted_cmdsubs = vec![];
@@ -646,7 +646,7 @@ impl<'c> Tokenizer<'c> {
         fn process_opening_quote(
             zelf: &mut Tokenizer,
             quoted_cmdsubs: &mut Vec<usize>,
-            paran_offsets: &[usize],
+            paren_offsets: &[usize],
             quote: char,
         ) -> Result<(), usize> {
             zelf.on_quote_toggle
@@ -656,7 +656,7 @@ impl<'c> Tokenizer<'c> {
                 let mut one_past_end = end + 1;
                 if zelf.start.char_at(end) == '$' {
                     one_past_end = end;
-                    quoted_cmdsubs.push(paran_offsets.len());
+                    quoted_cmdsubs.push(paren_offsets.len());
                 }
                 zelf.token_cursor = end;
                 zelf.on_quote_toggle.as_mut().map(|cb| (cb)(one_past_end));
@@ -686,7 +686,7 @@ impl<'c> Tokenizer<'c> {
             } else if c == '#' && is_token_begin {
                 self.token_cursor = comment_end(self.start, self.token_cursor) - 1;
             } else if c == '(' {
-                paran_offsets.push(self.token_cursor);
+                paren_offsets.push(self.token_cursor);
                 expecting.push(')');
                 mode |= TOK_MODE_SUBSHELL;
             } else if c == '{' {
@@ -703,7 +703,7 @@ impl<'c> Tokenizer<'c> {
                         1,
                     );
                 }
-                if paran_offsets.pop().is_none() {
+                if paren_offsets.pop().is_none() {
                     return self.call_error(
                         TokenizerError::ClosingUnopenedSubshell,
                         self.token_cursor,
@@ -712,17 +712,17 @@ impl<'c> Tokenizer<'c> {
                         1,
                     );
                 }
-                if paran_offsets.is_empty() {
+                if paren_offsets.is_empty() {
                     mode &= !TOK_MODE_SUBSHELL;
                 }
                 expecting.pop();
                 // Check if the ) completed a quoted command substitution.
-                if quoted_cmdsubs.last() == Some(&paran_offsets.len()) {
+                if quoted_cmdsubs.last() == Some(&paren_offsets.len()) {
                     quoted_cmdsubs.pop();
                     // The "$(" part of a quoted command substitution closes double quotes. To keep
                     // quotes balanced, act as if there was an invisible double quote after the ")".
                     if let Err(error_loc) =
-                        process_opening_quote(self, &mut quoted_cmdsubs, &paran_offsets, '"')
+                        process_opening_quote(self, &mut quoted_cmdsubs, &paren_offsets, '"')
                     {
                         if !self.accept_unfinished {
                             return self.call_error(
@@ -770,7 +770,7 @@ impl<'c> Tokenizer<'c> {
                 mode &= !TOK_MODE_ARRAY_BRACKETS;
             } else if c == '\'' || c == '"' {
                 if let Err(error_loc) =
-                    process_opening_quote(self, &mut quoted_cmdsubs, &paran_offsets, c)
+                    process_opening_quote(self, &mut quoted_cmdsubs, &paren_offsets, c)
                 {
                     if !self.accept_unfinished {
                         return self.call_error(
@@ -826,12 +826,12 @@ impl<'c> Tokenizer<'c> {
                     1,
                 );
             } else if mode & TOK_MODE_SUBSHELL {
-                let offset_of_open_paran = *paran_offsets.last().expect("paran_offsets is empty");
+                let offset_of_open_paren = *paren_offsets.last().expect("paren_offsets is empty");
 
                 return self.call_error(
                     TokenizerError::UnterminatedSubshell,
                     buff_start,
-                    offset_of_open_paran,
+                    offset_of_open_paren,
                     None,
                     1,
                 );

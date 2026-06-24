@@ -458,19 +458,33 @@ pub fn truncate(input: &wstr, max_len: usize) -> WString {
     output
 }
 
-pub fn trim(input: WString, any_of: Option<&wstr>) -> WString {
+fn trim_indices(input: &wstr, any_of: Option<&wstr>) -> std::ops::Range<usize> {
     let any_of = any_of.unwrap_or(L!("\t\x0B \r\n"));
-    let mut result = input;
+    let result = input;
     let Some(suffix) = result.chars().rposition(|c| !any_of.contains(c)) else {
-        return WString::new();
+        return 0..0;
     };
-    result.truncate(suffix + 1);
-
     let prefix = result
         .chars()
         .position(|c| !any_of.contains(c))
         .expect("Should have one non-trimmed character");
-    result.split_off(prefix)
+    prefix..(suffix + 1)
+}
+
+// Remove leading and trailing characters in `any_of` from the string.
+// By default, trim whitespace.
+pub fn trim<'a>(input: &'a wstr, any_of: Option<&wstr>) -> &'a wstr {
+    let range = trim_indices(input, any_of);
+    &input[range]
+}
+
+// Remove leading and trailing characters in `any_of` from the string.
+// By default, trim whitespace.
+// This trims in-place.
+pub fn trim_in_place(input: &mut WString, any_of: Option<&wstr>) {
+    let range = trim_indices(input, any_of);
+    input.truncate(range.end);
+    input.drain(0..range.start);
 }
 
 /// Return the number of escaping backslashes before a character.
@@ -534,7 +548,7 @@ mod tests {
     use super::{
         CaseSensitivity, ContainType, LineIterator, count_newlines, ifind, join_strings,
         split_string_tok, string_fuzzy_match_string, string_prefixes_string_case_insensitive,
-        string_suffixes_string_case_insensitive,
+        string_suffixes_string_case_insensitive, trim, trim_in_place,
     };
     use fish_widestring::prelude::*;
 
@@ -746,5 +760,21 @@ mod tests {
         assert_eq!(count_newlines(L!("foo\nbar\nbaz")), 2);
         assert_eq!(count_newlines(L!("\n")), 1);
         assert_eq!(count_newlines(L!("\n\n")), 2);
+    }
+
+    #[test]
+    fn test_trim() {
+        fn test_trim(input: &wstr, any_of: Option<&wstr>, expect: &wstr) {
+            assert_eq!(trim(input, any_of), expect);
+
+            let mut s = input.to_owned();
+            trim_in_place(&mut s, any_of);
+            assert_eq!(s, expect);
+        }
+        test_trim(L!("foo"), None, L!("foo"));
+        test_trim(L!("fooff"), Some(L!("f")), L!("oo"));
+        test_trim(L!("  foo  "), None, L!("foo"));
+        test_trim(L!(""), None, L!(""));
+        test_trim(L!("  \n\n\n"), None, L!(""));
     }
 }

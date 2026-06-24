@@ -910,16 +910,11 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
         let mut seen_short_options = HashSet::new();
         for (pos, arg_char) in arg.chars().enumerate().skip(1) {
-            let mut matched = None;
-            for o in options {
-                if o.typ == CompleteOptionType::Short
+            let matched = options.iter().find(|o| {
+                o.typ == CompleteOptionType::Short
                     && o.option.char_at(0) == arg_char
                     && self.conditions_test(&o.conditions)
-                {
-                    matched = Some(o);
-                    break;
-                }
-            }
+            });
 
             if let Some(matched) = matched {
                 if matched.result_mode.requires_param {
@@ -2229,8 +2224,10 @@ fn param_match(e: &CompleteEntryOpt, optstr: &wstr) -> bool {
     }
 }
 
-/// Test if a string is an option with an argument, like --color=auto or -I/usr/include.
+/// Test if a string is an option with an argument, like --color=auto or -std=c++26.
+/// Short options are handled by the caller.
 fn param_match2(e: &CompleteEntryOpt, optstr: &wstr) -> Option<usize> {
+    assert!(e.typ != CompleteOptionType::Short);
     // We may get a complete_entry_opt_t with no options if it's just arguments.
     if e.option.is_empty() {
         return None;
@@ -2250,7 +2247,6 @@ fn param_match2(e: &CompleteEntryOpt, optstr: &wstr) -> Option<usize> {
 
     // Short options are like -DNDEBUG. Long options are like --color=auto. So check for an equal
     // sign for long options.
-    assert!(e.typ != CompleteOptionType::Short);
     if optstr.char_at(cursor) != '=' {
         return None;
     }

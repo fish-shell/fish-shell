@@ -1291,6 +1291,8 @@ fn html_class_name_for_color(spec: HighlightSpec) -> &'static wstr {
         HighlightRole::Normal => L!("fish_color_normal"),
         HighlightRole::Error => L!("fish_color_error"),
         HighlightRole::Command => L!("fish_color_command"),
+        HighlightRole::Builtin => L!("fish_color_builtin"),
+        HighlightRole::Function => L!("fish_color_function"),
         HighlightRole::StatementTerminator => L!("fish_color_statement_terminator"),
         HighlightRole::Param => L!("fish_color_param"),
         HighlightRole::Option => L!("fish_color_option"),

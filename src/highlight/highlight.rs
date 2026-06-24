@@ -228,12 +228,21 @@ pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> Option<TextFace> {
     })
 }
 
-fn command_is_valid(
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum CommandKind {
+    Builtin,
+    Function,
+    Plain,
+}
+
+fn command_kind(
     cmd: &wstr,
     decoration: StatementDecoration,
     working_directory: &wstr,
     vars: &dyn Environment,
-) -> bool {
+) -> Option<CommandKind> {
+    use CommandKind::*;
+
     // Determine which types we check, based on the decoration.
     let mut builtin_ok = true;
     let mut function_ok = true;
@@ -257,36 +266,32 @@ fn command_is_valid(
         implicit_cd_ok = false;
     }
 
-    // Check them.
-    let mut is_valid = false;
-
     // Builtins
-    if !is_valid && builtin_ok {
-        is_valid = builtin_exists(cmd);
+    if builtin_ok && builtin_exists(cmd) {
+        return Some(Builtin);
     }
 
     // Functions
-    if !is_valid && function_ok {
-        is_valid = function::exists_no_autoload(cmd);
+    if function_ok && function::exists_no_autoload(cmd) {
+        return Some(Function);
     }
 
     // Abbreviations
-    if !is_valid && abbreviation_ok {
-        is_valid = with_abbrs(|set| set.has_match(cmd, abbrs::Position::Command, L!("")));
+    if abbreviation_ok && with_abbrs(|set| set.has_match(cmd, abbrs::Position::Command, L!(""))) {
+        return Some(Plain);
     }
 
     // Regular commands
-    if !is_valid && command_ok {
-        is_valid = path_get_path(cmd, vars).is_some();
+    if command_ok && path_get_path(cmd, vars).is_some() {
+        return Some(Plain);
     }
 
     // Implicit cd
-    if !is_valid && implicit_cd_ok {
-        is_valid = path_as_implicit_cd(cmd, working_directory, vars).is_some();
+    if implicit_cd_ok && path_as_implicit_cd(cmd, working_directory, vars).is_some() {
+        return Some(Plain);
     }
 
-    // Return what we got.
-    is_valid
+    None
 }
 
 fn has_expand_reserved(s: &wstr) -> bool {
@@ -480,7 +485,9 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
         [
             HighlightSpec::with_fg(HighlightRole::Param),
             HighlightSpec::with_fg(HighlightRole::Option),
-            HighlightSpec::with_fg(HighlightRole::Command)
+            HighlightSpec::with_fg(HighlightRole::Command),
+            HighlightSpec::with_fg(HighlightRole::Builtin),
+            HighlightSpec::with_fg(HighlightRole::Function),
         ]
         .contains(&base_color),
         "Unexpected base color"
@@ -801,13 +808,19 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
     }
 
     // Color a command.
-    fn color_command(&mut self, node: &ast::String_) {
+    fn color_command(&mut self, node: &ast::String_, cmd_kind: CommandKind) {
         let source_range = node.source_range();
         let cmd_str = self.get_source(source_range);
 
+        let role = match cmd_kind {
+            CommandKind::Builtin => HighlightRole::Builtin,
+            CommandKind::Function => HighlightRole::Function,
+            CommandKind::Plain => HighlightRole::Command,
+        };
+
         color_string_internal(
             cmd_str,
-            HighlightSpec::with_fg(HighlightRole::Command),
+            HighlightSpec::with_fg(role),
             &mut self.color_array[source_range.as_usize()],
         );
     }
@@ -1049,12 +1062,12 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
         let cmd = stmt.command.source(self.buff);
 
         let mut expanded_cmd = WString::new();
-        let mut is_valid_cmd = false;
+        let mut cmd_kind = None;
         if !self.io_still_ok() {
             // We cannot check if the command is invalid, so just assume it's valid.
-            is_valid_cmd = true;
+            cmd_kind = Some(CommandKind::Plain);
         } else if variable_assignment_equals_pos(cmd).is_some() {
-            is_valid_cmd = true;
+            cmd_kind = Some(CommandKind::Plain);
         } else {
             // Check to see if the command is valid.
             // Try expanding it. If we cannot, it's an error.
@@ -1063,7 +1076,7 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
             {
                 expanded_cmd = expanded;
                 if !has_expand_reserved(&expanded_cmd) {
-                    is_valid_cmd = command_is_valid(
+                    cmd_kind = command_kind(
                         &expanded_cmd,
                         stmt.decoration(),
                         self.working_directory,
@@ -1074,8 +1087,8 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
         }
 
         // Color our statement.
-        if is_valid_cmd {
-            self.color_command(&stmt.command);
+        if let Some(cmd_kind) = cmd_kind {
+            self.color_command(&stmt.command, cmd_kind);
         } else {
             self.color_node(&stmt.command, HighlightSpec::with_fg(HighlightRole::Error));
         }
@@ -1206,6 +1219,8 @@ fn get_highlight_var_name(role: HighlightRole) -> &'static wstr {
         HighlightRole::Normal => L!("fish_color_normal"),
         HighlightRole::Error => L!("fish_color_error"),
         HighlightRole::Command => L!("fish_color_command"),
+        HighlightRole::Builtin => L!("fish_color_builtin"),
+        HighlightRole::Function => L!("fish_color_function"),
         HighlightRole::Keyword => L!("fish_color_keyword"),
         HighlightRole::StatementTerminator => L!("fish_color_end"),
         HighlightRole::Param => L!("fish_color_param"),
@@ -1256,7 +1271,9 @@ fn get_fallback(role: HighlightRole) -> HighlightRole {
         | HighlightRole::PagerPrefix
         | HighlightRole::PagerCompletion
         | HighlightRole::PagerDescription => HighlightRole::Normal,
-        HighlightRole::Keyword => HighlightRole::Command,
+        HighlightRole::Builtin | HighlightRole::Function | HighlightRole::Keyword => {
+            HighlightRole::Command
+        }
         HighlightRole::Option => HighlightRole::Param,
         HighlightRole::PagerSecondaryBackground => HighlightRole::PagerBackground,
         HighlightRole::PagerSecondaryPrefix | HighlightRole::PagerSelectedPrefix => {
@@ -1279,8 +1296,10 @@ fn get_fallback(role: HighlightRole) -> HighlightRole {
 pub enum HighlightRole {
     #[default]
     Normal, // normal text
-    Error,   // error
-    Command, // command
+    Error,    // error
+    Command,  // command
+    Builtin,  // builtin command
+    Function, // user-defined function
     Keyword,
     StatementTerminator, // process separator
     Param,               // command parameter (argument)
@@ -1451,7 +1470,7 @@ mod tests {
             });
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("./foo", param_valid_path),
                 ("&", fg(HighlightRole::StatementTerminator)),
             );
@@ -1465,11 +1484,11 @@ mod tests {
             );
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("foo&bar", fg(HighlightRole::Param)),
                 ("foo", fg(HighlightRole::Param), ns),
                 ("&", fg(HighlightRole::StatementTerminator)),
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("&>", fg(HighlightRole::Redirection)),
             );
 
@@ -1477,7 +1496,7 @@ mod tests {
                 ("if command", fg(HighlightRole::Keyword)),
                 ("ls", fg(HighlightRole::Command)),
                 ("; ", fg(HighlightRole::StatementTerminator)),
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("abc", fg(HighlightRole::Param)),
                 ("; ", fg(HighlightRole::StatementTerminator)),
                 ("/bin/definitely_not_a_command", fg(HighlightRole::Error)),
@@ -1487,52 +1506,52 @@ mod tests {
 
             validate!(
                 ("if", fg(HighlightRole::Keyword)),
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 (";", fg(HighlightRole::StatementTerminator)),
                 ("else", fg(HighlightRole::Keyword)),
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 (";", fg(HighlightRole::StatementTerminator)),
                 ("end", fg(HighlightRole::Keyword)),
             );
 
             // Verify that cd shows errors for non-directories.
             validate!(
-                ("cd", fg(HighlightRole::Command)),
+                ("cd", fg(HighlightRole::Builtin)),
                 ("dir", param_valid_path),
             );
 
             validate!(
-                ("cd", fg(HighlightRole::Command)),
+                ("cd", fg(HighlightRole::Builtin)),
                 ("foo", fg(HighlightRole::Error)),
             );
 
             validate!(
-                ("cd", fg(HighlightRole::Command)),
+                ("cd", fg(HighlightRole::Builtin)),
                 ("--help", fg(HighlightRole::Option)),
                 ("-h", fg(HighlightRole::Option)),
                 ("definitely_not_a_directory", fg(HighlightRole::Error)),
             );
 
             validate!(
-                ("cd", fg(HighlightRole::Command)),
+                ("cd", fg(HighlightRole::Builtin)),
                 ("--logical", fg(HighlightRole::Option)),
                 ("still_definitely_not_a_directory", fg(HighlightRole::Error)),
             );
 
             validate!(
-                ("cd", fg(HighlightRole::Command)),
+                ("cd", fg(HighlightRole::Builtin)),
                 ("dir-in-cdpath", param_valid_path),
             );
 
             // Command substitutions.
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("param1", fg(HighlightRole::Param)),
                 ("-l", fg(HighlightRole::Option)),
                 ("--", fg(HighlightRole::Option)),
                 ("-l", fg(HighlightRole::Param)),
                 ("(", fg(HighlightRole::Operat)),
-                ("ls", fg(HighlightRole::Command)),
+                ("ls", fg(HighlightRole::Function)),
                 ("-l", fg(HighlightRole::Option)),
                 ("--", fg(HighlightRole::Option)),
                 ("-l", fg(HighlightRole::Param)),
@@ -1542,33 +1561,33 @@ mod tests {
                 ("cat", fg(HighlightRole::Command)),
             );
             validate!(
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 ("$(", fg(HighlightRole::Operat)),
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 (")", fg(HighlightRole::Operat)),
             );
             validate!(
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 ("\"before", fg(HighlightRole::Quote)),
                 ("$(", fg(HighlightRole::Operat)),
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 ("param1", fg(HighlightRole::Param)),
                 (")", fg(HighlightRole::Operat)),
                 ("after\"", fg(HighlightRole::Quote)),
                 ("param2", fg(HighlightRole::Param)),
             );
             validate!(
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 ("\"", fg(HighlightRole::Error)),
                 ("unclosed quote", fg(HighlightRole::Quote)),
                 ("$(", fg(HighlightRole::Operat)),
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 (")", fg(HighlightRole::Operat)),
             );
 
             // Redirections substitutions.
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("param1", fg(HighlightRole::Param)),
                 // Input redirection.
                 ("<", fg(HighlightRole::Redirection)),
@@ -1596,7 +1615,7 @@ mod tests {
                 // Output redirection containing a command substitution.
                 ("4>", fg(HighlightRole::Redirection)),
                 ("(", fg(HighlightRole::Operat)),
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("test/somewhere", fg(HighlightRole::Param)),
                 (")", fg(HighlightRole::Operat)),
                 // Just another param.
@@ -1604,7 +1623,7 @@ mod tests {
             );
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 (">", fg(HighlightRole::Redirection)),
                 ("-no-such-file", fg(HighlightRole::Redirection)),
                 (">", fg(HighlightRole::Redirection)),
@@ -1618,7 +1637,7 @@ mod tests {
                 ("set-by-for-1", fg(HighlightRole::Param)),
                 ("set-by-for-2", fg(HighlightRole::Param)),
                 (";", fg(HighlightRole::StatementTerminator)),
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 (">", fg(HighlightRole::Redirection)),
                 ("$x", fg(HighlightRole::Redirection)),
                 (";", fg(HighlightRole::StatementTerminator)),
@@ -1626,11 +1645,11 @@ mod tests {
             );
 
             validate!(
-                ("set", fg(HighlightRole::Command)),
+                ("set", fg(HighlightRole::Builtin)),
                 ("x", fg(HighlightRole::Param)),
                 ("set-by-set", fg(HighlightRole::Param)),
                 (";", fg(HighlightRole::StatementTerminator)),
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 (">", fg(HighlightRole::Redirection)),
                 ("$x", fg(HighlightRole::Redirection)),
                 ("2>", fg(HighlightRole::Redirection)),
@@ -1643,7 +1662,7 @@ mod tests {
                 ("x", fg(HighlightRole::Param), ns),
                 ("=", fg(HighlightRole::Operat), ns),
                 ("set-by-variable-override", fg(HighlightRole::Param), ns),
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 (">", fg(HighlightRole::Redirection)),
                 ("$x", fg(HighlightRole::Redirection)),
             );
@@ -1656,21 +1675,21 @@ mod tests {
             );
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("'", fg(HighlightRole::Error)),
                 ("single_quote", fg(HighlightRole::Quote)),
                 ("$stuff", fg(HighlightRole::Quote)),
             );
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("\"", fg(HighlightRole::Error)),
                 ("double_quote", fg(HighlightRole::Quote)),
                 ("$stuff", fg(HighlightRole::Operat)),
             );
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("$foo", fg(HighlightRole::Operat)),
                 ("\"", fg(HighlightRole::Quote)),
                 ("$bar", fg(HighlightRole::Operat)),
@@ -1690,7 +1709,7 @@ mod tests {
             );
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("$$foo[", fg(HighlightRole::Operat)),
                 ("1", fg(HighlightRole::Param)),
                 ("][", fg(HighlightRole::Operat)),
@@ -1717,34 +1736,34 @@ mod tests {
 
             validate!(
                 ("if", fg(HighlightRole::Keyword)),
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 ("&&", fg(HighlightRole::Operat)),
-                ("false", fg(HighlightRole::Command)),
+                ("false", fg(HighlightRole::Builtin)),
                 (";", fg(HighlightRole::StatementTerminator)),
                 ("or", fg(HighlightRole::Operat)),
-                ("false", fg(HighlightRole::Command)),
+                ("false", fg(HighlightRole::Builtin)),
                 ("||", fg(HighlightRole::Operat)),
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 (";", fg(HighlightRole::StatementTerminator)),
                 ("and", fg(HighlightRole::Operat)),
                 ("not", fg(HighlightRole::Operat)),
                 ("!", fg(HighlightRole::Operat)),
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 (";", fg(HighlightRole::StatementTerminator)),
                 ("end", fg(HighlightRole::Keyword)),
             );
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("%self", fg(HighlightRole::Operat)),
                 ("not%self", fg(HighlightRole::Param)),
                 ("self%not", fg(HighlightRole::Param)),
             );
 
             validate!(
-                ("false", fg(HighlightRole::Command)),
+                ("false", fg(HighlightRole::Builtin)),
                 ("&|", fg(HighlightRole::StatementTerminator)),
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
             );
 
             validate!(
@@ -1756,25 +1775,25 @@ mod tests {
                 ("VAL1", fg(HighlightRole::Param), ns),
                 ("VAR", fg(HighlightRole::Param)),
                 ("=", fg(HighlightRole::Operat), ns),
-                ("false", fg(HighlightRole::Command)),
+                ("false", fg(HighlightRole::Builtin)),
                 ("|&", fg(HighlightRole::StatementTerminator)),
-                ("true", fg(HighlightRole::Command)),
+                ("true", fg(HighlightRole::Builtin)),
                 ("stuff", fg(HighlightRole::Param)),
             );
 
             validate!(
-                ("echo", fg(HighlightRole::Command)), // (
+                ("echo", fg(HighlightRole::Builtin)), // (
                 (")", fg(HighlightRole::Error)),
             );
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("stuff", fg(HighlightRole::Param)),
                 ("# comment", fg(HighlightRole::Comment)),
             );
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("--", fg(HighlightRole::Option)),
                 ("-s", fg(HighlightRole::Param)),
             );
@@ -1793,7 +1812,7 @@ mod tests {
 
             // Highlighting works across escaped line breaks (#8444).
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("$FISH_\\\n", fg(HighlightRole::Operat)),
                 ("VERSION", fg(HighlightRole::Operat), ns),
             );
@@ -1824,15 +1843,15 @@ mod tests {
             validate!(("\"$EMPTY_VARIABLE\"", fg(HighlightRole::Error)));
 
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("\\UFDFD", fg(HighlightRole::Escape)),
             );
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("\\U10FFFF", fg(HighlightRole::Escape)),
             );
             validate!(
-                ("echo", fg(HighlightRole::Command)),
+                ("echo", fg(HighlightRole::Builtin)),
                 ("\\U110000", fg(HighlightRole::Error)),
             );
 

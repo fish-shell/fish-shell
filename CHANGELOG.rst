@@ -12,6 +12,7 @@ fish 4.8.0 (released June 24, 2026)
 Notable improvements and fixes
 ------------------------------
 - Translatable messages defined in Rust source code can and should now be translated using `Fluent <https://projectfluent.org/>`__ instead of GNU gettext.
+  For now, GNU gettext continues to be used for translating messages defined in fish scripts.
   To make Fluent easy to work with, we have added tooling based on the new `fluent-ftl-tools <https://codeberg.org/danielrainer/fluent-ftl-tools>`__ library.
   See :ref:`Contributing Translations <localization>` (:issue:`11928`).
 

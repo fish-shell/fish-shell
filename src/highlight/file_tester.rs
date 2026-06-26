@@ -28,13 +28,13 @@ use std::{
 
 // This is used only internally to this file, and is exposed only for testing.
 #[derive(Clone, Copy, Default)]
-pub struct PathFlags {
+struct PathFlags {
     // The path must be to a directory.
-    pub require_dir: bool,
+    require_dir: bool,
     // Expand any leading tilde in the path.
-    pub expand_tilde: bool,
+    expand_tilde: bool,
     // Normalize directories before resolving, as "cd".
-    pub for_cd: bool,
+    for_cd: bool,
 }
 
 // When a file test is OK, we may also return whether this was a file.
@@ -52,7 +52,7 @@ pub struct FileTester<'src, 'wd, 'opctx> {
     // The working directory, for resolving paths against.
     working_directory: &'wd wstr,
     // The operation context.
-    pub(super) ctx: &'opctx mut OperationContext<'src>,
+    pub ctx: &'opctx mut OperationContext<'src>,
 }
 
 impl<'src, 'wd, 'opctx> FileTester<'src, 'wd, 'opctx> {
@@ -224,7 +224,7 @@ impl<'src, 'wd, 'opctx> FileTester<'src, 'wd, 'opctx> {
 /// cdpath). This does I/O!
 ///
 /// We expect the path to already be unescaped.
-pub fn is_potential_path(
+fn is_potential_path(
     potential_path_fragment: &wstr,
     at_cursor: bool,
     directories: &[&wstr],
@@ -358,7 +358,7 @@ pub fn is_potential_path(
 
 // Given a string, return whether it prefixes a path that we could cd into. Return that path in
 // out_path. Expects path to be unescaped.
-pub fn is_potential_cd_path(
+fn is_potential_cd_path(
     path: &wstr,
     at_cursor: bool,
     working_directory: &wstr,
@@ -410,7 +410,7 @@ pub fn is_potential_cd_path(
 /// Returns:
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
-pub type CaseSensitivityCache = HashMap<WString, bool>;
+type CaseSensitivityCache = HashMap<WString, bool>;
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 fn fs_is_case_insensitive(
@@ -430,7 +430,7 @@ fn fs_is_case_insensitive(
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "ios")))]
-pub fn fs_is_case_insensitive(
+fn fs_is_case_insensitive(
     _path: &wstr,
     _fd: RawFd,
     _case_sensitivity_cache: &mut CaseSensitivityCache,

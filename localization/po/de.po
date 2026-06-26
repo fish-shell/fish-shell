@@ -1616,9 +1616,6 @@ msgstr "Befehl"
 msgid "command link"
 msgstr "Verweis auf einen Befehl"
 
-msgid "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-msgstr "Befehlsersetzung sind in Befehlsposition nicht erlaubt. Probier stattdessen var=(befehl) $var ..."
-
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr "Vervollständigung hat die maximale Rekursionstiefe erreicht, möglicher Kreis?"
 

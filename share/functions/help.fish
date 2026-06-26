@@ -228,8 +228,7 @@ chromium-browser
         # The space before the /c is to prevent msys2 from expanding it to a path
         $fish_browser " /c" start $page_url
     else if contains -- $fish_browser[1] $graphical_browsers
-        set -l sh (__fish_posix_shell)
-        $sh -c '( "$@" ) &' -- $fish_browser $page_url
+        $(__fish_posix_shell) -c '( "$@" ) &' -- $fish_browser $page_url
     else
         $fish_browser $page_url
     end

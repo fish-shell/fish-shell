@@ -1616,9 +1616,6 @@ msgstr "comando"
 msgid "command link"
 msgstr "enlace de comando"
 
-msgid "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-msgstr "las sustituciones de comando no están permitidas en posición de comando. Prueba var=(tu-comando) $var …"
-
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr "la finalización alcanzó la profundidad máxima de recursión, ¿posible ciclo?"
 

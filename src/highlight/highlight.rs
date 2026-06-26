@@ -810,14 +810,13 @@ impl<'src, 'ctx> Highlighter<'src, 'ctx> {
             HighlightSpec::with_fg(HighlightRole::Command),
             &mut self.color_array[source_range.as_usize()],
         );
+        self.color_cmdsubs(node);
     }
     // Color a node as if it were an argument.
     fn color_as_argument(&mut self, node: &dyn ast::Node, options_allowed: bool /* = true */) {
         // node does not necessarily have type symbol_argument here.
         let source_range = node.source_range();
         let arg_str = self.get_source(source_range);
-
-        let arg_start = source_range.start();
 
         // Color this argument without concern for command substitutions.
         if options_allowed && arg_str.char_at(0) == '-' {
@@ -834,7 +833,13 @@ impl<'src, 'ctx> Highlighter<'src, 'ctx> {
             );
         }
 
-        // Now do command substitutions.
+        self.color_cmdsubs(node);
+    }
+
+    fn color_cmdsubs(&mut self, node: &dyn ast::Node) {
+        let source_range = node.source_range();
+        let arg_str = self.get_source(source_range);
+        let arg_start = source_range.start();
         let mut cmdsub_cursor = 0;
         let mut is_quoted = false;
         while let Ok(Some(cmdsub)) = locate_cmdsubst_range(
@@ -1050,10 +1055,12 @@ impl<'src, 'ctx> Highlighter<'src, 'ctx> {
 
         let mut expanded_cmd = WString::new();
         let mut is_valid_cmd = false;
-        if !self.io_still_ok() {
+        if {
             // We cannot check if the command is invalid, so just assume it's valid.
-            is_valid_cmd = true;
-        } else if variable_assignment_equals_pos(cmd).is_some() {
+            !self.io_still_ok()
+        } || variable_assignment_equals_pos(cmd).is_some()
+            || has_cmdsub(cmd)
+        {
             is_valid_cmd = true;
         } else {
             // Check to see if the command is valid.
@@ -1197,7 +1204,15 @@ fn statement_get_expanded_command(
     // Get the command. Try expanding it. If we cannot, it's an error.
     let cmd = stmt.command.try_source(src)?;
     let mut out_cmd = WString::new();
-    let err = expand_to_command_and_args(cmd, ctx, &mut out_cmd, None, None, false);
+    let err = expand_to_command_and_args(
+        cmd,
+        ctx,
+        &mut out_cmd,
+        None,
+        None,
+        /*skip_cmdsubs=*/ true,
+        /*skip_wildcards=*/ false,
+    );
     (err == ExpandResultCode::Ok).then_some(out_cmd)
 }
 
@@ -1609,6 +1624,18 @@ mod tests {
                 ("-no-such-file", fg(HighlightRole::Redirection)),
                 (">", fg(HighlightRole::Redirection)),
                 ("-filename-starting-with-dash", redirection_valid_path),
+            );
+
+            validate!(
+                ("$(", fg(HighlightRole::Operat)),
+                ("true", fg(HighlightRole::Command)),
+                (")", fg(HighlightRole::Operat)),
+            );
+            // TODO make this pass
+            validate!(
+                ("(", fg(HighlightRole::Error)),
+                ("true", fg(HighlightRole::Error)),
+                (")", fg(HighlightRole::Error)),
             );
 
             validate!(

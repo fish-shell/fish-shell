@@ -1653,7 +1653,8 @@ fn detect_errors_in_decorated_statement(
                 &mut command,
                 None,
                 Some(&mut new_errors),
-                true, /* skip wildcards */
+                /*skip_cmdsubs=*/ true,
+                /*skip_wildcards=*/ true,
             )
             .result,
             ExpandResultCode::Error | ExpandResultCode::Overflow

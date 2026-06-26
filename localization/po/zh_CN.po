@@ -1637,9 +1637,6 @@ msgstr "命令"
 msgid "command link"
 msgstr "命令链接"
 
-msgid "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-msgstr "在命令位置不允许替换命令。试使用 var=(你的命令) $var ..."
-
 msgid "completion reached maximum recursion depth, possible cycle?"
 msgstr "补全达到了最大的递归深度，可能存在循环？"
 

@@ -25,7 +25,7 @@ isolated-tmux capture-pane -p | string match '*to background*'
 
 sleep 1.5
 
-isolated-tmux send-keys C-l $fish -c '
+isolated-tmux send-keys C-l '
     status job-control full
     for x in (seq 10)
         sleep 0.0001 &
@@ -39,4 +39,5 @@ isolated-tmux capture-pane -p |
     string match -rv '^Send job \d+ \(sleep 0.0001 &\) to foreground$' |
     string match -rv '^warning: Could not send job \d+ \(\'sleep 0.0001 &\'\) with pgid \d+ to foreground' |
     string match -rv '^tcsetpgrp: No such process'
-# CHECK: prompt 4>
+
+# CHECK: prompt 3>

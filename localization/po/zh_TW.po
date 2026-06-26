@@ -61660,6 +61660,9 @@ msgstr ""
 msgid "Skipping JUnit Tests"
 msgstr ""
 
+msgid "Skips acquiring file locks"
+msgstr ""
+
 msgid "Skips autoloader generation"
 msgstr ""
 

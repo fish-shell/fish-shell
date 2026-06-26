@@ -11,15 +11,9 @@ EOF
     exit 1
 }
 
-DOCKER_EXTRA_ARGS=""
-
-export DOCKER_BUILDKIT=1
-
-# Exit on failure.
 set -e
 
-# Get fish source directory.
-workspace_root=$(cd "$( dirname "$0" )"/.. >/dev/null && pwd)
+DOCKER_EXTRA_ARGS=""
 
 # Parse args.
 while [ $# -gt 1 ]; do
@@ -43,19 +37,19 @@ while [ $# -gt 1 ]; do
     shift
 done
 
-DOCKERFILE="$1"
-test -n "$DOCKERFILE" || usage
+dockerfile=$1
+test -n "$dockerfile" || usage
 
-# Construct a docker image.
-IMG_TAGNAME="ghcr.io/fish-shell/fish-ci/$(basename -s .Dockerfile "$DOCKERFILE"):latest"
-docker build \
-    -t "$IMG_TAGNAME" \
-    -f "$DOCKERFILE" \
-    "$workspace_root"/docker/context/
+workspace_root=$(cd "$( dirname "$0" )"/.. >/dev/null && pwd)
+
+. "$workspace_root"/docker/lib.sh
+
+docker_build "$dockerfile"
 
 # Run tests in it, allowing them to fail without failing this script.
+# shellcheck disable=SC2046  # for the isatty snippet
 # shellcheck disable=SC2086  # $DOCKER_EXTRA_ARGS should have globbing and splitting applied.
-docker run -it \
+docker run -i $(isatty 0 && printf %s -t) \
     --mount type=bind,source="$workspace_root",target=/fish-source,readonly \
     $DOCKER_EXTRA_ARGS \
-    "$IMG_TAGNAME"
+    "$(image_tagname "$dockerfile")"

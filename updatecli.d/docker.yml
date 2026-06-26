@@ -1,6 +1,13 @@
 name: "Update Linux docker images"
 
 sources:
+  alpine_latest_version:
+    kind: dockerimage
+    spec:
+      image: alpine
+      tagfilter: "^[0-9]+\\.[0-9]+$"
+      versionfilter:
+        kind: semver
   ubuntu_latest_lts_version:
     kind: shell
     spec:
@@ -17,6 +24,14 @@ sources:
           tail -1
 
 targets:
+  update_alpine_dockerfile:
+    name: "Update Alpine Linux version"
+    sourceid: alpine_latest_version
+    kind: file
+    spec:
+      file: docker/alpine.Dockerfile
+      matchpattern: "FROM alpine:.*"
+      replacepattern: 'FROM alpine:{{ source "alpine_latest_version" }}'
   ubuntu_latest_version_dockerfile:
     name: "Update oldest non-EOL Ubuntu Linux version"
     sourceid: ubuntu_latest_lts_version

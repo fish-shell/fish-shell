@@ -22,7 +22,7 @@ use fish_widestring::{
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap, hash_map},
     os::fd::RawFd,
 };
 
@@ -274,7 +274,8 @@ pub fn is_potential_path(
 
     // Don't test the same path multiple times, which can happen if the path is absolute and the
     // CDPATH contains multiple entries.
-    let mut checked_paths = HashSet::new();
+    // TODO This should be a HashSet https://github.com/rust-lang/rust/issues/60896.
+    let mut checked_paths = HashMap::new();
 
     // Keep a cache of which paths / filesystems are case sensitive.
     let mut case_sensitivity_cache = CaseSensitivityCache::new();
@@ -289,11 +290,17 @@ pub fn is_potential_path(
             abs_path = normalize_path(&abs_path, /*allow_leading_double_slashes=*/ true);
         }
 
-        // Skip this if it's empty or we've already checked it.
-        if abs_path.is_empty() || checked_paths.contains(&abs_path) {
+        if abs_path.is_empty() {
             continue;
         }
-        checked_paths.insert(abs_path.clone());
+        let abs_path = {
+            use hash_map::Entry::*;
+            match checked_paths.entry(abs_path) {
+                Occupied(_occupied_entry) => continue,
+                Vacant(vacant) => vacant.insert_entry(()),
+            }
+        };
+        let abs_path = abs_path.key();
 
         // If the user is still typing the argument, we want to highlight it if it's the prefix
         // of a valid path. This means we need to potentially walk all files in some directory.
@@ -302,15 +309,15 @@ pub fn is_potential_path(
         // 2. If the cursor is not at the argument, it means the user is definitely not typing it,
         //    so we can skip the prefix-match.
         if must_be_full_dir || !at_cursor {
-            if let Ok(md) = wstat(&abs_path) {
+            if let Ok(md) = wstat(abs_path) {
                 if !at_cursor || md.file_type().is_dir() {
                     return true;
                 }
             }
         } else {
             // We do not end with a slash; it does not have to be a directory.
-            let dir_name = wdirname(&abs_path);
-            let filename_fragment = wbasename(&abs_path);
+            let dir_name = wdirname(abs_path);
+            let filename_fragment = wbasename(abs_path);
             if dir_name == "/" && filename_fragment == "/" {
                 // cd ///.... No autosuggestion.
                 return true;

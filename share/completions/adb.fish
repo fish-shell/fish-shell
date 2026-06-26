@@ -9,7 +9,7 @@ function __fish_adb_parse_global_prefix
         set -l token $tokens[1]
         set -e tokens[1]
         switch $token
-            case -s -t -H -P -L
+            case -s -t -H -P -L --one-device
                 if set -q tokens[1]
                     test "$mode" = forwarded-options
                     and printf '%s\n' $token $tokens[1]
@@ -18,7 +18,7 @@ function __fish_adb_parse_global_prefix
             case -d -e
                 test "$mode" = forwarded-options
                 and printf '%s\n' $token
-            case -a
+            case -a --exit-on-write-error
                 # Global option without an argument that does not affect shell queries.
             case '-*'
                 if string match -qr '^-([HP].+|s[0-9]|t[0-9]+$)' -- $token
@@ -126,10 +126,12 @@ complete -n __fish_adb_needs_command -c adb -o a -d 'Listen on all network inter
 complete -n __fish_adb_needs_command -c adb -o d -d 'Use first USB device'
 complete -n __fish_adb_needs_command -c adb -o e -d 'Use first TCP/IP device'
 complete -n __fish_adb_needs_command -c adb -o s -x -a "(__fish_adb_get_devices)" -d 'Use device with given serial'
-complete -n __fish_adb_needs_command -c adb -o t -d 'Use device with given transport id'
-complete -n __fish_adb_needs_command -c adb -o H -d 'Name of adb server host'
-complete -n __fish_adb_needs_command -c adb -o P -d 'Port of adb server'
-complete -n __fish_adb_needs_command -c adb -o L -d 'Listen on given socket for adb server'
+complete -n __fish_adb_needs_command -c adb -o t -x -d 'Use device with given transport id'
+complete -n __fish_adb_needs_command -c adb -o H -x -d 'Name of adb server host'
+complete -n __fish_adb_needs_command -c adb -o P -x -d 'Port of adb server'
+complete -n __fish_adb_needs_command -c adb -o L -r -d 'Listen on given socket for adb server'
+complete -n __fish_adb_needs_command -c adb -l one-device -x -a "(__fish_adb_get_devices)" -d 'Server only connects to one USB device'
+complete -n __fish_adb_needs_command -c adb -l exit-on-write-error -d 'Exit if stdout is closed'
 
 # Commands
 complete -f -n __fish_adb_needs_command -c adb -a connect -d 'Connect to device'
@@ -158,12 +160,10 @@ complete -f -n __fish_adb_needs_command -c adb -a reboot -d 'Reboots the device,
 complete -f -n __fish_adb_needs_command -c adb -a get-state -d 'Prints state of the device'
 complete -f -n __fish_adb_needs_command -c adb -a get-serialno -d 'Prints serial number of the device'
 complete -f -n __fish_adb_needs_command -c adb -a get-devpath -d 'Prints device path'
-complete -f -n __fish_adb_needs_command -c adb -a status-window -d 'Continuously print the device status'
 complete -f -n __fish_adb_needs_command -c adb -a root -d 'Restart the adbd daemon with root permissions'
 complete -f -n __fish_adb_needs_command -c adb -a unroot -d 'Restart the adbd daemon without root permissions'
 complete -f -n __fish_adb_needs_command -c adb -a usb -d 'Restart the adbd daemon listening on USB'
 complete -f -n __fish_adb_needs_command -c adb -a tcpip -d 'Restart the adbd daemon listening on TCP'
-complete -f -n __fish_adb_needs_command -c adb -a ppp -d 'Run PPP over USB'
 complete -f -n __fish_adb_needs_command -c adb -a sideload -d 'Sideloads the given package'
 complete -f -n __fish_adb_needs_command -c adb -a reconnect -d 'Kick current connection from host side and make it reconnect.'
 complete -f -n __fish_adb_needs_command -c adb -a exec-out -d 'Execute a command on the device and send its stdout back'
@@ -189,7 +189,7 @@ complete -n '__fish_adb_using_command devices' -c adb -s l -d 'Also list device 
 complete -n '__fish_adb_using_command disconnect' -c adb -x -a "(__fish_adb_get_tcpip_devices)" -d 'Device to disconnect'
 
 # backup
-complete -n '__fish_adb_using_command backup' -c adb -s f -d 'File to write backup data to'
+complete -n '__fish_adb_using_command backup' -c adb -s f -r -d 'File to write backup data to'
 complete -n '__fish_adb_using_command backup' -c adb -o apk -d 'Enable backup of the .apks themselves'
 complete -n '__fish_adb_using_command backup' -c adb -o noapk -d 'Disable backup of the .apks themselves (default)'
 complete -n '__fish_adb_using_command backup' -c adb -o obb -d 'Enable backup of any installed apk expansion'
@@ -237,7 +237,7 @@ complete -n '__fish_adb_using_command logcat' -c adb -s v -l format -d 'Sets log
 complete -n '__fish_adb_using_command logcat' -c adb -s D -l dividers -d 'Print dividers between each log buffer'
 complete -n '__fish_adb_using_command logcat' -c adb -s B -l binary -d 'Output the log in binary'
 # outfile files
-complete -n '__fish_adb_using_command logcat' -c adb -s f -l file -d 'Log to file instead of stdout'
+complete -n '__fish_adb_using_command logcat' -c adb -s f -l file -r -d 'Log to file instead of stdout'
 complete -n '__fish_adb_using_command logcat' -c adb -s r -l rotate-kbytes -d 'Rotate log every kbytes, requires -f'
 complete -n '__fish_adb_using_command logcat' -c adb -s n -l rotate-count -d 'Sets number of rotated logs to keep, default 4'
 complete -n '__fish_adb_using_command logcat' -c adb -l id -d 'If the given signature for logging changes, clear the associated files'

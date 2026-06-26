@@ -69,6 +69,8 @@ set -l dnf_install_cmds install in
 set -l dnf_remove_cmds remove rm
 set -l dnf_reinstall_cmds reinstall rei
 set -l dnf_info_cmds info if
+set -l dnf_upgrade_cmds upgrade up
+
 
 # Alias
 complete -c dnf -n __fish_use_subcommand -xa alias -d "Manage aliases"
@@ -339,8 +341,8 @@ complete -c dnf -n "__fish_seen_subcommand_from updateinfo" -l installed
 complete -c dnf -n "__fish_seen_subcommand_from updateinfo" -l updates
 
 # Upgrade
-complete -c dnf -n __fish_use_subcommand -xa upgrade -d "Updates packages"
-complete -c dnf -n "__fish_seen_subcommand_from upgrade" -xa "(__fish_dnf_list_installed_packages)"
+complete -c dnf -n __fish_use_subcommand -xa "$dnf_upgrade_cmds" -d "Updates packages"
+complete -c dnf -n "__fish_seen_subcommand_from $dnf_upgrade_cmds" -xa "(__fish_dnf_list_installed_packages)"
 
 # Upgrade-Minimal
 complete -c dnf -n __fish_use_subcommand -xa upgrade-minimal -d "Updates packages"

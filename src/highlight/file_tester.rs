@@ -410,13 +410,13 @@ fn is_potential_cd_path(
 /// Returns:
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
-type CaseSensitivityCache = HashMap<WString, bool>;
+type CaseSensitivityCache<'a> = HashMap<&'a wstr, bool>;
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
-fn fs_is_case_insensitive(
-    path: &wstr,
+fn fs_is_case_insensitive<'a>(
+    path: &'a wstr,
     fd: RawFd,
-    case_sensitivity_cache: &mut CaseSensitivityCache,
+    case_sensitivity_cache: &mut CaseSensitivityCache<'a>,
 ) -> bool {
     if let Some(cached) = case_sensitivity_cache.get(path) {
         return *cached;
@@ -425,7 +425,7 @@ fn fs_is_case_insensitive(
     // sensitive, and a 0 value means case insensitive.
     let ret = unsafe { libc::fpathconf(fd, libc::_PC_CASE_SENSITIVE) };
     let icase = ret == 0;
-    case_sensitivity_cache.insert(path.to_owned(), icase);
+    case_sensitivity_cache.insert(path, icase);
     icase
 }
 

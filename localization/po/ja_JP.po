@@ -12741,9 +12741,6 @@ msgstr ""
 msgid "Continuously display system-wide disk manipulation activity"
 msgstr ""
 
-msgid "Continuously print the device status"
-msgstr ""
-
 msgid "Control Unicode features"
 msgstr ""
 
@@ -25930,6 +25927,9 @@ msgid "Exit ibus-daemon"
 msgstr ""
 
 msgid "Exit if command has a non-zero exit"
+msgstr ""
+
+msgid "Exit if stdout is closed"
 msgstr ""
 
 msgid "Exit if the size is exceeded"
@@ -52440,9 +52440,6 @@ msgstr ""
 msgid "Run Node with the hook already setup"
 msgstr ""
 
-msgid "Run PPP over USB"
-msgstr ""
-
 msgid "Run PROG after connect"
 msgstr ""
 
@@ -55237,6 +55234,9 @@ msgid "Serve time even when not synced"
 msgstr ""
 
 msgid "Server mode"
+msgstr ""
+
+msgid "Server only connects to one USB device"
 msgstr ""
 
 msgid "Server option"

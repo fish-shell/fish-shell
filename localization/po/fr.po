@@ -12846,9 +12846,6 @@ msgstr ""
 msgid "Continuously display system-wide disk manipulation activity"
 msgstr "Afficher en continu les activités du système sur le disque"
 
-msgid "Continuously print the device status"
-msgstr "Afficher en permanence l’état du périphérique"
-
 msgid "Control Unicode features"
 msgstr ""
 
@@ -26012,6 +26009,9 @@ msgstr ""
 
 msgid "Exit if command has a non-zero exit"
 msgstr "Quitter en cas de code de retour non nul"
+
+msgid "Exit if stdout is closed"
+msgstr ""
 
 msgid "Exit if the size is exceeded"
 msgstr "Quitter si la taille est dépassée"
@@ -52419,9 +52419,6 @@ msgstr ""
 msgid "Run Node with the hook already setup"
 msgstr ""
 
-msgid "Run PPP over USB"
-msgstr "Exécuter PPP sur USB"
-
 msgid "Run PROG after connect"
 msgstr ""
 
@@ -55205,6 +55202,9 @@ msgstr ""
 
 msgid "Server mode"
 msgstr "Mode serveur"
+
+msgid "Server only connects to one USB device"
+msgstr ""
 
 msgid "Server option"
 msgstr ""

@@ -134,6 +134,7 @@ completions#useful-functions-for-writing-completions
 completions#where-to-put-completions
 contributing
 contributing#adding-translations-for-a-new-language
+contributing#ai-contributions-policy
 contributing#code-style
 contributing#commit-history
 contributing#configuring-your-editor-for-fish-scripts

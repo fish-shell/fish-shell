@@ -101,7 +101,7 @@ pub fn highlight_shell<'src, 'ctx>(
     cursor: Option<usize>,
 ) {
     let working_directory = ctx.vars().get_pwd_slash();
-    let mut highlighter = Highlighter::new(buff, cursor, ctx, working_directory, io_ok);
+    let mut highlighter = Highlighter::new(buff, cursor, ctx, &working_directory, io_ok);
     *color = highlighter.highlight();
 }
 
@@ -695,7 +695,7 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
 pub type ColorArray = Vec<HighlightSpec>;
 
 /// Syntax highlighter helper.
-struct Highlighter<'src, 'ctx> {
+struct Highlighter<'src, 'wd, 'ctx> {
     // The string we're highlighting. Note this is a reference member variable (to avoid copying)!
     buff: &'src wstr,
     // The position of the cursor within the string.
@@ -703,9 +703,9 @@ struct Highlighter<'src, 'ctx> {
     // Whether it's OK to do I/O.
     io_ok: bool,
     // Working directory.
-    working_directory: WString,
+    working_directory: &'wd wstr,
     // Our component for testing strings for being potential file paths.
-    file_tester: FileTester<'src, 'ctx>,
+    file_tester: FileTester<'src, 'wd, 'ctx>,
     // The resulting colors.
     color_array: ColorArray,
     // A stack of variables that the current commandline probably defines.  We mark redirections
@@ -714,15 +714,15 @@ struct Highlighter<'src, 'ctx> {
     done: bool,
 }
 
-impl<'src, 'ctx> Highlighter<'src, 'ctx> {
+impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
     pub fn new(
         buff: &'src wstr,
         cursor: Option<usize>,
         ctx: &'ctx mut OperationContext<'src>,
-        working_directory: WString,
+        working_directory: &'wd wstr,
         can_do_io: bool,
     ) -> Self {
-        let file_tester = FileTester::new(working_directory.clone(), ctx);
+        let file_tester = FileTester::new(working_directory, ctx);
         Self {
             buff,
             cursor,
@@ -861,7 +861,7 @@ impl<'src, 'ctx> Highlighter<'src, 'ctx> {
                 cmdsub_contents,
                 arg_cursor,
                 self.file_tester.ctx,
-                self.working_directory.clone(),
+                self.working_directory,
                 self.io_still_ok(),
             );
             let subcolors = cmdsub_highlighter.highlight();
@@ -1066,7 +1066,7 @@ impl<'src, 'ctx> Highlighter<'src, 'ctx> {
                     is_valid_cmd = command_is_valid(
                         &expanded_cmd,
                         stmt.decoration(),
-                        &self.working_directory,
+                        self.working_directory,
                         self.file_tester.ctx.vars(),
                     );
                 }
@@ -1161,7 +1161,7 @@ fn contains_pending_variable(pending_variables: &[&wstr], haystack: &wstr) -> bo
     false
 }
 
-impl<'src, 'ctx, 'a> NodeVisitor<'a> for Highlighter<'src, 'ctx> {
+impl<'src, 'wd, 'ctx, 'a> NodeVisitor<'a> for Highlighter<'src, 'wd, 'ctx> {
     fn visit(&mut self, node: &'a dyn Node) {
         if let Some(keyword) = node.as_keyword() {
             return self.visit_keyword(keyword);

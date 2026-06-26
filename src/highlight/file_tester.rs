@@ -48,15 +48,15 @@ pub struct IsErr;
 /// The result of a file test.
 pub type FileTestResult = Result<IsFile, IsErr>;
 
-pub struct FileTester<'src, 'opctx> {
+pub struct FileTester<'src, 'wd, 'opctx> {
     // The working directory, for resolving paths against.
-    working_directory: WString,
+    working_directory: &'wd wstr,
     // The operation context.
     pub(super) ctx: &'opctx mut OperationContext<'src>,
 }
 
-impl<'src, 'opctx> FileTester<'src, 'opctx> {
-    pub fn new(working_directory: WString, ctx: &'opctx mut OperationContext<'src>) -> Self {
+impl<'src, 'wd, 'opctx> FileTester<'src, 'wd, 'opctx> {
+    pub fn new(working_directory: &'wd wstr, ctx: &'opctx mut OperationContext<'src>) -> Self {
         Self {
             working_directory,
             ctx,
@@ -110,7 +110,7 @@ impl<'src, 'opctx> FileTester<'src, 'opctx> {
         let valid_path = is_potential_cd_path(
             &param,
             is_prefix,
-            &self.working_directory,
+            self.working_directory,
             self.ctx,
             PathFlags {
                 expand_tilde: true,
@@ -144,7 +144,7 @@ impl<'src, 'opctx> FileTester<'src, 'opctx> {
         // Ok, we successfully expanded our target. Now verify that it works with this
         // redirection. We will probably need it as a path (but not in the case of fd
         // redirections). Note that the target is now unescaped.
-        let target_path = path_apply_working_directory(&target, &self.working_directory);
+        let target_path = path_apply_working_directory(&target, self.working_directory);
         match mode {
             RedirectionMode::Fd => {
                 if target == "-" {
@@ -224,10 +224,10 @@ impl<'src, 'opctx> FileTester<'src, 'opctx> {
 /// cdpath). This does I/O!
 ///
 /// We expect the path to already be unescaped.
-pub fn is_potential_path(
+pub fn is_potential_path<S: AsRef<wstr>>(
     potential_path_fragment: &wstr,
     at_cursor: bool,
-    directories: &[WString],
+    directories: &[S],
     ctx: &OperationContext<'_>,
     flags: PathFlags,
 ) -> bool {
@@ -280,6 +280,7 @@ pub fn is_potential_path(
     let mut case_sensitivity_cache = CaseSensitivityCache::new();
 
     for wd in directories {
+        let wd = wd.as_ref();
         if ctx.check_cancel() {
             return false;
         }
@@ -453,17 +454,11 @@ mod tests {
         OperationContext::empty()
     }
 
-    fn file_tester<'a>(
-        ctx: &'a mut OperationContext<'static>,
-        tempdir: &TempDir,
-    ) -> FileTester<'static, 'a> {
-        FileTester::new(osstr2wcstring(tempdir.path()), ctx)
-    }
-
     #[test]
     fn test_ispath() {
         let (tempdir, ctx) = (temp_dir(), &mut op_context());
-        let tester = file_tester(ctx, &tempdir);
+        let wd = osstr2wcstring(tempdir.path());
+        let tester = FileTester::new(&wd, ctx);
 
         let file_path = filepath(&tempdir, "file.txt");
         File::create(file_path).unwrap();
@@ -512,7 +507,8 @@ mod tests {
     #[test]
     fn test_iscdpath() {
         let (tempdir, ctx) = (temp_dir(), &mut op_context());
-        let mut tester = file_tester(ctx, &tempdir);
+        let wd = osstr2wcstring(tempdir.path());
+        let mut tester = FileTester::new(&wd, ctx);
 
         // Note cd (unlike file paths) should report IsErr for invalid cd paths,
         // rather than IsFile(false).
@@ -543,7 +539,8 @@ mod tests {
     fn test_redirections() {
         // Note we use is_ok and is_err since we don't care about the IsFile part.
         let (tempdir, ctx) = (temp_dir(), &mut op_context());
-        let mut tester = file_tester(ctx, &tempdir);
+        let wd = osstr2wcstring(tempdir.path());
+        let mut tester = FileTester::new(&wd, ctx);
         let file_path = filepath(&tempdir, "file.txt");
         File::create(&file_path).unwrap();
 
@@ -738,8 +735,8 @@ mod tests {
         std::fs::write("test/is_potential_path_test/aardvark", []).unwrap();
         std::fs::write("test/is_potential_path_test/gamma", []).unwrap();
 
-        let wd = L!("test/is_potential_path_test/").to_owned();
-        let wds = [L!(".").to_owned(), wd];
+        let wd = L!("test/is_potential_path_test/");
+        let wds = [L!("."), wd];
 
         let vars = EnvStack::new();
         let ctx = OperationContext::background(&vars, EXPANSION_LIMIT_DEFAULT);

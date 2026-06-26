@@ -224,10 +224,10 @@ impl<'src, 'wd, 'opctx> FileTester<'src, 'wd, 'opctx> {
 /// cdpath). This does I/O!
 ///
 /// We expect the path to already be unescaped.
-pub fn is_potential_path<S: AsRef<wstr>>(
+pub fn is_potential_path(
     potential_path_fragment: &wstr,
     at_cursor: bool,
-    directories: &[S],
+    directories: &[&wstr],
     ctx: &OperationContext<'_>,
     flags: PathFlags,
 ) -> bool {
@@ -280,7 +280,6 @@ pub fn is_potential_path<S: AsRef<wstr>>(
     let mut case_sensitivity_cache = CaseSensitivityCache::new();
 
     for wd in directories {
-        let wd = wd.as_ref();
         if ctx.check_cancel() {
             return false;
         }
@@ -360,27 +359,36 @@ pub fn is_potential_cd_path(
     mut flags: PathFlags,
 ) -> bool {
     let mut directories = vec![];
+    let mut storage = vec![];
 
     if string_prefixes_string(L!("./"), path) {
         // Ignore the CDPATH in this case; just use the working directory.
-        directories.push(working_directory.to_owned());
+        directories.push(working_directory);
     } else {
-        // Get the CDPATH.
-        let cdpath = ctx.vars().get_unless_empty(L!("CDPATH"));
-        let mut pathsv = match cdpath {
-            None => vec![L!(".").to_owned()],
-            Some(cdpath) => cdpath.as_list().to_vec(),
-        };
-        // The current $PWD is always valid.
-        pathsv.push(L!(".").to_owned());
-
-        for mut next_path in pathsv {
-            if next_path.is_empty() {
-                next_path = L!(".").to_owned();
-            }
+        fn add_path(storage: &mut Vec<WString>, working_directory: &wstr, next_path: &wstr) {
             // Ensure that we use the working directory for relative cdpaths like ".".
-            directories.push(path_apply_working_directory(&next_path, working_directory));
+            storage.push(path_apply_working_directory(next_path, working_directory));
         }
+
+        // Get the CDPATH.
+        let mut have_curdir = false;
+        if let Some(cdpath) = ctx.vars().get_unless_empty(L!("CDPATH")) {
+            for next_path in cdpath.as_list() {
+                let mut next_path = next_path.as_utfstr();
+                if next_path.is_empty() {
+                    next_path = L!(".");
+                }
+                if next_path == L!(".") {
+                    have_curdir = true;
+                }
+                add_path(&mut storage, working_directory, next_path);
+            }
+        }
+        // The current $PWD is always valid.
+        if !have_curdir {
+            add_path(&mut storage, working_directory, L!("."));
+        }
+        directories = storage.iter().map(|s| s.as_utfstr()).collect();
     }
 
     // Call is_potential_path with all of these directories.

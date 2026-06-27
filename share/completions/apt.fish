@@ -9,15 +9,46 @@ end
 set -l all_subcmds update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove autopurge depends rdepends why-not satisfy history-list history-rollback history-info history-redo history-undo help
 
 # subcommands that take a package name as an argument
-set -l pkg_subcmds install upgrade full-upgrade show search changelog policy depends rdepends why-not # why-not subcmd makes more sense with only non installed packages, but figuring out how to list those is left as an exercise to the reader
+set -l pkg_subcmds \
+    changelog \
+    depends \
+    full-upgrade \
+    install \
+    policy \
+    rdepends \
+    search \
+    show \
+    upgrade \
+    why-not # why-not subcmd makes more sense with only non installed packages, but figuring out how to list those is left as an exercise to the reader
+
 # subcommands that take a package name as an argument but cannot or don't make sense to operate on non insatlled packages, should be mutually exclusive with the above list
-set -l installed_pkg_subcmds reinstall purge remove autoremove autopurge why
+set -l installed_pkg_subcmds \
+    autopurge \
+    autoremove \
+    purge \
+    reinstall \
+    remove \
+    why
 
 # subcommands to suggest loose .deb files (that are present in the CWD) in the completions
 set -l handle_file_pkg_subcmds install
 
 # sub commands that all seem to be inherited from apt-get and share common options, although some combinations of them seems questionable, e.g remove --download-only
-set -l option_group1 install remove purge upgrade full-upgrade dist-upgrade source build-dep reinstall satisfy clean distclean autoremove autopurge
+set -l option_group1 \
+    autopurge \
+    autoremove \
+    build-dep \
+    clean \
+    dist-upgrade \
+    distclean \
+    full-upgrade \
+    install \
+    purge \
+    reinstall \
+    remove \
+    satisfy \
+    source \
+    upgrade
 
 function __fish_apt_subcommand -V all_subcmds
     set -l subcommand $argv[1]
@@ -47,7 +78,8 @@ function __fish_apt_list_repos
         set -a repos (cat $lists | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1')
     end
 
-    # New format of apt sources, the old one and the new one may coexist in a given system
+    # New format of apt sources (https://wiki.debian.org/SourcesList https://manpages.debian.org/trixie/dpkg-dev/deb822.5.en.html)
+    # The old one and the new one may coexist in a given system
     # TODO for the given input `Suites: sid experimental` this line doesn't work properly
     set -a repos (cat (find /etc/apt/sources.list.d/ -name "*.sources") | string replace -rf '^Suites: +([^ ]+)' '$1')
 

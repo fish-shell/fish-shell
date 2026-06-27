@@ -15,6 +15,8 @@ Description
 
 ``not`` negates the exit status of another command. If the exit status is zero, ``not`` returns 1. Otherwise, ``not`` returns 0.
 
+In order to make it possible for the original status of the command to be recovered, ``not`` does not affect the ``$pipestatus`` environment variable. It only affects ``$status``.
+
 Some other shells only support the ``!`` alias.
 
 The **-h** or **--help** option displays help about using this command.

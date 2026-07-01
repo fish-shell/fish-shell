@@ -43,7 +43,12 @@ function __fish_guile__complete_srfis
         98\t'Accessing environment variables' \
         105\t'Curly-infix expressions' \
         111\t'Boxes' \
-        119\t'Wisp: simpler indentation-sensitive Scheme'
+        119\t'Wisp: simpler indentation-sensitive Scheme' \
+        171\t'Transducers' \
+        197\t'Pipeline Operators' \
+        207\t'String-notated bytevectors' \
+        235\t'Combinators' \
+        244\t'Multiple-value Definitions'
 end
 
 function __fish_guile__complete_function_names
@@ -58,12 +63,11 @@ function __fish_guile__complete_function_names
 end
 
 set -l command guile
-complete -c $command -f
 
 complete -c $command -s h -l help -d 'Show help'
 complete -c $command -s v -l version -d 'Show version'
-complete -c $command -s s -F -r -d 'Specify the script to run'
-complete -c $command -s c -x -d 'Specify the code to run'
+complete -c $command -s s -F -r -d 'Load source code from FILE and exit'
+complete -c $command -s c -x -d 'Evaluate expression EXPR and exit'
 
 complete -c $command -s L -F -r \
     -d 'Specify the directory to prepend to module load path'
@@ -75,7 +79,7 @@ complete -c $command -s x -x \
     -a '.scm\tdefault' \
     -d 'Specify the extension to prepend to extension list'
 
-complete -c $command -s l -F -r -d 'Specify the script to load'
+complete -c $command -s l -F -r -d 'Load source code from FILE'
 
 complete -c $command -s e -x \
     -a '(__fish_guile__complete_function_names)' \
@@ -89,7 +93,7 @@ complete -c $command -l use-srfi \
     -d 'Specify the SRFI modules to load'
 
 for standard in 6 7
-    set -l option r$standard"rc"
+    set -l option r$standard"rs"
 
     complete -c $command -l $option \
         -d "Use $(string upper -- $option) compatible mode"
@@ -101,7 +105,7 @@ complete -c $command -s q -d "Don't load .guile file"
 
 complete -c $command -l listen \
     -a '37146\tdefault' \
-    -d 'Specify the port to list to'
+    -d 'Specify the port to listen on'
 
 complete -c $command -l auto-compile -d 'Compile scripts automatically'
 
@@ -109,6 +113,8 @@ complete -c $command -l fresh-auto-compile \
     -d 'Compile scripts automatically forcefully'
 
 complete -c $command -l no-auto-compile -d "Don't compile scripts automatically"
+
+complete -c $command -l statprof -d 'Profile using statprof and show results in STYLE'
 
 complete -c $command -l language \
     -a 'scheme\tdefault elisp ecmascript' \

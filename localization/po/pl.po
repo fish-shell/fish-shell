@@ -25358,6 +25358,9 @@ msgstr ""
 msgid "Evaluate expr on nvim server specified with --server"
 msgstr ""
 
+msgid "Evaluate expression EXPR and exit"
+msgstr ""
+
 msgid "Evaluate indexing information for path"
 msgstr ""
 
@@ -36797,6 +36800,12 @@ msgstr ""
 msgid "Load settings from all system configuration files"
 msgstr ""
 
+msgid "Load source code from FILE"
+msgstr ""
+
+msgid "Load source code from FILE and exit"
+msgstr ""
+
 msgid "Load stylesheet from Nmap.Org"
 msgstr ""
 
@@ -47241,6 +47250,9 @@ msgid "Profile stack usage"
 msgstr ""
 
 msgid "Profile startup execution time"
+msgstr ""
+
+msgid "Profile using statprof and show results in STYLE"
 msgstr ""
 
 msgid "Profiles the given file or expression with fprof"
@@ -63953,9 +63965,6 @@ msgstr ""
 msgid "Specify the code page for source code files"
 msgstr ""
 
-msgid "Specify the code to run"
-msgstr ""
-
 msgid "Specify the codepage used to read source files"
 msgstr ""
 
@@ -64233,12 +64242,6 @@ msgid "Specify the rsync to run on remote machine"
 msgstr ""
 
 msgid "Specify the scope of the search"
-msgstr ""
-
-msgid "Specify the script to load"
-msgstr ""
-
-msgid "Specify the script to run"
 msgstr ""
 
 msgid "Specify the selection in a view"

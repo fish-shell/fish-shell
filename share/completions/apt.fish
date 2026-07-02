@@ -74,16 +74,15 @@ function __fish_apt_list_repos
     end
 
     set -l lists (find /etc/apt/sources.list.d/ -name "*.list")
-    if test -n $lists
+    if test -n "$lists"
         set -a repos (cat $lists | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1')
     end
 
     # New format of apt sources (https://wiki.debian.org/SourcesList https://manpages.debian.org/trixie/dpkg-dev/deb822.5.en.html)
     # The old one and the new one may coexist in a given system
-    # TODO for the given input `Suites: sid experimental` this line doesn't work properly
-    set -a repos (cat (find /etc/apt/sources.list.d/ -name "*.sources") | string replace -rf '^Suites: +([^ ]+)' '$1')
+    set -a repos (cat (find /etc/apt/sources.list.d/ -name "*.sources") | string replace -rf '^Suites: +(.*)' '$1') | string replace --all ' ' ''
 
-    echo $repos | string replace ' ' '
+    echo $repos | string replace --all ' ' '
 ' | sort -u
 end
 

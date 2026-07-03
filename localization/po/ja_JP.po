@@ -27216,6 +27216,9 @@ msgstr ""
 msgid "Fix zipfile (try harder)"
 msgstr ""
 
+msgid "Fixup a commit"
+msgstr ""
+
 msgid "Fixup commit to be used with rebase --autosquash"
 msgstr ""
 
@@ -40726,6 +40729,9 @@ msgid "Open docs for a package in a web browser"
 msgstr ""
 
 msgid "Open editor"
+msgstr ""
+
+msgid "Open editor to modify commit message"
 msgstr ""
 
 msgid "Open extension preferences"

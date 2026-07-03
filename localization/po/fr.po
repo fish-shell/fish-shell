@@ -27342,6 +27342,9 @@ msgstr "Réparer l’archive"
 msgid "Fix zipfile (try harder)"
 msgstr "Réparer l’archive en essayant davantage"
 
+msgid "Fixup a commit"
+msgstr ""
+
 msgid "Fixup commit to be used with rebase --autosquash"
 msgstr "Préparer la validation à utiliser avec rebase --autosquash"
 
@@ -40852,6 +40855,9 @@ msgid "Open docs for a package in a web browser"
 msgstr ""
 
 msgid "Open editor"
+msgstr ""
+
+msgid "Open editor to modify commit message"
 msgstr ""
 
 msgid "Open extension preferences"

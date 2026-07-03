@@ -62,7 +62,7 @@ The following options are available:
 **-i** or **--italics**, or **-iSTATE** or **--italics=STATE**
     Sets italics mode. The state can be **on** (default), or **off**.
 
-**-r** or **--reverse**, or **-iSTATE** or **--reverse=STATE**
+**-r** or **--reverse**, or **-rSTATE** or **--reverse=STATE**
     Sets reverse mode. The state can be **on** (default), or **off**.
 
 **-s** or **--strikethrough**, or **-sSTATE** or **--strikethrough=STATE**

@@ -5,6 +5,10 @@ Interactive improvements
 ------------------------
 - Builtin and function commands can now be colored separately via new variables :envvar:`fish_color_builtin` and :envvar:`fish_color_function` (:issue:`12837`).
 
+Scripting improvements
+----------------------
+- Expanded variable values containing ``]`` are no longer treated as closing array index brackets (:issue:`12819`).
+
 Regression fixes:
 -----------------
 - ``abbr --position=anywhere`` completions are no longer offered in argument position, to avoid cluttering the completion pager (:issue:`12838`).

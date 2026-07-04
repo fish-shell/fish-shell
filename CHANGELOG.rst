@@ -8,6 +8,7 @@ Interactive improvements
 Regression fixes:
 -----------------
 - ``abbr --position=anywhere`` completions are no longer offered in argument position, to avoid cluttering the completion pager (:issue:`12838`).
+- ``pacman -Q`` short option completions (:issue:`12857`).
 
 fish 4.8.0 (released June 24, 2026)
 ===================================

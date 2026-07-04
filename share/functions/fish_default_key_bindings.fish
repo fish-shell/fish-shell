@@ -13,10 +13,6 @@ function fish_default_key_bindings -d "emacs-like key binds"
         end
     end
 
-    function __fish_per_os_bind
-        eval "$(__fish_per_os_bind_body)"
-    end
-
     # These are shell-specific bindings that we share with vi mode.
     eval "$(__fish_shared_key_bindings)" $argv
     or return # protect against invalid $argv
@@ -50,12 +46,11 @@ function fish_default_key_bindings -d "emacs-like key binds"
 
     bind --preset $argv alt-c capitalize-word
 
-    __fish_per_os_bind --preset $argv alt-backspace backward-kill-word backward-kill-token
-    __fish_per_os_bind --preset $argv ctrl-alt-h backward-kill-word backward-kill-token
-    __fish_per_os_bind --preset $argv ctrl-backspace backward-kill-token backward-kill-word
-    __fish_per_os_bind --preset $argv alt-delete kill-word kill-token
-    __fish_per_os_bind --preset $argv ctrl-delete kill-token kill-word
-    functions --erase __fish_per_os_bind
+    bind --preset $argv alt-backspace backward-kill-word
+    bind --preset $argv ctrl-alt-h backward-kill-word
+    bind --preset $argv ctrl-backspace backward-kill-token
+    bind --preset $argv alt-delete kill-word
+    bind --preset $argv ctrl-delete kill-token
 
     bind --preset $argv alt-\< beginning-of-buffer
     bind --preset $argv alt-\> end-of-buffer

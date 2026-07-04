@@ -3,6 +3,7 @@ function __fish_shared_key_bindings -d "Prints function body for bindings shared
     # These are some bindings that are supposed to be shared between vi mode and default mode.
     # They are supposed to be unrelated to text-editing (or movement).
     # This takes $argv so the vi-bindings can pass the mode they are valid in.
+    # The code is printed instead of executed so that `bind` attributes the bindings to the caller.
     printf %s '
 if contains -- -h $argv
     or contains -- --help $argv
@@ -18,8 +19,8 @@ bind --preset $argv right forward-char
 bind --preset $argv left backward-char
 
  # Ctrl-left/right - these also work in vim.
-__fish_per_os_bind --preset $argv ctrl-right forward-token forward-word
-__fish_per_os_bind --preset $argv ctrl-left backward-token backward-word
+bind --preset $argv ctrl-right forward-token
+bind --preset $argv ctrl-left backward-token
 
 bind --preset $argv pageup beginning-of-history
 bind --preset $argv pagedown end-of-history
@@ -47,12 +48,10 @@ bind --preset $argv alt-b prevd-or-backward-word
 bind --preset $argv alt-f nextd-or-forward-word
 
 for alt_right in alt-right \e\[1\;9C  # TODO(terminal-workaround) iTerm2 < 3.5.12
-    __fish_per_os_bind --preset $argv $alt_right \
-        nextd-or-forward-word nextd-or-forward-token
+    bind --preset $argv $alt_right nextd-or-forward-word
 end
 for alt_left in alt-left \e\[1\;9D  # TODO(terminal-workaround) iTerm2 < 3.5.12
-    __fish_per_os_bind --preset $argv $alt_left \
-        prevd-or-backward-word prevd-or-backward-token
+    bind --preset $argv $alt_left prevd-or-backward-word
 end
 
 bind --preset $argv alt-up history-token-search-backward

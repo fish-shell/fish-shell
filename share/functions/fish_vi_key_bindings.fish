@@ -327,19 +327,13 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     function __fish_vi_key_bindings_shared
         eval "$(__fish_shared_key_bindings)"
     end
-    function __fish_per_os_bind
-        eval "$(__fish_per_os_bind_body)"
-    end
 
     # Inherit shared key bindings.
     # Do this first so vi-bindings win over default.
     for mode in insert default visual
         __fish_vi_key_bindings_shared -M $mode
-        __fish_per_os_bind --preset -M $mode ctrl-right forward-token forward-word-vi
-        # ctrl-left is same as emacs mode
     end
     functions -e __fish_vi_key_bindings_shared
-    functions -e __fish_per_os_bind
 
     # Add a way to switch from insert to normal (command) mode.
     # Note if we are paging, we want to stay in insert mode

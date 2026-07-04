@@ -5175,6 +5175,9 @@ msgstr ""
 msgid "Activate a home area"
 msgstr ""
 
+msgid "Activate a state"
+msgstr ""
+
 msgid "Activate accessibility mode, reducing visual noise [env: ACCESSIBLE=]"
 msgstr ""
 
@@ -5533,6 +5536,9 @@ msgid "Add a range of subordinate uids to the user's account"
 msgstr ""
 
 msgid "Add a registry user account"
+msgstr ""
+
+msgid "Add a repository for the system"
 msgstr ""
 
 msgid "Add a rule to chain in table"
@@ -8328,6 +8334,9 @@ msgstr ""
 msgid "Assume words in wordlist are given in hex"
 msgstr ""
 
+msgid "Assume yes for all questions"
+msgstr ""
+
 msgid "Assume yes for all yes/no queries"
 msgstr ""
 
@@ -9168,6 +9177,9 @@ msgstr ""
 msgid "Blinking cursor will be on for that many milliseconds"
 msgstr ""
 
+msgid "Blit this sync to the provided directory instead of the root"
+msgstr ""
+
 msgid "Block an account"
 msgstr ""
 
@@ -9223,6 +9235,9 @@ msgid "Boot into a specific boot loader entry on next boot"
 msgstr ""
 
 msgid "Boot into boot loader menu on next boot"
+msgstr ""
+
+msgid "Boot management"
 msgstr ""
 
 msgid "Boot manager display label (Default: Linux)"
@@ -10831,6 +10846,9 @@ msgid "Check the given version strings"
 msgstr ""
 
 msgid "Check the integrity of installed packages (through checksums)"
+msgstr ""
+
+msgid "Check the integrity of the stone file(s)"
 msgstr ""
 
 msgid "Check the repository related to the current directory"
@@ -15915,6 +15933,9 @@ msgstr ""
 msgid "Directory to cd into before running"
 msgstr ""
 
+msgid "Directory to extract the stone(s) to"
+msgstr ""
+
 msgid "Directory to install packages into"
 msgstr ""
 
@@ -15949,6 +15970,9 @@ msgid "Directory to write logs to"
 msgstr ""
 
 msgid "Directory to write scripts"
+msgstr ""
+
+msgid "Directory to write the stone.index"
 msgstr ""
 
 msgid "Directory where conversion result will be written"
@@ -16957,6 +16981,9 @@ msgid "Disable the string normalize extension"
 msgstr ""
 
 msgid "Disable the syscall filtering"
+msgstr ""
+
+msgid "Disable the system repositories"
 msgstr ""
 
 msgid "Disable the systemd unit for a profile"
@@ -20412,6 +20439,9 @@ msgstr ""
 msgid "Do not run the pre-push hook"
 msgstr ""
 
+msgid "Do not run triggers on activation"
+msgstr ""
+
 msgid "Do not run unit tests"
 msgstr ""
 
@@ -20614,6 +20644,9 @@ msgid "Do not strip executables"
 msgstr ""
 
 msgid "Do not sync before getting usage info"
+msgstr ""
+
+msgid "Do not sync boot on activation"
 msgstr ""
 
 msgid "Do not sync modification time of files"
@@ -24591,6 +24624,9 @@ msgstr ""
 msgid "Enable the repository"
 msgstr ""
 
+msgid "Enable the system repositories"
+msgstr ""
+
 msgid "Enable the systemd unit for a profile"
 msgstr ""
 
@@ -25377,6 +25413,9 @@ msgstr ""
 msgid "Examine property updates forever"
 msgstr ""
 
+msgid "Examine raw stone files"
+msgstr ""
+
 msgid "Exchange primary and secondary selections"
 msgstr ""
 
@@ -26040,6 +26079,9 @@ msgstr ""
 msgid "Export a pool"
 msgstr ""
 
+msgid "Export a state as a system-model.kdl file"
+msgstr ""
+
 msgid "Export all defined repositories as a single local .repo file"
 msgstr ""
 
@@ -26121,6 +26163,9 @@ msgstr ""
 msgid "Export the local changeset to a file"
 msgstr ""
 
+msgid "Export to the provided path"
+msgstr ""
+
 msgid "Export variable to file"
 msgstr ""
 
@@ -26146,6 +26191,9 @@ msgid "Extra action triggered with number key "
 msgstr ""
 
 msgid "Extra full format"
+msgstr ""
+
+msgid "Extract a `.stone` content to disk"
 msgstr ""
 
 msgid "Extract a resource"
@@ -26404,6 +26452,9 @@ msgid "Fetch logs from instance(s)"
 msgstr ""
 
 msgid "Fetch package from STDIN"
+msgstr ""
+
+msgid "Fetch package(s)"
 msgstr ""
 
 msgid "Fetch source package from STDIN"
@@ -32124,6 +32175,9 @@ msgstr ""
 msgid "Include special symbols in the output"
 msgstr ""
 
+msgid "Include states newer than the active state when pruning"
+msgstr ""
+
 msgid "Include statistics in output"
 msgstr ""
 
@@ -32263,6 +32317,9 @@ msgid "Indent lisp source."
 msgstr ""
 
 msgid "Indent w/ tabs instead of spaces"
+msgstr ""
+
+msgid "Index a collection of packages"
 msgstr ""
 
 msgid "Index from 1 instead of 0"
@@ -33483,6 +33540,9 @@ msgstr ""
 msgid "Keep the right end of the line visible on overflow"
 msgstr ""
 
+msgid "Keep this many states"
+msgstr ""
+
 msgid "Keep unmerged changes"
 msgstr ""
 
@@ -34521,6 +34581,9 @@ msgstr ""
 msgid "List all installed modules and their versions"
 msgstr ""
 
+msgid "List all installed packages"
+msgstr ""
+
 msgid "List all installed, non-relocatable schemas"
 msgstr ""
 
@@ -34669,6 +34732,9 @@ msgid "List all stacks (stack is a pre-built file system, including an OS, to ru
 msgstr ""
 
 msgid "List all stashes"
+msgstr ""
+
+msgid "List all states"
 msgstr ""
 
 msgid "List all supported MIME types"
@@ -35158,6 +35224,9 @@ msgid "List existing rbenv shims"
 msgstr ""
 
 msgid "List exit statuses along with their class"
+msgstr ""
+
+msgid "List explicit packages only"
 msgstr ""
 
 msgid "List extensions"
@@ -35793,6 +35862,9 @@ msgstr ""
 msgid "List packages with newer versions available for upgrading"
 msgstr ""
 
+msgid "List packages with sync changes"
+msgstr ""
+
 msgid "List packages with updates available"
 msgstr ""
 
@@ -36090,6 +36162,9 @@ msgstr ""
 msgid "List system calls contained in the specified system call set"
 msgstr ""
 
+msgid "List system software repositories"
+msgstr ""
+
 msgid "List table (default)"
 msgstr ""
 
@@ -36115,6 +36190,9 @@ msgid "List teams or team members"
 msgstr ""
 
 msgid "List templates containing the specified name"
+msgstr ""
+
+msgid "List the active state"
 msgstr ""
 
 msgid "List the allowed and forbidden commands for the given user"
@@ -37077,6 +37155,9 @@ msgstr ""
 msgid "Logger to use for test results"
 msgstr ""
 
+msgid "Logging configuration"
+msgstr ""
+
 msgid "Logging target"
 msgstr ""
 
@@ -37620,6 +37701,9 @@ msgstr ""
 msgid "Manage boxes: installation, removal, etc."
 msgstr ""
 
+msgid "Manage cached data"
+msgstr ""
+
 msgid "Manage cluster(s)"
 msgstr ""
 
@@ -37710,10 +37794,16 @@ msgstr ""
 msgid "Manage settings"
 msgstr ""
 
+msgid "Manage software repositories"
+msgstr ""
+
 msgid "Manage stack configuration"
 msgstr ""
 
 msgid "Manage stashes"
+msgstr ""
+
+msgid "Manage state"
 msgstr ""
 
 msgid "Manage subprojects"
@@ -40495,6 +40585,9 @@ msgid "Only store the channel as the default one and then exit"
 msgstr ""
 
 msgid "Only strip bracket pairs containing 'PATCH'"
+msgstr ""
+
+msgid "Only sync packages that have a version upgrade"
 msgstr ""
 
 msgid "Only this package's library"
@@ -46272,6 +46365,9 @@ msgstr ""
 msgid "Print this message and exit."
 msgstr ""
 
+msgid "Print this message or the help of the given subcommand(s)"
+msgstr ""
+
 msgid "Print this usage information"
 msgstr ""
 
@@ -46560,6 +46656,9 @@ msgstr ""
 msgid "Prints a summary of your setup, useful for bug-reports"
 msgstr ""
 
+msgid "Prints additional information about what moss is doing"
+msgstr ""
+
 msgid "Prints all routes"
 msgstr ""
 
@@ -46819,6 +46918,9 @@ msgid "Prints version and exit"
 msgstr ""
 
 msgid "Prints version information"
+msgstr ""
+
+msgid "Prints version information about the binary"
 msgstr ""
 
 msgid "Prints version of mddiagnose"
@@ -47445,6 +47547,12 @@ msgstr ""
 msgid "Prune all unreachable objects from the object database"
 msgstr ""
 
+msgid "Prune archived states"
+msgstr ""
+
+msgid "Prune cached artefacts"
+msgstr ""
+
 msgid "Prune empty directories from the output"
 msgstr ""
 
@@ -47748,6 +47856,9 @@ msgstr ""
 msgid "Query information"
 msgstr ""
 
+msgid "Query information for a state"
+msgstr ""
+
 msgid "Query information for remote repositories"
 msgstr ""
 
@@ -47782,6 +47893,9 @@ msgid "Query package that contains a given package identifier"
 msgstr ""
 
 msgid "Query package(s) that have the specified TID (transaction identifier)"
+msgstr ""
+
+msgid "Query packages"
 msgstr ""
 
 msgid "Query packages recursively"
@@ -49515,6 +49629,9 @@ msgstr ""
 msgid "Remove a range of subordinate uids from the user's account"
 msgstr ""
 
+msgid "Remove a repository for the system"
+msgstr ""
+
 msgid "Remove a rule from chain in table"
 msgstr ""
 
@@ -49702,6 +49819,9 @@ msgid "Remove any cached packages which can no longer be downloaded"
 msgstr ""
 
 msgid "Remove any matching versionlock entries"
+msgstr ""
+
+msgid "Remove archived state(s)"
 msgstr ""
 
 msgid "Remove artifacts that cargo has generated in the past"
@@ -50944,6 +51064,9 @@ msgid "Reports whether SSH is allowed in a space"
 msgstr ""
 
 msgid "Reports whether SSH is enabled on an application container instance"
+msgstr ""
+
+msgid "Repository priority"
 msgstr ""
 
 msgid "Repository to be added to the top of the list."
@@ -52219,6 +52342,9 @@ msgid "Rollback the latest self-update"
 msgstr ""
 
 msgid "Rollback to previous saved configuration created via iface-begin"
+msgstr ""
+
+msgid "Root directory"
 msgstr ""
 
 msgid "Root filesystem mountpoint"
@@ -53859,6 +53985,9 @@ msgstr ""
 msgid "Search also in untracked files"
 msgstr ""
 
+msgid "Search among installed packages only"
+msgstr ""
+
 msgid "Search an update for devel packages"
 msgstr ""
 
@@ -53896,6 +54025,9 @@ msgid "Search documentation"
 msgstr ""
 
 msgid "Search ebuilds for <string>. Use `%<string>` for regex"
+msgstr ""
+
+msgid "Search files"
 msgstr ""
 
 msgid "Search files according to the specified search mask"
@@ -53980,6 +54112,9 @@ msgid "Search for packages"
 msgstr ""
 
 msgid "Search for packages by matching PATTERN on pkgver or short_desc"
+msgstr ""
+
+msgid "Search for packages by provider"
 msgstr ""
 
 msgid "Search for packages containing file"
@@ -54115,6 +54250,9 @@ msgid "Search packagename by REGEX"
 msgstr ""
 
 msgid "Search packagename only"
+msgstr ""
+
+msgid "Search packages"
 msgstr ""
 
 msgid "Search packages by maintainer instead of name (AUR only)"
@@ -56844,6 +56982,9 @@ msgstr ""
 msgid "Set the color of a flag"
 msgstr ""
 
+msgid "Set the comment for the repository"
+msgstr ""
+
 msgid "Set the commit message"
 msgstr ""
 
@@ -58993,6 +59134,9 @@ msgid "Show files from date."
 msgstr ""
 
 msgid "Show files on the filesystem that need to be removed for checkout-index to succeed"
+msgstr ""
+
+msgid "Show files provided by package"
 msgstr ""
 
 msgid "Show files that aren't part of checkout"
@@ -61314,7 +61458,13 @@ msgstr ""
 msgid "Simulate motion blur [geometry]"
 msgstr ""
 
+msgid "Simulate the operation (dry-run)"
+msgstr ""
+
 msgid "Simulate the requested operation"
+msgstr ""
+
+msgid "Simulate the sync (dry-run)"
 msgstr ""
 
 msgid "Simulate, send no signals"
@@ -64875,6 +65025,9 @@ msgstr ""
 msgid "Stats per device (-B only)"
 msgstr ""
 
+msgid "Status of boot configuration"
+msgstr ""
+
 msgid "Stay in local filesystem"
 msgstr ""
 
@@ -65646,6 +65799,9 @@ msgstr ""
 msgid "Suppress output when executed less than specified times"
 msgstr ""
 
+msgid "Suppress output, only exit status indicates success or failure (requires --check)"
+msgstr ""
+
 msgid "Suppress printing any news from the game administrator"
 msgstr ""
 
@@ -65856,6 +66012,9 @@ msgstr ""
 msgid "Symlink instead of renaming"
 msgstr ""
 
+msgid "Sync against the provided system-model.kdl"
+msgstr ""
+
 msgid "Sync all repos that have a sync-url defined"
 msgstr ""
 
@@ -65866,6 +66025,9 @@ msgid "Sync before getting usage info"
 msgstr ""
 
 msgid "Sync blobs"
+msgstr ""
+
+msgid "Sync packages"
 msgstr ""
 
 msgid "Sync packages installed"
@@ -65902,6 +66064,9 @@ msgid "Synchronize X server commands"
 msgstr ""
 
 msgid "Synchronize a directory tree to S3"
+msgstr ""
+
+msgid "Synchronize boot configuration"
 msgstr ""
 
 msgid "Synchronize image to storage device"
@@ -69120,6 +69285,9 @@ msgstr ""
 msgid "Update remote state from local state"
 msgstr ""
 
+msgid "Update repositories before syncing"
+msgstr ""
+
 msgid "Update repositories. Use without arguments to update all autosync repos"
 msgstr ""
 
@@ -69214,6 +69382,9 @@ msgid "Update the specified backend or all backends"
 msgstr ""
 
 msgid "Update the system dconf databases"
+msgstr ""
+
+msgid "Update the system repositories"
 msgstr ""
 
 msgid "Update the trustdb with the ownertrust values stored in specified files or stdin"
@@ -72160,6 +72331,9 @@ msgid "Verify a signed NuGet package"
 msgstr ""
 
 msgid "Verify and commit firmware to a specific slot"
+msgstr ""
+
+msgid "Verify and fix system states and assets"
 msgstr ""
 
 msgid "Verify archive"

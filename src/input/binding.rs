@@ -213,6 +213,7 @@ define_readline_cmds! {
     ("complete-and-search", CompleteAndSearch),
     ("delete-char", DeleteChar),
     ("delete-or-exit", DeleteOrExit),
+    ("delete-selection", DeleteSelection),
     ("down-line", DownLine),
     ("downcase-selection", DowncaseSelection),
     ("downcase-word", DowncaseWord),

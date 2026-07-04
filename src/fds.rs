@@ -43,7 +43,17 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
     #[allow(unused_mut, unused_assignments)]
     let mut already_cloexec = false;
     cfg_if!(
-        if #[cfg(have_pipe2)] {
+        // Use pipe2 where nix exposes it.
+        // Do not use on Apple targets: macOS 27 introduces pipe2 (so the symbol exists)
+        // but macOS builds need to support older macOS versions.
+        if #[cfg(any(
+            target_os = "linux",
+            target_os = "android",
+            bsd,
+            cygwin,
+            target_os = "solaris",
+            target_os = "illumos",
+        ))] {
             let pipes = match nix::unistd::pipe2(OFlag::O_CLOEXEC) {
                 Ok(pipes) => {
                     already_cloexec = true;

@@ -82,7 +82,6 @@ fn detect_cfgs(target: &mut Target) {
         ("have_localeconv_l", &|target| {
             target.has_symbol("localeconv_l")
         }),
-        ("have_pipe2", &|target| target.has_symbol("pipe2")),
         ("have_posix_spawn", &|target| {
             if matches!(target_os().as_str(), "openbsd" | "android") {
                 // OpenBSD's posix_spawn returns status 127 instead of erroring with ENOEXEC when faced with a

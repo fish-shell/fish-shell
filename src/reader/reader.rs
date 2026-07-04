@@ -3353,6 +3353,10 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::Yank => {
+                // Yanking over a selection replaces it, like typing does.
+                if self.active_edit_line_tag() == EditableLineTag::Commandline {
+                    self.replace_selection();
+                }
                 let yank_str = kill_yank();
                 self.data
                     .insert_string(self.active_edit_line_tag(), &yank_str);
@@ -4216,6 +4220,11 @@ impl<'a> Reader<'a> {
                 if self.is_at_end() {
                     self.update_buff_pos(self.active_edit_line_tag(), None);
                 }
+            }
+            rl::DeleteSelection => {
+                // Erase the selection without touching the kill ring, so scripts (like
+                // __fish_paste) can replace the selection the same way typing does.
+                self.replace_selection();
             }
             rl::InsertLineOver => {
                 let elt = loop {

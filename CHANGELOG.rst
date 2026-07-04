@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 Interactive improvements
 ------------------------
 - Builtin and function commands can now be colored separately via new variables :envvar:`fish_color_builtin` and :envvar:`fish_color_function` (:issue:`12837`).
+- On non-macOS platforms, :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of tokens (:issue:`12122`) eliminating cross-platform differences in input handling.
 
 Regression fixes:
 -----------------
@@ -144,7 +145,6 @@ Other improvements
 - For compatibility with Bash, fish now accepts ``|&`` as alternate spelling of ``&|``, for piping both standard output and standard error (:issue:`11516`).
 - ``fish_indent`` now preserves comments and newlines immediately preceding a brace block (``{ }``) (:issue:`12505`).
 - A crash when suspending certain pipelines with :kbd:`ctrl-z` has been fixed (:issue:`12301`).
-- On non-macOS platforms, :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of tokens (:issue:`12122`) eliminating cross-platform differences in input handling.
 
 For distributors and developers
 -------------------------------

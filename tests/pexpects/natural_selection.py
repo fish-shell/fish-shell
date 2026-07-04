@@ -99,3 +99,21 @@ expect_prompt()
 sendline("echo" + home + delete + dump_buf)  # deletes leading 'e'
 expect_str("B:<cho>")
 expect_prompt()
+
+# ---- pasting replaces the selection (__fish_paste goes through delete-selection) ----
+sendline("bind '%' '__fish_paste PASTED'")
+expect_prompt()
+sendline("echo abcd" + s_left + s_left + "%" + dump_buf)
+expect_str("B:<echo abPASTED>")
+expect_prompt()
+# ...and still inserts normally with no selection.
+sendline("echo ab" + "%" + dump_buf)
+expect_str("B:<echo abPASTED>")
+expect_prompt()
+
+# ---- yank replaces the selection ----
+# alt-backspace kills "XX" into the killring, leaving "echo abcd "; then select the
+# trailing "d " and yank over it.
+sendline("echo abcd XX" + "\x1b\x7f" + s_left + s_left + "\x19" + dump_buf)
+expect_str("B:<echo abcXX>")
+expect_prompt()

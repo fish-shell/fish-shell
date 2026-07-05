@@ -39,6 +39,7 @@ cmds/fish_clipboard_copy
 cmds/fish_clipboard_paste
 cmds/fish_command_not_found
 cmds/fish_config
+cmds/fish_darcs_prompt
 cmds/fish_default_key_bindings
 cmds/fish_delta
 cmds/fish_git_prompt

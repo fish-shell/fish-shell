@@ -671,21 +671,10 @@ abbr cat cat
 complete -C ca | string match -r '^cat(?:\t.*)?$'
 # CHECK: cat{{\t}}Abbreviation: cat
 
-# anywhere-position abbrs complete in non-command position
-abbr --position anywhere __test_pgr '| grep -i'
-complete -C'echo __test_pgr' | string match -r '^__test_pgr.*'
-# CHECK: __test_pgr{{\t}}Abbreviation: | grep -i
-
-# anywhere-position abbrs still complete in command position (regression guard)
-complete -C__test_pgr | string match -r '^__test_pgr.*'
-# CHECK: __test_pgr{{\t}}Abbreviation: | grep -i
-
-# command-position-only abbrs do NOT complete in non-command position
-abbr --position command __test_cmd_only 'git status'
-complete -C'echo __test_cmd' | string match -rq '^__test_cmd'
-echo $status
-# CHECK: 1
-abbr --erase __test_pgr __test_cmd_only
+touch somefile
+abbr --position anywhere gr '| grep -i'
+complete -C'rm '
+# CHECK: somefile
 
 complete complete-list -xa '(__fish_complete_list , "seq 2")'
 complete -C "complete-list 1,"

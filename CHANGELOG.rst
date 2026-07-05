@@ -1,12 +1,22 @@
 fish ?.?.? (released ???)
 =========================
 
+Interactive improvements
+------------------------
+- Builtin and function commands can now be colored separately via new variables :envvar:`fish_color_builtin` and :envvar:`fish_color_function` (:issue:`12837`).
+
+Regression fixes:
+-----------------
+- ``abbr --position=anywhere`` completions are no longer offered in argument position, to avoid cluttering the completion pager (:issue:`12838`).
+- ``pacman -Q`` short option completions (:issue:`12857`).
+
 fish 4.8.0 (released June 24, 2026)
 ===================================
 
 Notable improvements and fixes
 ------------------------------
 - Translatable messages defined in Rust source code can and should now be translated using `Fluent <https://projectfluent.org/>`__ instead of GNU gettext.
+  For now, GNU gettext continues to be used for translating messages defined in fish scripts.
   To make Fluent easy to work with, we have added tooling based on the new `fluent-ftl-tools <https://codeberg.org/danielrainer/fluent-ftl-tools>`__ library.
   See :ref:`Contributing Translations <localization>` (:issue:`11928`).
 
@@ -135,6 +145,7 @@ Other improvements
 - For compatibility with Bash, fish now accepts ``|&`` as alternate spelling of ``&|``, for piping both standard output and standard error (:issue:`11516`).
 - ``fish_indent`` now preserves comments and newlines immediately preceding a brace block (``{ }``) (:issue:`12505`).
 - A crash when suspending certain pipelines with :kbd:`ctrl-z` has been fixed (:issue:`12301`).
+- On non-macOS platforms, :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of tokens (:issue:`12122`) eliminating cross-platform differences in input handling.
 
 For distributors and developers
 -------------------------------

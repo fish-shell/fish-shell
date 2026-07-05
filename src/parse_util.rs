@@ -1331,8 +1331,8 @@ pub fn detect_errors_in_argument(
                     if src.len() == 2
                         && src[0] == '\\'
                         && (src[1] == 'c'
-                            || src[1].to_lowercase().eq(['u'])
-                            || src[1].to_lowercase().eq(['x']))
+                            || src[1].eq_ignore_ascii_case(&'u')
+                            || src[1].eq_ignore_ascii_case(&'x'))
                     {
                         append_syntax_error!(
                             out_errors,

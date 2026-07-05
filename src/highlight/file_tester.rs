@@ -22,19 +22,19 @@ use fish_widestring::{
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap, hash_map},
     os::fd::RawFd,
 };
 
 // This is used only internally to this file, and is exposed only for testing.
 #[derive(Clone, Copy, Default)]
-pub struct PathFlags {
+struct PathFlags {
     // The path must be to a directory.
-    pub require_dir: bool,
+    require_dir: bool,
     // Expand any leading tilde in the path.
-    pub expand_tilde: bool,
+    expand_tilde: bool,
     // Normalize directories before resolving, as "cd".
-    pub for_cd: bool,
+    for_cd: bool,
 }
 
 // When a file test is OK, we may also return whether this was a file.
@@ -48,15 +48,15 @@ pub struct IsErr;
 /// The result of a file test.
 pub type FileTestResult = Result<IsFile, IsErr>;
 
-pub struct FileTester<'src, 'opctx> {
+pub struct FileTester<'src, 'wd, 'opctx> {
     // The working directory, for resolving paths against.
-    working_directory: WString,
+    working_directory: &'wd wstr,
     // The operation context.
-    pub(super) ctx: &'opctx mut OperationContext<'src>,
+    pub ctx: &'opctx mut OperationContext<'src>,
 }
 
-impl<'src, 'opctx> FileTester<'src, 'opctx> {
-    pub fn new(working_directory: WString, ctx: &'opctx mut OperationContext<'src>) -> Self {
+impl<'src, 'wd, 'opctx> FileTester<'src, 'wd, 'opctx> {
+    pub fn new(working_directory: &'wd wstr, ctx: &'opctx mut OperationContext<'src>) -> Self {
         Self {
             working_directory,
             ctx,
@@ -110,7 +110,7 @@ impl<'src, 'opctx> FileTester<'src, 'opctx> {
         let valid_path = is_potential_cd_path(
             &param,
             is_prefix,
-            &self.working_directory,
+            self.working_directory,
             self.ctx,
             PathFlags {
                 expand_tilde: true,
@@ -144,7 +144,7 @@ impl<'src, 'opctx> FileTester<'src, 'opctx> {
         // Ok, we successfully expanded our target. Now verify that it works with this
         // redirection. We will probably need it as a path (but not in the case of fd
         // redirections). Note that the target is now unescaped.
-        let target_path = path_apply_working_directory(&target, &self.working_directory);
+        let target_path = path_apply_working_directory(&target, self.working_directory);
         match mode {
             RedirectionMode::Fd => {
                 if target == "-" {
@@ -224,10 +224,10 @@ impl<'src, 'opctx> FileTester<'src, 'opctx> {
 /// cdpath). This does I/O!
 ///
 /// We expect the path to already be unescaped.
-pub fn is_potential_path(
+fn is_potential_path(
     potential_path_fragment: &wstr,
     at_cursor: bool,
-    directories: &[WString],
+    directories: &[&wstr],
     ctx: &OperationContext<'_>,
     flags: PathFlags,
 ) -> bool {
@@ -274,7 +274,8 @@ pub fn is_potential_path(
 
     // Don't test the same path multiple times, which can happen if the path is absolute and the
     // CDPATH contains multiple entries.
-    let mut checked_paths = HashSet::new();
+    // TODO This should be a HashSet https://github.com/rust-lang/rust/issues/60896.
+    let mut checked_paths = HashMap::new();
 
     // Keep a cache of which paths / filesystems are case sensitive.
     let mut case_sensitivity_cache = CaseSensitivityCache::new();
@@ -289,11 +290,17 @@ pub fn is_potential_path(
             abs_path = normalize_path(&abs_path, /*allow_leading_double_slashes=*/ true);
         }
 
-        // Skip this if it's empty or we've already checked it.
-        if abs_path.is_empty() || checked_paths.contains(&abs_path) {
+        if abs_path.is_empty() {
             continue;
         }
-        checked_paths.insert(abs_path.clone());
+        let abs_path = {
+            use hash_map::Entry::*;
+            match checked_paths.entry(abs_path) {
+                Occupied(_occupied_entry) => continue,
+                Vacant(vacant) => vacant.insert_entry(()),
+            }
+        };
+        let abs_path = abs_path.key();
 
         // If the user is still typing the argument, we want to highlight it if it's the prefix
         // of a valid path. This means we need to potentially walk all files in some directory.
@@ -302,15 +309,15 @@ pub fn is_potential_path(
         // 2. If the cursor is not at the argument, it means the user is definitely not typing it,
         //    so we can skip the prefix-match.
         if must_be_full_dir || !at_cursor {
-            if let Ok(md) = wstat(&abs_path) {
+            if let Ok(md) = wstat(abs_path) {
                 if !at_cursor || md.file_type().is_dir() {
                     return true;
                 }
             }
         } else {
             // We do not end with a slash; it does not have to be a directory.
-            let dir_name = wdirname(&abs_path);
-            let filename_fragment = wbasename(&abs_path);
+            let dir_name = wdirname(abs_path);
+            let filename_fragment = wbasename(abs_path);
             if dir_name == "/" && filename_fragment == "/" {
                 // cd ///.... No autosuggestion.
                 return true;
@@ -351,7 +358,7 @@ pub fn is_potential_path(
 
 // Given a string, return whether it prefixes a path that we could cd into. Return that path in
 // out_path. Expects path to be unescaped.
-pub fn is_potential_cd_path(
+fn is_potential_cd_path(
     path: &wstr,
     at_cursor: bool,
     working_directory: &wstr,
@@ -359,27 +366,36 @@ pub fn is_potential_cd_path(
     mut flags: PathFlags,
 ) -> bool {
     let mut directories = vec![];
+    let mut storage = vec![];
 
     if string_prefixes_string(L!("./"), path) {
         // Ignore the CDPATH in this case; just use the working directory.
-        directories.push(working_directory.to_owned());
+        directories.push(working_directory);
     } else {
-        // Get the CDPATH.
-        let cdpath = ctx.vars().get_unless_empty(L!("CDPATH"));
-        let mut pathsv = match cdpath {
-            None => vec![L!(".").to_owned()],
-            Some(cdpath) => cdpath.as_list().to_vec(),
-        };
-        // The current $PWD is always valid.
-        pathsv.push(L!(".").to_owned());
-
-        for mut next_path in pathsv {
-            if next_path.is_empty() {
-                next_path = L!(".").to_owned();
-            }
+        fn add_path(storage: &mut Vec<WString>, working_directory: &wstr, next_path: &wstr) {
             // Ensure that we use the working directory for relative cdpaths like ".".
-            directories.push(path_apply_working_directory(&next_path, working_directory));
+            storage.push(path_apply_working_directory(next_path, working_directory));
         }
+
+        // Get the CDPATH.
+        let mut have_curdir = false;
+        if let Some(cdpath) = ctx.vars().get_unless_empty(L!("CDPATH")) {
+            for next_path in cdpath.as_list() {
+                let mut next_path = next_path.as_utfstr();
+                if next_path.is_empty() {
+                    next_path = L!(".");
+                }
+                if next_path == L!(".") {
+                    have_curdir = true;
+                }
+                add_path(&mut storage, working_directory, next_path);
+            }
+        }
+        // The current $PWD is always valid.
+        if !have_curdir {
+            add_path(&mut storage, working_directory, L!("."));
+        }
+        directories = storage.iter().map(|s| s.as_utfstr()).collect();
     }
 
     // Call is_potential_path with all of these directories.
@@ -394,7 +410,7 @@ pub fn is_potential_cd_path(
 /// Returns:
 ///     false: the filesystem is not case insensitive
 ///     true: the file system is case insensitive
-pub type CaseSensitivityCache = HashMap<WString, bool>;
+type CaseSensitivityCache = HashMap<WString, bool>;
 
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 fn fs_is_case_insensitive(
@@ -414,7 +430,7 @@ fn fs_is_case_insensitive(
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "ios")))]
-pub fn fs_is_case_insensitive(
+fn fs_is_case_insensitive(
     _path: &wstr,
     _fd: RawFd,
     _case_sensitivity_cache: &mut CaseSensitivityCache,
@@ -453,17 +469,11 @@ mod tests {
         OperationContext::empty()
     }
 
-    fn file_tester<'a>(
-        ctx: &'a mut OperationContext<'static>,
-        tempdir: &TempDir,
-    ) -> FileTester<'static, 'a> {
-        FileTester::new(osstr2wcstring(tempdir.path()), ctx)
-    }
-
     #[test]
     fn test_ispath() {
         let (tempdir, ctx) = (temp_dir(), &mut op_context());
-        let tester = file_tester(ctx, &tempdir);
+        let wd = osstr2wcstring(tempdir.path());
+        let tester = FileTester::new(&wd, ctx);
 
         let file_path = filepath(&tempdir, "file.txt");
         File::create(file_path).unwrap();
@@ -512,7 +522,8 @@ mod tests {
     #[test]
     fn test_iscdpath() {
         let (tempdir, ctx) = (temp_dir(), &mut op_context());
-        let mut tester = file_tester(ctx, &tempdir);
+        let wd = osstr2wcstring(tempdir.path());
+        let mut tester = FileTester::new(&wd, ctx);
 
         // Note cd (unlike file paths) should report IsErr for invalid cd paths,
         // rather than IsFile(false).
@@ -543,7 +554,8 @@ mod tests {
     fn test_redirections() {
         // Note we use is_ok and is_err since we don't care about the IsFile part.
         let (tempdir, ctx) = (temp_dir(), &mut op_context());
-        let mut tester = file_tester(ctx, &tempdir);
+        let wd = osstr2wcstring(tempdir.path());
+        let mut tester = FileTester::new(&wd, ctx);
         let file_path = filepath(&tempdir, "file.txt");
         File::create(&file_path).unwrap();
 
@@ -738,8 +750,8 @@ mod tests {
         std::fs::write("test/is_potential_path_test/aardvark", []).unwrap();
         std::fs::write("test/is_potential_path_test/gamma", []).unwrap();
 
-        let wd = L!("test/is_potential_path_test/").to_owned();
-        let wds = [L!(".").to_owned(), wd];
+        let wd = L!("test/is_potential_path_test/");
+        let wds = [L!("."), wd];
 
         let vars = EnvStack::new();
         let ctx = OperationContext::background(&vars, EXPANSION_LIMIT_DEFAULT);

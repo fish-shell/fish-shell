@@ -18,6 +18,10 @@ set -l command guild
 complete -c $command -f
 
 set -l compile_condition '__fish_seen_subcommand_from compile'
+
+# compile takes FILE... as positional arguments
+complete -c $command -F -n $compile_condition
+
 complete -c $command -a 'compile\tCompile scripts' -n "not $compile_condition"
 
 complete -c $command -s h -l help -d 'Show help' -n $compile_condition
@@ -46,7 +50,7 @@ complete -c $command -s O -l optimize \
     -n $compile_condition
 
 for standard in 6 7
-    set -l option r$standard"rc"
+    set -l option r$standard"rs"
 
     complete -c $command -l $option \
         -d "Use $(string upper -- $option) compatible mode" \
@@ -59,7 +63,7 @@ complete -c $command -s f -l from \
     -n $compile_condition
 
 complete -c $command -s t -l to \
-    -a 'rtl\tdefault' \
+    -a 'bytecode\tdefault tree-il cps value' \
     -d 'Specify the language for an output' \
     -n $compile_condition
 

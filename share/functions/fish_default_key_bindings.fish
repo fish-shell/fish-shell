@@ -13,10 +13,6 @@ function fish_default_key_bindings -d "emacs-like key binds"
         end
     end
 
-    function __fish_per_os_bind
-        eval "$(__fish_per_os_bind_body)"
-    end
-
     # These are shell-specific bindings that we share with vi mode.
     eval "$(__fish_shared_key_bindings)" $argv
     or return # protect against invalid $argv
@@ -25,31 +21,19 @@ function fish_default_key_bindings -d "emacs-like key binds"
     # nothing is selected). The word-motion keys are restated since the shared bindings lack it.
     bind --preset $argv right end-selection forward-char
     bind --preset $argv left end-selection backward-char
-    __fish_per_os_bind --preset $argv ctrl-right \
-        'commandline -f end-selection forward-token' \
-        'commandline -f end-selection forward-word'
-    __fish_per_os_bind --preset $argv ctrl-left \
-        'commandline -f end-selection backward-token' \
-        'commandline -f end-selection backward-word'
+    bind --preset $argv ctrl-right end-selection forward-token
+    bind --preset $argv ctrl-left end-selection backward-token
 
     # Shift+movement starts a selection if needed, then extends it via the trailing movement.
     bind --preset $argv shift-right begin-selection-if-none forward-single-char
     bind --preset $argv shift-left begin-selection-if-none backward-char
     bind --preset $argv shift-home begin-selection-if-none beginning-of-line
     bind --preset $argv shift-end begin-selection-if-none end-of-line
-    # Alt/Ctrl+Shift+Arrow extend by word, matching Alt/Ctrl+Arrow (token on macOS).
-    __fish_per_os_bind --preset $argv alt-shift-right \
-        'commandline -f begin-selection-if-none forward-token' \
-        'commandline -f begin-selection-if-none forward-word'
-    __fish_per_os_bind --preset $argv alt-shift-left \
-        'commandline -f begin-selection-if-none backward-token' \
-        'commandline -f begin-selection-if-none backward-word'
-    __fish_per_os_bind --preset $argv ctrl-shift-right \
-        'commandline -f begin-selection-if-none forward-token' \
-        'commandline -f begin-selection-if-none forward-word'
-    __fish_per_os_bind --preset $argv ctrl-shift-left \
-        'commandline -f begin-selection-if-none backward-token' \
-        'commandline -f begin-selection-if-none backward-word'
+    # Alt/Ctrl+Shift+Arrow extend by word/token, matching Alt/Ctrl+Arrow.
+    bind --preset $argv alt-shift-right begin-selection-if-none forward-word
+    bind --preset $argv alt-shift-left begin-selection-if-none backward-word
+    bind --preset $argv ctrl-shift-right begin-selection-if-none forward-token
+    bind --preset $argv ctrl-shift-left begin-selection-if-none backward-token
 
     bind --preset $argv delete delete-char
     bind --preset $argv backspace backward-delete-char
@@ -77,12 +61,11 @@ function fish_default_key_bindings -d "emacs-like key binds"
 
     bind --preset $argv alt-c capitalize-word
 
-    __fish_per_os_bind --preset $argv alt-backspace backward-kill-word backward-kill-token
-    __fish_per_os_bind --preset $argv ctrl-alt-h backward-kill-word backward-kill-token
-    __fish_per_os_bind --preset $argv ctrl-backspace backward-kill-token backward-kill-word
-    __fish_per_os_bind --preset $argv alt-delete kill-word kill-token
-    __fish_per_os_bind --preset $argv ctrl-delete kill-token kill-word
-    functions --erase __fish_per_os_bind
+    bind --preset $argv alt-backspace backward-kill-word
+    bind --preset $argv ctrl-alt-h backward-kill-word
+    bind --preset $argv ctrl-backspace backward-kill-token
+    bind --preset $argv alt-delete kill-word
+    bind --preset $argv ctrl-delete kill-token
 
     bind --preset $argv alt-\< end-selection beginning-of-buffer
     bind --preset $argv alt-\> end-selection end-of-buffer

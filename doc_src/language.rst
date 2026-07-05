@@ -620,6 +620,8 @@ Wildcard matches are sorted case insensitively. When sorting matches containing 
 
 Hidden files (where the name begins with a dot) are not considered when wildcarding unless the wildcard string has a dot in that place.
 
+Wildcards never expand to ``.`` (current directory) or ``..`` (parent directory).
+
 Examples:
 
 - ``a*`` matches any files beginning with an 'a' in the current directory.

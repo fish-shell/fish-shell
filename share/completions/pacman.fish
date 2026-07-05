@@ -88,13 +88,13 @@ complete -c $progname -n 'not __fish_pacman_has_operation' -a -U -d 'Add a packa
 complete -c $progname -n 'not __fish_pacman_has_operation' -a -F -d 'Query the files database' -f
 
 ## OPERATIONS
-complete -c $progname -n 'not __fish_pacman_has_operation' -s D -l database -d 'Modify the package database' -f
-complete -c $progname -n 'not __fish_pacman_has_operation' -s Q -l query -d 'Query the package database' -f
-complete -c $progname -n 'not __fish_pacman_has_operation' -s R -l remove -d 'Remove packages from the system' -f
-complete -c $progname -n 'not __fish_pacman_has_operation' -s S -l sync -d 'Synchronize packages' -f
-complete -c $progname -n 'not __fish_pacman_has_operation' -s T -l deptest -d 'Check dependencies' -f
-complete -c $progname -n 'not __fish_pacman_has_operation' -s U -l upgrade -d 'Add a package from a file or URL' -f
-complete -c $progname -n 'not __fish_pacman_has_operation' -s F -l files -d 'Query the files database' -f
+complete -c $progname -n 'not __fish_pacman_has_operation || __fish_pacman_has_operation D' -s D -l database -d 'Modify the package database' -f
+complete -c $progname -n 'not __fish_pacman_has_operation || __fish_pacman_has_operation Q' -s Q -l query -d 'Query the package database' -f
+complete -c $progname -n 'not __fish_pacman_has_operation || __fish_pacman_has_operation R' -s R -l remove -d 'Remove packages from the system' -f
+complete -c $progname -n 'not __fish_pacman_has_operation || __fish_pacman_has_operation S' -s S -l sync -d 'Synchronize packages' -f
+complete -c $progname -n 'not __fish_pacman_has_operation || __fish_pacman_has_operation T' -s T -l deptest -d 'Check dependencies' -f
+complete -c $progname -n 'not __fish_pacman_has_operation || __fish_pacman_has_operation U' -s U -l upgrade -d 'Add a package from a file or URL' -f
+complete -c $progname -n 'not __fish_pacman_has_operation || __fish_pacman_has_operation F' -s F -l files -d 'Query the files database' -f
 complete -c $progname -s V -l version -d 'Display version and exit' -f
 complete -c $progname -s h -l help -d 'Display help' -f
 

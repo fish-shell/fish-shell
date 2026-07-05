@@ -262,7 +262,7 @@ pub fn signal_safe_termsize_invalidate_tty() {
 
 #[cfg(test)]
 mod tests {
-    use crate::env::{EnvMode, EnvSetMode, Environment as _};
+    use crate::env::{EnvMode, EnvSetMode};
     use crate::termsize::*;
     use crate::tests::prelude::*;
     use std::sync::Mutex;

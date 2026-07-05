@@ -77,6 +77,8 @@ function __fish_complete_special_vars
         fish_user_paths "A list of dirs to prepend to PATH"
     __fish_complete_special_vars_ifndef fish_color_option 'defaults to $fish_color_param'
     __fish_complete_special_vars_ifndef fish_color_keyword 'defaults to $fish_color_command'
+    __fish_complete_special_vars_ifndef fish_color_builtin 'defaults to $fish_color_command'
+    __fish_complete_special_vars_ifndef fish_color_function 'defaults to $fish_color_command'
 end
 
 #

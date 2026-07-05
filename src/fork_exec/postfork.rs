@@ -137,18 +137,17 @@ pub fn child_setup_process(
 ) -> i32 {
     // Note we are called in a forked child.
     for act in &dup2s.actions {
-        let err;
-        if act.target < 0 {
-            err = unsafe { libc::close(act.src) };
+        let err = if act.target < 0 {
+            unsafe { libc::close(act.src) }
         } else if act.target != act.src {
             // Normal redirection.
-            err = unsafe { libc::dup2(act.src, act.target) };
+            unsafe { libc::dup2(act.src, act.target) }
         } else {
             // This is a weird case like /bin/cmd 6< file.txt
             // The opened file (which is CLOEXEC) wants to be dup2'd to its own fd.
             // We need to unset the CLOEXEC flag.
-            err = clear_cloexec(act.src);
-        }
+            clear_cloexec(act.src)
+        };
         if err < 0 {
             if is_forked {
                 flog_safe!(

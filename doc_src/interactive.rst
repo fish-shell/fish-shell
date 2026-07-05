@@ -129,6 +129,8 @@ Variable                                          Meaning
 ==========================================        =====================================================================
 .. envvar:: fish_color_normal                     default color
 .. envvar:: fish_color_command                    commands like echo
+.. envvar:: fish_color_builtin                    builtin commands like cd and set - this falls back on the command color if unset
+.. envvar:: fish_color_function                   user-defined functions - this falls back on the command color if unset
 .. envvar:: fish_color_keyword                    keywords like if - this falls back on the command color if unset
 .. envvar:: fish_color_quote                      quoted text like ``"abc"``
 .. envvar:: fish_color_redirection                IO redirections like >/dev/null
@@ -157,6 +159,7 @@ Variable                                          Meaning
 If a variable isn't set or is empty after subtracting any ``--theme=THEME`` options,
 fish usually tries ``$fish_color_normal``, except for:
 
+- ``$fish_color_builtin`` and ``$fish_color_function``, where they try ``$fish_color_command`` first.
 - ``$fish_color_keyword``, where it tries ``$fish_color_command`` first.
 - ``$fish_color_option``, where it tries ``$fish_color_param`` first.
 - For ``$fish_color_valid_path``, if that doesn't have a color, but only modifiers, it adds those to the color that would otherwise be used,
@@ -327,11 +330,11 @@ Some bindings are common across Emacs and vi mode, because they aren't text edit
 
 - :kbd:`alt-enter` inserts a newline at the cursor position. This is useful to add a line to a commandline that's already complete.
 
-- :kbd:`alt-left` (``←``) and :kbd:`alt-right` (``→``) move the cursor left or right by one argument (or one word on macOS).
+- :kbd:`alt-left` (``←``) and :kbd:`alt-right` (``→``) move the cursor left or right by one word.
   If the command line is empty, they move forward/backward in the directory history.
-  If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`alt-right` (``→``) (or :kbd:`alt-f`) accepts the first argument (or word on macOS) in the suggestion.
+  If the cursor is already at the end of the line, and an autosuggestion is available, :kbd:`alt-right` (``→``) (or :kbd:`alt-f`) accepts the first word in the suggestion.
 
-- :kbd:`ctrl-left` (``←``) and :kbd:`ctrl-right` (``→``) move the cursor left or right by one word. These accept one word of the autosuggestion - the part they'd move over.
+- :kbd:`ctrl-left` (``←``) and :kbd:`ctrl-right` (``→``) move the cursor left or right by one token. These accept one token of the autosuggestion - the part they'd move over.
 
 - :kbd:`shift-left` (``←``) and :kbd:`shift-right` (``→``) move the cursor one word left or right, without stopping on punctuation. These accept one big word of the autosuggestion.
 
@@ -401,8 +404,7 @@ To enable emacs mode, use :doc:`fish_default_key_bindings <cmds/fish_default_key
 
 - :kbd:`delete` or :kbd:`backspace` or :kbd:`ctrl-h` removes one character forwards or backwards respectively.
 
-- :kbd:`ctrl-backspace` removes one word backwards and :kbd:`alt-backspace` removes one argument backwards.
-  On macOS, it's the other way round.
+- :kbd:`alt-backspace` removes one word backwards and :kbd:`ctrl-backspace` removes one argument backwards.
 
 - :kbd:`alt-<` moves to the beginning of the commandline, :kbd:`alt->` moves to the end.
 

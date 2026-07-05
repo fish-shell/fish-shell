@@ -3129,6 +3129,9 @@ msgstr "打印/设置光标所在的列"
 msgid "Print/set the line the cursor is on"
 msgstr "打印/设置光标所在的行"
 
+msgid "Prompt function for Darcs"
+msgstr ""
+
 msgid "Prompt function for Git"
 msgstr "Git 的提示函数"
 

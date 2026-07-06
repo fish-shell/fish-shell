@@ -10,7 +10,7 @@ use crate::prelude::*;
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
     reader_current_data, reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled,
-    reader_set_transient_prompt,
+    reader_set_autosuggestion_include_history, reader_set_transient_prompt,
 };
 use crate::screen::{IS_DUMB, ONLY_GRAYSCALE, screen_set_midnight_commander_hack};
 use crate::terminal::ColorSupport;
@@ -74,6 +74,10 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         table.add_anon(
             L!("fish_autosuggestion_enabled"),
             vars!(handle_autosuggestion_change),
+        );
+        table.add_anon(
+            L!("fish_autosuggestion_include_history"),
+            vars!(handle_autosuggestion_history_change),
         );
         table.add_anon(
             L!("fish_transient_prompt"),
@@ -271,6 +275,10 @@ pub fn handle_fish_cursor_end_mode_change(vars: &EnvStack) {
 
 fn handle_autosuggestion_change(vars: &EnvStack) {
     reader_set_autosuggestion_enabled(vars);
+}
+
+fn handle_autosuggestion_history_change(vars: &EnvStack) {
+    reader_set_autosuggestion_include_history(vars);
 }
 
 fn handle_transient_prompt_change(vars: &EnvStack) {

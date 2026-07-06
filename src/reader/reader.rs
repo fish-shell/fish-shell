@@ -473,6 +473,9 @@ pub struct ReaderConfig {
     /// Whether to allow autosuggestions.
     pub autosuggest_ok: bool,
 
+    /// Whether to include history in autosuggestions
+    pub autosuggestion_include_history: bool,
+
     /// Whether to reexecute prompt function before final rendering.
     pub transient_prompt: bool,
 
@@ -829,6 +832,11 @@ fn read_i(parser: &mut Parser) {
         syntax_check_ok: true,
         expand_abbrev_ok: true,
         autosuggest_ok: check_bool_var(parser.vars(), L!("fish_autosuggestion_enabled"), true),
+        autosuggestion_include_history: check_bool_var(
+            parser.vars(),
+            L!("fish_autosuggestion_include_history"),
+            true,
+        ),
         transient_prompt: check_bool_var(parser.vars(), L!("fish_transient_prompt"), false),
         ..Default::default()
     };
@@ -1119,6 +1127,17 @@ pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
         let enable = check_bool_var(vars, L!("fish_autosuggestion_enabled"), true);
         if data.conf.autosuggest_ok != enable {
             data.conf.autosuggest_ok = enable;
+            data.schedule_prompt_repaint();
+        }
+    }
+}
+
+/// Include or exclude history in autosuggestions
+pub fn reader_set_autosuggestion_include_history(vars: &dyn Environment) {
+    if let Some(data) = current_data() {
+        let enable = check_bool_var(vars, L!("fish_autosuggestion_include_history"), true);
+        if data.conf.autosuggestion_include_history != enable {
+            data.conf.autosuggestion_include_history = enable;
             data.schedule_prompt_repaint();
         }
     }
@@ -5302,6 +5321,7 @@ fn get_autosuggestion_performer(
     command_line: WString,
     cursor_pos: usize,
     history: Arc<History>,
+    include_history: bool,
 ) -> impl FnOnce() -> AutosuggestionResult + use<> {
     let generation_count = read_generation_count();
     let vars = parser.vars().snapshot();
@@ -5318,111 +5338,113 @@ fn get_autosuggestion_performer(
         let mut icase_history_result = None;
 
         let line_range = range_of_line_at_cursor(&command_line, cursor_pos);
-        // Search history for a matching item unless this line is not a continuation line or quoted.
-        for (search_type, range) in [
-            (SearchType::Prefix, 0..command_line.len()),
-            (SearchType::LinePrefix, line_range.clone()),
-        ] {
-            if range.is_empty() {
-                continue;
-            }
-            let search_string = &command_line[range.clone()];
-            if search_type == SearchType::LinePrefix {
-                let cursor_line_has_process_start = {
-                    let mut tokens = vec![];
-                    get_process_extent(&command_line, cursor_pos, Some(&mut tokens));
-                    range_of_line_at_cursor(
-                        &command_line,
-                        get_process_first_token_offset(&command_line, cursor_pos)
-                            .unwrap_or(cursor_pos),
-                    ) == range
-                };
-                if !cursor_line_has_process_start {
+        // Search history for a matching item unless this line is not a continuation line or quoted or history is disabled for autosuggestions.
+        if include_history {
+            for (search_type, range) in [
+                (SearchType::Prefix, 0..command_line.len()),
+                (SearchType::LinePrefix, line_range.clone()),
+            ] {
+                if range.is_empty() {
                     continue;
                 }
-            }
-            let mut searcher = HistorySearch::new_with(
-                history.clone(),
-                search_string.to_owned(),
-                search_type,
-                SearchFlags::IGNORE_CASE,
-                0,
-            );
-
-            while !ctx.check_cancel() && searcher.go_to_next_match(SearchDirection::Backward) {
-                let item = searcher.current_item();
-
-                let full = item.str();
-                let (suggested_range, icase) = if search_type == SearchType::Prefix {
-                    let mut suggested_range =
-                        full.starts_with(search_string).then_some(0..full.len());
-                    let mut icase = false;
-                    // Only check for a case-insensitive match if we haven't already found one
-                    if suggested_range.is_none() && icase_history_result.is_none() {
-                        icase = true;
-                        suggested_range =
-                            string_prefixes_string_case_insensitive(search_string, full)
-                                .then_some(0..full.len());
+                let search_string = &command_line[range.clone()];
+                if search_type == SearchType::LinePrefix {
+                    let cursor_line_has_process_start = {
+                        let mut tokens = vec![];
+                        get_process_extent(&command_line, cursor_pos, Some(&mut tokens));
+                        range_of_line_at_cursor(
+                            &command_line,
+                            get_process_first_token_offset(&command_line, cursor_pos)
+                                .unwrap_or(cursor_pos),
+                        ) == range
+                    };
+                    if !cursor_line_has_process_start {
+                        continue;
                     }
+                }
+                let mut searcher = HistorySearch::new_with(
+                    history.clone(),
+                    search_string.to_owned(),
+                    search_type,
+                    SearchFlags::IGNORE_CASE,
+                    0,
+                );
 
-                    (suggested_range, icase)
-                } else {
-                    // The history items may have multiple lines of text.
-                    // Only suggest the line that actually contains the search string.
-                    let newlines = full
-                        .char_indices()
-                        .filter_map(|(i, c)| (c == '\n').then_some(i));
-                    let line_ranges = std::iter::once(0)
-                        .chain(newlines.clone().map(|i| i + 1))
-                        .zip(newlines.chain(std::iter::once(full.char_count())))
-                        .map(|(start, end)| start..end);
+                while !ctx.check_cancel() && searcher.go_to_next_match(SearchDirection::Backward) {
+                    let item = searcher.current_item();
 
-                    let mut icase = false;
-                    let mut suggested_range = line_ranges
-                        .clone()
-                        .find(|range| full[range.clone()].starts_with(search_string));
+                    let full = item.str();
+                    let (suggested_range, icase) = if search_type == SearchType::Prefix {
+                        let mut suggested_range =
+                            full.starts_with(search_string).then_some(0..full.len());
+                        let mut icase = false;
+                        // Only check for a case-insensitive match if we haven't already found one
+                        if suggested_range.is_none() && icase_history_result.is_none() {
+                            icase = true;
+                            suggested_range =
+                                string_prefixes_string_case_insensitive(search_string, full)
+                                    .then_some(0..full.len());
+                        }
 
-                    // Only check for a case-insensitive match if we haven't already found one
-                    if suggested_range.is_none() && icase_history_result.is_none() {
-                        icase = true;
-                        suggested_range = line_ranges.into_iter().find(|range| {
-                            string_prefixes_string_case_insensitive(
-                                search_string,
-                                &full[range.clone()],
-                            )
-                        });
-                    }
-
-                    (suggested_range, icase)
-                };
-                let Some(suggested_range) = suggested_range else {
-                    assert!(
-                        icase_history_result.is_some(),
-                        "couldn't find line matching search {search_string:?} in history item {item:?} (did history search yield a bogus result?)"
-                    );
-                    continue;
-                };
-
-                if autosuggest_validate_from_history(
-                    full,
-                    suggested_range.clone(),
-                    item.get_required_paths(),
-                    &working_directory,
-                    ctx,
-                ) {
-                    // The command autosuggestion was handled specially, so we're done.
-                    let is_whole = suggested_range.len() == item.str().len();
-                    let result = AutosuggestionResult::new(
-                        command_line.clone(),
-                        range.clone(),
-                        full[suggested_range].into(),
-                        icase.then(|| searcher.canon_term().char_count()),
-                        is_whole,
-                    );
-                    if icase {
-                        icase_history_result = Some(result);
+                        (suggested_range, icase)
                     } else {
-                        return result;
+                        // The history items may have multiple lines of text.
+                        // Only suggest the line that actually contains the search string.
+                        let newlines = full
+                            .char_indices()
+                            .filter_map(|(i, c)| (c == '\n').then_some(i));
+                        let line_ranges = std::iter::once(0)
+                            .chain(newlines.clone().map(|i| i + 1))
+                            .zip(newlines.chain(std::iter::once(full.char_count())))
+                            .map(|(start, end)| start..end);
+
+                        let mut icase = false;
+                        let mut suggested_range = line_ranges
+                            .clone()
+                            .find(|range| full[range.clone()].starts_with(search_string));
+
+                        // Only check for a case-insensitive match if we haven't already found one
+                        if suggested_range.is_none() && icase_history_result.is_none() {
+                            icase = true;
+                            suggested_range = line_ranges.into_iter().find(|range| {
+                                string_prefixes_string_case_insensitive(
+                                    search_string,
+                                    &full[range.clone()],
+                                )
+                            });
+                        }
+
+                        (suggested_range, icase)
+                    };
+                    let Some(suggested_range) = suggested_range else {
+                        assert!(
+                            icase_history_result.is_some(),
+                            "couldn't find line matching search {search_string:?} in history item {item:?} (did history search yield a bogus result?)"
+                        );
+                        continue;
+                    };
+
+                    if autosuggest_validate_from_history(
+                        full,
+                        suggested_range.clone(),
+                        item.get_required_paths(),
+                        &working_directory,
+                        ctx,
+                    ) {
+                        // The command autosuggestion was handled specially, so we're done.
+                        let is_whole = suggested_range.len() == item.str().len();
+                        let result = AutosuggestionResult::new(
+                            command_line.clone(),
+                            range.clone(),
+                            full[suggested_range].into(),
+                            icase.then(|| searcher.canon_term().char_count()),
+                            is_whole,
+                        );
+                        if icase {
+                            icase_history_result = Some(result);
+                        } else {
+                            return result;
+                        }
                     }
                 }
             }
@@ -5598,6 +5620,7 @@ impl<'a> Reader<'a> {
             el.text().to_owned(),
             el.position(),
             self.history.clone(),
+            self.conf.autosuggestion_include_history,
         );
         self.debouncers.autosuggestions.perform(performer);
     }

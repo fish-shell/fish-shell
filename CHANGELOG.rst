@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 Interactive improvements
 ------------------------
 - Builtin and function commands can now be colored separately via new variables :envvar:`fish_color_builtin` and :envvar:`fish_color_function` (:issue:`12837`).
+- History entries can now be excluded from autosuggestions by setting ``$fish_autosuggestion_include_history`` to 0.
 
 Regression fixes:
 -----------------

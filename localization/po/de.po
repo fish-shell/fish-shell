@@ -3108,6 +3108,9 @@ msgstr ""
 msgid "Print/set the line the cursor is on"
 msgstr ""
 
+msgid "Prompt function for Darcs"
+msgstr ""
+
 msgid "Prompt function for Git"
 msgstr ""
 

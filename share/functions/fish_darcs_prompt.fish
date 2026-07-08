@@ -1,8 +1,8 @@
 # Based on the Darc hub ``darcs-fish`` repositories of raichoo & toastal
 
 # For a Darcs-themed prompt try:
-# set fish_color_darcs_normal $__darcs_logo_color
-set -g __darcs_logo_color 72ff01
+# set fish_color_darcs_normal $fish_darcs_logo_color
+set -g fish_darcs_logo_color 72ff01
 # Basic green preferred to clash less with terminal emulator theming
 set -g fish_color_darcs_normal green
 set -g fish_color_darcs_rebasing yellow
@@ -12,6 +12,7 @@ set -g fish_color_darcs_conflict red
 # Darcs doesn’t have branches/channels so just showing the VCS name is more
 # consistent with having text as other VCS prompts do
 set -g fish_prompt_darcs_name darcs
+
 set -g fish_prompt_darcs_status_added '+'
 set -g fish_prompt_darcs_status_removed -
 set -g fish_prompt_darcs_status_modified '*'

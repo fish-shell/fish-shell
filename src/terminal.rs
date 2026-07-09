@@ -187,7 +187,10 @@ fn osc_0_or_1_terminal_title(out: &mut Outputter, is_1: bool, title: &[WString])
 fn want_to_mark_prompt() -> bool {
     static IN_KONSOLE: LazyLock<bool> =
         LazyLock::new(|| XTVERSION.get().unwrap().starts_with("Konsole "));
-    fish_feature_flags::feature_test(FeatureFlag::MarkPrompt) && !*IN_KONSOLE
+    if *IN_KONSOLE && !fish_feature_flags::feature_test(FeatureFlag::OmitTermWorkarounds) {
+        return false;
+    }
+    fish_feature_flags::feature_test(FeatureFlag::MarkPrompt)
 }
 
 fn osc_133_prompt_start(out: &mut Outputter) -> bool {

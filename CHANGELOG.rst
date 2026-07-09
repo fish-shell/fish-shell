@@ -7,7 +7,7 @@ Interactive improvements
 - On non-macOS platforms, :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of tokens (:issue:`12122`) eliminating cross-platform differences in input handling.
 - Add ``fish_darcs_prompt`` for `Darcs <https://darcs.net/>`_ repository status.
 - Since prompt marking (via :ref:`osc 133 <term-compat-osc-133>`) causes an issue in Konsole's default configuration, prompt marking had been disabled for Konsole in 4.8.0.
-  Now the ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be enabled to enable prompt marking on Konsole again.
+  Now the ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be enabled to enable prompt marking on Konsole again (:issue:`12859`).
 
 Regression fixes:
 -----------------

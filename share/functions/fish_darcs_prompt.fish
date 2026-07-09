@@ -6,9 +6,11 @@ set -g fish_darcs_logo_color 72ff01
 
 function fish_darcs_prompt --description "Prompt function for Darcs"
     # No Darcs, no prompt
-    command -sq darcs || return 1
+    command -sq darcs
+    or return 1
     # The _darcs metadata directory, must be exist
-    darcs show repo >/dev/null 2>&1 || return 1
+    darcs show repo >/dev/null 2>&1
+    or return 127
 
     # Basic green preferred over the logo color to clash less with terminal
     # emulator theming

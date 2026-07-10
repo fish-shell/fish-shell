@@ -784,7 +784,7 @@ impl ExecutionContext {
         let mut redirections = RedirectionSpecList::new();
         if use_implicit_cd {
             // Implicit cd is simple.
-            cmd_args = vec![L!("cd").to_owned(), cmd];
+            cmd_args = vec![L!("cd").to_owned(), L!("--").to_owned(), cmd];
 
             // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
             process_type = if function::exists(L!("cd"), ctx.parser()) {

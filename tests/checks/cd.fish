@@ -167,6 +167,14 @@ test $PWD = $base/-testdir
 echo $status
 #CHECK: 0
 
+# An implicit cd must also accept a directory name beginning with a hyphen.
+mkdir $base/-h
+cd $base
+-h/
+test $PWD = $base/-h
+echo $status
+#CHECK: 0
+
 # test a few error cases - nonexistent directory
 set -l old_cdpath $CDPATH
 set -l old_path $PWD

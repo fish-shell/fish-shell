@@ -3,30 +3,42 @@
 # For a Darcs-themed prompt try:
 # set fish_color_darcs_normal $fish_darcs_logo_color
 set -g fish_darcs_logo_color 72ff01
-# Basic green preferred to clash less with terminal emulator theming
-set -g fish_color_darcs_normal green
-set -g fish_color_darcs_rebasing yellow
-# Conflicts are a critical state that should be resolved
-set -g fish_color_darcs_conflict red
-
-# Darcs doesn’t have branches/channels so just showing the VCS name is more
-# consistent with having text as other VCS prompts do
-set -g fish_prompt_darcs_name darcs
-
-set -g fish_prompt_darcs_status_added '+'
-set -g fish_prompt_darcs_status_removed -
-set -g fish_prompt_darcs_status_modified '*'
-set -g fish_prompt_darcs_status_moved '→'
-set -g fish_prompt_darcs_status_conflict '!'
-set -g fish_prompt_darcs_status_untracked '…'
-
-set -g fish_prompt_darcs_status_order added removed modified moved conflict untracked
 
 function fish_darcs_prompt --description "Prompt function for Darcs"
     # No Darcs, no prompt
     command -sq darcs || return 1
     # The _darcs metadata directory, must be exist
     darcs show repo >/dev/null 2>&1 || return 1
+
+    # Basic green preferred over the logo color to clash less with terminal
+    # emulator theming
+    set -q fish_color_darcs_normal
+    or set -l fish_color_darcs_normal green
+    set -q fish_color_darcs_rebasing
+    or set -l fish_color_darcs_rebasing yellow
+    # Conflicts are a critical state that should be resolved
+    set -q fish_color_darcs_conflict
+    or set -l fish_color_darcs_conflict red
+
+    # Darcs doesn’t have branches/channels so just showing the VCS name is more
+    # consistent with having text as other VCS prompts do
+    set -q fish_prompt_darcs_name
+    or set -l fish_prompt_darcs_name darcs
+    set -q fish_prompt_darcs_status_added
+    or set -l fish_prompt_darcs_status_added '+'
+    set -q fish_prompt_darcs_status_removed
+    or set -l fish_prompt_darcs_status_removed -
+    set -q fish_prompt_darcs_status_modified
+    or set -l fish_prompt_darcs_status_modified '*'
+    set -q fish_prompt_darcs_status_moved
+    or set -l fish_prompt_darcs_status_moved '→'
+    set -q fish_prompt_darcs_status_conflict
+    or set -l fish_prompt_darcs_status_conflict '!'
+    set -q fish_prompt_darcs_status_untracked
+    or set -l fish_prompt_darcs_status_untracked '…'
+
+    set -q fish_prompt_darcs_status_order
+    or set -l fish_prompt_darcs_status_order added removed modified moved conflict untracked
 
     set -l added 0
     set -l modified 0

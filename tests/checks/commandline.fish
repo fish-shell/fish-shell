@@ -66,6 +66,15 @@ $fish -ic '
 # CHECK: helloworld
 # CHECK: hello world
 
+$fish -ic '
+    commandline "echo hi &| less"
+    commandline --cursor 9
+    commandline --current-process
+    commandline --cursor --current-process
+'
+# CHECK:
+# CHECK: 0
+
 $fish -c 'commandline foo'
 # CHECKERR: commandline: Can not set commandline in non-interactive mode
 # CHECKERR: Standard input (line 1):

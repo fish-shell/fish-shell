@@ -8,6 +8,7 @@ Interactive improvements
 - Add ``fish_darcs_prompt`` for `Darcs <https://darcs.net/>`_ repository status.
 - Since prompt marking (via :ref:`osc 133 <term-compat-osc-133>`) causes an issue in Konsole's default configuration, prompt marking had been disabled for Konsole in 4.8.0.
   Now the ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be enabled to enable prompt marking on Konsole again (:issue:`12859`).
+- Fixed a crash in ``commandline --current-process`` when the cursor is inside a ``&|`` pipe (:issue:`12868`).
 
 Regression fixes:
 -----------------

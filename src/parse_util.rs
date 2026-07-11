@@ -434,9 +434,13 @@ fn get_job_or_process_extent(
                 if tok_begin >= pos {
                     finished = true;
                     result.end = cmdsub_range.start + tok_begin;
-                } else {
+                } else if token.end() <= pos {
                     // Statement at cursor might start after this token.
                     result.start = cmdsub_range.start + tok_begin + token.length();
+                    out_tokens.as_mut().map(|tokens| tokens.clear());
+                } else {
+                    finished = true;
+                    result = cursor_pos..cursor_pos;
                     out_tokens.as_mut().map(|tokens| tokens.clear());
                 }
                 continue; // Do not add this to tokens
@@ -1998,6 +2002,7 @@ mod tests {
         validate!("for file in (path base\necho", 22, 13..22);
         validate!("begin\n\n\nec", 10, 6..10);
         validate!("begin; echo; end", 12, 12..16);
+        validate!("echo hi &| less", 9, 9..9);
     }
 
     #[test]

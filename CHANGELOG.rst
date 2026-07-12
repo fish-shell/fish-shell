@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 Interactive improvements
 ------------------------
 - Builtin and function commands can now be colored separately via new variables :envvar:`fish_color_builtin` and :envvar:`fish_color_function` (:issue:`12837`).
+- History entries can now be excluded from autosuggestions by setting ``$fish_autosuggestion_include_history`` to 0.
 - On non-macOS platforms, :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of tokens (:issue:`12122`) eliminating cross-platform differences in input handling.
 - Add ``fish_darcs_prompt`` for `Darcs <https://darcs.net/>`_ repository status.
 - Since prompt marking (via :ref:`osc 133 <term-compat-osc-133>`) causes an issue in Konsole's default configuration, prompt marking had been disabled for Konsole in 4.8.0.

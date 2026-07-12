@@ -1581,6 +1581,10 @@ You can change the settings of fish by changing the values of certain variables.
 
    controls if :ref:`autosuggestions` are enabled. Set it to 0 to disable, anything else to enable. By default they are on.
 
+.. envvar:: fish_autosuggestion_include_history
+
+   controls if history entries are used for autosuggestions. Set it to 0 to disable, anything else to enable. By default it is on.
+
 .. envvar:: fish_transient_prompt
 
    If this is set to 1, fish will redraw prompts with a ``--final-rendering`` argument before running a commandline, allowing you to change it before pushing it to the scrollback. This enables :ref:`transient prompts <transient-prompt>`.

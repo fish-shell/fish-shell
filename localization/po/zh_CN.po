@@ -5694,6 +5694,9 @@ msgstr ""
 msgid "Add comma-separated list of age recipients fingerprints"
 msgstr ""
 
+msgid "Add comment to this transaction"
+msgstr ""
+
 msgid "Add custom repositories, either by URL or using JSON arrays"
 msgstr ""
 
@@ -12049,6 +12052,9 @@ msgid "Compile scripts automatically"
 msgstr ""
 
 msgid "Compile source packages"
+msgstr ""
+
+msgid "Compile source packages after download"
 msgstr ""
 
 msgid "Compile the current module"

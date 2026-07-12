@@ -6,10 +6,49 @@ if [ "$(uname -s)" = Darwin -a "$(command -s apt)" = /usr/bin/apt ]
     exit 1
 end
 
-set -l all_subcmds update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove autopurge depends rdepends
-set -l pkg_subcmds install upgrade full-upgrade show search purge changelog policy depends rdepends autoremove autopurge
-set -l installed_pkg_subcmds remove
+set -l all_subcmds update upgrade full-upgrade search list install show remove edit-sources purge changelog autoremove autopurge depends rdepends why-not satisfy history-list history-rollback history-info history-redo history-undo help
+
+# subcommands that take a package name as an argument
+set -l pkg_subcmds \
+    changelog \
+    depends \
+    full-upgrade \
+    install \
+    policy \
+    rdepends \
+    search \
+    show \
+    upgrade \
+    purge \
+    autopurge \
+    why-not # why-not subcmd makes more sense with only non installed packages, but figuring out how to list those is left as an exercise to the reader
+
+# subcommands that take a package name as an argument but cannot or don't make sense to operate on non insatlled packages, should be mutually exclusive with the above list
+set -l installed_pkg_subcmds \
+    autoremove \
+    reinstall \
+    remove \
+    why
+
+# subcommands to suggest loose .deb files (that are present in the CWD) in the completions
 set -l handle_file_pkg_subcmds install
+
+# sub commands that all seem to be inherited from apt-get and share common options, although some combinations of them seems questionable, e.g remove --download-only
+set -l option_group1 \
+    autopurge \
+    autoremove \
+    build-dep \
+    clean \
+    dist-upgrade \
+    distclean \
+    full-upgrade \
+    install \
+    purge \
+    reinstall \
+    remove \
+    satisfy \
+    source \
+    upgrade
 
 function __fish_apt_subcommand -V all_subcmds
     set -l subcommand $argv[1]
@@ -38,20 +77,24 @@ complete -k -c apt -n "__fish_seen_subcommand_from $handle_file_pkg_subcmds" -kx
 complete -k -c apt -n "__fish_seen_subcommand_from $pkg_subcmds" -kxa '(__fish_print_apt_packages | sort)'
 complete -c apt -n "__fish_seen_subcommand_from $installed_pkg_subcmds" -kxa '(__fish_print_apt_packages --installed | sort)'
 
-complete -c apt -n "__fish_seen_subcommand_from install" -l no-install-recommends -d 'Do not install recommended packages'
-complete -c apt -n "__fish_seen_subcommand_from install" -l no-install-suggests -d 'Do not install suggested packages'
-complete -c apt -n "__fish_seen_subcommand_from install" -s d -l download-only -d 'Download Only'
-complete -c apt -n "__fish_seen_subcommand_from install" -s f -l fix-broken -d 'Correct broken dependencies'
-complete -c apt -n "__fish_seen_subcommand_from install" -s m -l fix-missing -d 'Ignore missing packages'
-complete -c apt -n "__fish_seen_subcommand_from install" -l no-download -d 'Disable downloading packages'
-complete -c apt -n "__fish_seen_subcommand_from install" -s q -l quiet -d 'Quiet mode'
-complete -c apt -n "__fish_seen_subcommand_from install" -s s -l simulate -l just-print -l dry-run -l recon -l no-act -d 'Perform a simulation'
-complete -c apt -n "__fish_seen_subcommand_from install" -s y -l yes -l assume-yes -d 'Automatic yes to prompts'
-complete -c apt -n "__fish_seen_subcommand_from install" -l assume-no -d 'Automatic no to prompts'
-complete -c apt -n "__fish_seen_subcommand_from install" -l install-recommends -d 'Install recommended packages'
-complete -c apt -n "__fish_seen_subcommand_from install" -l install-suggests -d 'Install suggested packages'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -l no-install-recommends -d 'Do not install recommended packages'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -l no-install-suggests -d 'Do not install suggested packages'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -s d -l download-only -d 'Download Only'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -s f -l fix-broken -d 'Correct broken dependencies'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -s m -l fix-missing -d 'Ignore missing packages'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -l no-download -d 'Disable downloading packages'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -s q -l quiet -d 'Quiet mode'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -s s -l simulate -l just-print -l dry-run -l recon -l no-act -d 'Perform a simulation'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -s y -l yes -l assume-yes -d 'Automatic yes to prompts'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -l assume-no -d 'Automatic no to prompts'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -l install-recommends -d 'Install recommended packages'
+complete -c apt -n "__fish_seen_subcommand_from $option_group1" -l install-suggests -d 'Install suggested packages'
 # This advanced flag is the safest way to upgrade packages that otherwise would have been kept back
 complete -c apt -n "__fish_seen_subcommand_from upgrade" -l with-new-pkgs
+
+complete -c apt -n "__fish_seen_subcommand_from install reinstall remove purge autoremove autopurge upgrade dist-upgrade full-upgrade" -l comment -d 'Add comment to this transaction'
+
+complete -c apt -n "__fish_seen_subcommand_from source" -s b -l build -l compile -d 'Compile source packages after download'
 
 # Support flags
 complete -f -c apt -s h -l help -d 'Display help'
@@ -137,6 +180,27 @@ __fish_apt_subcommand download -x -d 'Download packages'
 
 # Build-dep
 __fish_apt_subcommand build-dep -x -d 'Install packages needed to build the given package'
+
+# Why
+__fish_apt_subcommand why -x -d 'See why a given package is installed'
+
+# Why not
+__fish_apt_subcommand why-not -r -d 'See why a given package is not installable'
+
+# History list
+__fish_apt_subcommand history-list -d 'List transaction list'
+
+# History info
+__fish_apt_subcommand history-info -d 'Show info of a transaction'
+
+# History redo
+__fish_apt_subcommand history-redo -d 'Redo transaction'
+
+# History undo
+__fish_apt_subcommand history-undo -d 'Undo transaction'
+
+# History rollback
+__fish_apt_subcommand history-rollback -d 'Rollback transaction'
 
 # Help
 __fish_apt_subcommand help -d 'Print help page'

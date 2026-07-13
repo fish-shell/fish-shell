@@ -1,9 +1,4 @@
 # Based on the Darc hub ``darcs-fish`` repositories of raichoo & toastal
-
-# For a Darcs-themed prompt try:
-# set fish_color_darcs_normal $fish_darcs_logo_color
-set -g fish_darcs_logo_color 72ff01
-
 function fish_darcs_prompt --description "Prompt function for Darcs"
     # No Darcs, no prompt
     command -sq darcs

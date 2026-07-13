@@ -3,17 +3,17 @@ fish ?.?.? (released ???)
 
 Interactive improvements
 ------------------------
+- On non-macOS platforms, :kbd:`alt-backspace`, :kbd:`alt-delete`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of tokens (:issue:`12122`) eliminating cross-platform differences in input handling.
 - Builtin and function commands can now be colored separately via new variables :envvar:`fish_color_builtin` and :envvar:`fish_color_function` (:issue:`12837`).
-- On non-macOS platforms, :kbd:`alt-backspace`, :kbd:`alt-left` and :kbd:`alt-right` operate on words again instead of tokens (:issue:`12122`) eliminating cross-platform differences in input handling.
-- Add ``fish_darcs_prompt`` for `Darcs <https://darcs.net/>`_ repository status.
-- Since prompt marking (via :ref:`osc 133 <term-compat-osc-133>`) causes an issue in Konsole's default configuration, prompt marking had been disabled for Konsole in 4.8.0.
-  Now the ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be enabled to enable prompt marking on Konsole again (:issue:`12859`).
+- Add :doc:`fish_darcs_prompt <cmds/fish_darcs_prompt>` for `Darcs <https://darcs.net/>`__ repository status.
 - Fixed a crash in ``commandline --current-process`` when the cursor is inside a ``&|`` pipe (:issue:`12868`).
+- Since prompt marking (via :ref:`OSC 133 <term-compat-osc-133>`) causes an issue in `Konsole's <https://apps.kde.org/konsole/>`__ default configuration, prompt marking had been disabled for Konsole in 4.8.0.
+  Now the ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be enabled to enable prompt marking on Konsole again (:issue:`12859`).
 
 Regression fixes:
 -----------------
-- ``abbr --position=anywhere`` completions are no longer offered in argument position, to avoid cluttering the completion pager (:issue:`12838`).
-- ``pacman -Q`` short option completions (:issue:`12857`).
+- (From 4.8.0) ``abbr --position=anywhere`` completions are no longer offered in argument position, to avoid cluttering the completion pager (:issue:`12838`).
+- (From 4.8.0) ``pacman -Q`` short option completions (:issue:`12857`).
 
 fish 4.8.0 (released June 24, 2026)
 ===================================

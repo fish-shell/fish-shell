@@ -1,26 +1,42 @@
 # Adapted from __terlar_git_prompt
 
-set -g fish_color_hg_clean green
-set -g fish_color_hg_modified yellow
-set -g fish_color_hg_dirty red
-
-set -g fish_color_hg_added green
-set -g fish_color_hg_renamed magenta
-set -g fish_color_hg_copied magenta
-set -g fish_color_hg_deleted red
-set -g fish_color_hg_untracked yellow
-set -g fish_color_hg_unmerged red
-
-set -g fish_prompt_hg_status_added '✚'
-set -g fish_prompt_hg_status_modified '*'
-set -g fish_prompt_hg_status_copied '⇒'
-set -g fish_prompt_hg_status_deleted '✖'
-set -g fish_prompt_hg_status_untracked '?'
-set -g fish_prompt_hg_status_unmerged !
-
-set -g fish_prompt_hg_status_order added modified copied deleted untracked unmerged
-
 function fish_hg_prompt --description 'Write out the hg prompt'
+    set -q fish_color_hg_clean
+    or set -l fish_color_hg_clean green
+    set -q fish_color_hg_modified
+    or set -l fish_color_hg_modified yellow
+    set -q fish_color_hg_dirty
+    or set -l fish_color_hg_dirty red
+
+    set -q fish_color_hg_added
+    or set -l fish_color_hg_added green
+    set -q fish_color_hg_renamed
+    or set -l fish_color_hg_renamed magenta
+    set -q fish_color_hg_copied
+    or set -l fish_color_hg_copied magenta
+    set -q fish_color_hg_deleted
+    or set -l fish_color_hg_deleted red
+    set -q fish_color_hg_untracked
+    or set -l fish_color_hg_untracked yellow
+    set -q fish_color_hg_unmerged
+    or set -l fish_color_hg_unmerged red
+
+    set -q fish_prompt_hg_status_added
+    or set -l fish_prompt_hg_status_added '✚'
+    set -q fish_prompt_hg_status_modified
+    or set -l fish_prompt_hg_status_modified '*'
+    set -q fish_prompt_hg_status_copied
+    or set -l fish_prompt_hg_status_copied '⇒'
+    set -q fish_prompt_hg_status_deleted
+    or set -l fish_prompt_hg_status_deleted '✖'
+    set -q fish_prompt_hg_status_untracked
+    or set -l fish_prompt_hg_status_untracked '?'
+    set -q fish_prompt_hg_status_unmerged
+    or set -l fish_prompt_hg_status_unmerged !
+
+    set -q fish_prompt_hg_status_order
+    or set -l fish_prompt_hg_status_order added modified copied deleted untracked unmerged
+
     # If hg isn't installed, there's nothing we can do
     # Return 1 so the calling prompt can deal with it
     if not command -sq hg

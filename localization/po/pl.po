@@ -5333,6 +5333,9 @@ msgstr ""
 msgid "Add a CD-ROM to the list of available sources of packages"
 msgstr ""
 
+msgid "Add a Finder icon to image file"
+msgstr ""
+
 msgid "Add a NuGet package reference"
 msgstr ""
 
@@ -5394,6 +5397,9 @@ msgid "Add a file set to the project"
 msgstr ""
 
 msgid "Add a file-filtering RULE"
+msgstr ""
+
+msgid "Add a generic password item"
 msgstr ""
 
 msgid "Add a given entry to a SET"
@@ -5516,6 +5522,9 @@ msgstr ""
 msgid "Add a package/reference"
 msgstr ""
 
+msgid "Add a partition map"
+msgstr ""
+
 msgid "Add a passthrough rule"
 msgstr ""
 
@@ -5597,6 +5606,9 @@ msgstr ""
 msgid "Add a wait time for reading"
 msgstr ""
 
+msgid "Add additional FileVault users"
+msgstr ""
+
 msgid "Add addresses in Signed-off-by trailers to Cc"
 msgstr ""
 
@@ -5633,6 +5645,9 @@ msgstr ""
 msgid "Add an initscript for the new group"
 msgstr ""
 
+msgid "Add an internet password item"
+msgstr ""
+
 msgid "Add an introductory message"
 msgstr ""
 
@@ -5652,6 +5667,9 @@ msgid "Add bias when convolving an image [value]"
 msgstr ""
 
 msgid "Add blob"
+msgstr ""
+
+msgid "Add certificates to a keychain"
 msgstr ""
 
 msgid "Add clap property"
@@ -5921,6 +5939,9 @@ msgstr ""
 msgid "Add or update keys from <file>"
 msgstr ""
 
+msgid "Add or update the personal or institutional recovery key"
+msgstr ""
+
 msgid "Add owner"
 msgstr ""
 
@@ -6071,6 +6092,9 @@ msgstr ""
 msgid "Add the source port to zone|policy|service"
 msgstr ""
 
+msgid "Add the specified device to the specified bond."
+msgstr ""
+
 msgid "Add the specified package to the local cache"
 msgstr ""
 
@@ -6084,6 +6108,9 @@ msgid "Add the user id to the whitelist"
 msgstr ""
 
 msgid "Add the user to the whitelist"
+msgstr ""
+
+msgid "Add to admin cert store (default is user)"
 msgstr ""
 
 msgid "Add to dll path"
@@ -6110,6 +6137,9 @@ msgstr ""
 msgid "Add transactions using guided prompts"
 msgstr ""
 
+msgid "Add trusted certificate(s)"
+msgstr ""
+
 msgid "Add type information from provided files to the project"
 msgstr ""
 
@@ -6120,6 +6150,9 @@ msgid "Add user to group"
 msgstr ""
 
 msgid "Add value"
+msgstr ""
+
+msgid "Add wireless network to a device preferred list at an index"
 msgstr ""
 
 msgid "Add zipfile comments"
@@ -6171,6 +6204,9 @@ msgid "Additional rules for determining base revision"
 msgstr ""
 
 msgid "Additional source to include in the bundle"
+msgstr ""
+
+msgid "Additional user to add to FileVault"
 msgstr ""
 
 msgid "Additional win32 shellcode file to include"
@@ -6263,10 +6299,19 @@ msgstr ""
 msgid "Admin section"
 msgstr ""
 
+msgid "Admin username to authenticate as"
+msgstr ""
+
 msgid "Administration front end for rcs"
 msgstr ""
 
 msgid "Administration tool for local repositories"
+msgstr ""
+
+msgid "Administrator password (use - to be prompted interactively)"
+msgstr ""
+
+msgid "Administrator user name for scripted authentication"
 msgstr ""
 
 msgid "Advanced state management"
@@ -6323,6 +6368,9 @@ msgstr ""
 msgid "Aggregate sources for all modules in an aggregator project"
 msgstr ""
 
+msgid "Aggregated search node"
+msgstr ""
+
 msgid "Aggressive scan options"
 msgstr ""
 
@@ -6335,10 +6383,16 @@ msgstr ""
 msgid "Agree to the CA's Subscriber Agreement"
 msgstr ""
 
+msgid "Agree to the software license without user interaction"
+msgstr ""
+
 msgid "Alert when commands start and end"
 msgstr ""
 
 msgid "Algorithm name"
+msgstr ""
+
+msgid "Algorithm to use (default rsa)"
 msgstr ""
 
 msgid "Algorithm to use (lzo only)"
@@ -6479,6 +6533,12 @@ msgstr ""
 msgid "Align the start of functions to the next power-of-two greater than n, skipping up to n bytes"
 msgstr ""
 
+msgid "Alignment for the output image"
+msgstr ""
+
+msgid "Alignment of the final data partition"
+msgstr ""
+
 msgid "Aligns \"double\", \"long double\", and \"long long\" variables on a one word boundary"
 msgstr ""
 
@@ -6581,6 +6641,15 @@ msgstr ""
 msgid "Allow an upgrade to replace a newer package with an older one"
 msgstr ""
 
+msgid "Allow any application to access the imported key (insecure)"
+msgstr ""
+
+msgid "Allow any application to access this item (insecure)"
+msgstr ""
+
+msgid "Allow any application to access this key (insecure)"
+msgstr ""
+
 msgid "Allow arbitrary sized immediates in bit operations"
 msgstr ""
 
@@ -6611,13 +6680,22 @@ msgstr ""
 msgid "Allow binary files to be diffed"
 msgstr ""
 
+msgid "Allow booting from non-sealed system snapshots (Recovery OS only)"
+msgstr ""
+
 msgid "Allow broadcast"
+msgstr ""
+
+msgid "Allow burning to devices not qualified by Apple"
 msgstr ""
 
 msgid "Allow cloning to new name"
 msgstr ""
 
 msgid "Allow commit older than ancestor"
+msgstr ""
+
+msgid "Allow compacting while on battery power"
 msgstr ""
 
 msgid "Allow conditional expressions with mismatched types"
@@ -6657,6 +6735,9 @@ msgid "Allow displaying passwords"
 msgstr ""
 
 msgid "Allow edit if <file>s are edited by others (default)."
+msgstr ""
+
+msgid "Allow eliminating the trailing gap"
 msgstr ""
 
 msgid "Allow empty check-ins"
@@ -6720,6 +6801,9 @@ msgid "Allow insecure connections"
 msgstr ""
 
 msgid "Allow insecure server connections"
+msgstr ""
+
+msgid "Allow install of package signed by untrusted or expired cert"
 msgstr ""
 
 msgid "Allow interactive input/action"
@@ -6815,6 +6899,9 @@ msgstr ""
 msgid "Allow rerere to update index if possible"
 msgstr ""
 
+msgid "Allow research guests (Recovery OS only)"
+msgstr ""
+
 msgid "Allow response from cache"
 msgstr ""
 
@@ -6825,6 +6912,9 @@ msgid "Allow response from locally registered mDNS/LLMNR records"
 msgstr ""
 
 msgid "Allow response from network"
+msgstr ""
+
+msgid "Allow returning partial rights"
 msgstr ""
 
 msgid "Allow same version"
@@ -6917,6 +7007,9 @@ msgstr ""
 msgid "Allow user account with a duplicate UID"
 msgstr ""
 
+msgid "Allow user interaction"
+msgstr ""
+
 msgid "Allow users to register themselves"
 msgstr ""
 
@@ -6993,6 +7086,9 @@ msgid "Also compare received files relative to DIR"
 msgstr ""
 
 msgid "Also delete excluded files on receiver"
+msgstr ""
+
+msgid "Also delete user trust settings for this certificate"
 msgstr ""
 
 msgid "Also display internal events"
@@ -7254,6 +7350,9 @@ msgid "Always print file names"
 msgstr ""
 
 msgid "Always produce unwind table entries for all functions"
+msgstr ""
+
+msgid "Always prompt for information"
 msgstr ""
 
 msgid "Always read slots of installed packages"
@@ -7601,6 +7700,9 @@ msgstr ""
 msgid "Append to variable specified by --name"
 msgstr ""
 
+msgid "Append values to an existing property"
+msgstr ""
+
 msgid "Append with full file checksum, including old data"
 msgstr ""
 
@@ -7614,6 +7716,9 @@ msgid "Appends test binary path to `--test-cmd`"
 msgstr ""
 
 msgid "Appends the given path to Erlang code path"
+msgstr ""
+
+msgid "AppleScript source file"
 msgstr ""
 
 msgid "Applies a configuration to an interface"
@@ -7632,6 +7737,9 @@ msgid "Apply <file> patch"
 msgstr ""
 
 msgid "Apply N patches"
+msgstr ""
+
+msgid "Apply PEM armour to the output data"
 msgstr ""
 
 msgid "Apply Paeth rotation to the image [degrees]"
@@ -7689,6 +7797,9 @@ msgid "Apply a single stashed state"
 msgstr ""
 
 msgid "Apply a unidiff patch to the working copy"
+msgstr ""
+
+msgid "Apply additional validation restrictions"
 msgstr ""
 
 msgid "Apply all patches in the series file"
@@ -7772,6 +7883,9 @@ msgstr ""
 msgid "Apply changes without making any commit"
 msgstr ""
 
+msgid "Apply choiceChanges XML and print resulting choices; requires -target"
+msgstr ""
+
 msgid "Apply color correction to the image [matrix]"
 msgstr ""
 
@@ -7803,6 +7917,9 @@ msgid "Apply function over image values [name parameters]"
 msgstr ""
 
 msgid "Apply hold recursively"
+msgstr ""
+
+msgid "Apply install choice changes from an XML file before installation"
 msgstr ""
 
 msgid "Apply mathematical expression to an image channel(s) [expression]"
@@ -7881,6 +7998,18 @@ msgid "Apply periodic txn rules to generate future txns"
 msgstr ""
 
 msgid "Apply read-only mount"
+msgstr ""
+
+msgid "Apply setting to UPS power source"
+msgstr ""
+
+msgid "Apply setting to all power sources"
+msgstr ""
+
+msgid "Apply setting to battery power source"
+msgstr ""
+
+msgid "Apply setting to charger (AC) power source"
 msgstr ""
 
 msgid "Apply settings to this helper"
@@ -8141,6 +8270,9 @@ msgstr ""
 msgid "Assert that compilation takes place in a hosted environment"
 msgstr ""
 
+msgid "Assess one or more files against system policy"
+msgstr ""
+
 msgid "Assign SRC as the child qgroup of DST"
 msgstr ""
 
@@ -8390,6 +8522,9 @@ msgstr ""
 msgid "Attach a USB device to the host"
 msgstr ""
 
+msgid "Attach a disk image as a device"
+msgstr ""
+
 msgid "Attach a file to your message using MIME"
 msgstr ""
 
@@ -8411,6 +8546,9 @@ msgstr ""
 msgid "Attach network interface"
 msgstr ""
 
+msgid "Attach only a subsection (offset / first-last / start,count)"
+msgstr ""
+
 msgid "Attach the system's debugger to a service"
 msgstr ""
 
@@ -8423,10 +8561,16 @@ msgstr ""
 msgid "Attach virtual device to a pool device"
 msgstr ""
 
+msgid "Attach with a helper process (the default)"
+msgstr ""
+
 msgid "Attach/detach vcpu or groups of threads"
 msgstr ""
 
 msgid "Attach/mount a locked CoreStorage logical volume"
+msgstr ""
+
+msgid "Attached device"
 msgstr ""
 
 msgid "Attaches a namespace to requested controller(s)"
@@ -8448,6 +8592,9 @@ msgid "Attempt automatic login"
 msgstr ""
 
 msgid "Attempt run command in precise intervals"
+msgstr ""
+
+msgid "Attempt to attach in-kernel; fail if unsupported"
 msgstr ""
 
 msgid "Attempt to connect to both IPv4 and IPv6 in parallel"
@@ -8567,10 +8714,19 @@ msgstr ""
 msgid "Authenticate all net traffic."
 msgstr ""
 
+msgid "Authenticate as user"
+msgstr ""
+
 msgid "Authenticate user non-interactively"
 msgstr ""
 
 msgid "Authenticates against the API and stores the token"
+msgstr ""
+
+msgid "Authentication password"
+msgstr ""
+
+msgid "Authentication password (on command line)"
 msgstr ""
 
 msgid "Authentication strategy"
@@ -8580,6 +8736,9 @@ msgid "Author name of package"
 msgstr ""
 
 msgid "Author names"
+msgstr ""
+
+msgid "Authorization policy database operation"
 msgstr ""
 
 msgid "Auto-adjust filter strength"
@@ -8595,6 +8754,12 @@ msgid "Auto-enable --with-bdeps for installation actions (default: y)"
 msgstr ""
 
 msgid "Auto-gen package cache"
+msgstr ""
+
+msgid "Auto-hibernate after sleep for standbydelay seconds (0/1)"
+msgstr ""
+
+msgid "Auto-hibernate into lower-power chipset sleep (Lot 6; 0/1)"
 msgstr ""
 
 msgid "Auto-ignore files in the same way CVS does"
@@ -8637,6 +8802,12 @@ msgid "Automatic mode"
 msgstr ""
 
 msgid "Automatic no to prompts"
+msgstr ""
+
+msgid "Automatic restart on power connect (0/1)"
+msgstr ""
+
+msgid "Automatic restart on power loss (0/1)"
 msgstr ""
 
 msgid "Automatic rotation"
@@ -8688,6 +8859,9 @@ msgid "Automatically reset internal session when reaching N packets"
 msgstr ""
 
 msgid "Automatically reset mock state between every test"
+msgstr ""
+
+msgid "Automatically restart if required to complete installation"
 msgstr ""
 
 msgid "Automatically rotate video"
@@ -8778,6 +8952,9 @@ msgid "Avoid restricted operations such as heap"
 msgstr ""
 
 msgid "Avoid stat(2) for binaries on NFS shares"
+msgstr ""
+
+msgid "BMP image"
 msgstr ""
 
 msgid "BSD jobs format (user, pid, ppid, pgid, sid, jobc, state, tt, time, and cmd)"
@@ -8930,6 +9107,9 @@ msgstr ""
 msgid "Batch size to use for embeddings"
 msgstr ""
 
+msgid "Battery % threshold selecting high vs low standby delay (default 50)"
+msgstr ""
+
 msgid "Be interactive and colorful"
 msgstr ""
 
@@ -9009,6 +9189,9 @@ msgid "Be verbose when showing status"
 msgstr ""
 
 msgid "Be verbose, most useful if you want to nail down a problem with adduser"
+msgstr ""
+
+msgid "Be very verbose (implies -verbose)"
 msgstr ""
 
 msgid "Become a daemon immediately"
@@ -9680,6 +9863,9 @@ msgstr ""
 msgid "Bundles the Javadoc documentation for test Java code into a jar"
 msgstr ""
 
+msgid "Burn an image to optical media"
+msgstr ""
+
 msgid "Busid of the device on <host>"
 msgstr ""
 
@@ -9806,6 +9992,9 @@ msgstr ""
 msgid "Calculate ReplayGain & store in Vorbis comments"
 msgstr ""
 
+msgid "Calculate a checksum on the image data"
+msgstr ""
+
 msgid "Calculate accurate disk space usage for a path"
 msgstr ""
 
@@ -9869,7 +10058,16 @@ msgstr ""
 msgid "Cancel a running scrub"
 msgstr ""
 
+msgid "Cancel a scheduled power event (requires type and date)"
+msgstr ""
+
+msgid "Cancel all repeating power events"
+msgstr ""
+
 msgid "Cancel all scheduled actions on all packages"
+msgstr ""
+
+msgid "Cancel all scheduled power events"
 msgstr ""
 
 msgid "Cancel an active transaction"
@@ -9947,10 +10145,19 @@ msgstr ""
 msgid "Capitalize variable names"
 msgstr ""
 
+msgid "Capture Touch Bar (non-interactive modes only)"
+msgstr ""
+
 msgid "Capture a movie"
 msgstr ""
 
 msgid "Capture a quick preview"
+msgstr ""
+
+msgid "Capture a video recording of the screen"
+msgstr ""
+
+msgid "Capture a video recording of the screen for the given number of seconds"
 msgstr ""
 
 msgid "Capture an audio clip"
@@ -9962,10 +10169,31 @@ msgstr ""
 msgid "Capture an image and download it"
 msgstr ""
 
+msgid "Capture audio during video using the audio source with the given ID"
+msgstr ""
+
+msgid "Capture audio during video using the default input"
+msgstr ""
+
 msgid "Capture disk state but not vm state"
 msgstr ""
 
+msgid "Capture from the specified display number (1=main, 2=secondary, …)"
+msgstr ""
+
 msgid "Capture in immediate mode"
+msgstr ""
+
+msgid "Capture rectangle specified as x,y,width,height"
+msgstr ""
+
+msgid "Capture screen interactively, by selection or window"
+msgstr ""
+
+msgid "Capture the cursor as well as the screen (non-interactive only)"
+msgstr ""
+
+msgid "Capture the window with the given window ID"
 msgstr ""
 
 msgid "Card Authentication (PIN never checked)"
@@ -10016,7 +10244,13 @@ msgstr ""
 msgid "Cause `smushing`"
 msgstr ""
 
+msgid "Cause an immediate system sleep"
+msgstr ""
+
 msgid "Cause gas to print out tomcat statistics"
+msgstr ""
+
+msgid "Cause the display to sleep immediately"
 msgstr ""
 
 msgid "Cause the errors having to do with files that have the wrong architecture to be fatal"
@@ -10064,6 +10298,9 @@ msgstr ""
 msgid "Certificate store name"
 msgstr ""
 
+msgid "Certificate to verify (DER or PEM)"
+msgstr ""
+
 msgid "Change ABI to use double word insns"
 msgstr ""
 
@@ -10079,7 +10316,13 @@ msgstr ""
 msgid "Change a CoreStorage logical volume's passphrase"
 msgstr ""
 
+msgid "Change a property value at a value index"
+msgstr ""
+
 msgid "Change a running pv's options"
+msgstr ""
+
+msgid "Change a value of a property"
 msgstr ""
 
 msgid "Change artificial nesting limit [1024]"
@@ -10119,6 +10362,9 @@ msgid "Change font directory"
 msgstr ""
 
 msgid "Change from owner/group"
+msgstr ""
+
+msgid "Change group format"
 msgstr ""
 
 msgid "Change input buffer size (in kB, default 32)"
@@ -10161,6 +10407,15 @@ msgid "Change number of virtual CPUs"
 msgstr ""
 
 msgid "Change only the low 8 bits of the stack pointer"
+msgstr ""
+
+msgid "Change or add the institutional recovery key"
+msgstr ""
+
+msgid "Change or add the personal recovery key"
+msgstr ""
+
+msgid "Change or set a password for a user record"
 msgstr ""
 
 msgid "Change or view the instance count, disk space limit, and memory limit for an app"
@@ -10220,6 +10475,9 @@ msgstr ""
 msgid "Change the current configuration"
 msgstr ""
 
+msgid "Change the current user password (requires -oldPassword)"
+msgstr ""
+
 msgid "Change the default algorothms for key generation"
 msgstr ""
 
@@ -10230,6 +10488,9 @@ msgid "Change the folder to the Initial working folder preference"
 msgstr ""
 
 msgid "Change the interface's timestamp method"
+msgstr ""
+
+msgid "Change the passphrase for an encrypted image"
 msgstr ""
 
 msgid "Change the passphrase of a cryptographic user"
@@ -10751,6 +11012,9 @@ msgstr ""
 msgid "Check native build tools are installed"
 msgstr ""
 
+msgid "Check network reachability of a host, IP address, or address pair"
+msgstr ""
+
 msgid "Check not only for file existence but for the correct file hash while cleaning"
 msgstr ""
 
@@ -10913,6 +11177,9 @@ msgstr ""
 msgid "Check the results of maven-invoker-plugin integration tests"
 msgstr ""
 
+msgid "Check the validity and trust of the signature on a package"
+msgstr ""
+
 msgid "Check the validity of a signed commit object"
 msgstr ""
 
@@ -11055,6 +11322,9 @@ msgid "Checks the signatures of a project artifact and attachments using jarsign
 msgstr ""
 
 msgid "Checks, updates or deletes an SSH key"
+msgstr ""
+
+msgid "Checksum type to calculate"
 msgstr ""
 
 msgid "Choose a diff algorithm"
@@ -11393,6 +11663,9 @@ msgstr ""
 msgid "Clear the effect of previous use of --where"
 msgstr ""
 
+msgid "Clear the existing SIP configuration"
+msgstr ""
+
 msgid "Clear the fact cache"
 msgstr ""
 
@@ -11516,6 +11789,9 @@ msgstr ""
 msgid "Close only if the repository is untracked and the revision is accepted"
 msgstr ""
 
+msgid "Close stdout/stderr; only exit status indicates success"
+msgstr ""
+
 msgid "Close the branch"
 msgstr ""
 
@@ -11577,6 +11853,12 @@ msgid "Color for the pointer cursor"
 msgstr ""
 
 msgid "Color for the text cursor"
+msgstr ""
+
+msgid "Color match image to profile"
+msgstr ""
+
+msgid "Color match image to profile with rendering intent"
 msgstr ""
 
 msgid "Color non-matchining whitespace changes"
@@ -11711,6 +11993,9 @@ msgstr ""
 msgid "Comma-delimited list of specified reactor projects to build instead of all projects"
 msgstr ""
 
+msgid "Comma-separated code-signature option flags to embed"
+msgstr ""
+
 msgid "Comma-separated format, fills across screen"
 msgstr ""
 
@@ -11744,6 +12029,9 @@ msgstr ""
 msgid "Comma-separated list of package installation states to show"
 msgstr ""
 
+msgid "Comma-separated list of product keys to operate on"
+msgstr ""
+
 msgid "Comma-separated list of prompts"
 msgstr ""
 
@@ -11757,6 +12045,9 @@ msgid "Comma-separated lists of file name suffixes or patterns to accept"
 msgstr ""
 
 msgid "Comma-separated lists of file name suffixes or patterns to reject"
+msgstr ""
+
+msgid "Comma-separated partition list"
 msgstr ""
 
 msgid "Command execute a command in an remote display process"
@@ -11832,6 +12123,9 @@ msgid "Commands to run"
 msgstr ""
 
 msgid "Comment out LiveView socket setup in assets/js/app.js"
+msgstr ""
+
+msgid "Comment to add or replace"
 msgstr ""
 
 msgid "Commit a revision which has been accepted by a reviewer"
@@ -11978,6 +12272,9 @@ msgstr ""
 msgid "Compare package versions"
 msgstr ""
 
+msgid "Compare records or values at two paths"
+msgstr ""
+
 msgid "Compare sizes"
 msgstr ""
 
@@ -12117,6 +12414,9 @@ msgid "Compile, but don't run benchmarks"
 msgstr ""
 
 msgid "Compile, but don't run tests"
+msgstr ""
+
+msgid "Compiled script"
 msgstr ""
 
 msgid "Compiler debug mode"
@@ -12311,6 +12611,9 @@ msgstr ""
 msgid "Compute and check message digest"
 msgstr ""
 
+msgid "Compute and verify the checksum of a read-only or compressed image"
+msgstr ""
+
 msgid "Compute baseline CPU"
 msgstr ""
 
@@ -12455,6 +12758,9 @@ msgstr ""
 msgid "Configure analytics"
 msgstr ""
 
+msgid "Configure automatic login (set/off/status)"
+msgstr ""
+
 msgid "Configure color output"
 msgstr ""
 
@@ -12480,6 +12786,9 @@ msgid "Configure local name to be advertised"
 msgstr ""
 
 msgid "Configure package"
+msgstr ""
+
+msgid "Configure screen lock timeout (status/immediate/off/seconds)"
 msgstr ""
 
 msgid "Configure static DHCP value"
@@ -12564,6 +12873,9 @@ msgid "Connect external IP addresses to the ADB server"
 msgstr ""
 
 msgid "Connect readonly"
+msgstr ""
+
+msgid "Connect the PPPoE service."
 msgstr ""
 
 msgid "Connect timeout"
@@ -12713,6 +13025,9 @@ msgstr ""
 msgid "Construct a path from the given template"
 msgstr ""
 
+msgid "Construct and print the hosting chain of running pid(s)"
+msgstr ""
+
 msgid "Construct the RPM file"
 msgstr ""
 
@@ -12726,6 +13041,9 @@ msgid "Consume remaining arguments as positional JSON values"
 msgstr ""
 
 msgid "Consume remaining arguments as positional string values"
+msgstr ""
+
+msgid "Contact a timestamp authority (=URL, or none to disable)"
 msgstr ""
 
 msgid "Container authentication file"
@@ -12762,6 +13080,9 @@ msgid "Continue as much as possible after an error"
 msgstr ""
 
 msgid "Continue as much as possible after an error; recalculate deps for remaining packages"
+msgstr ""
+
+msgid "Continue assessing remaining files after a failed assessment"
 msgstr ""
 
 msgid "Continue conversation with given id"
@@ -12801,6 +13122,9 @@ msgid "Continue on all problems"
 msgstr ""
 
 msgid "Continue on unmerged changes in the index"
+msgstr ""
+
+msgid "Continue processing path arguments even if one fails"
 msgstr ""
 
 msgid "Continue refresh after error"
@@ -13052,6 +13376,9 @@ msgstr ""
 msgid "Convert all the files in a directory"
 msgstr ""
 
+msgid "Convert an image to another format"
+msgstr ""
+
 msgid "Convert an interface MAC address to interface name"
 msgstr ""
 
@@ -13295,7 +13622,13 @@ msgstr ""
 msgid "Copy settings from repository"
 msgstr ""
 
+msgid "Copy srcTag element of a profile to dstTag"
+msgstr ""
+
 msgid "Copy symlinks as symlinks"
+msgstr ""
+
+msgid "Copy the contents of this folder into the image"
 msgstr ""
 
 msgid "Copy the current TOTP to the clipboard"
@@ -13418,7 +13751,19 @@ msgstr ""
 msgid "Create a 512MB Apple_Journal partition"
 msgstr ""
 
+msgid "Create a 6 to 4 service with name <newnetworkservicename>."
+msgstr ""
+
 msgid "Create a BSD-style checksum"
+msgstr ""
+
+msgid "Create a CMS encrypted message"
+msgstr ""
+
+msgid "Create a CMS enveloped message"
+msgstr ""
+
+msgid "Create a CMS signed message"
 msgstr ""
 
 msgid "Create a CVS repository if it doesn't exist"
@@ -13433,7 +13778,13 @@ msgstr ""
 msgid "Create a NuGet package"
 msgstr ""
 
+msgid "Create a PPPoE service on the specified device"
+msgstr ""
+
 msgid "Create a RAID set on multiple disks"
+msgstr ""
+
+msgid "Create a VLAN over a device"
 msgstr ""
 
 msgid "Create a bare repository"
@@ -13473,6 +13824,9 @@ msgid "Create a commit with no commit message"
 msgstr ""
 
 msgid "Create a console application"
+msgstr ""
+
+msgid "Create a db using the DL"
 msgstr ""
 
 msgid "Create a device defined by an XML file on the node"
@@ -13568,6 +13922,9 @@ msgstr ""
 msgid "Create a new authentication token"
 msgstr ""
 
+msgid "Create a new bond and add the specified devices"
+msgstr ""
+
 msgid "Create a new branch"
 msgstr ""
 
@@ -13607,10 +13964,19 @@ msgstr ""
 msgid "Create a new extent tree (repair only)"
 msgstr ""
 
+msgid "Create a new image of the given size or from provided data"
+msgstr ""
+
 msgid "Create a new k3s node in docker"
 msgstr ""
 
+msgid "Create a new local user account"
+msgstr ""
+
 msgid "Create a new mount"
+msgstr ""
+
+msgid "Create a new network location with the specified name."
 msgstr ""
 
 msgid "Create a new orphan branch"
@@ -13673,6 +14039,12 @@ msgstr ""
 msgid "Create a permission set or add permissions to an existing one"
 msgstr ""
 
+msgid "Create a plist property at a value index"
+msgstr ""
+
+msgid "Create a plist property from a plist path"
+msgstr ""
+
 msgid "Create a pool by splitting an existing mirror one"
 msgstr ""
 
@@ -13697,6 +14069,9 @@ msgstr ""
 msgid "Create a readonly snapshot"
 msgstr ""
 
+msgid "Create a record, property, or value (alias: mk)"
+msgstr ""
+
 msgid "Create a reflog"
 msgstr ""
 
@@ -13719,6 +14094,9 @@ msgid "Create a service broker"
 msgstr ""
 
 msgid "Create a service instance"
+msgstr ""
+
+msgid "Create a service on a hardware port"
 msgstr ""
 
 msgid "Create a set identified with SETNAME"
@@ -13856,6 +14234,9 @@ msgstr ""
 msgid "Create an assertion to prevent the system from sleeping (AC power)"
 msgstr ""
 
+msgid "Create an asymmetric key pair"
+msgstr ""
+
 msgid "Create an email thread"
 msgstr ""
 
@@ -13890,6 +14271,9 @@ msgid "Create any missing parent directories"
 msgstr ""
 
 msgid "Create archive"
+msgstr ""
+
+msgid "Create as a role account (name must start with _, UID 450-499)"
 msgstr ""
 
 msgid "Create batchfile"
@@ -13974,6 +14358,9 @@ msgid "Create index F for archive"
 msgstr ""
 
 msgid "Create key for a service instance"
+msgstr ""
+
+msgid "Create keychains"
 msgstr ""
 
 msgid "Create library from source or object files"
@@ -14258,6 +14645,12 @@ msgstr ""
 msgid "Creates the apklib file"
 msgstr ""
 
+msgid "Crop image to fit specified height and width (pixels)"
+msgstr ""
+
+msgid "Crop offset from top left corner (offsetY offsetH)"
+msgstr ""
+
 msgid "Crop picture with <x> <y> <v> <h> rectangle"
 msgstr ""
 
@@ -14268,6 +14661,9 @@ msgid "Cross-compile to build programs to run on HOST"
 msgstr ""
 
 msgid "Cumulative mode"
+msgstr ""
+
+msgid "Current (old) password"
 msgstr ""
 
 msgid "Current term in the argument list being completed"
@@ -14402,6 +14798,9 @@ msgstr ""
 msgid "Data integrity algorithm (LUKS2 only)"
 msgstr ""
 
+msgid "Data type to include in report"
+msgstr ""
+
 msgid "Database connection pool size"
 msgstr ""
 
@@ -14496,6 +14895,9 @@ msgid "Date as the value for the given key"
 msgstr ""
 
 msgid "Date for track"
+msgstr ""
+
+msgid "Date to set for verification (YYYY-MM-DD-hh:mm:ss)"
 msgstr ""
 
 msgid "Date."
@@ -14613,6 +15015,9 @@ msgid "Decode (the default behavior is to encode)"
 msgstr ""
 
 msgid "Decode URL-escaped filenames"
+msgstr ""
+
+msgid "Decode a CMS message"
 msgstr ""
 
 msgid "Decode and display packet summary or details"
@@ -14735,6 +15140,9 @@ msgstr ""
 msgid "Default host"
 msgstr ""
 
+msgid "Default language for OS installs (ISO language code, e.g. en)"
+msgstr ""
+
 msgid "Default library type"
 msgstr ""
 
@@ -14768,7 +15176,13 @@ msgstr ""
 msgid "Default umask to apply on permissions of installed files"
 msgstr ""
 
+msgid "Default volume name for all filesystems"
+msgstr ""
+
 msgid "Default window size (qt only)"
+msgstr ""
+
+msgid "Defer enablement; write recovery info to this file path"
 msgstr ""
 
 msgid "Defer module loading"
@@ -14981,10 +15395,19 @@ msgstr ""
 msgid "Delete a buildpack"
 msgstr ""
 
+msgid "Delete a certificate and its private key from a keychain"
+msgstr ""
+
+msgid "Delete a certificate from a keychain"
+msgstr ""
+
 msgid "Delete a domain"
 msgstr ""
 
 msgid "Delete a domain snapshot"
+msgstr ""
+
+msgid "Delete a generic password item"
 msgstr ""
 
 msgid "Delete a group"
@@ -14994,6 +15417,9 @@ msgid "Delete a key group from a SOPS file"
 msgstr ""
 
 msgid "Delete a key or an entire directory"
+msgstr ""
+
+msgid "Delete a local user account"
 msgstr ""
 
 msgid "Delete a loop device"
@@ -15006,6 +15432,9 @@ msgid "Delete a pool"
 msgstr ""
 
 msgid "Delete a quota"
+msgstr ""
+
+msgid "Delete a record, property, or value (alias: rm)"
 msgstr ""
 
 msgid "Delete a route"
@@ -15140,6 +15569,9 @@ msgstr ""
 msgid "Delete an existing workspace"
 msgstr ""
 
+msgid "Delete an internet password item"
+msgstr ""
+
 msgid "Delete an isolation segment"
 msgstr ""
 
@@ -15174,6 +15606,9 @@ msgid "Delete children but not snapshot"
 msgstr ""
 
 msgid "Delete cluster(s)"
+msgstr ""
+
+msgid "Delete color management properties in TIFF, PNG, and EXIF"
 msgstr ""
 
 msgid "Delete config"
@@ -15260,6 +15695,9 @@ msgstr ""
 msgid "Delete invalid tarballs from the cache"
 msgstr ""
 
+msgid "Delete keychains and remove from the search list"
+msgstr ""
+
 msgid "Delete logs older than NUM days"
 msgstr ""
 
@@ -15291,6 +15729,9 @@ msgid "Delete only libvirt metadata, leaving snapshot contents behind"
 msgstr ""
 
 msgid "Delete only those tarballs which aren't present in a snapshot"
+msgstr ""
+
+msgid "Delete plist-path values at a value index"
 msgstr ""
 
 msgid "Delete previous settime entry"
@@ -15350,6 +15791,15 @@ msgstr ""
 msgid "Delete tag"
 msgstr ""
 
+msgid "Delete the PPPoE service."
+msgstr ""
+
+msgid "Delete the VLAN over the parent device"
+msgstr ""
+
+msgid "Delete the bond with the specified device-name."
+msgstr ""
+
 msgid "Delete the cache directory"
 msgstr ""
 
@@ -15369,6 +15819,9 @@ msgid "Delete the given tag."
 msgstr ""
 
 msgid "Delete the image from the image sequence [indexes]"
+msgstr ""
+
+msgid "Delete the location."
 msgstr ""
 
 msgid "Delete the logfile when done"
@@ -15408,6 +15861,9 @@ msgid "Delete unused indexes from application"
 msgstr ""
 
 msgid "Delete user password"
+msgstr ""
+
+msgid "Delete values from a plist path"
 msgstr ""
 
 msgid "Delete virtual netdevs"
@@ -15713,6 +16169,9 @@ msgstr ""
 msgid "Destroy (stop) a pool"
 msgstr ""
 
+msgid "Destroy FileVault key on standby (0=retain, 1=destroy)"
+msgstr ""
+
 msgid "Destroy a dataset"
 msgstr ""
 
@@ -15723,6 +16182,9 @@ msgid "Destroy a quota group."
 msgstr ""
 
 msgid "Destroy a storage pool"
+msgstr ""
+
+msgid "Destroy acquired rights"
 msgstr ""
 
 msgid "Destroy an existing team"
@@ -15750,6 +16212,9 @@ msgid "Detach HEAD in the new working tree"
 msgstr ""
 
 msgid "Detach a USB device from the host"
+msgstr ""
+
+msgid "Detach a disk image and terminate associated process"
 msgstr ""
 
 msgid "Detach all tracees when LIMIT number of syscalls have been captured"
@@ -15819,6 +16284,9 @@ msgid "Detect lines moved or copied from other files modified in the same commit
 msgstr ""
 
 msgid "Detect moved or copied lines within a file"
+msgstr ""
+
+msgid "Detect new network hardware and create a default service"
 msgstr ""
 
 msgid "Detect the file that sets the current pyenv version"
@@ -15896,6 +16364,9 @@ msgstr ""
 msgid "Device or file with separated LUKS header"
 msgstr ""
 
+msgid "Device path, BSD name, or LV/LVF UUID to query"
+msgstr ""
+
 msgid "Device removal is deferred until the last user closes it"
 msgstr ""
 
@@ -15909,6 +16380,9 @@ msgid "Device to clear ZFS label information from"
 msgstr ""
 
 msgid "Device to disconnect"
+msgstr ""
+
+msgid "Device to use for burning"
 msgstr ""
 
 msgid "DevicesMojo lists all attached devices and emulators found with the android debug bridge"
@@ -15984,6 +16458,9 @@ msgid "Directly sign a key from the passphrase; marks signatures as non-exportab
 msgstr ""
 
 msgid "Directory Service cache utility"
+msgstr ""
+
+msgid "Directory Service node (e.g. /LDAPv3/ldap.example.com or . for local)"
 msgstr ""
 
 msgid "Directory containing additional DB migrations"
@@ -16211,6 +16688,9 @@ msgstr ""
 msgid "Disable EPSC/EPRT command on IPv4 connections"
 msgstr ""
 
+msgid "Disable FileVault"
+msgstr ""
+
 msgid "Disable GPG check for this repository"
 msgstr ""
 
@@ -16268,10 +16748,16 @@ msgstr ""
 msgid "Disable SSL for connection"
 msgstr ""
 
+msgid "Disable Secure Token for a user"
+msgstr ""
+
 msgid "Disable Spotlight activity for volume"
 msgstr ""
 
 msgid "Disable Steam Runtime"
+msgstr ""
+
+msgid "Disable System Integrity Protection (Recovery OS only)"
 msgstr ""
 
 msgid "Disable TestDox progress animation"
@@ -16293,6 +16779,9 @@ msgid "Disable a Copr repository"
 msgstr ""
 
 msgid "Disable a NuGet source"
+msgstr ""
+
+msgid "Disable a VPN application type or service"
 msgstr ""
 
 msgid "Disable a demangling recursion limit"
@@ -16712,6 +17201,9 @@ msgstr ""
 msgid "Disable interactive prompts"
 msgstr ""
 
+msgid "Disable interactive verification of replace/delete operations"
+msgstr ""
+
 msgid "Disable intra zone forwarding"
 msgstr ""
 
@@ -16938,6 +17430,9 @@ msgid "Disable size limitation on JavaScript project"
 msgstr ""
 
 msgid "Disable slideshow mode"
+msgstr ""
+
+msgid "Disable smartcard token"
 msgstr ""
 
 msgid "Disable sound"
@@ -17360,6 +17855,9 @@ msgstr ""
 msgid "Disallow pushing to the repository"
 msgstr ""
 
+msgid "Disallow research guests (Recovery OS only)"
+msgstr ""
+
 msgid "Disallow stop bits to be placed earlier than immediately before the triggering instruction"
 msgstr ""
 
@@ -17379,6 +17877,9 @@ msgid "Discard all but one of any pixel color"
 msgstr ""
 
 msgid "Discard all but the last element of the path of the sent snapshot"
+msgstr ""
+
+msgid "Discard all receipt data about a package-id (does not remove files)"
 msgstr ""
 
 msgid "Discard any transparency information"
@@ -17435,6 +17936,9 @@ msgstr ""
 msgid "Disconnect networking of the container from the host"
 msgstr ""
 
+msgid "Disconnect the PPPoE service."
+msgstr ""
+
 msgid "Discover MTU along the path"
 msgstr ""
 
@@ -17454,6 +17958,9 @@ msgid "Disk image dissection policy"
 msgstr ""
 
 msgid "Disk image to mount the root directory for the container from"
+msgstr ""
+
+msgid "Disk spindown timer in minutes (0=never)"
 msgstr ""
 
 msgid "Disk usage by buckets"
@@ -17480,6 +17987,9 @@ msgstr ""
 msgid "Display AS number"
 msgstr ""
 
+msgid "Display Bypass Domain Names for a network service"
+msgstr ""
+
 msgid "Display C compiler invocations"
 msgstr ""
 
@@ -17504,16 +18014,34 @@ msgstr ""
 msgid "Display DITA Open Toolkit's common Ant properties usage"
 msgstr ""
 
+msgid "Display DNS info for a network service"
+msgstr ""
+
 msgid "Display DWARF info in file"
 msgstr ""
 
+msgid "Display Domain Name info for a network service"
+msgstr ""
+
 msgid "Display EXIF information"
+msgstr ""
+
+msgid "Display IP, subnet, router, and ethernet info for a service"
 msgstr ""
 
 msgid "Display LTO symbol tables"
 msgstr ""
 
 msgid "Display RubyGems environmental information"
+msgstr ""
+
+msgid "Display SIP configuration of the running (or each Recovery) OS"
+msgstr ""
+
+msgid "Display SOCKS Firewall proxy info for a network service"
+msgstr ""
+
+msgid "Display Secure Web proxy info for a network service"
 msgstr ""
 
 msgid "Display Sphinx version"
@@ -17528,10 +18056,19 @@ msgstr ""
 msgid "Display UPDATING entries"
 msgstr ""
 
+msgid "Display UPS emergency thresholds"
+msgstr ""
+
 msgid "Display URL for path of given portname"
 msgstr ""
 
 msgid "Display VPN connections"
+msgstr ""
+
+msgid "Display VPN on-demand information"
+msgstr ""
+
+msgid "Display Web proxy info for a network service"
 msgstr ""
 
 msgid "Display a brief help message. Identical to the help action"
@@ -17543,6 +18080,9 @@ msgstr ""
 msgid "Display a dependency listing for given port(s)"
 msgstr ""
 
+msgid "Display a descriptive message for the given error code(s)"
+msgstr ""
+
 msgid "Display a help message"
 msgstr ""
 
@@ -17550,6 +18090,9 @@ msgid "Display a help page"
 msgstr ""
 
 msgid "Display a list of available package sets"
+msgstr ""
+
+msgid "Display a list of commands with no detail"
 msgstr ""
 
 msgid "Display a list of speedtest.net servers sorted by distance"
@@ -17600,7 +18143,13 @@ msgstr ""
 msgid "Display actions without running"
 msgstr ""
 
+msgid "Display active sleep/wake UUID and print new UUIDs as set"
+msgstr ""
+
 msgid "Display active subdomains only"
+msgstr ""
+
+msgid "Display additional information"
 msgstr ""
 
 msgid "Display all ARP entries"
@@ -17616,6 +18165,9 @@ msgid "Display all available licenses"
 msgstr ""
 
 msgid "Display all changelogs"
+msgstr ""
+
+msgid "Display all commands with explanatory information"
 msgstr ""
 
 msgid "Display all details."
@@ -17681,10 +18233,19 @@ msgstr ""
 msgid "Display assembler contents of executable sections"
 msgstr ""
 
+msgid "Display assessment outcome as raw XML plist"
+msgstr ""
+
 msgid "Display author"
 msgstr ""
 
 msgid "Display author email"
+msgstr ""
+
+msgid "Display available smartcards"
+msgstr ""
+
+msgid "Display battery and UPS status (alias for ps)"
 msgstr ""
 
 msgid "Display brief instructions"
@@ -17756,6 +18317,9 @@ msgstr ""
 msgid "Display configuration and exit"
 msgstr ""
 
+msgid "Display configuration for a service"
+msgstr ""
+
 msgid "Display configuration options for packages"
 msgstr ""
 
@@ -17780,6 +18344,9 @@ msgstr ""
 msgid "Display contents of the overall file header"
 msgstr ""
 
+msgid "Display contents of trust settings"
+msgstr ""
+
 msgid "Display control chars"
 msgstr ""
 
@@ -17789,7 +18356,19 @@ msgstr ""
 msgid "Display copious debugging information [events]"
 msgstr ""
 
+msgid "Display current FileVault status"
+msgstr ""
+
+msgid "Display current Wi-Fi Network for a device"
+msgstr ""
+
 msgid "Display current time when using monitor"
+msgstr ""
+
+msgid "Display currently active sleep/wake UUID"
+msgstr ""
+
+msgid "Display custom settings for all power sources"
 msgstr ""
 
 msgid "Display date described by string"
@@ -17828,6 +18407,9 @@ msgstr ""
 msgid "Display detailed help on every command"
 msgstr ""
 
+msgid "Display detailed information about a disk image"
+msgstr ""
+
 msgid "Display detailed information about the packages"
 msgstr ""
 
@@ -17838,6 +18420,12 @@ msgid "Display detailed information of gem(s)"
 msgstr ""
 
 msgid "Display detailed pool health status"
+msgstr ""
+
+msgid "Display details about attached AC power adapter (MacBook/Pro)"
+msgstr ""
+
+msgid "Display details about attached AC power adapter (alias for ac)"
 msgstr ""
 
 msgid "Display device and node names instead of descriptions"
@@ -17886,6 +18474,12 @@ msgid "Display environment variables as an s-expression"
 msgstr ""
 
 msgid "Display error and exit if exceed memory usage limit"
+msgstr ""
+
+msgid "Display errors to the user graphically"
+msgstr ""
+
+msgid "Display ethernet or Wi-Fi address for a hardware port or device"
 msgstr ""
 
 msgid "Display extended details for pools"
@@ -18287,6 +18881,9 @@ msgstr ""
 msgid "Display help message and exit"
 msgstr ""
 
+msgid "Display help screen"
+msgstr ""
+
 msgid "Display help text"
 msgstr ""
 
@@ -18299,10 +18896,25 @@ msgstr ""
 msgid "Display histogram of bucket list lengths"
 msgstr ""
 
+msgid "Display history of sleeps, wakes, and power management events"
+msgstr ""
+
 msgid "Display hook variables"
 msgstr ""
 
 msgid "Display hosts listed in configuration"
+msgstr ""
+
+msgid "Display idle time until computer sleeps"
+msgstr ""
+
+msgid "Display idle time until display sleeps"
+msgstr ""
+
+msgid "Display idle time until hard disk sleeps"
+msgstr ""
+
+msgid "Display idle time until machine sleeps"
 msgstr ""
 
 msgid "Display image centered on a backdrop"
@@ -18332,13 +18944,22 @@ msgstr ""
 msgid "Display info about a project"
 msgstr ""
 
+msgid "Display info about the disk image driver and attached images"
+msgstr ""
+
 msgid "Display information about a local or remote item"
 msgstr ""
 
 msgid "Display information about all link groups"
 msgstr ""
 
+msgid "Display information about installed DiskImages plugins"
+msgstr ""
+
 msgid "Display information about specific packages"
+msgstr ""
+
+msgid "Display information about the code at the path(s)/pid(s)"
 msgstr ""
 
 msgid "Display information about the link group"
@@ -18392,6 +19013,12 @@ msgstr ""
 msgid "Display linker invocations"
 msgstr ""
 
+msgid "Display list of hardware ports with device name and address"
+msgstr ""
+
+msgid "Display list of network services"
+msgstr ""
+
 msgid "Display locations"
 msgstr ""
 
@@ -18431,7 +19058,16 @@ msgstr ""
 msgid "Display minimal output for each responding host"
 msgstr ""
 
+msgid "Display minimal usage information for each verb"
+msgstr ""
+
+msgid "Display minimum, current, and maximum sizes; do not resize"
+msgstr ""
+
 msgid "Display modules found via autodetection"
+msgstr ""
+
+msgid "Display more descriptive output"
 msgstr ""
 
 msgid "Display more detailed help"
@@ -18470,6 +19106,15 @@ msgstr ""
 msgid "Display one-line summary"
 msgstr ""
 
+msgid "Display ongoing log of battery state read directly from battery"
+msgstr ""
+
+msgid "Display ongoing log of power source state"
+msgstr ""
+
+msgid "Display ongoing log of system load advisory changes (10.6+)"
+msgstr ""
+
 msgid "Display only a total for each argument"
 msgstr ""
 
@@ -18491,10 +19136,25 @@ msgstr ""
 msgid "Display only security context and file name"
 msgstr ""
 
+msgid "Display only the password for the item found"
+msgstr ""
+
 msgid "Display only undefined symbols"
 msgstr ""
 
+msgid "Display or manipulate the keychain search list"
+msgstr ""
+
+msgid "Display or manipulate user-level trust settings"
+msgstr ""
+
 msgid "Display or set UTC time"
+msgstr ""
+
+msgid "Display or set the default keychain"
+msgstr ""
+
+msgid "Display or set the login keychain"
 msgstr ""
 
 msgid "Display output and report summary on exit"
@@ -18563,6 +19223,9 @@ msgstr ""
 msgid "Display process statistics"
 msgstr ""
 
+msgid "Display profile installation status"
+msgstr ""
+
 msgid "Display profile properties"
 msgstr ""
 
@@ -18573,6 +19236,9 @@ msgid "Display progress as a simple progress bar"
 msgstr ""
 
 msgid "Display progress bar when using the -info option"
+msgstr ""
+
+msgid "Display proxy auto-config (url, enabled) info for a service"
 msgstr ""
 
 msgid "Display queries that internal commands generate"
@@ -18599,6 +19265,9 @@ msgstr ""
 msgid "Display rm version"
 msgstr ""
 
+msgid "Display scheduled startup/wake and shutdown/sleep events"
+msgstr ""
+
 msgid "Display scrollbar"
 msgstr ""
 
@@ -18611,10 +19280,19 @@ msgstr ""
 msgid "Display services"
 msgstr ""
 
+msgid "Display services with port and device in connection order"
+msgstr ""
+
+msgid "Display settings currently in use"
+msgstr ""
+
 msgid "Display short option summary"
 msgstr ""
 
 msgid "Display short usage message"
+msgstr ""
+
+msgid "Display sleep timer in minutes (0=never)"
 msgstr ""
 
 msgid "Display software version"
@@ -18635,7 +19313,16 @@ msgstr ""
 msgid "Display status information on checked out files"
 msgstr ""
 
+msgid "Display status of batteries and UPSs"
+msgstr ""
+
 msgid "Display summary"
+msgstr ""
+
+msgid "Display summary of power assertions (10.6+)"
+msgstr ""
+
+msgid "Display supported power management features"
 msgstr ""
 
 msgid "Display swap usage"
@@ -18645,6 +19332,9 @@ msgid "Display syntax and command line options"
 msgstr ""
 
 msgid "Display synthetic symbols as well"
+msgstr ""
+
+msgid "Display system load advisory summary (10.6+)"
 msgstr ""
 
 msgid "Display system message buffer"
@@ -18671,6 +19361,12 @@ msgstr ""
 msgid "Display the compiled-in search paths"
 msgstr ""
 
+msgid "Display the computer name"
+msgstr ""
+
+msgid "Display the computer name."
+msgstr ""
+
 msgid "Display the contents of DWARF debug sections"
 msgstr ""
 
@@ -18692,13 +19388,31 @@ msgstr ""
 msgid "Display the core notes"
 msgstr ""
 
+msgid "Display the current date"
+msgstr ""
+
 msgid "Display the current platform information"
+msgstr ""
+
+msgid "Display the current startup disk"
 msgstr ""
 
 msgid "Display the current state of the system"
 msgstr ""
 
 msgid "Display the current status of RAID sets"
+msgstr ""
+
+msgid "Display the current time in 24-hour format"
+msgstr ""
+
+msgid "Display the current time zone"
+msgstr ""
+
+msgid "Display the current tool version"
+msgstr ""
+
+msgid "Display the currently set network time server"
 msgstr ""
 
 msgid "Display the default ignore rules that bzr uses"
@@ -18746,10 +19460,16 @@ msgstr ""
 msgid "Display the list of stored user names and credentials"
 msgstr ""
 
+msgid "Display the local subnet name"
+msgstr ""
+
 msgid "Display the manual for an OPAM command"
 msgstr ""
 
 msgid "Display the modification status of the files in the configured scm url"
+msgstr ""
+
+msgid "Display the name of the current location."
 msgstr ""
 
 msgid "Display the next image after pausing [value]"
@@ -18768,6 +19488,12 @@ msgid "Display the package's README file from /usr/share/doc"
 msgstr ""
 
 msgid "Display the page with label LABEL first"
+msgstr ""
+
+msgid "Display the partition map of an image"
+msgstr ""
+
+msgid "Display the password for the item found"
 msgstr ""
 
 msgid "Display the path to the Portfile for portname"
@@ -18812,6 +19538,12 @@ msgstr ""
 msgid "Display the states of files in the package"
 msgstr ""
 
+msgid "Display the status of the specified PPPoE service."
+msgstr ""
+
+msgid "Display the status of the specified bond."
+msgstr ""
+
 msgid "Display the status view in a machine-readable format"
 msgstr ""
 
@@ -18819,6 +19551,9 @@ msgid "Display the symbol table"
 msgstr ""
 
 msgid "Display the symbol/file index in an archive"
+msgstr ""
+
+msgid "Display the tool version"
 msgstr ""
 
 msgid "Display the tree for all packages in the workspace"
@@ -18845,10 +19580,16 @@ msgstr ""
 msgid "Display the version of pkg-config and quit"
 msgstr ""
 
+msgid "Display the version of the installer tool"
+msgstr ""
+
 msgid "Display the version of the program"
 msgstr ""
 
 msgid "Display the version sections"
+msgstr ""
+
+msgid "Display these help listings."
 msgstr ""
 
 msgid "Display this help"
@@ -18965,6 +19706,12 @@ msgstr ""
 msgid "Display version number."
 msgstr ""
 
+msgid "Display version of networksetup tool."
+msgstr ""
+
+msgid "Display version of systemsetup tool"
+msgstr ""
+
 msgid "Display virtual device GUID instead of device name"
 msgstr ""
 
@@ -18978,6 +19725,39 @@ msgid "Display warranty and exit"
 msgstr ""
 
 msgid "Display what would be done without doing it"
+msgstr ""
+
+msgid "Display whether Proxy Auto Discover is on or off for a service"
+msgstr ""
+
+msgid "Display whether Wi-Fi power is on or off for a device"
+msgstr ""
+
+msgid "Display whether a service is on or off."
+msgstr ""
+
+msgid "Display whether network time is on or off"
+msgstr ""
+
+msgid "Display whether power button can sleep the computer"
+msgstr ""
+
+msgid "Display whether remote Apple Events are on or off"
+msgstr ""
+
+msgid "Display whether remote login (SSH) is on or off"
+msgstr ""
+
+msgid "Display whether restart on freeze is on or off"
+msgstr ""
+
+msgid "Display whether restart on power failure is on or off"
+msgstr ""
+
+msgid "Display whether wake on modem is on or off"
+msgstr ""
+
+msgid "Display whether wake on network access is on or off"
 msgstr ""
 
 msgid "Display whiteouts when scanning directories"
@@ -19020,6 +19800,9 @@ msgid "Displays a list of the profiles which are currently active for this build
 msgstr ""
 
 msgid "Displays a projects build history"
+msgstr ""
+
+msgid "Displays a quick listing of commands."
 msgstr ""
 
 msgid "Displays accounts and their subscription status"
@@ -19346,6 +20129,9 @@ msgstr ""
 msgid "Do not add message id to commit message"
 msgstr ""
 
+msgid "Do not add screen DPI metadata to the captured file"
+msgstr ""
+
 msgid "Do not add the default keyrings to the list of keyrings"
 msgstr ""
 
@@ -19404,6 +20190,9 @@ msgid "Do not ask for confirmation"
 msgstr ""
 
 msgid "Do not ask for confirmation and skip all warnings when switching GPUs"
+msgstr ""
+
+msgid "Do not ask for confirmation before destructive operations"
 msgstr ""
 
 msgid "Do not ask for passphrase if activation by token fails"
@@ -19488,6 +20277,9 @@ msgid "Do not call gensync (and the !commands in /etc/eix-sync.conf)"
 msgstr ""
 
 msgid "Do not canonicalize any paths or tags during the mount process"
+msgstr ""
+
+msgid "Do not capture attached windows"
 msgstr ""
 
 msgid "Do not cc the From: address"
@@ -19611,6 +20403,9 @@ msgid "Do not create a branch"
 msgstr ""
 
 msgid "Do not create a hierarchy of directories"
+msgstr ""
+
+msgid "Do not create a personal recovery key"
 msgstr ""
 
 msgid "Do not create a signature for the package"
@@ -20288,6 +21083,9 @@ msgstr ""
 msgid "Do not pipe output into a pager"
 msgstr ""
 
+msgid "Do not play sounds"
+msgstr ""
+
 msgid "Do not pre allocate upload data"
 msgstr ""
 
@@ -20390,6 +21188,9 @@ msgstr ""
 msgid "Do not prompt for confirmation"
 msgstr ""
 
+msgid "Do not prompt for enablement at logout"
+msgstr ""
+
 msgid "Do not prompt for password"
 msgstr ""
 
@@ -20403,6 +21204,9 @@ msgid "Do not prune any loose objects"
 msgstr ""
 
 msgid "Do not put the recipient keyid into encrypted packets"
+msgstr ""
+
+msgid "Do not query the assessment object cache (may be slower)"
 msgstr ""
 
 msgid "Do not query the user for authentication for privileged operations"
@@ -20813,6 +21617,9 @@ msgstr ""
 msgid "Do not stash local changes before starting rebase"
 msgstr ""
 
+msgid "Do not store assessment outcome in the cache"
+msgstr ""
+
 msgid "Do not store directory names"
 msgstr ""
 
@@ -21101,6 +21908,9 @@ msgstr ""
 msgid "Do not use the standard system startup files when linking"
 msgstr ""
 
+msgid "Do not use the supplied password to unlock"
+msgstr ""
+
 msgid "Do not use the ~/.cvsrc file."
 msgstr ""
 
@@ -21119,6 +21929,9 @@ msgstr ""
 msgid "Do not validate requires for overly strict/loose constraints"
 msgstr ""
 
+msgid "Do not validate the code's resources during static validation"
+msgstr ""
+
 msgid "Do not verify PGP signatures"
 msgstr ""
 
@@ -21129,6 +21942,9 @@ msgid "Do not verify each signature right after creation"
 msgstr ""
 
 msgid "Do not verify source files with PGP signatures"
+msgstr ""
+
+msgid "Do not verify the image before attaching"
 msgstr ""
 
 msgid "Do not wait for changes to be written safely to disk"
@@ -22508,6 +23324,9 @@ msgstr ""
 msgid "Don't strip leading /"
 msgstr ""
 
+msgid "Don't strip prefix from DirectoryService API constants"
+msgstr ""
+
 msgid "Don't submit audit reports"
 msgstr ""
 
@@ -22584,6 +23403,9 @@ msgid "Don't try to be smart about the interface name"
 msgstr ""
 
 msgid "Don't try to set the date"
+msgstr ""
+
+msgid "Don't turn on the laser (test burn)"
 msgstr ""
 
 msgid "Don't uninstall all matching versions"
@@ -23000,6 +23822,9 @@ msgstr ""
 msgid "Download a single module and change into its directory"
 msgstr ""
 
+msgid "Download all applicable updates"
+msgstr ""
+
 msgid "Download all source rpms to this directory"
 msgstr ""
 
@@ -23022,6 +23847,9 @@ msgid "Download and extract a source"
 msgstr ""
 
 msgid "Download and install modules for the configuration"
+msgstr ""
+
+msgid "Download and install updates"
 msgstr ""
 
 msgid "Download dependencies recursively"
@@ -23072,7 +23900,16 @@ msgstr ""
 msgid "Download only"
 msgstr ""
 
+msgid "Download only Safari updates"
+msgstr ""
+
 msgid "Download only diff file"
+msgstr ""
+
+msgid "Download only macOS updates"
+msgstr ""
+
+msgid "Download only recommended updates"
 msgstr ""
 
 msgid "Download only tar file"
@@ -23105,6 +23942,9 @@ msgstr ""
 msgid "Download source rpms for all installed packages to a local directory"
 msgstr ""
 
+msgid "Download the latest recommended macOS full installer"
+msgstr ""
+
 msgid "Download the license files of all the current project's dependencies, and generate a summary file containing a list of all dependencies and their licenses"
 msgstr ""
 
@@ -23121,6 +23961,9 @@ msgid "Download torrent with given ID"
 msgstr ""
 
 msgid "Download updates for offline upgrade"
+msgstr ""
+
+msgid "Download updates without installing"
 msgstr ""
 
 msgid "Download volume contents to a file"
@@ -23216,6 +24059,9 @@ msgstr ""
 msgid "Dsc comments are respected"
 msgstr ""
 
+msgid "Dump (decrypted) data of items"
+msgstr ""
+
 msgid "Dump (some) data structures from a repository"
 msgstr ""
 
@@ -23226,6 +24072,9 @@ msgid "Dump DMI data to a file"
 msgstr ""
 
 msgid "Dump XML for a domain snapshot"
+msgstr ""
+
+msgid "Dump access control list of items"
 msgstr ""
 
 msgid "Dump all IR"
@@ -23354,6 +24203,9 @@ msgstr ""
 msgid "Dump packet-matching code as decimal numbers"
 msgstr ""
 
+msgid "Dump raw (encrypted) data of items"
+msgstr ""
+
 msgid "Dump shorthand alias names"
 msgstr ""
 
@@ -23376,6 +24228,9 @@ msgid "Dump the compiled packet-matching code in a human readable form"
 msgstr ""
 
 msgid "Dump the configuration in the same format that CPAN.pm uses"
+msgstr ""
+
+msgid "Dump the contents of one or more keychains"
 msgstr ""
 
 msgid "Dump the contents of specified section as bytes"
@@ -23424,6 +24279,9 @@ msgid "Dumps the autoloader"
 msgstr ""
 
 msgid "Dumps the jetsam properties category for all services"
+msgstr ""
+
+msgid "Duplicate a network service under a new name"
 msgstr ""
 
 msgid "Duplicate address detection mode"
@@ -23702,16 +24560,40 @@ msgstr ""
 msgid "Email address for user"
 msgstr ""
 
+msgid "Embed (signing) or extract (display) entitlement data"
+msgstr ""
+
+msgid "Embed a constraint plist on libraries this process can load"
+msgstr ""
+
+msgid "Embed a launch constraint plist on the executable's parent"
+msgstr ""
+
+msgid "Embed a launch constraint plist on the responsible process"
+msgstr ""
+
+msgid "Embed a launch constraint plist on this executable"
+msgstr ""
+
 msgid "Embed a specific DTB"
 msgstr ""
 
 msgid "Embed all source files in the PDB"
 msgstr ""
 
+msgid "Embed entitlements as both XML and DER"
+msgstr ""
+
 msgid "Embed files in DIR matching GLOB"
 msgstr ""
 
 msgid "Embed given file as public key for signature checking"
+msgstr ""
+
+msgid "Embed profile in image"
+msgstr ""
+
+msgid "Embed profile in image only if none present"
 msgstr ""
 
 msgid "Embed specific files in the PDB"
@@ -23867,6 +24749,9 @@ msgstr ""
 msgid "Enable Compass imports and load project configuration"
 msgstr ""
 
+msgid "Enable FileVault on the current volume"
+msgstr ""
+
 msgid "Enable GPG check but allow installing unsigned packages from this repository."
 msgstr ""
 
@@ -23927,6 +24812,9 @@ msgstr ""
 msgid "Enable POSIX ACLs support"
 msgstr ""
 
+msgid "Enable Power Nap on supported machines (0/1)"
+msgstr ""
+
 msgid "Enable Python scripts automatic execution"
 msgstr ""
 
@@ -23951,6 +24839,15 @@ msgstr ""
 msgid "Enable SSL for connection"
 msgstr ""
 
+msgid "Enable Secure Token for a user"
+msgstr ""
+
+msgid "Enable System Integrity Protection (Recovery OS only)"
+msgstr ""
+
+msgid "Enable TCP keep-alive during sleep (0/1)"
+msgstr ""
+
 msgid "Enable Thread Sanitizer"
 msgstr ""
 
@@ -23964,6 +24861,9 @@ msgid "Enable \\write18{SHELL COMMAND}"
 msgstr ""
 
 msgid "Enable a NuGet source"
+msgstr ""
+
+msgid "Enable a VPN application type or service"
 msgstr ""
 
 msgid "Enable a demangling recursion limit"
@@ -24545,6 +25445,9 @@ msgstr ""
 msgid "Enable or disable tailcalls"
 msgstr ""
 
+msgid "Enable or disable the power button sleeping the computer"
+msgstr ""
+
 msgid "Enable or disable use of \"CONST16\" instructions for loading constant values"
 msgstr ""
 
@@ -24704,6 +25607,9 @@ msgstr ""
 msgid "Enable slower (but advanced) candidate generators"
 msgstr ""
 
+msgid "Enable smartcard token"
+msgstr ""
+
 msgid "Enable socket level debugging"
 msgstr ""
 
@@ -24780,6 +25686,9 @@ msgid "Enable the JIT compiler"
 msgstr ""
 
 msgid "Enable the Lintian verification check"
+msgstr ""
+
+msgid "Enable the assessment subsystem (requires root)"
 msgstr ""
 
 msgid "Enable the bitrate management engine"
@@ -24917,6 +25826,9 @@ msgstr ""
 msgid "Enable verbose log messages"
 msgstr ""
 
+msgid "Enable verbose logging of DirectoryService API calls"
+msgstr ""
+
 msgid "Enable verbose logging output"
 msgstr ""
 
@@ -24956,7 +25868,25 @@ msgstr ""
 msgid "Enable writing into executable and core files"
 msgstr ""
 
+msgid "Enable, disable or list disabled smartcard tokens"
+msgstr ""
+
 msgid "Enable, disable tethering, set SSID and passphrase for wifi"
+msgstr ""
+
+msgid "Enable, disable, or show 12-hour clock on login window"
+msgstr ""
+
+msgid "Enable, disable, or show AFP guest access"
+msgstr ""
+
+msgid "Enable, disable, or show Guest Account status"
+msgstr ""
+
+msgid "Enable, disable, or show SMB guest access"
+msgstr ""
+
+msgid "Enable, disable, or show automatic time setting"
 msgstr ""
 
 msgid "Enable/Disable colored error messages"
@@ -25107,6 +26037,9 @@ msgid "Encode image losslessly"
 msgstr ""
 
 msgid "Encode lfence mfence and sfence as lock addl $0x0 (%{re}sp)"
+msgstr ""
+
+msgid "Encode or decode CMS messages"
 msgstr ""
 
 msgid "Encode scalar AVX instructions with specific vector length"
@@ -25346,6 +26279,9 @@ msgstr ""
 msgid "Enter interactive mode after executing script"
 msgstr ""
 
+msgid "Enter one line of script (may be repeated to build multi-line script)"
+msgstr ""
+
 msgid "Enter parser debugging mode"
 msgstr ""
 
@@ -25514,6 +26450,9 @@ msgstr ""
 msgid "Erase possible superblock"
 msgstr ""
 
+msgid "Erase the cryptographic keys of an encrypted image"
+msgstr ""
+
 msgid "Erase, using a secure method"
 msgstr ""
 
@@ -25571,6 +26510,12 @@ msgstr ""
 msgid "Evaluate EXPR and display the result"
 msgstr ""
 
+msgid "Evaluate a code requirement against a certificate chain"
+msgstr ""
+
+msgid "Evaluate a list of product keys (use with --products)"
+msgstr ""
+
 msgid "Evaluate code"
 msgstr ""
 
@@ -25611,6 +26556,9 @@ msgid "Evaluates the given code"
 msgstr ""
 
 msgid "Evaluates the given command"
+msgstr ""
+
+msgid "Evaluation is for client usage"
 msgstr ""
 
 msgid "Even more verbose mode"
@@ -25853,6 +26801,9 @@ msgstr ""
 msgid "Execute GDB commands from this file."
 msgstr ""
 
+msgid "Execute JavaScript file"
+msgstr ""
+
 msgid "Execute Lua script"
 msgstr ""
 
@@ -26040,6 +26991,9 @@ msgid "Execute the specified resource file"
 msgstr ""
 
 msgid "Execute the statement"
+msgstr ""
+
+msgid "Execute tool with privileges"
 msgstr ""
 
 msgid "Executes SQL against a database"
@@ -26252,6 +27206,9 @@ msgstr ""
 msgid "Exits once the scenario is over, without displaying dialog"
 msgstr ""
 
+msgid "Expand a flat package at pkg-path into a new directory at dir-path"
+msgstr ""
+
 msgid "Expand advisories listing"
 msgstr ""
 
@@ -26298,6 +27255,9 @@ msgid "Explicitly set compression level (aka --zl)"
 msgstr ""
 
 msgid "Explicitly set the mime-type"
+msgstr ""
+
+msgid "Explicitly specify the unique identifier embedded in the signature"
 msgstr ""
 
 msgid "Exploit titles are allowed to overflow their columns"
@@ -26369,6 +27329,9 @@ msgstr ""
 msgid "Export into dir instead of module name."
 msgstr ""
 
+msgid "Export items from a keychain"
+msgstr ""
+
 msgid "Export key name with prefix"
 msgstr ""
 
@@ -26390,6 +27353,9 @@ msgstr ""
 msgid "Export sources from CVS, similar to checkout"
 msgstr ""
 
+msgid "Export system trust settings"
+msgstr ""
+
 msgid "Export tagged revisions."
 msgstr ""
 
@@ -26408,7 +27374,13 @@ msgstr ""
 msgid "Export to the provided path"
 msgstr ""
 
+msgid "Export trust settings"
+msgstr ""
+
 msgid "Export variable to file"
+msgstr ""
+
+msgid "Export/display items from a smartcard"
 msgstr ""
 
 msgid "Exports the chapter information in a simple format"
@@ -26429,16 +27401,25 @@ msgstr ""
 msgid "External symbols start with prefix instead of yy"
 msgstr ""
 
+msgid "Externalize authref to stdout"
+msgstr ""
+
 msgid "Extra action triggered with number key "
 msgstr ""
 
 msgid "Extra full format"
 msgstr ""
 
+msgid "Extract BOM files from a flat package into /tmp and return filenames"
+msgstr ""
+
 msgid "Extract a `.stone` content to disk"
 msgstr ""
 
 msgid "Extract a resource"
+msgstr ""
+
+msgid "Extract a resource from a UDIF image (deprecated)"
 msgstr ""
 
 msgid "Extract a specific key or branch from decrypted input document"
@@ -26520,6 +27501,9 @@ msgid "Extract the data to a raw file"
 msgstr ""
 
 msgid "Extract the data to a raw file including the CodecPrivate as header"
+msgstr ""
+
+msgid "Extract the embedded certificate chain to files (prefix)"
 msgstr ""
 
 msgid "Extract timecodes of a track as timecode v2 file"
@@ -26936,6 +27920,9 @@ msgstr ""
 msgid "File's security context matches specified pattern"
 msgstr ""
 
+msgid "FileVault UUID of the user to remove"
+msgstr ""
+
 msgid "Filehandles that are read are UTF-8"
 msgstr ""
 
@@ -27027,6 +28014,9 @@ msgid "Filesystem location"
 msgstr ""
 
 msgid "Filesystem path to local crate to install"
+msgstr ""
+
+msgid "Filesystem to make on the new image"
 msgstr ""
 
 msgid "Filesystem to mount"
@@ -27230,7 +28220,22 @@ msgstr ""
 msgid "Finalize git notes merge"
 msgstr ""
 
+msgid "Find a certificate item"
+msgstr ""
+
 msgid "Find a common ancestor for a merge"
+msgstr ""
+
+msgid "Find a generic password item"
+msgstr ""
+
+msgid "Find all matching certificates, not just the first"
+msgstr ""
+
+msgid "Find an identity (certificate + private key)"
+msgstr ""
+
+msgid "Find an internet password item"
 msgstr ""
 
 msgid "Find and add results to current queue"
@@ -27273,6 +28278,9 @@ msgid "Find entries quickly"
 msgstr ""
 
 msgid "Find first unused device"
+msgstr ""
+
+msgid "Find keys in the keychain"
 msgstr ""
 
 msgid "Find local Debian archives suitable for sources.list"
@@ -27387,6 +28395,9 @@ msgid "First patch to include"
 msgstr ""
 
 msgid "First remove existing destination files"
+msgstr ""
+
+msgid "First segment output name"
 msgstr ""
 
 msgid "Fit the size of the window to the size of the page"
@@ -27518,10 +28529,16 @@ msgstr ""
 msgid "FlashPix viewing transforms"
 msgstr ""
 
+msgid "Flatten a directory into a new flat package"
+msgstr ""
+
 msgid "Flatten a sequence of images"
 msgstr ""
 
 msgid "Flattens the output to single line"
+msgstr ""
+
+msgid "Flip image horizontal or vertical"
 msgstr ""
 
 msgid "Flip image in the vertical direction"
@@ -27842,10 +28859,16 @@ msgstr ""
 msgid "Force a locked repository to be open"
 msgstr ""
 
+msgid "Force a normal restart after FileVault is configured (CoreStorage only)"
+msgstr ""
+
 msgid "Force a reduction of metadata integrity"
 msgstr ""
 
 msgid "Force a refresh for all module indexes or a specific ecosystem"
+msgstr ""
+
+msgid "Force a restart even if not flagged as required"
 msgstr ""
 
 msgid "Force a symbol to be exported (Wasm)"
@@ -27870,6 +28893,9 @@ msgid "Force all pixels below the threshold into black [value]"
 msgstr ""
 
 msgid "Force an older protocol version to be used"
+msgstr ""
+
+msgid "Force an online notarization check during verification"
 msgstr ""
 
 msgid "Force an update only if the tip of the remote-tracking ref has been integrated locally"
@@ -28250,6 +29276,9 @@ msgstr ""
 msgid "Force run the bootstrap script"
 msgstr ""
 
+msgid "Force screen capture to go to the clipboard"
+msgstr ""
+
 msgid "Force scrollbar to the left side"
 msgstr ""
 
@@ -28314,6 +29343,9 @@ msgid "Force the rebase"
 msgstr ""
 
 msgid "Force the removal"
+msgstr ""
+
+msgid "Force the resulting device to be read-only"
 msgstr ""
 
 msgid "Force the revocation of write access when downgrading a mount to read-only"
@@ -28463,6 +29495,9 @@ msgstr ""
 msgid "Force/layzy unmount"
 msgstr ""
 
+msgid "Forcefully embed entitlements in library signatures"
+msgstr ""
+
 msgid "Forcefully reconfigure package even if it was configured previously."
 msgstr ""
 
@@ -28583,6 +29618,9 @@ msgstr ""
 msgid "Format code passed in as a string"
 msgstr ""
 
+msgid "Format current arguments as a config plist (no install performed)"
+msgstr ""
+
 msgid "Format data output as key=value pairs"
 msgstr ""
 
@@ -28625,7 +29663,16 @@ msgstr ""
 msgid "Format of the destination file"
 msgstr ""
 
+msgid "Format of the empty read/write image"
+msgstr ""
+
+msgid "Format of the exported data"
+msgstr ""
+
 msgid "Format of the file results"
+msgstr ""
+
+msgid "Format of the imported data"
 msgstr ""
 
 msgid "Format of the key being read/written  (default='PEM')"
@@ -28644,6 +29691,9 @@ msgid "Format of the resulting archive: tar or zip"
 msgstr ""
 
 msgid "Format only"
+msgstr ""
+
+msgid "Format output as XML plist (use with -dominfo/-volinfo/-pkginfo)"
 msgstr ""
 
 msgid "Format output for more than 80 columns"
@@ -28742,6 +29792,9 @@ msgstr ""
 msgid "From preferences file show priorities/policy (available)"
 msgstr ""
 
+msgid "Full (display) name for the new user"
+msgstr ""
+
 msgid "Full format"
 msgstr ""
 
@@ -28769,7 +29822,13 @@ msgstr ""
 msgid "Full path the certificate or certificate chain."
 msgstr ""
 
+msgid "Full path to home directory for the new account"
+msgstr ""
+
 msgid "Full path to server socket. If set, -L is ignored."
+msgstr ""
+
+msgid "Full path to user account picture image"
 msgstr ""
 
 msgid "Full screen"
@@ -28805,6 +29864,9 @@ msgstr ""
 msgid "GDB sysroot path"
 msgstr ""
 
+msgid "GIF image"
+msgstr ""
+
 msgid "GOPATH environment variable"
 msgstr ""
 
@@ -28823,7 +29885,13 @@ msgstr ""
 msgid "GPG-sign the push"
 msgstr ""
 
+msgid "GPU switching mode (0=integrated, 1=discrete, 2=dynamic)"
+msgstr ""
+
 msgid "GTYPE-group-format=GFMT  Similar, but format GTYPE input groups with GFMT."
+msgstr ""
+
+msgid "GUID (128-bit text representation) to add or replace"
 msgstr ""
 
 msgid "Games section"
@@ -28902,6 +29970,9 @@ msgid "Generate HP Function Key escape codes for function keys"
 msgstr ""
 
 msgid "Generate JSON output"
+msgstr ""
+
+msgid "Generate Joliet extensions to ISO9660"
 msgstr ""
 
 msgid "Generate LLVM bitcode"
@@ -29012,6 +30083,9 @@ msgstr ""
 msgid "Generate a SYSIMAGE"
 msgstr ""
 
+msgid "Generate a UDF filesystem"
+msgstr ""
+
 msgid "Generate a URL to the speedtest.net share results image"
 msgstr ""
 
@@ -29025,6 +30099,9 @@ msgid "Generate a call to the function \"abort\" at the end of a \"noreturn\" fu
 msgstr ""
 
 msgid "Generate a changelog report"
+msgstr ""
+
+msgid "Generate a cross-platform (HFS+/ISO/Joliet/UDF) image"
 msgstr ""
 
 msgid "Generate a deduplicated stream"
@@ -29139,6 +30216,12 @@ msgid "Generate additional code to check that indices used to access arrays are 
 msgstr ""
 
 msgid "Generate addresses from interface configuration"
+msgstr ""
+
+msgid "Generate an HFS+ filesystem"
+msgstr ""
+
+msgid "Generate an ISO9660 Level 2 filesystem"
 msgstr ""
 
 msgid "Generate an ODF TOC"
@@ -29465,6 +30548,9 @@ msgstr ""
 msgid "Generate man page"
 msgstr ""
 
+msgid "Generate man pages"
+msgstr ""
+
 msgid "Generate man pages for the Hugo CLI"
 msgstr ""
 
@@ -29577,6 +30663,12 @@ msgid "Generate relax relocations"
 msgstr ""
 
 msgid "Generate release file"
+msgstr ""
+
+msgid "Generate report in JSON format"
+msgstr ""
+
+msgid "Generate report in XML format (saveable as .spx for System Information.app)"
 msgstr ""
 
 msgid "Generate rpm repo metadata"
@@ -29888,6 +30980,9 @@ msgstr ""
 msgid "Genre of track"
 msgstr ""
 
+msgid "Get (display) current power management settings"
+msgstr ""
+
 msgid "Get CoreStorage information by UUID or disk"
 msgstr ""
 
@@ -29928,6 +31023,12 @@ msgid "Get access level"
 msgstr ""
 
 msgid "Get active job information for the specified disk"
+msgstr ""
+
+msgid "Get additional IPv4 routes associated with a network service"
+msgstr ""
+
+msgid "Get additional IPv6 routes associated with a network service"
 msgstr ""
 
 msgid "Get all PIDs for a process name"
@@ -30018,6 +31119,9 @@ msgid "Get device block stats for a domain"
 msgstr ""
 
 msgid "Get device info"
+msgstr ""
+
+msgid "Get embedded profile from image and write to file"
 msgstr ""
 
 msgid "Get encryption info about said device"
@@ -30158,6 +31262,9 @@ msgstr ""
 msgid "Get or change the label of a filesystem"
 msgstr ""
 
+msgid "Get or set automatic background check schedule"
+msgstr ""
+
 msgid "Get or set blkio parameters"
 msgstr ""
 
@@ -30215,6 +31322,9 @@ msgstr ""
 msgid "Get relative importance of performance vs energy savings"
 msgstr ""
 
+msgid "Get seconds before computer starts up after a power failure"
+msgstr ""
+
 msgid "Get secs ban history will be kept"
 msgstr ""
 
@@ -30248,10 +31358,16 @@ msgstr ""
 msgid "Get status of mobile broadband radio switch; turn it on/off"
 msgstr ""
 
+msgid "Get the MTU value for a hardware port or device"
+msgstr ""
+
 msgid "Get the current package's dependencies"
 msgstr ""
 
 msgid "Get the default subvolume of a filesystem"
+msgstr ""
+
+msgid "Get the kernel boot architecture setting from com.apple.Boot.plist"
 msgstr ""
 
 msgid "Get the list of project files"
@@ -30270,6 +31386,9 @@ msgid "Get the names of link groups in the alternatives system"
 msgstr ""
 
 msgid "Get the passphrase from this file [filename]"
+msgstr ""
+
+msgid "Get the preferred identity to use for a service"
 msgstr ""
 
 msgid "Get the priority"
@@ -30330,6 +31449,9 @@ msgid "Get values for keys matching regex"
 msgstr ""
 
 msgid "Get various information about Buckets or Files"
+msgstr ""
+
+msgid "Get whether keyboard is disabled when enclosure lock is engaged"
 msgstr ""
 
 msgid "Get/set bandwidth in bytes rather than MiB/s"
@@ -30578,7 +31700,13 @@ msgstr ""
 msgid "Grant additional capabilities to the container"
 msgstr ""
 
+msgid "Grant administrator privileges to the new account"
+msgstr ""
+
 msgid "Grant permission to named user"
+msgstr ""
+
+msgid "Granularity of code signing (a power of two)"
 msgstr ""
 
 msgid "Graph execution time for this command"
@@ -30599,6 +31727,9 @@ msgstr ""
 msgid "Grep through a set of files to find text strings and fail build if matches are found"
 msgstr ""
 
+msgid "Group ID (gid) to add or replace"
+msgstr ""
+
 msgid "Group commits by author (default)"
 msgstr ""
 
@@ -30609,6 +31740,9 @@ msgid "Group commits by committer instead of author"
 msgstr ""
 
 msgid "Group directories before files"
+msgstr ""
+
+msgid "Group name"
 msgstr ""
 
 msgid "Group name of file"
@@ -30726,6 +31860,9 @@ msgid "Hard link instead of copying"
 msgstr ""
 
 msgid "Hard-link working tree files where possible"
+msgstr ""
+
+msgid "Hardened runtime version when the runtime flag is set"
 msgstr ""
 
 msgid "Hardlink instead of renaming"
@@ -30881,6 +32018,9 @@ msgstr ""
 msgid "Helps you out when in dire need of information"
 msgstr ""
 
+msgid "Hex color used when padding (e.g. FFFFFF=white, FF0000=red, default=000000)"
+msgstr ""
+
 msgid "Hex-encoded iv"
 msgstr ""
 
@@ -30888,6 +32028,9 @@ msgid "Hex-encoded key"
 msgstr ""
 
 msgid "Hex-encodes data provided on the command line or stdin"
+msgstr ""
+
+msgid "Hibernation mode (0=no image, 3=safe sleep, 25=full hibernate)"
 msgstr ""
 
 msgid "Hide UI"
@@ -31020,6 +32163,9 @@ msgid "Home directory for the new user"
 msgstr ""
 
 msgid "Homepage of package"
+msgstr ""
+
+msgid "Honor owners on the filesystems or not"
 msgstr ""
 
 msgid "Honor state files even if Portfile was modified"
@@ -31275,6 +32421,9 @@ msgid "Identical to --files but filenames terminate with \\0"
 msgstr ""
 
 msgid "Identical to --multifile --decrypt"
+msgstr ""
+
+msgid "Identical to -mount suppressed"
 msgstr ""
 
 msgid "Identifier to be renamed"
@@ -31712,6 +32861,9 @@ msgstr ""
 msgid "Ignore offsets, find all references to an extent"
 msgstr ""
 
+msgid "Ignore open files on mounted volumes"
+msgstr ""
+
 msgid "Ignore option '--read-alias'"
 msgstr ""
 
@@ -31889,6 +33041,9 @@ msgstr ""
 msgid "Image depth [value]"
 msgstr ""
 
+msgid "Image format to create (default: png)"
+msgstr ""
+
 msgid "Image format type [type]"
 msgstr ""
 
@@ -31905,6 +33060,15 @@ msgid "Image quality [1-100]"
 msgstr ""
 
 msgid "Image scene number [value]"
+msgstr ""
+
+msgid "Image size (e.g. 100m, 4g) in mkfile(8) style"
+msgstr ""
+
+msgid "Image size in 512-byte sectors"
+msgstr ""
+
+msgid "Image size in megabytes"
 msgstr ""
 
 msgid "Image type [type]"
@@ -31988,6 +33152,9 @@ msgstr ""
 msgid "Import image(s) from docker into k3d cluster(s)"
 msgstr ""
 
+msgid "Import items into a keychain"
+msgstr ""
+
 msgid "Import memory from the environment (Wasm)"
 msgstr ""
 
@@ -32007,6 +33174,9 @@ msgid "Import the contents"
 msgstr ""
 
 msgid "Import the keys with the given key IDs from a keyserver"
+msgstr ""
+
+msgid "Import trust settings"
 msgstr ""
 
 msgid "Import variable from file"
@@ -32076,6 +33246,12 @@ msgid "In the Alpha architecture, floating point traps are imprecise"
 msgstr ""
 
 msgid "In the first form, list objects you've flagged"
+msgstr ""
+
+msgid "In window capture mode, capture the screen instead of the window"
+msgstr ""
+
+msgid "In window capture mode, do not capture the shadow of the window"
 msgstr ""
 
 msgid "In-memory cache SIZE for chunk objects"
@@ -32945,6 +34121,9 @@ msgstr ""
 msgid "Input target from file"
 msgstr ""
 
+msgid "Input trust settings file"
+msgstr ""
+
 msgid "Input_file Read a list of already existing known bad blocks"
 msgstr ""
 
@@ -33008,6 +34187,9 @@ msgstr ""
 msgid "Inspect user"
 msgstr ""
 
+msgid "Install (or re-install) the MDS database"
+msgstr ""
+
 msgid "Install (or upgrade) one or more packages or .deb files"
 msgstr ""
 
@@ -33030,6 +34212,9 @@ msgid "Install Node.js from a prebuilt package (default)"
 msgstr ""
 
 msgid "Install Node.js from source"
+msgstr ""
+
+msgid "Install Rosetta 2 (Apple silicon only)"
 msgstr ""
 
 msgid "Install a Copr repository"
@@ -33068,6 +34253,9 @@ msgstr ""
 msgid "Install a private colormap"
 msgstr ""
 
+msgid "Install a profile (bootstraptoken; config install removed in macOS 11)"
+msgstr ""
+
 msgid "Install a project with a clean slate and run tests"
 msgstr ""
 
@@ -33078,6 +34266,9 @@ msgid "Install after build"
 msgstr ""
 
 msgid "Install all Node.js packages listed in this file"
+msgstr ""
+
+msgid "Install all applicable updates"
 msgstr ""
 
 msgid "Install all binaries"
@@ -33209,6 +34400,9 @@ msgstr ""
 msgid "Install one or more packages"
 msgstr ""
 
+msgid "Install only Safari updates"
+msgstr ""
+
 msgid "Install only build dependencies of specified packages"
 msgstr ""
 
@@ -33216,6 +34410,12 @@ msgid "Install only given locales"
 msgstr ""
 
 msgid "Install only given modules and their dependencies"
+msgstr ""
+
+msgid "Install only macOS updates"
+msgstr ""
+
+msgid "Install only recommended updates"
 msgstr ""
 
 msgid "Install only targets having one of the given tags"
@@ -33306,6 +34506,9 @@ msgid "Install plugins resolved from the Maven repository system into an Eclipse
 msgstr ""
 
 msgid "Install pre-releases and development versions of dependencies"
+msgstr ""
+
+msgid "Install product archive as the Mac App Store would"
 msgstr ""
 
 msgid "Install project in editable mode from PATH"
@@ -33494,6 +34697,9 @@ msgstr ""
 msgid "Interact with build servers"
 msgstr ""
 
+msgid "Interactive access control list editing mode"
+msgstr ""
+
 msgid "Interactive console for OpenTofu interpolations"
 msgstr ""
 
@@ -33510,6 +34716,9 @@ msgid "Interactive mode"
 msgstr ""
 
 msgid "Interactive mode after executing commands"
+msgstr ""
+
+msgid "Interactive mode: prompt for one line at a time, print result after each"
 msgstr ""
 
 msgid "Interactive shell"
@@ -33561,6 +34770,12 @@ msgid "Intermix source code with disassembly"
 msgstr ""
 
 msgid "Internal flag only to be used by e2fsck(8) and mke2fs(8)"
+msgstr ""
+
+msgid "Internal requirements to embed (file, =text, or - for stdin)"
+msgstr ""
+
+msgid "Internalize authref passed on stdin"
 msgstr ""
 
 msgid "Interpolates variables into a manifest"
@@ -33710,6 +34925,9 @@ msgstr ""
 msgid "JJDoc takes a JavaCC parser specification and produces documentation for the BNF grammar"
 msgstr ""
 
+msgid "JPEG image"
+msgstr ""
+
 msgid "JPEG output quality"
 msgstr ""
 
@@ -33729,6 +34947,9 @@ msgid "JSON output format"
 msgstr ""
 
 msgid "Java1.5+: use the OS proxy settings"
+msgstr ""
+
+msgid "JavaScript for Automation source file"
 msgstr ""
 
 msgid "Jobs format"
@@ -33899,6 +35120,9 @@ msgstr ""
 msgid "Keep the right end of the line visible on overflow"
 msgstr ""
 
+msgid "Keep the user home directory after deletion"
+msgstr ""
+
 msgid "Keep this many states"
 msgstr ""
 
@@ -33935,6 +35159,9 @@ msgstr ""
 msgid "Key location"
 msgstr ""
 
+msgid "Key size in bits (default 512)"
+msgstr ""
+
 msgid "Key to be used as a namespace identifier"
 msgstr ""
 
@@ -33942,6 +35169,18 @@ msgid "Key-value pair to apply as a trailer"
 msgstr ""
 
 msgid "Keyboard layout mapping table for special hash-modes"
+msgstr ""
+
+msgid "Keychain to export from"
+msgstr ""
+
+msgid "Keychain to import into"
+msgstr ""
+
+msgid "Keychain to search for intermediate CAs"
+msgstr ""
+
+msgid "Keychain to which cert is added"
 msgstr ""
 
 msgid "Keyfiles to use"
@@ -33957,6 +35196,9 @@ msgid "Keyword as regex (default)"
 msgstr ""
 
 msgid "Keyword as wildcards"
+msgstr ""
+
+msgid "Keyword to add"
 msgstr ""
 
 msgid "Keywords for `p4 help`"
@@ -34089,6 +35331,9 @@ msgid "Launch python shell"
 msgstr ""
 
 msgid "Launch the Protontricks GUI"
+msgstr ""
+
+msgid "Launch the installer automatically after download"
 msgstr ""
 
 msgid "Launch utility at startup and reload on file change"
@@ -34289,6 +35534,9 @@ msgstr ""
 msgid "Like -l, but xattrs shown instead of ACLs"
 msgstr ""
 
+msgid "Like -mountroot, with randomized mount-point names"
+msgstr ""
+
 msgid "Like -print-file-name, but searches for a program such as cpp"
 msgstr ""
 
@@ -34443,6 +35691,9 @@ msgid "Limit range of code and data virtual addresses"
 msgstr ""
 
 msgid "Limit recorded idle time to given number of seconds"
+msgstr ""
+
+msgid "Limit scan to a comma-separated list of product types"
 msgstr ""
 
 msgid "Limit scope of variables in for-init-statement to the loop itself, like the C++ standard says"
@@ -34847,6 +36098,9 @@ msgstr ""
 msgid "List all available tags"
 msgstr ""
 
+msgid "List all available updates"
+msgstr ""
+
 msgid "List all benchmarks"
 msgstr ""
 
@@ -34943,6 +36197,9 @@ msgstr ""
 msgid "List all files in the package"
 msgstr ""
 
+msgid "List all files installed under the given package-id"
+msgstr ""
+
 msgid "List all files owned by PACKAGE"
 msgstr ""
 
@@ -34968,6 +36225,12 @@ msgid "List all installed files and directories with their details"
 msgstr ""
 
 msgid "List all installed modules and their versions"
+msgstr ""
+
+msgid "List all installed package IDs in plist format"
+msgstr ""
+
+msgid "List all installed package IDs on the volume"
 msgstr ""
 
 msgid "List all installed packages"
@@ -35033,10 +36296,28 @@ msgstr ""
 msgid "List all object in all buckets"
 msgstr ""
 
+msgid "List all of the PPPoE services in the current set."
+msgstr ""
+
+msgid "List all of the bonds."
+msgstr ""
+
+msgid "List all of the locations."
+msgstr ""
+
 msgid "List all options, with brief explanations"
 msgstr ""
 
 msgid "List all orgs"
+msgstr ""
+
+msgid "List all package groups a package-id is a member of"
+msgstr ""
+
+msgid "List all package groups on the volume"
+msgstr ""
+
+msgid "List all package groups on the volume in plist format"
 msgstr ""
 
 msgid "List all package references"
@@ -35052,6 +36333,9 @@ msgid "List all packages in REPOSITORY"
 msgstr ""
 
 msgid "List all packages not in the database"
+msgstr ""
+
+msgid "List all packages that are members of a group-id"
 msgstr ""
 
 msgid "List all packages that would be built"
@@ -35076,6 +36360,9 @@ msgid "List all pkgs owning file(s)"
 msgstr ""
 
 msgid "List all posts dated in the future"
+msgstr ""
+
+msgid "List all profiles on the system (requires root)"
 msgstr ""
 
 msgid "List all projects in a solution file"
@@ -35153,6 +36440,9 @@ msgstr ""
 msgid "List all the profile properties"
 msgstr ""
 
+msgid "List all time zones supported by this machine"
+msgstr ""
+
 msgid "List all torrents"
 msgstr ""
 
@@ -35169,6 +36459,9 @@ msgid "List all user names that are on the whitelist"
 msgstr ""
 
 msgid "List all users"
+msgstr ""
+
+msgid "List all valid startup disks on this computer"
 msgstr ""
 
 msgid "List all values a certain FIELD takes"
@@ -35219,6 +36512,9 @@ msgstr ""
 msgid "List available Node.js versions"
 msgstr ""
 
+msgid "List available VPN services in the current set"
+msgstr ""
+
 msgid "List available actions"
 msgstr ""
 
@@ -35232,6 +36528,9 @@ msgid "List available controllers"
 msgstr ""
 
 msgid "List available coredumps"
+msgstr ""
+
+msgid "List available data types"
 msgstr ""
 
 msgid "List available databases, then exit"
@@ -35250,6 +36549,9 @@ msgid "List available generators"
 msgstr ""
 
 msgid "List available groups"
+msgstr ""
+
+msgid "List available macOS full installers"
 msgstr ""
 
 msgid "List available models"
@@ -35531,6 +36833,9 @@ msgstr ""
 msgid "List directory entries in the repository"
 msgstr ""
 
+msgid "List disabled smartcard tokens"
+msgstr ""
+
 msgid "List disabled snaps"
 msgstr ""
 
@@ -35558,6 +36863,9 @@ msgstr ""
 msgid "List domains in the target org"
 msgstr ""
 
+msgid "List domains where the package can be installed"
+msgstr ""
+
 msgid "List domains with autostart disabled"
 msgstr ""
 
@@ -35577,6 +36885,9 @@ msgid "List domains without managed save"
 msgstr ""
 
 msgid "List egress zones added"
+msgstr ""
+
+msgid "List enabled FileVault users or locked volumes"
 msgstr ""
 
 msgid "List encodings"
@@ -35646,6 +36957,9 @@ msgid "List file in ls -dils format, write to specified file"
 msgstr ""
 
 msgid "List files"
+msgstr ""
+
+msgid "List files archived within the payload of an uninstalled flat package"
 msgstr ""
 
 msgid "List files available from CVS"
@@ -35844,6 +37158,9 @@ msgid "List installed packages which have no dependent packages"
 msgstr ""
 
 msgid "List installed plugins"
+msgstr ""
+
+msgid "List installed profiles"
 msgstr ""
 
 msgid "List installed snaps"
@@ -36056,6 +37373,9 @@ msgstr ""
 msgid "List only configuration files (implies -l)"
 msgstr ""
 
+msgid "List only directories (not files) in --files listing"
+msgstr ""
+
 msgid "List only documentation files (implies -l)"
 msgstr ""
 
@@ -36063,6 +37383,9 @@ msgid "List only domains in other states"
 msgstr ""
 
 msgid "List only explicitly installed packages"
+msgstr ""
+
+msgid "List only files (not directories) in --files listing"
 msgstr ""
 
 msgid "List only inactive domains"
@@ -36216,6 +37539,9 @@ msgid "List packages having install_if referencing PACKAGE"
 msgstr ""
 
 msgid "List packages in the package database (pkgdb) that were installed manually"
+msgstr ""
+
+msgid "List packages inside the package (subpackages for metapkg)"
 msgstr ""
 
 msgid "List packages matching pattern"
@@ -36545,6 +37871,9 @@ msgstr ""
 msgid "List subcommands"
 msgstr ""
 
+msgid "List subdirectories of a directory (alias: ls)"
+msgstr ""
+
 msgid "List subdirectory recursively"
 msgstr ""
 
@@ -36594,6 +37923,9 @@ msgid "List teams or team members"
 msgstr ""
 
 msgid "List templates containing the specified name"
+msgstr ""
+
+msgid "List the VLANs that have been created."
 msgstr ""
 
 msgid "List the active state"
@@ -36648,6 +37980,9 @@ msgid "List the dependencies"
 msgstr ""
 
 msgid "List the dependencies as a tree"
+msgstr ""
+
+msgid "List the devices that support VLANs."
 msgstr ""
 
 msgid "List the discovered tests"
@@ -36710,6 +38045,9 @@ msgstr ""
 msgid "List the paths of all gems required by your Gemfile"
 msgstr ""
 
+msgid "List the preferred wireless networks for a device"
+msgstr ""
+
 msgid "List the process name as well as the process ID"
 msgstr ""
 
@@ -36735,6 +38073,9 @@ msgid "List the subvolume in order"
 msgstr ""
 
 msgid "List the supported time stamp types for the interface"
+msgstr ""
+
+msgid "List the valid MTU range for a hardware port or device"
 msgstr ""
 
 msgid "List those packages on hold"
@@ -36806,7 +38147,13 @@ msgstr ""
 msgid "List users logged in"
 msgstr ""
 
+msgid "List valid ISO language codes"
+msgstr ""
+
 msgid "List valid event types"
+msgstr ""
+
+msgid "List valid media options for a hardware port or device"
 msgstr ""
 
 msgid "List variables"
@@ -36834,6 +38181,9 @@ msgid "List virtual packages provided"
 msgstr ""
 
 msgid "List vols"
+msgstr ""
+
+msgid "List volumes where the package can be installed"
 msgstr ""
 
 msgid "List windows available for recording by their id"
@@ -37286,6 +38636,9 @@ msgstr ""
 msgid "Loads the given configuration file"
 msgstr ""
 
+msgid "Local (Bonjour) host name"
+msgstr ""
+
 msgid "Local Path"
 msgstr ""
 
@@ -37296,6 +38649,12 @@ msgid "Local address to bind to"
 msgstr ""
 
 msgid "Local branch ref used by `git push`"
+msgstr ""
+
+msgid "Local directory node"
+msgstr ""
+
+msgid "Local directory node (shorthand)"
 msgstr ""
 
 msgid "Local directory only (not recursive)."
@@ -37316,6 +38675,9 @@ msgstr ""
 msgid "Local file target"
 msgstr ""
 
+msgid "Local host (no auth required)"
+msgstr ""
+
 msgid "Local msfconsole data service connection name"
 msgstr ""
 
@@ -37323,6 +38685,12 @@ msgid "Local port"
 msgstr ""
 
 msgid "Local section"
+msgstr ""
+
+msgid "Local username to authenticate as owner (Apple silicon only)"
+msgstr ""
+
+msgid "Local-plugin-only DirectoryService instance"
 msgstr ""
 
 msgid "Locale data directory"
@@ -37382,6 +38750,9 @@ msgstr ""
 msgid "Lock a working tree"
 msgstr ""
 
+msgid "Lock all keychains"
+msgstr ""
+
 msgid "Lock all suitable home areas"
 msgstr ""
 
@@ -37397,6 +38768,12 @@ msgstr ""
 msgid "Lock down dependency versions"
 msgstr ""
 
+msgid "Lock keychain after timeout interval"
+msgstr ""
+
+msgid "Lock keychain when the system sleeps"
+msgstr ""
+
 msgid "Lock password"
 msgstr ""
 
@@ -37407,6 +38784,9 @@ msgid "Lock the databases the first time a lock is requested and do not release 
 msgstr ""
 
 msgid "Lock the specified device"
+msgstr ""
+
+msgid "Lock the specified keychain"
 msgstr ""
 
 msgid "Lock user's password"
@@ -37485,6 +38865,9 @@ msgid "Log in using your browser"
 msgstr ""
 
 msgid "Log input to file"
+msgstr ""
+
+msgid "Log internal SU daemon state to /var/log/install.log"
 msgstr ""
 
 msgid "Log into a private repository"
@@ -37590,6 +38973,9 @@ msgid "Login rate-limit attempts per interval"
 msgstr ""
 
 msgid "Login rate-limit interval in seconds"
+msgstr ""
+
+msgid "Login shell path for the new account"
 msgstr ""
 
 msgid "Login to Windscribe account"
@@ -37751,6 +39137,9 @@ msgstr ""
 msgid "Main goal implementation of the import mojo"
 msgstr ""
 
+msgid "Maintain ComputerLists in parallel with ComputerGroups"
+msgstr ""
+
 msgid "Maintain original layout"
 msgstr ""
 
@@ -37814,6 +39203,9 @@ msgstr ""
 msgid "Make a raw Conduit method call"
 msgstr ""
 
+msgid "Make a service active in the current set"
+msgstr ""
+
 msgid "Make a signature"
 msgstr ""
 
@@ -37865,6 +39257,9 @@ msgstr ""
 msgid "Make changes only temporarily"
 msgstr ""
 
+msgid "Make changes to the authorization policy database"
+msgstr ""
+
 msgid "Make checked-out files read-only."
 msgstr ""
 
@@ -37905,6 +39300,15 @@ msgid "Make filesystem exportable via NFS"
 msgstr ""
 
 msgid "Make hard links directly to symbolic links"
+msgstr ""
+
+msgid "Make key valid for the number of days from today"
+msgstr ""
+
+msgid "Make key valid from the specified date"
+msgstr ""
+
+msgid "Make key valid to the specified date"
 msgstr ""
 
 msgid "Make live change persistent"
@@ -37955,6 +39359,12 @@ msgstr ""
 msgid "Make scripts executable"
 msgstr ""
 
+msgid "Make security less verbose"
+msgstr ""
+
+msgid "Make security more verbose"
+msgstr ""
+
 msgid "Make stack-frame, writable data and constants all 16-bit"
 msgstr ""
 
@@ -38001,6 +39411,9 @@ msgid "Make the packet output packet-buffered"
 msgstr ""
 
 msgid "Make the result of a division yielding a remainder have the same sign as the divisor"
+msgstr ""
+
+msgid "Make the specified location the current location."
 msgstr ""
 
 msgid "Make the specified modules"
@@ -38115,6 +39528,12 @@ msgid "Manage active block operations"
 msgstr ""
 
 msgid "Manage aliases"
+msgstr ""
+
+msgid "Manage allow-research-guests policy"
+msgstr ""
+
+msgid "Manage authenticated-root (sealed system snapshot) policy"
 msgstr ""
 
 msgid "Manage base package overrides"
@@ -38486,6 +39905,9 @@ msgstr ""
 msgid "Master document name"
 msgstr ""
 
+msgid "Match account string"
+msgstr ""
+
 msgid "Match against the base name of the file"
 msgstr ""
 
@@ -38498,10 +39920,58 @@ msgstr ""
 msgid "Match all non-option arguments"
 msgstr ""
 
+msgid "Match application label string"
+msgstr ""
+
+msgid "Match authenticationType (four-character code)"
+msgstr ""
+
+msgid "Match comment string"
+msgstr ""
+
+msgid "Match creator (four-character code)"
+msgstr ""
+
+msgid "Match description string"
+msgstr ""
+
 msgid "Match duplicated packages"
 msgstr ""
 
 msgid "Match files both in working tree and index"
+msgstr ""
+
+msgid "Match keys that can decrypt"
+msgstr ""
+
+msgid "Match keys that can derive"
+msgstr ""
+
+msgid "Match keys that can encrypt"
+msgstr ""
+
+msgid "Match keys that can sign"
+msgstr ""
+
+msgid "Match keys that can unwrap"
+msgstr ""
+
+msgid "Match keys that can verify"
+msgstr ""
+
+msgid "Match keys that can wrap"
+msgstr ""
+
+msgid "Match kind string"
+msgstr ""
+
+msgid "Match label string"
+msgstr ""
+
+msgid "Match on emailAddress when searching"
+msgstr ""
+
+msgid "Match on name when searching"
 msgstr ""
 
 msgid "Match one of the given protocols"
@@ -38514,6 +39984,9 @@ msgid "Match only existing files"
 msgstr ""
 
 msgid "Match only whole words"
+msgstr ""
+
+msgid "Match package-id arguments as a regular expression"
 msgstr ""
 
 msgid "Match packages from overlays"
@@ -38537,10 +40010,19 @@ msgstr ""
 msgid "Match packages without best slotted version"
 msgstr ""
 
+msgid "Match path string"
+msgstr ""
+
 msgid "Match paths exactly"
 msgstr ""
 
 msgid "Match pattern against full command line"
+msgstr ""
+
+msgid "Match port number"
+msgstr ""
+
+msgid "Match protocol (four-character code)"
 msgstr ""
 
 msgid "Match search strings approximately; auto-disabled for regex searches (default: y)"
@@ -38549,7 +40031,22 @@ msgstr ""
 msgid "Match secondary date instead"
 msgstr ""
 
+msgid "Match securityDomain string"
+msgstr ""
+
+msgid "Match server string"
+msgstr ""
+
+msgid "Match service string"
+msgstr ""
+
 msgid "Match the pattern only at word boundary"
+msgstr ""
+
+msgid "Match type (four-character code)"
+msgstr ""
+
+msgid "Match value string (generic attribute)"
 msgstr ""
 
 msgid "Matches dockerfile CMD instruction"
@@ -38565,6 +40062,9 @@ msgid "Maven project version is dot based, e.g '1.9.15' , whereas appengine-web.
 msgstr ""
 
 msgid "Max LPC order; 0 => only fixed predictors"
+msgstr ""
+
+msgid "Max login cancellations before FileVault enablement is required"
 msgstr ""
 
 msgid "Max memory plus swap, as scaled integer (default KiB)"
@@ -38696,6 +40196,9 @@ msgstr ""
 msgid "Maximum recursion depth"
 msgstr ""
 
+msgid "Maximum seconds to wait for results (0 = no timeout; default 180)"
+msgstr ""
+
 msgid "Maximum size of the encoded payload"
 msgstr ""
 
@@ -38817,6 +40320,9 @@ msgid "Merge two databases"
 msgstr ""
 
 msgid "Merge two or more partitions on a disk"
+msgstr ""
+
+msgid "Merge values into a property (no duplicates)"
 msgstr ""
 
 msgid "Merge/write kubeconfig(s) from cluster(s) into existing kubeconfig/file"
@@ -38946,6 +40452,12 @@ msgid "Minimum-stability allowed (unless a version is specified)"
 msgstr ""
 
 msgid "Minor number of array device"
+msgstr ""
+
+msgid "Minutes on UPS power after which to trigger emergency shutdown"
+msgstr ""
+
+msgid "Minutes to delay before restarting (0=immediately, -1=never)"
 msgstr ""
 
 msgid "Minutes to wait for enumeration results"
@@ -39137,6 +40649,9 @@ msgstr ""
 msgid "Monitor activity on the LXD server."
 msgstr ""
 
+msgid "Monitor and interact with VPN connections"
+msgstr ""
+
 msgid "Monitor changes to objects"
 msgstr ""
 
@@ -39266,10 +40781,19 @@ msgstr ""
 msgid "Mount the root file system read-only for the container"
 msgstr ""
 
+msgid "Mount the single volume at this path instead of /Volumes"
+msgstr ""
+
+msgid "Mount the volume on an already-attached device"
+msgstr ""
+
 msgid "Mount tmpfs into sandbox"
 msgstr ""
 
 msgid "Mount volume"
+msgstr ""
+
+msgid "Mount volumes under this directory instead of /Volumes"
 msgstr ""
 
 msgid "Mounted block device"
@@ -39479,6 +41003,9 @@ msgstr ""
 msgid "Name and email of person signing the repository"
 msgstr ""
 
+msgid "Name associated with hostname(1) / gethostname(3)"
+msgstr ""
+
 msgid "Name commits with unique prefix"
 msgstr ""
 
@@ -39537,6 +41064,12 @@ msgid "Name of patch before the topmost/given patch"
 msgstr ""
 
 msgid "Name of profile to use"
+msgstr ""
+
+msgid "Name of record to add to the group"
+msgstr ""
+
+msgid "Name of record to delete from the group"
 msgstr ""
 
 msgid "Name of rules file to use"
@@ -39612,6 +41145,9 @@ msgid "Name the current repository state for future reference"
 msgstr ""
 
 msgid "Name the output debug file"
+msgstr ""
+
+msgid "Name to be verified (SSL host or RFC822 email)"
 msgstr ""
 
 msgid "Names additional files that don't directly affect code generation but may be used by analyzers for producing errors or warnings"
@@ -39737,6 +41273,9 @@ msgstr ""
 msgid "Never write output to terminal"
 msgstr ""
 
+msgid "New keychain password"
+msgstr ""
+
 msgid "New management key algorithm to use for action set-mgm-key"
 msgstr ""
 
@@ -39749,10 +41288,19 @@ msgstr ""
 msgid "New name for identifier"
 msgstr ""
 
+msgid "New password hint"
+msgstr ""
+
 msgid "New pin/puk code for changing, if omitted pin/puk will be asked for"
 msgstr ""
 
 msgid "New section"
+msgstr ""
+
+msgid "New size (e.g. 100m, 4g) in mkfile(8) style"
+msgstr ""
+
+msgid "New size in 512-byte sectors (or min)"
 msgstr ""
 
 msgid "New vault password file for rekey"
@@ -39852,6 +41400,9 @@ msgid "No graphic chars for line drawing"
 msgstr ""
 
 msgid "No group corresponds to file's numeric group ID"
+msgstr ""
+
+msgid "No identity; delete the preference"
 msgstr ""
 
 msgid "No keypad init"
@@ -40259,6 +41810,9 @@ msgstr ""
 msgid "Number of seconds to wait when reading the payload"
 msgstr ""
 
+msgid "Number of segments"
+msgstr ""
+
 msgid "Number of segments to use"
 msgstr ""
 
@@ -40290,6 +41844,9 @@ msgid "Number of suggestions visible in the list. [default: 3]"
 msgstr ""
 
 msgid "Number of threads for -filter_complex"
+msgstr ""
+
+msgid "Number of threads to use for compression"
 msgstr ""
 
 msgid "Number of tiles per row and column [geometry]"
@@ -40337,10 +41894,16 @@ msgstr ""
 msgid "Numeric output only"
 msgstr ""
 
+msgid "Numeric user ID for the new account"
+msgstr ""
+
 msgid "Numerical address"
 msgstr ""
 
 msgid "N{%,s} Jump to some position of the current track"
+msgstr ""
+
+msgid "OD short user name"
 msgstr ""
 
 msgid "Obfuscate email addresses"
@@ -40401,6 +41964,9 @@ msgid "Offline migration"
 msgstr ""
 
 msgid "Offset hide watermark within an image"
+msgstr ""
+
+msgid "Old keychain password"
 msgstr ""
 
 msgid "Old section"
@@ -40559,7 +42125,16 @@ msgstr ""
 msgid "Only active when -fstack-protector is active"
 msgstr ""
 
+msgid "Only allow booting from sealed system snapshots (Recovery OS only)"
+msgstr ""
+
 msgid "Only allow installing locked packages with --ex-lockfile"
+msgstr ""
+
+msgid "Only allow mouse selection mode"
+msgstr ""
+
+msgid "Only allow window selection mode"
 msgstr ""
 
 msgid "Only applies when generating code for big-endian processors"
@@ -40572,6 +42147,9 @@ msgid "Only build a binary pkg"
 msgstr ""
 
 msgid "Only build the database, don't download metadata"
+msgstr ""
+
+msgid "Only capture the main monitor (undefined if -i is set)"
 msgstr ""
 
 msgid "Only check if sorted"
@@ -41141,6 +42719,9 @@ msgstr ""
 msgid "Open Preferences dialog"
 msgstr ""
 
+msgid "Open SCPreferences interactive CLI (optional preference-file)"
+msgstr ""
+
 msgid "Open Vim inside another GTK widget"
 msgstr ""
 
@@ -41243,6 +42824,9 @@ msgstr ""
 msgid "Open horizontally split windows for each file"
 msgstr ""
 
+msgid "Open in the app matching the given bundle ID"
+msgstr ""
+
 msgid "Open interactive console"
 msgstr ""
 
@@ -41318,6 +42902,12 @@ msgstr ""
 msgid "Open the specified profile in an editor"
 msgstr ""
 
+msgid "Open the taken picture in Preview or QuickTime Player (video)"
+msgstr ""
+
+msgid "Open the taken picture in a new Mail message"
+msgstr ""
+
 msgid "Open torrent in the default torrent application"
 msgstr ""
 
@@ -41375,6 +42965,9 @@ msgstr ""
 msgid "Opens the provided folder or workspace with the given profile"
 msgstr ""
 
+msgid "Operate authorization in least privileged mode"
+msgstr ""
+
 msgid "Operate on Driver variables, not Boot Variables."
 msgstr ""
 
@@ -41391,6 +42984,9 @@ msgid "Operate on a mounted guest system (root-only)"
 msgstr ""
 
 msgid "Operate on a range"
+msgstr ""
+
+msgid "Operate on admin (system) trust settings"
 msgstr ""
 
 msgid "Operate on an alternate filesystem root"
@@ -41447,6 +43043,9 @@ msgstr ""
 msgid "Operates on the user systemd instance"
 msgstr ""
 
+msgid "Operation to perform"
+msgstr ""
+
 msgid "Optimal output"
 msgstr ""
 
@@ -41463,6 +43062,9 @@ msgid "Optimize autoloader during autoloader dump"
 msgstr ""
 
 msgid "Optimize based on the number of times each branch was taken with -fprofile-arcs"
+msgstr ""
+
+msgid "Optimize color for sharing"
 msgstr ""
 
 msgid "Optimize compression parameters for streaming input of approximately this size"
@@ -41574,6 +43176,9 @@ msgid "Options to pass to diff"
 msgstr ""
 
 msgid "Options to use when calling GPG"
+msgstr ""
+
+msgid "Order the network services in the order specified"
 msgstr ""
 
 msgid "Orders the package listing by install time"
@@ -41759,6 +43364,9 @@ msgstr ""
 msgid "Output certain jump instructions, only compatible with GNU assembler"
 msgstr ""
 
+msgid "Output certificate in PEM format"
+msgstr ""
+
 msgid "Output changes in a darcs-specific format similar to diff -u"
 msgstr ""
 
@@ -41834,7 +43442,16 @@ msgstr ""
 msgid "Output directory to store the given assemblies"
 msgstr ""
 
+msgid "Output each file on a single line (pipe-delimited for profiles, tab for images)"
+msgstr ""
+
 msgid "Output extra information about work being done"
+msgstr ""
+
+msgid "Output extracted entitlements as DER"
+msgstr ""
+
+msgid "Output extracted entitlements as XML"
 msgstr ""
 
 msgid "Output featured packages as JSON array"
@@ -41909,6 +43526,12 @@ msgstr ""
 msgid "Output identical assemblies for identical inputs"
 msgstr ""
 
+msgid "Output identity certificate in PEM format"
+msgstr ""
+
+msgid "Output image file"
+msgstr ""
+
 msgid "Output image format"
 msgstr ""
 
@@ -41931,6 +43554,9 @@ msgid "Output in RFC 3339 format with second precision"
 msgstr ""
 
 msgid "Output in an easy-to-parse format for scripts"
+msgstr ""
+
+msgid "Output in human-readable format with extra context"
 msgstr ""
 
 msgid "Output in the three major formats"
@@ -42077,6 +43703,9 @@ msgstr ""
 msgid "Output patched files to FILE"
 msgstr ""
 
+msgid "Output path (stdout | stdout-xml | file)"
+msgstr ""
+
 msgid "Output paths of config files"
 msgstr ""
 
@@ -42146,6 +43775,9 @@ msgstr ""
 msgid "Output style"
 msgstr ""
 
+msgid "Output style modifier(s): h/s = value format, e/o = error destination"
+msgstr ""
+
 msgid "Output syntax and command line options"
 msgstr ""
 
@@ -42183,6 +43815,9 @@ msgid "Output the old-style ':prop val' property syntax"
 msgstr ""
 
 msgid "Output the part of line matching pattern"
+msgstr ""
+
+msgid "Output the property value for key"
 msgstr ""
 
 msgid "Output the resolved dependencies of a package in machine-readable format"
@@ -42228,6 +43863,9 @@ msgid "Output to zlib format"
 msgstr ""
 
 msgid "Output trace"
+msgstr ""
+
+msgid "Output trust settings file"
 msgstr ""
 
 msgid "Output updates using the specified FORMAT"
@@ -42389,6 +44027,9 @@ msgstr ""
 msgid "Override global daemon config parameter"
 msgstr ""
 
+msgid "Override language for plain-text files (default: AppleScript)"
+msgstr ""
+
 msgid "Override location of yadm bootstrap program"
 msgstr ""
 
@@ -42471,6 +44112,9 @@ msgid "Override the encrypted key suffix"
 msgstr ""
 
 msgid "Override the first uid in the range that the uid is chosen from (FIRST_UID)"
+msgstr ""
+
+msgid "Override the framework decision and attach read/write"
 msgstr ""
 
 msgid "Override the global cache directory"
@@ -42564,6 +44208,9 @@ msgid "Overwrite a single environment variable, multiple usages possible"
 msgstr ""
 
 msgid "Overwrite an existing extension"
+msgstr ""
+
+msgid "Overwrite an existing image at the destination"
 msgstr ""
 
 msgid "Overwrite an existing pack"
@@ -42662,6 +44309,9 @@ msgstr ""
 msgid "PBKDF parallel cost"
 msgstr ""
 
+msgid "PDF document"
+msgstr ""
+
 msgid "PDUs export according to given tap name"
 msgstr ""
 
@@ -42690,6 +44340,9 @@ msgid "PIV Authentication"
 msgstr ""
 
 msgid "PKZIP recursion"
+msgstr ""
+
+msgid "PNG image"
 msgstr ""
 
 msgid "POST the log file to URL"
@@ -42773,6 +44426,12 @@ msgstr ""
 msgid "Package to document"
 msgstr ""
 
+msgid "Package to install (.pkg or .mpkg)"
+msgstr ""
+
+msgid "Package to install (synonym for -pkg)"
+msgstr ""
+
 msgid "Package to remove"
 msgstr ""
 
@@ -42825,6 +44484,9 @@ msgid "Packs artifacts already available in a local repository in a bundle for a
 msgstr ""
 
 msgid "Pacman log actions"
+msgstr ""
+
+msgid "Pad image with pixels to fit specified height and width"
 msgstr ""
 
 msgid "Page cache size for xbzrle compression"
@@ -42942,6 +44604,12 @@ msgid "Partial clone by requesting a subset of objects from server"
 msgstr ""
 
 msgid "Participate in the DHCPv4 over DHCPv6 protocol"
+msgstr ""
+
+msgid "Partition layout (e.g. SPUD, GPTSPUD, NONE)"
+msgstr ""
+
+msgid "Partition to resize"
 msgstr ""
 
 msgid "Pass \"option\" to JVM"
@@ -43094,10 +44762,31 @@ msgstr ""
 msgid "Passthru to tmux -f"
 msgstr ""
 
+msgid "Password for VPN authentication"
+msgstr ""
+
 msgid "Password for decryption of private key file, if omitted password will be asked for"
 msgstr ""
 
+msgid "Password for keychain (deprecated)"
+msgstr ""
+
+msgid "Password for the automatic-login user"
+msgstr ""
+
 msgid "Password for the certificate"
+msgstr ""
+
+msgid "Password for the new account"
+msgstr ""
+
+msgid "Password for the target user"
+msgstr ""
+
+msgid "Password hint for the new account"
+msgstr ""
+
+msgid "Password required to change screen lock setting"
 msgstr ""
 
 msgid "Password server mode"
@@ -43154,6 +44843,9 @@ msgstr ""
 msgid "Path exclusion"
 msgstr ""
 
+msgid "Path for hibernation image (root volume only)"
+msgstr ""
+
 msgid "Path for the cached environment and doctree files"
 msgstr ""
 
@@ -43187,6 +44879,12 @@ msgstr ""
 msgid "Path to Cargo.toml"
 msgstr ""
 
+msgid "Path to DER-encoded certificate file for institutional recovery key"
+msgstr ""
+
+msgid "Path to DER-encoded certificate for the institutional recovery key"
+msgstr ""
+
 msgid "Path to FIDO2 hidraw device"
 msgstr ""
 
@@ -43197,6 +44895,9 @@ msgid "Path to SSH config file"
 msgstr ""
 
 msgid "Path to SSL CA certificate FILE"
+msgstr ""
+
+msgid "Path to XML config file (generated by -config)"
 msgstr ""
 
 msgid "Path to a '.clasp.json' or to a directory with it"
@@ -43286,6 +44987,9 @@ msgstr ""
 msgid "Path to emulator binary (/domain/devices/emulator)"
 msgstr ""
 
+msgid "Path to export certificates and public keys"
+msgstr ""
+
 msgid "Path to filter on in `git log -- <path>`"
 msgstr ""
 
@@ -43304,6 +45008,9 @@ msgstr ""
 msgid "Path to interpreter on the target system"
 msgstr ""
 
+msgid "Path to keychain file containing the institutional private key"
+msgstr ""
+
 msgid "Path to libc binary to use. If not given, the current directory is searched for a libc binary."
 msgstr ""
 
@@ -43311,6 +45018,15 @@ msgid "Path to make command"
 msgstr ""
 
 msgid "Path to private key"
+msgstr ""
+
+msgid "Path to profile file to install"
+msgstr ""
+
+msgid "Path to profile file to remove"
+msgstr ""
+
+msgid "Path to provisioning profile to validate"
 msgstr ""
 
 msgid "Path to rootdir."
@@ -43658,6 +45374,9 @@ msgstr ""
 msgid "Perform all the checks implied by --check-format, --check-header, --check-domain"
 msgstr ""
 
+msgid "Perform an authenticated restart after successful enablement"
+msgstr ""
+
 msgid "Perform an install without asking questions (non-interactive)"
 msgstr ""
 
@@ -43674,6 +45393,9 @@ msgid "Perform apt-get -f install (to fix broken dependencies)"
 msgstr ""
 
 msgid "Perform arbitrary transformations on your project map."
+msgstr ""
+
+msgid "Perform authorization operations"
 msgstr ""
 
 msgid "Perform branch target register load optimization after prologue / epilogue threading"
@@ -43775,6 +45497,9 @@ msgstr ""
 msgid "Perform operation on wireless network"
 msgstr ""
 
+msgid "Perform operations on the specified volume or home directory"
+msgstr ""
+
 msgid "Perform pkg move updates for binary pkgs"
 msgstr ""
 
@@ -43788,6 +45513,9 @@ msgid "Perform scalar replacement of aggregates"
 msgstr ""
 
 msgid "Perform selected wiping algorithm"
+msgstr ""
+
+msgid "Perform signing operations without writing the result"
 msgstr ""
 
 msgid "Perform some verification checks"
@@ -43836,6 +45564,9 @@ msgid "Performs a full system upgrade (except for packages on hold)"
 msgstr ""
 
 msgid "Period in seconds to set collection"
+msgstr ""
+
+msgid "Periodically print power state residency times for drivers"
 msgstr ""
 
 msgid "Periodically reopen file by name"
@@ -44174,6 +45905,9 @@ msgstr ""
 msgid "Postpone execution of utility until a file is modified"
 msgstr ""
 
+msgid "Power on N seconds after shutdown ends"
+msgstr ""
+
 msgid "Power-of-two granularity to use during the copy"
 msgstr ""
 
@@ -44208,6 +45942,9 @@ msgid "Poweroff machine"
 msgstr ""
 
 msgid "Pre-approve all changes and run non-interactively"
+msgstr ""
+
+msgid "Pre-authorize rights only"
 msgstr ""
 
 msgid "Pre-load specified modules"
@@ -44295,6 +46032,9 @@ msgid "Prefix of saved configuration"
 msgstr ""
 
 msgid "Prefix output with given name"
+msgstr ""
+
+msgid "Prefix string for an implicitly generated identifier"
 msgstr ""
 
 msgid "Prefix the 1-indexed byte-offset of the first match from the start of the matching line"
@@ -44424,6 +46164,9 @@ msgid "Preprocess to stdout/file"
 msgstr ""
 
 msgid "Preselect window"
+msgstr ""
+
+msgid "Present UI after screencapture is complete (files argument ignored)"
 msgstr ""
 
 msgid "Present a menu on specified <keys>"
@@ -44609,6 +46352,12 @@ msgstr ""
 msgid "Prevent floating point registers from being used in any manner"
 msgstr ""
 
+msgid "Prevent idle sleep (deprecated — use caffeinate instead)"
+msgstr ""
+
+msgid "Prevent idle sleep when a tty session is active (0/1)"
+msgstr ""
+
 msgid "Prevent including compiler-rt symbols"
 msgstr ""
 
@@ -44685,6 +46434,9 @@ msgid "Preview window layout"
 msgstr ""
 
 msgid "Primary branch"
+msgstr ""
+
+msgid "Primary group ID for the new account"
 msgstr ""
 
 msgid "Print # of in bytes"
@@ -44813,6 +46565,12 @@ msgstr ""
 msgid "Print PPID"
 msgstr ""
 
+msgid "Print SHA-1 hash of the preferred identity"
+msgstr ""
+
+msgid "Print SHA-256 (and SHA-1) hash of the certificate"
+msgstr ""
+
 msgid "Print SRCINFO to stdout"
 msgstr ""
 
@@ -44886,6 +46644,9 @@ msgid "Print a deptree for the port"
 msgstr ""
 
 msgid "Print a description of target specific options for each tool"
+msgstr ""
+
+msgid "Print a directory (aliases: cat .)"
 msgstr ""
 
 msgid "Print a file"
@@ -45026,6 +46787,9 @@ msgstr ""
 msgid "Print additional fields"
 msgstr ""
 
+msgid "Print additional status output"
+msgstr ""
+
 msgid "Print all active monitors"
 msgstr ""
 
@@ -45087,6 +46851,12 @@ msgid "Print all of the firmware variables"
 msgstr ""
 
 msgid "Print all possible data values of FIELD"
+msgstr ""
+
+msgid "Print all receipt information about a package-id in plist format"
+msgstr ""
+
+msgid "Print all records of a given type"
 msgstr ""
 
 msgid "Print all rules in a chain."
@@ -45182,6 +46952,9 @@ msgstr ""
 msgid "Print bash completion command"
 msgstr ""
 
+msgid "Print basic usage information for this verb"
+msgstr ""
+
 msgid "Print both online and offline CPUs"
 msgstr ""
 
@@ -45221,6 +46994,9 @@ msgstr ""
 msgid "Print command names for PIDs"
 msgstr ""
 
+msgid "Print command usage"
+msgstr ""
+
 msgid "Print command-line option descriptions"
 msgstr ""
 
@@ -45234,6 +47010,9 @@ msgid "Print commands before executing them"
 msgstr ""
 
 msgid "Print commit contents"
+msgstr ""
+
+msgid "Print common name of the preferred identity"
 msgstr ""
 
 msgid "Print compiler information"
@@ -45266,6 +47045,9 @@ msgstr ""
 msgid "Print content of device metadata"
 msgstr ""
 
+msgid "Print contents of a plist path"
+msgstr ""
+
 msgid "Print context diff"
 msgstr ""
 
@@ -45278,6 +47060,9 @@ msgstr ""
 msgid "Print corresponding addon name for im"
 msgstr ""
 
+msgid "Print counts of sleeps and wakes since boot"
+msgstr ""
+
 msgid "Print current RTC performance parameters"
 msgstr ""
 
@@ -45285,6 +47070,12 @@ msgid "Print current and latest version"
 msgstr ""
 
 msgid "Print current notes ref"
+msgstr ""
+
+msgid "Print current power state of system and available capabilities"
+msgstr ""
+
+msgid "Print current power states for I/O Kit drivers"
 msgstr ""
 
 msgid "Print current runlevel"
@@ -45416,6 +47207,9 @@ msgstr ""
 msgid "Print domain's time in human readable form"
 msgstr ""
 
+msgid "Print driver-level timings for a sleep/wake (pass a UUID)"
+msgstr ""
+
 msgid "Print each match in a machine readable output format"
 msgstr ""
 
@@ -45453,6 +47247,12 @@ msgid "Print event properties"
 msgstr ""
 
 msgid "Print events that trigger actions"
+msgstr ""
+
+msgid "Print extended information about a package-id"
+msgstr ""
+
+msgid "Print extended information about a package-id in plist format"
 msgstr ""
 
 msgid "Print extension details"
@@ -45698,6 +47498,9 @@ msgstr ""
 msgid "Print information about files found in .info files"
 msgstr ""
 
+msgid "Print information about filesystems on a disk image"
+msgstr ""
+
 msgid "Print information about the encryption parameters"
 msgstr ""
 
@@ -45741,6 +47544,12 @@ msgid "Print inode number of files"
 msgstr ""
 
 msgid "Print inodes instead of resolving paths"
+msgstr ""
+
+msgid "Print install choices in choiceChanges XML format"
+msgstr ""
+
+msgid "Print install choices in hierarchical XML (for System Image Utility)"
 msgstr ""
 
 msgid "Print installation directory and a list of directories gcc will search and exit"
@@ -46193,6 +48002,9 @@ msgstr ""
 msgid "Print output delimited by ASCII NUL characters"
 msgstr ""
 
+msgid "Print output from every -g argument (10.8+)"
+msgstr ""
+
 msgid "Print output in JSON"
 msgstr ""
 
@@ -46286,6 +48098,9 @@ msgstr ""
 msgid "Print placeholder instead of names"
 msgstr ""
 
+msgid "Print plist-path contents at a value index"
+msgstr ""
+
 msgid "Print pre-processor and compile flags for the specified libraries"
 msgstr ""
 
@@ -46368,6 +48183,12 @@ msgid "Print raw strings directly"
 msgstr ""
 
 msgid "Print real ID, not effective"
+msgstr ""
+
+msgid "Print record attribute values in URL-style encoding"
+msgstr ""
+
+msgid "Print record(s)/attribute(s) in XML plist format"
 msgstr ""
 
 msgid "Print records in an expanded format"
@@ -46937,6 +48758,9 @@ msgstr ""
 msgid "Print time remaining"
 msgstr ""
 
+msgid "Print timeline of system sleep/wake UUIDs (debug; needs boot-arg)"
+msgstr ""
+
 msgid "Print timestamp"
 msgstr ""
 
@@ -47007,6 +48831,9 @@ msgid "Print usage and subcommands description"
 msgstr ""
 
 msgid "Print usage and this help message and exit"
+msgstr ""
+
+msgid "Print usage info and examples"
 msgstr ""
 
 msgid "Print usage information"
@@ -47133,6 +48960,9 @@ msgid "Print what would be done"
 msgstr ""
 
 msgid "Print where the artifact would be cached, without fetching it"
+msgstr ""
+
+msgid "Print whether an image is encrypted"
 msgstr ""
 
 msgid "Print whether the current working directory is in the .git directory"
@@ -47513,6 +49343,12 @@ msgstr ""
 msgid "Private key type"
 msgstr ""
 
+msgid "Private keys are non-extractable after import"
+msgstr ""
+
+msgid "Private keys are wrapped and must be unwrapped on import"
+msgstr ""
+
 msgid "Privilege escalation method to use (default=sudo)"
 msgstr ""
 
@@ -47756,6 +49592,9 @@ msgstr ""
 msgid "Produce execution error messages"
 msgstr ""
 
+msgid "Produce extra progress output and error diagnostics"
+msgstr ""
+
 msgid "Produce filenames as this string"
 msgstr ""
 
@@ -47801,6 +49640,15 @@ msgstr ""
 msgid "Produces debugging information"
 msgstr ""
 
+msgid "Profile PayloadIdentifier to remove"
+msgstr ""
+
+msgid "Profile PayloadIdentifier to renew"
+msgstr ""
+
+msgid "Profile PayloadUUID to remove"
+msgstr ""
+
 msgid "Profile and dump timing on exit"
 msgstr ""
 
@@ -47814,6 +49662,9 @@ msgid "Profile stack usage"
 msgstr ""
 
 msgid "Profile startup execution time"
+msgstr ""
+
+msgid "Profile type"
 msgstr ""
 
 msgid "Profile using statprof and show results in STYLE"
@@ -47924,7 +49775,13 @@ msgstr ""
 msgid "Prompt for a key before exiting"
 msgstr ""
 
+msgid "Prompt for a password using the SecurityAgent"
+msgstr ""
+
 msgid "Prompt for an expiration time"
+msgstr ""
+
+msgid "Prompt for password"
 msgstr ""
 
 msgid "Prompt for password for authenticating server"
@@ -47943,6 +49800,9 @@ msgid "Prompt for the string to encrypt"
 msgstr ""
 
 msgid "Prompt for whether to edit the long comment"
+msgstr ""
+
+msgid "Prompt interactively for authentication password"
 msgstr ""
 
 msgid "Prompt string"
@@ -48087,6 +49947,12 @@ msgid "Provide list of expected cfgs for checking"
 msgstr ""
 
 msgid "Provide more information on what is going on"
+msgstr ""
+
+msgid "Provide progress output easy for another program to parse"
+msgstr ""
+
+msgid "Provide result output in plist format"
 msgstr ""
 
 msgid "Provide verbose output"
@@ -48461,6 +50327,9 @@ msgstr ""
 msgid "Query or set system options string"
 msgstr ""
 
+msgid "Query package metadata (e.g. RestartAction)"
+msgstr ""
+
 msgid "Query package owning specified file"
 msgstr ""
 
@@ -48521,6 +50390,12 @@ msgstr ""
 msgid "Query whether lockdown is enabled"
 msgstr ""
 
+msgid "Query whether the \"allow apps from anywhere\" option is available"
+msgstr ""
+
+msgid "Query whether the assessment subsystem is enabled or disabled"
+msgstr ""
+
 msgid "Query whether the command is on the whitelist"
 msgstr ""
 
@@ -48546,6 +50421,9 @@ msgid "Quickly create a task for yourself"
 msgstr ""
 
 msgid "Quiesce guest's file systems"
+msgstr ""
+
+msgid "Quiet - no interactive prompt"
 msgstr ""
 
 msgid "Quiet mode"
@@ -48704,6 +50582,9 @@ msgstr ""
 msgid "Re-package the files before erasing"
 msgstr ""
 
+msgid "Re-read existing power management settings from disk"
+msgstr ""
+
 msgid "Re-run common subexpression elimination after loop optimizations has been performed"
 msgstr ""
 
@@ -48776,6 +50657,9 @@ msgstr ""
 msgid "Read a list of files"
 msgstr ""
 
+msgid "Read a null-terminated passphrase from standard input"
+msgstr ""
+
 msgid "Read aliases from stdin, reporting matching ones on stdout"
 msgstr ""
 
@@ -48810,6 +50694,9 @@ msgid "Read arguments from file"
 msgstr ""
 
 msgid "Read attribute value"
+msgstr ""
+
+msgid "Read authentication information from stdin as a plist"
 msgstr ""
 
 msgid "Read bad blocks list from given file"
@@ -48849,6 +50736,9 @@ msgid "Read configuration from file instead of using default one"
 msgstr ""
 
 msgid "Read configuration from specified cache file"
+msgstr ""
+
+msgid "Read configuration from stdin as a plist"
 msgstr ""
 
 msgid "Read custom RC file"
@@ -49025,6 +50915,9 @@ msgstr ""
 msgid "Read or write the json from or to a file"
 msgstr ""
 
+msgid "Read owner password from stdin (Apple silicon only)"
+msgstr ""
+
 msgid "Read owner translation map from FILE"
 msgstr ""
 
@@ -49065,6 +50958,12 @@ msgid "Read program from stdin"
 msgstr ""
 
 msgid "Read program source from STDIN or start REPL if a TTY"
+msgstr ""
+
+msgid "Read recovery information from stdin as a plist"
+msgstr ""
+
+msgid "Read recovery key from stdin as a plist"
 msgstr ""
 
 msgid "Read revision information from a specific commit"
@@ -49157,6 +51056,9 @@ msgstr ""
 msgid "Read user configuration files from directory ARG"
 msgstr ""
 
+msgid "Read user information from stdin as a plist"
+msgstr ""
+
 msgid "Read user input from specified file descriptor"
 msgstr ""
 
@@ -49188,6 +51090,9 @@ msgid "Reads or modifies launchd's resource limits"
 msgstr ""
 
 msgid "Reads paths from files (.=stdin)"
+msgstr ""
+
+msgid "Real name (display name) to add or replace"
 msgstr ""
 
 msgid "Real name for user"
@@ -49352,6 +51257,9 @@ msgstr ""
 msgid "Receiver deletes during xfer, not before"
 msgstr ""
 
+msgid "Reclaim unused bands in a sparse (UDSP/UDSB) image"
+msgstr ""
+
 msgid "Recognise the specified programming language"
 msgstr ""
 
@@ -49422,6 +51330,9 @@ msgid "Record route (IPv4 only)"
 msgstr ""
 
 msgid "Record terminal session"
+msgstr ""
+
+msgid "Record type"
 msgstr ""
 
 msgid "Recording bit rate when recording"
@@ -49560,6 +51471,9 @@ msgid "Recursively search in each submodule"
 msgstr ""
 
 msgid "Recursively search in each submodule that is active and checked out in the repository"
+msgstr ""
+
+msgid "Recursively sign/verify/display nested code content"
 msgstr ""
 
 msgid "Recursively snapshot children"
@@ -50033,6 +51947,9 @@ msgstr ""
 msgid "Rely on Rosetta"
 msgstr ""
 
+msgid "Remaining UPS minutes at which to trigger emergency shutdown"
+msgstr ""
+
 msgid "Remaining args are positional JSON text args"
 msgstr ""
 
@@ -50094,6 +52011,9 @@ msgid "Remounts the /system partition on the device read-write"
 msgstr ""
 
 msgid "Removable medium"
+msgstr ""
+
+msgid "Removal password for password-protected profiles"
 msgstr ""
 
 msgid "Remove \"src\" directory after installation"
@@ -50198,6 +52118,9 @@ msgstr ""
 msgid "Remove a named hold from a snapshot"
 msgstr ""
 
+msgid "Remove a network from a device preferred list"
+msgstr ""
+
 msgid "Remove a package"
 msgstr ""
 
@@ -50223,6 +52146,9 @@ msgid "Remove a previously installed port"
 msgstr ""
 
 msgid "Remove a property from files, dirs, or revisions"
+msgstr ""
+
+msgid "Remove a property value for key"
 msgstr ""
 
 msgid "Remove a pushed crate from the index"
@@ -50265,6 +52191,9 @@ msgid "Remove a specific forward socket connection"
 msgstr ""
 
 msgid "Remove a tag"
+msgstr ""
+
+msgid "Remove a tag element from a profile"
 msgstr ""
 
 msgid "Remove a template"
@@ -50345,6 +52274,12 @@ msgstr ""
 msgid "Remove all overrides"
 msgstr ""
 
+msgid "Remove all preferred wireless networks for a device"
+msgstr ""
+
+msgid "Remove all profiles for the user or device"
+msgstr ""
+
 msgid "Remove all rules in the chain in table"
 msgstr ""
 
@@ -50382,6 +52317,9 @@ msgid "Remove an alternative and all of its associated slave links"
 msgstr ""
 
 msgid "Remove an egress zone"
+msgstr ""
+
+msgid "Remove an enabled user from FileVault"
 msgstr ""
 
 msgid "Remove an entry"
@@ -50597,6 +52535,9 @@ msgstr ""
 msgid "Remove first pkg in resume list. Use with --resume"
 msgstr ""
 
+msgid "Remove from admin cert store (default is user)"
+msgstr ""
+
 msgid "Remove fsigned-bitfields"
 msgstr ""
 
@@ -50625,6 +52566,9 @@ msgid "Remove input file(s) after decompression"
 msgstr ""
 
 msgid "Remove installed deps after build"
+msgstr ""
+
+msgid "Remove installed profiles"
 msgstr ""
 
 msgid "Remove instance from the state"
@@ -50921,6 +52865,12 @@ msgstr ""
 msgid "Remove the credential timestamp entirely"
 msgstr ""
 
+msgid "Remove the current code signature from the path(s)"
+msgstr ""
+
+msgid "Remove the current personal or institutional recovery key"
+msgstr ""
+
 msgid "Remove the current torrents"
 msgstr ""
 
@@ -50930,16 +52880,25 @@ msgstr ""
 msgid "Remove the given switch from disk"
 msgstr ""
 
+msgid "Remove the institutional recovery key"
+msgstr ""
+
 msgid "Remove the list of failed merges"
 msgstr ""
 
 msgid "Remove the metadata corresponding to an uri"
 msgstr ""
 
+msgid "Remove the named network service"
+msgstr ""
+
 msgid "Remove the package cache as well"
 msgstr ""
 
 msgid "Remove the packages"
+msgstr ""
+
+msgid "Remove the personal recovery key"
 msgstr ""
 
 msgid "Remove the port from zone|policy|service|helper"
@@ -50958,6 +52917,9 @@ msgid "Remove the source port from zone|policy|service"
 msgstr ""
 
 msgid "Remove the specified characters from parameters"
+msgstr ""
+
+msgid "Remove the specified device from the specified bond"
 msgstr ""
 
 msgid "Remove the specified packages and packages that depend on them"
@@ -50988,6 +52950,9 @@ msgid "Remove trailing '/' from source args"
 msgstr ""
 
 msgid "Remove trailing slashes from source"
+msgstr ""
+
+msgid "Remove trusted certificate(s)"
 msgstr ""
 
 msgid "Remove trusted certificates containing STRING"
@@ -51128,6 +53093,9 @@ msgstr ""
 msgid "Rename a machine image"
 msgstr ""
 
+msgid "Rename a network service"
+msgstr ""
+
 msgid "Rename a service broker"
 msgstr ""
 
@@ -51260,7 +53228,13 @@ msgstr ""
 msgid "Render vector graphics"
 msgstr ""
 
+msgid "Render volumes invisible in the Finder"
+msgstr ""
+
 msgid "Renders all of the types in the specified assembly"
+msgstr ""
+
+msgid "Renew certificates or retry DEP enrollment"
 msgstr ""
 
 msgid "Renew dynamic configurations"
@@ -51305,6 +53279,9 @@ msgstr ""
 msgid "Repair a damaged RAID mirror set"
 msgstr ""
 
+msgid "Repair any profile problems and log to stdout"
+msgstr ""
+
 msgid "Repair package"
 msgstr ""
 
@@ -51327,6 +53304,21 @@ msgid "Repeat headers on each page of output"
 msgstr ""
 
 msgid "Repeat until no new blocks are found in provided number of scans"
+msgstr ""
+
+msgid "Repeat: power on on given weekdays at given time"
+msgstr ""
+
+msgid "Repeat: shutdown on given weekdays at given time"
+msgstr ""
+
+msgid "Repeat: sleep on given weekdays at given time"
+msgstr ""
+
+msgid "Repeat: wake on given weekdays at given time"
+msgstr ""
+
+msgid "Repeat: wake or power on on given weekdays at given time"
 msgstr ""
 
 msgid "Replace -SNAPSHOT versions with a release version, downgrading if necessary"
@@ -51363,6 +53355,9 @@ msgid "Replace all underscores with whitespace"
 msgstr ""
 
 msgid "Replace all whitespace with underscores"
+msgstr ""
+
+msgid "Replace any existing signature on the path(s)"
 msgstr ""
 
 msgid "Replace as if the destination didn't exist"
@@ -51432,6 +53427,9 @@ msgid "Replacement device"
 msgstr ""
 
 msgid "Replacement for dot in _templates etc"
+msgstr ""
+
+msgid "Replacement password to set for the user"
 msgstr ""
 
 msgid "Replaces any -SNAPSHOT versions with the corresponding release version"
@@ -51656,10 +53654,19 @@ msgstr ""
 msgid "Report the CPU time taken by each subprocess in the compilation sequence"
 msgstr ""
 
+msgid "Report the current DNS configuration"
+msgstr ""
+
+msgid "Report the current proxy configuration"
+msgstr ""
+
 msgid "Report the current status of the service"
 msgstr ""
 
 msgid "Report the tmux version"
+msgstr ""
+
+msgid "Report the value of a system preference"
 msgstr ""
 
 msgid "Report uncaught exception to \"file\" (default), \"stderr\", or \"none\""
@@ -51753,6 +53760,9 @@ msgid "Request given address in DHCP DISCOVER message"
 msgstr ""
 
 msgid "Request given address in DHCP INFORM message"
+msgstr ""
+
+msgid "Request more verbose output (repeat to increase verbosity)"
 msgstr ""
 
 msgid "Request option list"
@@ -51860,6 +53870,9 @@ msgstr ""
 msgid "Require that responses include all of the items requested by any -N, -T, or -P options"
 msgstr ""
 
+msgid "Require that supplied constraints are structurally valid"
+msgstr ""
+
 msgid "Require the password to be changed on next login"
 msgstr ""
 
@@ -51902,7 +53915,19 @@ msgstr ""
 msgid "Rerun tree when max dir level reached"
 msgstr ""
 
+msgid "Resample image to specified height (maintains aspect ratio)"
+msgstr ""
+
+msgid "Resample image to specified size (aspect ratio may change)"
+msgstr ""
+
+msgid "Resample image to specified width (maintains aspect ratio)"
+msgstr ""
+
 msgid "Resample input data to sampling rate n (Hz)"
+msgstr ""
+
+msgid "Resample so height and width are no greater than specified size"
 msgstr ""
 
 msgid "Rescans the NVME namespaces"
@@ -51942,6 +53967,9 @@ msgid "Reset all packages to the provided versions"
 msgstr ""
 
 msgid "Reset all packet, cipher, and digest options to strict OpenPGP behavior"
+msgstr ""
+
+msgid "Reset ambient light parameters for certain Apple displays"
 msgstr ""
 
 msgid "Reset any sticky tags/date/kopts."
@@ -52022,6 +54050,9 @@ msgstr ""
 msgid "Reset the index and the working tree"
 msgstr ""
 
+msgid "Reset the password for a local user account"
+msgstr ""
+
 msgid "Reset the space's isolation segment to the org default"
 msgstr ""
 
@@ -52064,10 +54095,19 @@ msgstr ""
 msgid "Resize an APFS Container and its disk space usage"
 msgstr ""
 
+msgid "Resize an image and/or the filesystem within it"
+msgstr ""
+
 msgid "Resize block device of domain"
 msgstr ""
 
 msgid "Resize guest on fullscreen"
+msgstr ""
+
+msgid "Resize only a partition/filesystem in the image"
+msgstr ""
+
+msgid "Resize only the image file, not the partition"
 msgstr ""
 
 msgid "Resize picture to <w> <h> after any cropping"
@@ -52232,6 +54272,9 @@ msgstr ""
 msgid "Restart the service"
 msgstr ""
 
+msgid "Restart the system bypassing the FileVault unlock prompt"
+msgstr ""
+
 msgid "Restarts a build or job"
 msgstr ""
 
@@ -52308,6 +54351,9 @@ msgid "Restore only the schema, no data"
 msgstr ""
 
 msgid "Restore owner, mode and times"
+msgstr ""
+
+msgid "Restore power management settings to default values"
 msgstr ""
 
 msgid "Restore previously-saved state"
@@ -52421,10 +54467,16 @@ msgstr ""
 msgid "Result is true if either previous or next action are true"
 msgstr ""
 
+msgid "Result type (default trustRoot)"
+msgstr ""
+
 msgid "Resume a domain"
 msgstr ""
 
 msgid "Resume a postponed message"
+msgstr ""
+
+msgid "Resume a suspended service"
 msgstr ""
 
 msgid "Resume aborted scan"
@@ -52730,13 +54782,22 @@ msgstr ""
 msgid "Return to the previous movie or chapter in the playlist"
 msgstr ""
 
+msgid "Return whether FileVault is currently enabled"
+msgstr ""
+
 msgid "Return whether ICMP block inversion is enabled"
 msgstr ""
 
 msgid "Return whether IPv4 masquerading has been enabled"
 msgstr ""
 
+msgid "Return whether a personal recovery key is set"
+msgstr ""
+
 msgid "Return whether an ICMP block for icmptype has been added"
+msgstr ""
+
+msgid "Return whether an institutional recovery key is set"
 msgstr ""
 
 msgid "Return whether destination for ipv is enabled in permanent service|icmptype"
@@ -52752,6 +54813,9 @@ msgid "Return whether the IPv4 forward port has been added"
 msgstr ""
 
 msgid "Return whether the chain with given name exists in table"
+msgstr ""
+
+msgid "Return whether the device can be added to a bond"
 msgstr ""
 
 msgid "Return whether the entry has been added to an ipset"
@@ -52779,6 +54843,12 @@ msgid "Return whether the rule exists in chain in table"
 msgstr ""
 
 msgid "Return whether the source port has been added for zone|policy|service"
+msgstr ""
+
+msgid "Return whether the system is unlocked with the personal recovery key"
+msgstr ""
+
+msgid "Return whether the system supports authenticated restart"
 msgstr ""
 
 msgid "Return whether zone has been added"
@@ -52821,6 +54891,9 @@ msgid "Reuse existing destination"
 msgstr ""
 
 msgid "Reuse log message and authorship of an existing commit"
+msgstr ""
+
+msgid "Reveal the \"allow apps from anywhere\" option in Privacy & Security"
 msgstr ""
 
 msgid "Reverse diff"
@@ -52976,6 +55049,9 @@ msgstr ""
 msgid "Rollback to previous saved configuration created via iface-begin"
 msgstr ""
 
+msgid "Root certificate (DER or PEM)"
+msgstr ""
+
 msgid "Root directory"
 msgstr ""
 
@@ -52995,6 +55071,9 @@ msgid "Root source tree"
 msgstr ""
 
 msgid "Root to use as --quickpkg-direct source (default: /)"
+msgstr ""
+
+msgid "Rotate image clockwise by degrees"
 msgstr ""
 
 msgid "Rotate log every kbytes, requires -f"
@@ -53025,6 +55104,12 @@ msgid "Run 'pub get' after the project has been created (default)"
 msgstr ""
 
 msgid "Run /sageset and /sagerun for the same n"
+msgstr ""
+
+msgid "Run /usr/bin/leaks on itself before exiting"
+msgstr ""
+
+msgid "Run /usr/bin/leaks on this process"
 msgstr ""
 
 msgid "Run ANALYZE"
@@ -53594,6 +55679,9 @@ msgstr ""
 msgid "Run script at end of tape"
 msgstr ""
 
+msgid "Run security in interactive mode"
+msgstr ""
+
 msgid "Run self-tests"
 msgstr ""
 
@@ -54036,6 +56124,9 @@ msgid "S3 glacier restore priority"
 msgstr ""
 
 msgid "SCP to/from instance(s)"
+msgstr ""
+
+msgid "SID to add or replace"
 msgstr ""
 
 msgid "SIGHUP parent process of client, likely causing it to exit"
@@ -54584,6 +56675,30 @@ msgstr ""
 msgid "Scans the source files for tags and generates a report on their occurrences"
 msgstr ""
 
+msgid "Schedule a one-time power-on event"
+msgstr ""
+
+msgid "Schedule a one-time shutdown event"
+msgstr ""
+
+msgid "Schedule a one-time sleep event"
+msgstr ""
+
+msgid "Schedule a one-time sleep/wake/poweron/shutdown event"
+msgstr ""
+
+msgid "Schedule a one-time wake event"
+msgstr ""
+
+msgid "Schedule a one-time wake-or-power-on event"
+msgstr ""
+
+msgid "Schedule a relative wake or poweron in seconds from sleep end"
+msgstr ""
+
+msgid "Schedule a repeating power on/off event"
+msgstr ""
+
 msgid "Schedule account inactivation after password expiration"
 msgstr ""
 
@@ -54809,6 +56924,9 @@ msgstr ""
 msgid "Search for packages which supplements the search strings"
 msgstr ""
 
+msgid "Search for records matching a pattern"
+msgstr ""
+
 msgid "Search for subimage"
 msgstr ""
 
@@ -54819,6 +56937,9 @@ msgid "Search for the given pattern recursively"
 msgstr ""
 
 msgid "Search for the package that owns FILE"
+msgstr ""
+
+msgid "Search for the signing identity only in this keychain file"
 msgstr ""
 
 msgid "Search for torrents"
@@ -55043,6 +57164,12 @@ msgstr ""
 msgid "Searches through all known assemblies for types containing 'class'"
 msgstr ""
 
+msgid "Seconds before entering autopoweroff mode"
+msgstr ""
+
+msgid "Seconds before writing hibernate image and powering off memory (legacy)"
+msgstr ""
+
 msgid "Seconds between sending each packet"
 msgstr ""
 
@@ -55089,6 +57216,9 @@ msgid "Section name when generating Windows binaries"
 msgstr ""
 
 msgid "Secure mode"
+msgstr ""
+
+msgid "Securely erase the user home directory on deletion"
 msgstr ""
 
 msgid "See a synopsis"
@@ -55152,6 +57282,15 @@ msgid "Segment an image [value]"
 msgstr ""
 
 msgid "Segment an image [values]"
+msgstr ""
+
+msgid "Segment an image into multiple files"
+msgstr ""
+
+msgid "Segment size in sectors or mkfile(8) style"
+msgstr ""
+
+msgid "Segment the output into size_spec-sized files (deprecated)"
 msgstr ""
 
 msgid "Select \"destroy\" planning mode"
@@ -55464,6 +57603,9 @@ msgid "Select tags matching REGEXP"
 msgstr ""
 
 msgid "Select the FDPIC ABI, that uses function descriptors to represent pointers to functions"
+msgstr ""
+
+msgid "Select the Mach-O architecture to verify or display"
 msgstr ""
 
 msgid "Select the configuration file to use"
@@ -56024,6 +58166,9 @@ msgstr ""
 msgid "Set MAC address"
 msgstr ""
 
+msgid "Set MTU for a hardware port or device"
+msgstr ""
+
 msgid "Set NDOTS value"
 msgstr ""
 
@@ -56040,6 +58185,9 @@ msgid "Set Packet writing mode"
 msgstr ""
 
 msgid "Set Password hint"
+msgstr ""
+
+msgid "Set Proxy Auto Discovery to either on or off"
 msgstr ""
 
 msgid "Set QoS bits in ICMP datagrams"
@@ -56075,10 +58223,22 @@ msgstr ""
 msgid "Set SMART data for a drive"
 msgstr ""
 
+msgid "Set SOCKS Firewall proxy for a network service"
+msgstr ""
+
+msgid "Set SOCKS Firewall proxy to either on or off"
+msgstr ""
+
 msgid "Set SO_DEBUG socket option"
 msgstr ""
 
 msgid "Set SYSROOT (root for DEPEND build-time deps)"
+msgstr ""
+
+msgid "Set Secure Web proxy for a network service"
+msgstr ""
+
+msgid "Set Secure Web proxy to either on or off"
 msgstr ""
 
 msgid "Set TAO (Track At Once) writing mode"
@@ -56103,6 +58263,18 @@ msgid "Set Type of Service or Traffic Control value"
 msgstr ""
 
 msgid "Set VRDE property"
+msgstr ""
+
+msgid "Set Web proxy for a network service"
+msgstr ""
+
+msgid "Set Web proxy to either on or off"
+msgstr ""
+
+msgid "Set Wi-Fi Network for a device"
+msgstr ""
+
+msgid "Set Wi-Fi power for a device to on or off"
 msgstr ""
 
 msgid "Set Write-Ahead-Log journalling"
@@ -56180,6 +58352,9 @@ msgstr ""
 msgid "Set a group separator"
 msgstr ""
 
+msgid "Set a hardware port or device back to automatic media/MTU"
+msgstr ""
+
 msgid "Set a language"
 msgstr ""
 
@@ -56187,6 +58362,12 @@ msgid "Set a local config value instead of a user one"
 msgstr ""
 
 msgid "Set a memory usage for compression/decompression"
+msgstr ""
+
+msgid "Set a network service TCP/IP configuration to manual"
+msgstr ""
+
+msgid "Set a network service to on or off"
 msgstr ""
 
 msgid "Set a path to a temporary configuration file to use for the next reboot ONLY"
@@ -56210,7 +58391,13 @@ msgstr ""
 msgid "Set a property pointing to the artifact file for each project dependency"
 msgstr ""
 
+msgid "Set a property value for key to value"
+msgstr ""
+
 msgid "Set a secret value"
+msgstr ""
+
+msgid "Set a service to manual IP with a DHCP router"
 msgstr ""
 
 msgid "Set a shell prompt prefix string"
@@ -56220,6 +58407,9 @@ msgid "Set a specific key or branch in the input document (edit mode)"
 msgstr ""
 
 msgid "Set a static ARP entry"
+msgstr ""
+
+msgid "Set a tag element of a profile to the contents of tagFile"
 msgstr ""
 
 msgid "Set a time-zone"
@@ -56256,6 +58446,12 @@ msgid "Set action string"
 msgstr ""
 
 msgid "Set activation flags persistent for device"
+msgstr ""
+
+msgid "Set additional IPv4 routes associated with a service"
+msgstr ""
+
+msgid "Set additional IPv6 routes associated with a service"
 msgstr ""
 
 msgid "Set additional variables as key=value or YAML/JSON"
@@ -56798,6 +58994,15 @@ msgstr ""
 msgid "Set host key to values obtained using --detecthostkey"
 msgstr ""
 
+msgid "Set idle minutes until computer sleeps (or Never/Off)"
+msgstr ""
+
+msgid "Set idle minutes until display sleeps (or Never/Off)"
+msgstr ""
+
+msgid "Set idle minutes until hard disk sleeps (or Never/Off)"
+msgstr ""
+
 msgid "Set image composite operator [operator]"
 msgstr ""
 
@@ -56849,6 +59054,9 @@ msgstr ""
 msgid "Set keepalive interval (secs)"
 msgstr ""
 
+msgid "Set kernel boot architecture for next boot"
+msgstr ""
+
 msgid "Set key/value option for model"
 msgstr ""
 
@@ -56862,6 +59070,9 @@ msgid "Set label for the LUKS2 device"
 msgstr ""
 
 msgid "Set large pages mode"
+msgstr ""
+
+msgid "Set level of detail for the report"
 msgstr ""
 
 msgid "Set lexer"
@@ -56963,6 +59174,9 @@ msgstr ""
 msgid "Set maximum tolerable downtime"
 msgstr ""
 
+msgid "Set media for a hardware port or device"
+msgstr ""
+
 msgid "Set memory buffer size"
 msgstr ""
 
@@ -57030,6 +59244,9 @@ msgid "Set namelist file"
 msgstr ""
 
 msgid "Set network property to"
+msgstr ""
+
+msgid "Set network time to on or off"
 msgstr ""
 
 msgid "Set new description for zone|policy|ipset|service|helper|icmptype"
@@ -57117,6 +59334,9 @@ msgid "Set or delete expiration rule for the bucket"
 msgstr ""
 
 msgid "Set or get engine"
+msgstr ""
+
+msgid "Set or increment the verbosity level of output"
 msgstr ""
 
 msgid "Set or query a block device I/O tuning parameters"
@@ -57209,6 +59429,9 @@ msgstr ""
 msgid "Set password"
 msgstr ""
 
+msgid "Set password for a keychain"
+msgstr ""
+
 msgid "Set password for simple authentication"
 msgstr ""
 
@@ -57269,6 +59492,12 @@ msgstr ""
 msgid "Set provider for a given sink"
 msgstr ""
 
+msgid "Set proxy auto-config to a url for a service and enable it"
+msgstr ""
+
+msgid "Set proxy auto-config to either on or off"
+msgstr ""
+
 msgid "Set prune rules"
 msgstr ""
 
@@ -57312,6 +59541,9 @@ msgid "Set release"
 msgstr ""
 
 msgid "Set remote branch to track"
+msgstr ""
+
+msgid "Set remote login (SSH) on or off (requires Full Disk Access)"
 msgstr ""
 
 msgid "Set replay gain mode"
@@ -57386,6 +59618,9 @@ msgstr ""
 msgid "Set script directory"
 msgstr ""
 
+msgid "Set seconds before startup after power failure (multiple of 30)"
+msgstr ""
+
 msgid "Set seconds to wait between sending each packet"
 msgstr ""
 
@@ -57399,6 +59634,9 @@ msgid "Set server name"
 msgstr ""
 
 msgid "Set service configuration options"
+msgstr ""
+
+msgid "Set settings for a keychain"
 msgstr ""
 
 msgid "Set severity"
@@ -57599,6 +59837,9 @@ msgstr ""
 msgid "Set the DNS lookup timeout"
 msgstr ""
 
+msgid "Set the DNS servers for a network service"
+msgstr ""
+
 msgid "Set the Don't Fragment bit"
 msgstr ""
 
@@ -57642,6 +59883,9 @@ msgid "Set the TTL / hop limit of outgoing packets"
 msgstr ""
 
 msgid "Set the TTL start number"
+msgstr ""
+
+msgid "Set the account name for the specified PPPoE service."
 msgstr ""
 
 msgid "Set the amount of data to be appended as padding to the next track"
@@ -57704,6 +59948,12 @@ msgstr ""
 msgid "Set the commit message"
 msgstr ""
 
+msgid "Set the computer name (used by AFP)"
+msgstr ""
+
+msgid "Set the computer name."
+msgstr ""
+
 msgid "Set the connect timeout"
 msgstr ""
 
@@ -57713,7 +59963,16 @@ msgstr ""
 msgid "Set the crtc"
 msgstr ""
 
+msgid "Set the current date (mm:dd:yy)"
+msgstr ""
+
+msgid "Set the current startup disk to the indicated path"
+msgstr ""
+
 msgid "Set the current state of a container back to a snapshot."
+msgstr ""
+
+msgid "Set the current time (hh:mm:ss)"
 msgstr ""
 
 msgid "Set the currently active switch"
@@ -57863,7 +60122,13 @@ msgstr ""
 msgid "Set the input character set"
 msgstr ""
 
+msgid "Set the interactive prompt (implies -i)"
+msgstr ""
+
 msgid "Set the interval between saves of the push cache (in seconds)"
+msgstr ""
+
+msgid "Set the keychain password for the specified PPPoE service."
 msgstr ""
 
 msgid "Set the level of debug info generation"
@@ -57900,6 +60165,12 @@ msgid "Set the list of personal compression preferences to the specified string"
 msgstr ""
 
 msgid "Set the list of personal digest preferences to the specified string"
+msgstr ""
+
+msgid "Set the local subnet name"
+msgstr ""
+
+msgid "Set the local time zone"
 msgstr ""
 
 msgid "Set the log directory.  By default set to `log. <pid>`."
@@ -57957,6 +60228,15 @@ msgid "Set the netlink socket receive buffer size"
 msgstr ""
 
 msgid "Set the network"
+msgstr ""
+
+msgid "Set the network service TCP/IP configuration to BOOTP."
+msgstr ""
+
+msgid "Set the network service TCP/IP configuration to DHCP"
+msgstr ""
+
+msgid "Set the network time server (IP or DNS name)"
 msgstr ""
 
 msgid "Set the network timeout"
@@ -58031,6 +60311,15 @@ msgstr ""
 msgid "Set the paper width, in points"
 msgstr ""
 
+msgid "Set the partition list of a generic password item"
+msgstr ""
+
+msgid "Set the partition list of a key"
+msgstr ""
+
+msgid "Set the partition list of an internet password item"
+msgstr ""
+
 msgid "Set the path to a CommonJS config file to set option defaults"
 msgstr ""
 
@@ -58050,6 +60339,9 @@ msgid "Set the port to use when listening"
 msgstr ""
 
 msgid "Set the pre-gap size for the next track"
+msgstr ""
+
+msgid "Set the preferred identity to use for a service"
 msgstr ""
 
 msgid "Set the prefix of the generated C names"
@@ -58077,6 +60369,9 @@ msgid "Set the property value: --set <prop> <value>"
 msgstr ""
 
 msgid "Set the protocol address length"
+msgstr ""
+
+msgid "Set the proxy bypass domains for a network service"
 msgstr ""
 
 msgid "Set the proxy type; One of: socks,http_connect"
@@ -58124,7 +60419,28 @@ msgstr ""
 msgid "Set the scrub throughput limit"
 msgstr ""
 
+msgid "Set the search domains for a network service"
+msgstr ""
+
+msgid "Set the search list / keychain"
+msgstr ""
+
 msgid "Set the section enumerator separator"
+msgstr ""
+
+msgid "Set the service to get its 6 to 4 info automatically."
+msgstr ""
+
+msgid "Set the service to get its 6 to 4 info manually."
+msgstr ""
+
+msgid "Set the service to get its IPv6 info automatically."
+msgstr ""
+
+msgid "Set the service to get its IPv6 info manually."
+msgstr ""
+
+msgid "Set the service to use its IPv6 only for link local."
 msgstr ""
 
 msgid "Set the serviceable flag in the package"
@@ -58161,6 +60477,9 @@ msgid "Set the speed factor of the writing process to #"
 msgstr ""
 
 msgid "Set the start time offset"
+msgstr ""
+
+msgid "Set the starting style of interactive capture"
 msgstr ""
 
 msgid "Set the statement delimiter"
@@ -58431,6 +60750,24 @@ msgid "Set watches"
 msgstr ""
 
 msgid "Set where to write formatted output"
+msgstr ""
+
+msgid "Set whether keyboard is disabled when enclosure lock is engaged"
+msgstr ""
+
+msgid "Set whether server auto-restarts after a power failure"
+msgstr ""
+
+msgid "Set whether server responds to remote Apple Events"
+msgstr ""
+
+msgid "Set whether server restarts automatically after a system freeze"
+msgstr ""
+
+msgid "Set whether server wakes from sleep on network admin packet"
+msgstr ""
+
+msgid "Set whether the server wakes from sleep on modem activity"
 msgstr ""
 
 msgid "Set whether to use searchlist"
@@ -58841,6 +61178,9 @@ msgstr ""
 msgid "Shared or Private [type]"
 msgstr ""
 
+msgid "Shared secret for VPN authentication"
+msgstr ""
+
 msgid "Sharpen the image [geometry]"
 msgstr ""
 
@@ -58911,6 +61251,18 @@ msgid "Short title for start of progress meter"
 msgstr ""
 
 msgid "Short usage message"
+msgstr ""
+
+msgid "Short user name of the user to remove"
+msgstr ""
+
+msgid "Short user name to authenticate the change"
+msgstr ""
+
+msgid "Short user name to authenticate the removal"
+msgstr ""
+
+msgid "Short user name to enable for FileVault"
 msgstr ""
 
 msgid "Shortcut for '--options /dev/null'"
@@ -58997,6 +61349,9 @@ msgstr ""
 msgid "Show STABLEREQ arches (cc's) for all matching pkg versions"
 msgstr ""
 
+msgid "Show Secure Token status for a user"
+msgstr ""
+
 msgid "Show StackDriver logs"
 msgstr ""
 
@@ -59013,6 +61368,9 @@ msgid "Show `git diff` on hook failure"
 msgstr ""
 
 msgid "Show a brief description of the command and its options"
+msgstr ""
+
+msgid "Show a brief summary of commands and usage"
 msgstr ""
 
 msgid "Show a detailed coverage report on the CLI"
@@ -59087,6 +61445,9 @@ msgstr ""
 msgid "Show a word diff"
 msgstr ""
 
+msgid "Show abbreviated help"
+msgstr ""
+
 msgid "Show abbreviated object names"
 msgstr ""
 
@@ -59139,6 +61500,9 @@ msgid "Show all available formats"
 msgstr ""
 
 msgid "Show all branches"
+msgstr ""
+
+msgid "Show all commands, or usage for a command"
 msgstr ""
 
 msgid "Show all config settings"
@@ -59202,6 +61566,9 @@ msgid "Show all package versions"
 msgstr ""
 
 msgid "Show all possible graphical displays"
+msgstr ""
+
+msgid "Show all profiles on the system (requires root)"
 msgstr ""
 
 msgid "Show all properties"
@@ -59301,6 +61668,9 @@ msgid "Show automatically installed packages"
 msgstr ""
 
 msgid "Show auxiliary commands only"
+msgstr ""
+
+msgid "Show available --nc commands"
 msgstr ""
 
 msgid "Show available HW acceleration methods"
@@ -59414,6 +61784,9 @@ msgstr ""
 msgid "Show built-in defaults for various tar options"
 msgstr ""
 
+msgid "Show byte/packet/error statistics for a service"
+msgstr ""
+
 msgid "Show cache statistics"
 msgstr ""
 
@@ -59445,6 +61818,9 @@ msgid "Show characters in EBCDIC"
 msgstr ""
 
 msgid "Show checksums of package contents"
+msgstr ""
+
+msgid "Show clicks in video recordings"
 msgstr ""
 
 msgid "Show climate version"
@@ -59531,6 +61907,9 @@ msgstr ""
 msgid "Show conflicts"
 msgstr ""
 
+msgid "Show connection status and extended info for a service"
+msgstr ""
+
 msgid "Show content as transformed by a textconv filter"
 msgstr ""
 
@@ -59564,10 +61943,16 @@ msgstr ""
 msgid "Show current address label"
 msgstr ""
 
+msgid "Show current and active media on a hardware port or device"
+msgstr ""
+
 msgid "Show current cloud config"
 msgstr ""
 
 msgid "Show current config"
+msgstr ""
+
+msgid "Show current deferred enablement settings"
 msgstr ""
 
 msgid "Show current runtime config"
@@ -59583,6 +61968,9 @@ msgid "Show current time settings"
 msgstr ""
 
 msgid "Show current time smoothing state"
+msgstr ""
+
+msgid "Show currently locked and offline CoreStorage volumes"
 msgstr ""
 
 msgid "Show currently playing song"
@@ -59810,6 +62198,9 @@ msgstr ""
 msgid "Show execution time statistics"
 msgstr ""
 
+msgid "Show expanded profile information"
+msgstr ""
+
 msgid "Show explanations of automatic installations and removals"
 msgstr ""
 
@@ -59820,6 +62211,12 @@ msgid "Show extended information"
 msgstr ""
 
 msgid "Show extended pkg description"
+msgstr ""
+
+msgid "Show extended status with encryption progress estimate"
+msgstr ""
+
+msgid "Show extended user and volume information"
 msgstr ""
 
 msgid "Show extension info"
@@ -59883,6 +62280,9 @@ msgid "Show files that aren't part of checkout"
 msgstr ""
 
 msgid "Show files with revision or tag."
+msgstr ""
+
+msgid "Show filesystem status"
 msgstr ""
 
 msgid "Show format/container info"
@@ -59967,6 +62367,9 @@ msgid "Show help for a specific command"
 msgstr ""
 
 msgid "Show help for a subcommand"
+msgstr ""
+
+msgid "Show help for properties"
 msgstr ""
 
 msgid "Show help for this command"
@@ -60128,6 +62531,9 @@ msgstr ""
 msgid "Show installed size"
 msgstr ""
 
+msgid "Show interactive toolbar in interactive mode"
+msgstr ""
+
 msgid "Show internal guid list"
 msgstr ""
 
@@ -60215,6 +62621,9 @@ msgstr ""
 msgid "Show lint warnings just on changed lines"
 msgstr ""
 
+msgid "Show list of all commands, or usage for a command"
+msgstr ""
+
 msgid "Show list of all defined environments"
 msgstr ""
 
@@ -60272,10 +62681,16 @@ msgstr ""
 msgid "Show log for all reflogs entries"
 msgstr ""
 
+msgid "Show log of assertion creations and releases (10.6+)"
+msgstr ""
+
 msgid "Show log of bisects in check-in order"
 msgstr ""
 
 msgid "Show log of bisects in test order"
+msgstr ""
+
+msgid "Show log of thermal notifications affecting CPU speed"
 msgstr ""
 
 msgid "Show logged in accounts and instances"
@@ -60345,6 +62760,12 @@ msgid "Show messages from service of current user"
 msgstr ""
 
 msgid "Show messages from system services and the kernel"
+msgstr ""
+
+msgid "Show metadata known about a path"
+msgstr ""
+
+msgid "Show metadata known about a path in plist format"
 msgstr ""
 
 msgid "Show method names as they are invoked"
@@ -61208,6 +63629,12 @@ msgstr ""
 msgid "Show the current Stacks Plugin version"
 msgstr ""
 
+msgid "Show the current allow-research-guests setting"
+msgstr ""
+
+msgid "Show the current authenticated-root setting"
+msgstr ""
+
 msgid "Show the current version of prt-get"
 msgstr ""
 
@@ -61230,6 +63657,9 @@ msgid "Show the detailed installation summary"
 msgstr ""
 
 msgid "Show the differences in files and templates"
+msgstr ""
+
+msgid "Show the email addresses in the certificate"
 msgstr ""
 
 msgid "Show the entry's current TOTP"
@@ -61284,6 +63714,9 @@ msgid "Show the help message"
 msgstr ""
 
 msgid "Show the help message."
+msgstr ""
+
+msgid "Show the install history"
 msgstr ""
 
 msgid "Show the item counts column"
@@ -61370,6 +63803,9 @@ msgstr ""
 msgid "Show the protected attributes in clear text"
 msgstr ""
 
+msgid "Show the read/write formats"
+msgstr ""
+
 msgid "Show the reason for skipped steps"
 msgstr ""
 
@@ -61392,6 +63828,9 @@ msgid "Show the root package information"
 msgstr ""
 
 msgid "Show the roswell version information"
+msgstr ""
+
+msgid "Show the settings for a keychain"
 msgstr ""
 
 msgid "Show the source location of a particular gem in the bundle"
@@ -61427,6 +63866,9 @@ msgstr ""
 msgid "Show the type of the socket"
 msgstr ""
 
+msgid "Show the version"
+msgstr ""
+
 msgid "Show the version and available version of matching packages"
 msgstr ""
 
@@ -61455,6 +63897,9 @@ msgid "Show the whole file instead of just changes"
 msgstr ""
 
 msgid "Show the working tree status"
+msgstr ""
+
+msgid "Show thermal conditions affecting CPU speed"
 msgstr ""
 
 msgid "Show thermal information"
@@ -61620,6 +64065,9 @@ msgid "Show users that are members of specified group(s)"
 msgstr ""
 
 msgid "Show uuid of the subvolume"
+msgstr ""
+
+msgid "Show valid identities only"
 msgstr ""
 
 msgid "Show variable names only"
@@ -62106,6 +64554,9 @@ msgid "Sign of samples"
 msgstr ""
 
 msgid "Sign project artifact, the POM, and attached artifacts with GnuPG for deployment"
+msgstr ""
+
+msgid "Sign the code at the path(s) using this identity"
 msgstr ""
 
 msgid "Sign the extension so it can be installed in Firefox"
@@ -62628,6 +65079,9 @@ msgid "Slide one edge of the image along the X or Y axis [geometry]"
 msgstr ""
 
 msgid "Slideshow mode with X seconds per photo"
+msgstr ""
+
+msgid "Slightly dim display when switching to this source (0/1)"
 msgstr ""
 
 msgid "Slot number for new key (default is first free)"
@@ -63770,6 +66224,9 @@ msgstr ""
 msgid "Specify a yubikey slot"
 msgstr ""
 
+msgid "Specify account name (required)"
+msgstr ""
+
 msgid "Specify action to register for temporary watch, one of:"
 msgstr ""
 
@@ -63777,6 +66234,9 @@ msgid "Specify additional ODF options"
 msgstr ""
 
 msgid "Specify addons"
+msgstr ""
+
+msgid "Specify allowed error"
 msgstr ""
 
 msgid "Specify alternate rsyncd.conf file"
@@ -63830,6 +66290,15 @@ msgstr ""
 msgid "Specify an alternate session data file"
 msgstr ""
 
+msgid "Specify an application which may access the imported key"
+msgstr ""
+
+msgid "Specify an application which may access this item"
+msgstr ""
+
+msgid "Specify an application which may access this key"
+msgstr ""
+
 msgid "Specify an extension to be passed to a $shark module"
 msgstr ""
 
@@ -63863,7 +66332,13 @@ msgstr ""
 msgid "Specify app template"
 msgstr ""
 
+msgid "Specify application constraint"
+msgstr ""
+
 msgid "Specify apt config file"
+msgstr ""
+
+msgid "Specify authentication type (four-character)"
 msgstr ""
 
 msgid "Specify author id"
@@ -63896,6 +66371,18 @@ msgstr ""
 msgid "Specify camera model"
 msgstr ""
 
+msgid "Specify certificate by SHA-1 hash"
+msgstr ""
+
+msgid "Specify certificate by common name"
+msgstr ""
+
+msgid "Specify certificate to delete by its SHA-256/SHA-1 hash"
+msgstr ""
+
+msgid "Specify certificate to delete by its common name"
+msgstr ""
+
 msgid "Specify chunksize of bitmap"
 msgstr ""
 
@@ -63924,6 +66411,9 @@ msgid "Specify commands to run"
 msgstr ""
 
 msgid "Specify commands via stdin"
+msgstr ""
+
+msgid "Specify comment string"
 msgstr ""
 
 msgid "Specify commit ID of installed git module"
@@ -64082,6 +66572,9 @@ msgstr ""
 msgid "Specify environment variable"
 msgstr ""
 
+msgid "Specify existing receipt to be modified in-place by --learn"
+msgstr ""
+
 msgid "Specify experimental feature flags"
 msgstr ""
 
@@ -64140,6 +66633,9 @@ msgid "Specify general extensions"
 msgstr ""
 
 msgid "Specify general options"
+msgstr ""
+
+msgid "Specify generic attribute value"
 msgstr ""
 
 msgid "Specify hash algorithm for objects"
@@ -64232,7 +66728,13 @@ msgstr ""
 msgid "Specify ipset type"
 msgstr ""
 
+msgid "Specify item creator (four-character code)"
+msgstr ""
+
 msgid "Specify item key to send value to."
+msgstr ""
+
+msgid "Specify item type (four-character code)"
 msgstr ""
 
 msgid "Specify item value."
@@ -64259,10 +66761,22 @@ msgstr ""
 msgid "Specify key services to use in addition to the local one"
 msgstr ""
 
+msgid "Specify key usage"
+msgstr ""
+
+msgid "Specify key usage (an integer)"
+msgstr ""
+
 msgid "Specify keys to be used for trial decryption"
 msgstr ""
 
 msgid "Specify keyword expansion mode."
+msgstr ""
+
+msgid "Specify kind (default \"application password\")"
+msgstr ""
+
+msgid "Specify label"
 msgstr ""
 
 msgid "Specify latest major version as language version"
@@ -64379,6 +66893,9 @@ msgstr ""
 msgid "Specify object type"
 msgstr ""
 
+msgid "Specify optional extended attribute name and value"
+msgstr ""
+
 msgid "Specify options"
 msgstr ""
 
@@ -64409,10 +66926,22 @@ msgstr ""
 msgid "Specify parent window id"
 msgstr ""
 
+msgid "Specify password data as a hexadecimal string"
+msgstr ""
+
+msgid "Specify password to be added"
+msgstr ""
+
+msgid "Specify password to be added (legacy, = -w)"
+msgstr ""
+
 msgid "Specify path of installed binary"
 msgstr ""
 
 msgid "Specify path of source module (default: current path)"
+msgstr ""
+
+msgid "Specify path string"
 msgstr ""
 
 msgid "Specify path to create the module (default: current directory)"
@@ -64443,6 +66972,18 @@ msgid "Specify playlist file"
 msgstr ""
 
 msgid "Specify plugin signature file"
+msgstr ""
+
+msgid "Specify policy"
+msgstr ""
+
+msgid "Specify policy constraint"
+msgstr ""
+
+msgid "Specify policy string"
+msgstr ""
+
+msgid "Specify policy-specific string"
 msgstr ""
 
 msgid "Specify port for web interface"
@@ -64494,6 +67035,9 @@ msgid "Specify profession"
 msgstr ""
 
 msgid "Specify program for reading info files"
+msgstr ""
+
+msgid "Specify protocol (four-character SecProtocolType)"
 msgstr ""
 
 msgid "Specify proxy address"
@@ -64565,6 +67109,9 @@ msgstr ""
 msgid "Specify search extensions"
 msgstr ""
 
+msgid "Specify security domain string"
+msgstr ""
+
 msgid "Specify sendmail command"
 msgstr ""
 
@@ -64572,6 +67119,15 @@ msgid "Specify serial transfer speed"
 msgstr ""
 
 msgid "Specify server API"
+msgstr ""
+
+msgid "Specify server name (required)"
+msgstr ""
+
+msgid "Specify service"
+msgstr ""
+
+msgid "Specify service name (required)"
 msgstr ""
 
 msgid "Specify settings password"
@@ -64800,6 +67356,9 @@ msgid "Specify the drive"
 msgstr ""
 
 msgid "Specify the editor"
+msgstr ""
+
+msgid "Specify the encryption algorithm"
 msgstr ""
 
 msgid "Specify the end of the commit range"
@@ -65078,6 +67637,9 @@ msgstr ""
 msgid "Specify the title of rss"
 msgstr ""
 
+msgid "Specify the unwrapping passphrase"
+msgstr ""
+
 msgid "Specify the user name and password to use for proxy authentication"
 msgstr ""
 
@@ -65099,7 +67661,13 @@ msgstr ""
 msgid "Specify the width of the screen"
 msgstr ""
 
+msgid "Specify the wrapping passphrase"
+msgstr ""
+
 msgid "Specify thread count"
+msgstr ""
+
+msgid "Specify timeout interval in seconds"
 msgstr ""
 
 msgid "Specify timeout."
@@ -65288,6 +67856,12 @@ msgstr ""
 msgid "Standard mode"
 msgstr ""
 
+msgid "Standby delay when battery above highstandbythreshold (seconds)"
+msgstr ""
+
+msgid "Standby delay when battery below highstandbythreshold (seconds)"
+msgstr ""
+
 msgid "Star all packages in ~/.atom/packages"
 msgstr ""
 
@@ -65358,6 +67932,9 @@ msgid "Start a repl session either with the current project or standalone."
 msgstr ""
 
 msgid "Start a service"
+msgstr ""
+
+msgid "Start a service (optional --user/--password/--secret)"
 msgstr ""
 
 msgid "Start a unit and dependencies and disable all others"
@@ -65540,6 +68117,9 @@ msgstr ""
 msgid "Start in lisp mode"
 msgstr ""
 
+msgid "Start in mouse-selection mode"
+msgstr ""
+
 msgid "Start in quickFix mode"
 msgstr ""
 
@@ -65555,7 +68135,16 @@ msgstr ""
 msgid "Start in vi mode"
 msgstr ""
 
+msgid "Start in video-recording mode"
+msgstr ""
+
+msgid "Start in window-selection mode"
+msgstr ""
+
 msgid "Start instance(s)"
+msgstr ""
+
+msgid "Start interaction in window selection mode"
 msgstr ""
 
 msgid "Start interface"
@@ -65849,6 +68438,9 @@ msgstr ""
 msgid "Stop a running model."
 msgstr ""
 
+msgid "Stop a service"
+msgstr ""
+
 msgid "Stop a standalone server instance"
 msgstr ""
 
@@ -66095,6 +68687,9 @@ msgstr ""
 msgid "Store NTFS alternate streams"
 msgstr ""
 
+msgid "Store a resource in a UDIF image (deprecated)"
+msgstr ""
+
 msgid "Store assemblies"
 msgstr ""
 
@@ -66234,6 +68829,9 @@ msgid "Strip trailing carriage return at the end of an input line"
 msgstr ""
 
 msgid "Strip whitespace at the end of lines"
+msgstr ""
+
+msgid "Strip xattrs that could interfere with code signing"
 msgstr ""
 
 msgid "Strongname (sign) the output assembly using the key pair"
@@ -66506,6 +69104,9 @@ msgstr ""
 msgid "Suppress compiler copyright message"
 msgstr ""
 
+msgid "Suppress confirmation and ignore removal errors"
+msgstr ""
+
 msgid "Suppress daemon-mode MOTD"
 msgstr ""
 
@@ -66707,6 +69308,9 @@ msgstr ""
 msgid "Suspend a machine"
 msgstr ""
 
+msgid "Suspend a service (PPP, Modem on Hold)"
+msgstr ""
+
 msgid "Suspend the guest after timeout"
 msgstr ""
 
@@ -66836,6 +69440,9 @@ msgstr ""
 msgid "Sync blobs"
 msgstr ""
 
+msgid "Sync configuration profiles with local users"
+msgstr ""
+
 msgid "Sync packages"
 msgstr ""
 
@@ -66864,6 +69471,9 @@ msgid "Sync with a repository"
 msgstr ""
 
 msgid "Synchronize AUR packages"
+msgstr ""
+
+msgid "Synchronize Open Directory attributes to FileVault users"
 msgstr ""
 
 msgid "Synchronize X calls"
@@ -66920,6 +69530,15 @@ msgstr ""
 msgid "Synonym for -p --stat"
 msgstr ""
 
+msgid "Synonym for -srcimagekey"
+msgstr ""
+
+msgid "Synonym for attach (poorly-named)"
+msgstr ""
+
+msgid "Synonym for detach"
+msgstr ""
+
 msgid "Synonymous with -l 0 -b 1152 -M -r 2,2"
 msgstr ""
 
@@ -66965,6 +69584,9 @@ msgstr ""
 msgid "System prompt to use"
 msgstr ""
 
+msgid "System sleep timer in minutes (0=never)"
+msgstr ""
+
 msgid "System-wide init-file to use instead of default."
 msgstr ""
 
@@ -66975,6 +69597,9 @@ msgid "TCP mode, alternate syntax"
 msgstr ""
 
 msgid "TH1 initialization script"
+msgstr ""
+
+msgid "TIFF image"
 msgstr ""
 
 msgid "TLS variables may be accessed with offsets from the TLS segment register"
@@ -67103,6 +69728,9 @@ msgstr ""
 msgid "Take snapshot but create no metadata"
 msgstr ""
 
+msgid "Take the picture after a delay of the given number of seconds (default 5)"
+msgstr ""
+
 msgid "Take the specified devices offline"
 msgstr ""
 
@@ -67172,6 +69800,9 @@ msgstr ""
 msgid "Target framework to update the tool"
 msgstr ""
 
+msgid "Target image format"
+msgstr ""
+
 msgid "Target line"
 msgstr ""
 
@@ -67218,6 +69849,15 @@ msgid "Target triple to clean output for"
 msgstr ""
 
 msgid "Target triple which compiles will be for"
+msgstr ""
+
+msgid "Target volume, device, or domain"
+msgstr ""
+
+msgid "Target volume, device, or domain (synonym for -target)"
+msgstr ""
+
+msgid "Targeted local node database file path"
 msgstr ""
 
 msgid "Targets must be IP addresses, not hostnames"
@@ -67308,6 +69948,9 @@ msgid "Tell the MIPS assembler to not run its preprocessor over user assembler f
 msgstr ""
 
 msgid "Tell the Transmission to initiate a shutdown"
+msgstr ""
+
+msgid "Tell the kernel that system boot is complete"
 msgstr ""
 
 msgid "Tell which version of alternatives this is"
@@ -68363,6 +71006,9 @@ msgstr ""
 msgid "Time to wait for the command to exit gracefully"
 msgstr ""
 
+msgid "Time-to-live in seconds to add or replace"
+msgstr ""
+
 msgid "Timeout (seconds) before ping exits"
 msgstr ""
 
@@ -68385,6 +71031,9 @@ msgid "Timeout for retrieving selection"
 msgstr ""
 
 msgid "Timeout in seconds"
+msgstr ""
+
+msgid "Timeout in seconds (0 = wait indefinitely; default 15)"
 msgstr ""
 
 msgid "Timeout in seconds for tests without @small, @medium or @large"
@@ -68568,6 +71217,9 @@ msgid "Toggle the using of colors"
 msgstr ""
 
 msgid "Toggles the state of pppd's debug option"
+msgstr ""
+
+msgid "Token id (see list-smartcards)"
 msgstr ""
 
 msgid "Token name set for Pygments"
@@ -68948,6 +71600,12 @@ msgstr ""
 msgid "Trigger DHCP reconfiguration of all connected clients"
 msgstr ""
 
+msgid "Trigger VPN on-demand for a hostname (optional port/background)"
+msgstr ""
+
+msgid "Trigger a background scan and update operation"
+msgstr ""
+
 msgid "Trigger devices matching /dev path"
 msgstr ""
 
@@ -68964,6 +71622,9 @@ msgid "Trigger devices matching subsystem"
 msgstr ""
 
 msgid "Trigger devices with parent device"
+msgstr ""
+
+msgid "Trigger re-evaluation of network configuration on an interface"
 msgstr ""
 
 msgid "Trigger two-stage active commit of top file"
@@ -69084,6 +71745,12 @@ msgid "Tune output for this cpu without restricting the instructions to it"
 msgstr ""
 
 msgid "Tunnelled migration"
+msgstr ""
+
+msgid "Turn IPv4 off on a network service"
+msgstr ""
+
+msgid "Turn IPv6 off on a network service"
 msgstr ""
 
 msgid "Turn colorization off always (-C overrides)"
@@ -69341,6 +72008,9 @@ msgstr ""
 msgid "Type of archive"
 msgstr ""
 
+msgid "Type of assessment to perform"
+msgstr ""
+
 msgid "Type of crash dump to be collected"
 msgstr ""
 
@@ -69353,6 +72023,9 @@ msgstr ""
 msgid "Type of events to trigger"
 msgstr ""
 
+msgid "Type of group record to create or modify"
+msgstr ""
+
 msgid "Type of hook to install"
 msgstr ""
 
@@ -69360,6 +72033,18 @@ msgid "Type of hook to uninstall"
 msgstr ""
 
 msgid "Type of image interlacing scheme [type]"
+msgstr ""
+
+msgid "Type of items to display"
+msgstr ""
+
+msgid "Type of items to export"
+msgstr ""
+
+msgid "Type of items to import"
+msgstr ""
+
+msgid "Type of key to find"
 msgstr ""
 
 msgid "Type of memory operations"
@@ -69375,6 +72060,9 @@ msgid "Type of pixel compression when writing the image [type]"
 msgstr ""
 
 msgid "Type of queries for non-transactional execution mode (default: select)"
+msgstr ""
+
+msgid "Type of record to add or delete"
 msgstr ""
 
 msgid "Type of rendering intent when managing the image color [type]"
@@ -69420,6 +72108,9 @@ msgid "UM  Use NUM context lines."
 msgstr ""
 
 msgid "UNSAFE! Ignore SSL certs for package downloads"
+msgstr ""
+
+msgid "UPS battery % at which to trigger emergency shutdown"
 msgstr ""
 
 msgid "URI to PKCS#11 security token"
@@ -69737,6 +72428,9 @@ msgstr ""
 msgid "Unlock password"
 msgstr ""
 
+msgid "Unlock the specified keychain"
+msgstr ""
+
 msgid "Unlock working copy paths or URLs"
 msgstr ""
 
@@ -69758,6 +72452,9 @@ msgstr ""
 msgid "Unmount a ssh mount"
 msgstr ""
 
+msgid "Unmount a volume without detaching the image"
+msgstr ""
+
 msgid "Unmount all available ZFS filesystems"
 msgstr ""
 
@@ -69774,6 +72471,9 @@ msgid "Unmount all of the file systems described in /etc/mtab"
 msgstr ""
 
 msgid "Unmount an entire disk (all volumes)"
+msgstr ""
+
+msgid "Unmount regardless of open files on the filesystem"
 msgstr ""
 
 msgid "Unmount the CD drives"
@@ -69911,6 +72611,9 @@ msgstr ""
 msgid "Up to and including"
 msgstr ""
 
+msgid "Update ACLs of the given path in the receipt set by --edit-pkg"
+msgstr ""
+
 msgid "Update a NuGet source"
 msgstr ""
 
@@ -69939,6 +72642,9 @@ msgid "Update a single dependency to exactly PRECISE when used with -p"
 msgstr ""
 
 msgid "Update a specific group"
+msgstr ""
+
+msgid "Update a system preference (requires root)"
 msgstr ""
 
 msgid "Update all outdated installed packages"
@@ -70053,6 +72759,9 @@ msgid "Update installed systems."
 msgstr ""
 
 msgid "Update interval"
+msgstr ""
+
+msgid "Update item if it already exists"
 msgstr ""
 
 msgid "Update list of available packages"
@@ -71009,6 +73718,9 @@ msgstr ""
 msgid "Use Stream Control Transmission instead of ICMP echo"
 msgstr ""
 
+msgid "Use Sudden Motion Sensor to park disk heads (0/1)"
+msgstr ""
+
 msgid "Use TCP SYN for probes"
 msgstr ""
 
@@ -71199,6 +73911,9 @@ msgid "Use a separate operation for the following URL"
 msgstr ""
 
 msgid "Use a separate thread per interface"
+msgstr ""
+
+msgid "Use a shadow file alongside the primary image"
 msgstr ""
 
 msgid "Use a shared secret for validating digests with the TCP-MD5 option"
@@ -71543,6 +74258,9 @@ msgstr ""
 msgid "Use default permissions"
 msgstr ""
 
+msgid "Use default settings; the files argument will be ignored"
+msgstr ""
+
 msgid "Use default value when missing entry"
 msgstr ""
 
@@ -71774,6 +74492,9 @@ msgstr ""
 msgid "Use global registers 2 through 4, SPARC SVR4 ABI-reserved for applications"
 msgstr ""
 
+msgid "Use half-brightness state before display sleep (0/1)"
+msgstr ""
+
 msgid "Use hardware FPP floating point"
 msgstr ""
 
@@ -71823,6 +74544,9 @@ msgid "Use installed packages directly as binary packages"
 msgstr ""
 
 msgid "Use instead of host if you want to address 255.255.255.255"
+msgstr ""
+
+msgid "Use institutional recovery key from FileVaultMaster.keychain"
 msgstr ""
 
 msgid "Use interactive"
@@ -71999,6 +74723,9 @@ msgstr ""
 msgid "Use old incremental GNU format"
 msgstr ""
 
+msgid "Use one thread for building the resource seal"
+msgstr ""
+
 msgid "Use only IPv4 address for hostname resolution"
 msgstr ""
 
@@ -72006,6 +74733,9 @@ msgid "Use only IPv6 address for hostname resolution"
 msgstr ""
 
 msgid "Use only a given repository"
+msgstr ""
+
+msgid "Use only locally cached enrollment information"
 msgstr ""
 
 msgid "Use only paramiko, no openssh"
@@ -72075,6 +74805,9 @@ msgid "Use presentation mode"
 msgstr ""
 
 msgid "Use preview mode"
+msgstr ""
+
+msgid "Use previously cached scan results; do not rescan"
 msgstr ""
 
 msgid "Use primary selection"
@@ -72509,6 +75242,9 @@ msgstr ""
 msgid "Use the backlog of connections to set on the listener socket"
 msgstr ""
 
+msgid "Use the blocks of this device to create the image"
+msgstr ""
+
 msgid "Use the built-in profile"
 msgstr ""
 
@@ -72582,6 +75318,12 @@ msgid "Use the given message as the commit message"
 msgstr ""
 
 msgid "Use the given message as the commit message for the merge commit"
+msgstr ""
+
+msgid "Use the given password for the keychains (insecure)"
+msgstr ""
+
+msgid "Use the given password to unlock"
 msgstr ""
 
 msgid "Use the given tag message"
@@ -72695,6 +75437,9 @@ msgstr ""
 msgid "Use the specified interface"
 msgstr ""
 
+msgid "Use the specified keychain"
+msgstr ""
+
 msgid "Use the specified license file"
 msgstr ""
 
@@ -72702,6 +75447,9 @@ msgid "Use the specified message when updating a revision"
 msgstr ""
 
 msgid "Use the specified output format"
+msgstr ""
+
+msgid "Use the specified preference domain"
 msgstr ""
 
 msgid "Use the specified proxy"
@@ -72917,6 +75665,9 @@ msgstr ""
 msgid "User login"
 msgstr ""
 
+msgid "User name for VPN authentication"
+msgstr ""
+
 msgid "User name to connect as"
 msgstr ""
 
@@ -72932,7 +75683,13 @@ msgstr ""
 msgid "User style sheet for EPUB layout"
 msgstr ""
 
+msgid "User to add to FileVault"
+msgstr ""
+
 msgid "User to build as"
+msgstr ""
+
+msgid "User to configure for automatic login (used with set)"
 msgstr ""
 
 msgid "User to delegate permissions to"
@@ -72953,10 +75710,16 @@ msgstr ""
 msgid "User-defined charset ?4"
 msgstr ""
 
+msgid "User-friendly system name"
+msgstr ""
+
 msgid "Username for the entry"
 msgstr ""
 
 msgid "Username to be used"
+msgstr ""
+
+msgid "Username to verify group membership (used with -o checkmember)"
 msgstr ""
 
 msgid "Uses `binary_id` for schema's primary key and its references"
@@ -73004,6 +75767,9 @@ msgstr ""
 msgid "Validate UTF-8"
 msgstr ""
 
+msgid "Validate a provisioning or enrollment profile"
+msgstr ""
+
 msgid "Validate all spices"
 msgstr ""
 
@@ -73014,6 +75780,9 @@ msgid "Validate scm connection string"
 msgstr ""
 
 msgid "Validate storage"
+msgstr ""
+
+msgid "Validate that constraint plist(s) are structurally valid"
 msgstr ""
 
 msgid "Validate the JSON documents from newline separated paths and/or globs in a text file"
@@ -73032,6 +75801,9 @@ msgid "Validate the credentials, extending timeout"
 msgstr ""
 
 msgid "Validate the extension source"
+msgstr ""
+
+msgid "Validate the personal recovery key"
 msgstr ""
 
 msgid "Validate your system"
@@ -73163,6 +75935,9 @@ msgstr ""
 msgid "Verbose output"
 msgstr ""
 
+msgid "Verbose output formatted for easy parsing"
+msgstr ""
+
 msgid "Verbose output of operations"
 msgstr ""
 
@@ -73211,6 +75986,9 @@ msgstr ""
 msgid "Verbosity: none"
 msgstr ""
 
+msgid "Verification policy (default basic)"
+msgstr ""
+
 msgid "Verifies Portfile for portname"
 msgstr ""
 
@@ -73232,6 +76010,9 @@ msgstr ""
 msgid "Verify and fix system states and assets"
 msgstr ""
 
+msgid "Verify any profile problems and log to stdout"
+msgstr ""
+
 msgid "Verify archive"
 msgstr ""
 
@@ -73241,10 +76022,19 @@ msgstr ""
 msgid "Verify cache"
 msgstr ""
 
+msgid "Verify certificate(s)"
+msgstr ""
+
 msgid "Verify checksums of data blocks"
 msgstr ""
 
+msgid "Verify code signatures on the path(s)/pid(s)"
+msgstr ""
+
 msgid "Verify contents of package"
+msgstr ""
+
+msgid "Verify each architecture in a universal Mach-O separately"
 msgstr ""
 
 msgid "Verify file status using SHA1"
@@ -73319,7 +76109,13 @@ msgstr ""
 msgid "Verify the given <signature> file"
 msgstr ""
 
+msgid "Verify the image before attaching"
+msgstr ""
+
 msgid "Verify the partition map layout of a whole disk"
+msgstr ""
+
+msgid "Verify the path(s) against this code requirement"
 msgstr ""
 
 msgid "Verify using openSSL with authorized keys from file KEYS"
@@ -73356,6 +76152,9 @@ msgid "Version specified by the context in FILENAME"
 msgstr ""
 
 msgid "Version to check out"
+msgstr ""
+
+msgid "Versioned-bundle version to operate on"
 msgstr ""
 
 msgid "Versions this package reverts, separated by whitespaces"
@@ -73493,6 +76292,9 @@ msgstr ""
 msgid "Volume key size to use for LUKS encryption"
 msgstr ""
 
+msgid "Volume name for the new filesystem"
+msgstr ""
+
 msgid "Volume offset to download from"
 msgstr ""
 
@@ -73518,6 +76320,9 @@ msgid "Wait for TIME seconds to get an exclusive repository lock before failing"
 msgstr ""
 
 msgid "Wait for a bus name to appear"
+msgstr ""
+
+msgid "Wait for a dynamic store key to exist (optional -t timeout)"
 msgstr ""
 
 msgid "Wait for address to be assigned before forking to background"
@@ -73643,7 +76448,28 @@ msgstr ""
 msgid "Wait until the dump can run without anomalies"
 msgstr ""
 
+msgid "Wait while holding AuthorizationRef until stdout closes"
+msgstr ""
+
 msgid "Waits for the process with the specified PID to exit"
+msgstr ""
+
+msgid "Wake N seconds after sleep ends"
+msgstr ""
+
+msgid "Wake based on proximity of nearby iCloud devices (0/1)"
+msgstr ""
+
+msgid "Wake on ethernet magic packet (0/1)"
+msgstr ""
+
+msgid "Wake on modem ring (0/1)"
+msgstr ""
+
+msgid "Wake when laptop lid is opened (0/1)"
+msgstr ""
+
+msgid "Wake when power source changes (0/1)"
 msgstr ""
 
 msgid "Wakeup a domain from pmsuspended state"
@@ -73940,6 +76766,12 @@ msgstr ""
 msgid "Watch without enabling live browser reload on rebuild"
 msgstr ""
 
+msgid "Watch: report on-demand changes as they occur"
+msgstr ""
+
+msgid "Watch: report reachability status as network configuration changes"
+msgstr ""
+
 msgid "Weaves all main classes"
 msgstr ""
 
@@ -74072,6 +76904,9 @@ msgstr ""
 msgid "When no message is supplied, show diff along with status summary in message editor"
 msgstr ""
 
+msgid "When re-signing, reuse some information from the old signature"
+msgstr ""
+
 msgid "When requesting dependency generation (-M): assume missing header files exist"
 msgstr ""
 
@@ -74157,6 +76992,9 @@ msgid "Where to store the screenshot"
 msgstr ""
 
 msgid "Whether applicable optional patches should be treated as needed or be excluded"
+msgstr ""
+
+msgid "Whether filesystems in the image should be mounted"
 msgstr ""
 
 msgid "Whether or not to clean just the documentation directory"
@@ -74471,6 +77309,9 @@ msgstr ""
 msgid "Wrap output after N characters (default 76)"
 msgstr ""
 
+msgid "Wrap private keys on export"
+msgstr ""
+
 msgid "Wrap up the output with html tags"
 msgstr ""
 
@@ -74481,6 +77322,9 @@ msgid "Wrapper to run tests with (e.g. valgrind)"
 msgstr ""
 
 msgid "Wrappers specification line."
+msgstr ""
+
+msgid "Write (or read) a detached signature to/from this file"
 msgstr ""
 
 msgid "Write C-code equivalent to the invocation to the given file"
@@ -74526,6 +77370,9 @@ msgid "Write a plan file to the given path"
 msgstr ""
 
 msgid "Write a pom.xml file to disk for Maven interoperability."
+msgstr ""
+
+msgid "Write a profile tag element to tagFile"
 msgstr ""
 
 msgid "Write a trace.edn file that traces deps expansion"
@@ -74621,6 +77468,9 @@ msgstr ""
 msgid "Write index to specified file"
 msgstr ""
 
+msgid "Write install log to stderr in addition to syslog"
+msgstr ""
+
 msgid "Write keyword/mask changes using >= operators instead of ="
 msgstr ""
 
@@ -74693,6 +77543,9 @@ msgstr ""
 msgid "Write output to a local file named like the remote file we get"
 msgstr ""
 
+msgid "Write output to file or directory"
+msgstr ""
+
 msgid "Write output to given file; extension selects format"
 msgstr ""
 
@@ -74721,6 +77574,9 @@ msgid "Write raw packet data to the given file (\"-\" means stdout)"
 msgstr ""
 
 msgid "Write received packets to pcap savefile"
+msgstr ""
+
+msgid "Write recovery key and system info to stdout as a plist"
 msgstr ""
 
 msgid "Write result to (source) file instead of stdout"
@@ -74768,6 +77624,9 @@ msgstr ""
 msgid "Write the classpath of the current project to output-file."
 msgstr ""
 
+msgid "Write the detached signature into the system database"
+msgstr ""
+
 msgid "Write the diagnostic to the specified path"
 msgstr ""
 
@@ -74780,7 +77639,13 @@ msgstr ""
 msgid "Write the imported attributes to a file"
 msgstr ""
 
+msgid "Write the list of possibly-modified files to this path (- for stdout)"
+msgstr ""
+
 msgid "Write the name of each function into the text section, directly preceding the function prologue"
+msgstr ""
+
+msgid "Write the output data to outfile"
 msgstr ""
 
 msgid "Write the raw packets to file"
@@ -78011,6 +80876,9 @@ msgstr ""
 msgid "key table"
 msgstr ""
 
+msgid "key=value for the image recognition system"
+msgstr ""
+
 msgid "keywords for all matching pkg versions"
 msgstr ""
 
@@ -78492,6 +81360,9 @@ msgid "lower-case alphabetic characters"
 msgstr ""
 
 msgid "ls -ldF all files in the package"
+msgstr ""
+
+msgid "macOS version to fetch (e.g. 14.5)"
 msgstr ""
 
 msgid "macOS: compile code so that its external references are relocatable"

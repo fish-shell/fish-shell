@@ -44,6 +44,12 @@ function __fish_paste
     end
 
     if test -n "$data"
-        commandline --insert-smart -- $data
+        commandline (
+            if fish_is_root_user
+                echo --insert
+            else
+                echo --insert-smart
+            end
+        ) -- $data
     end
 end

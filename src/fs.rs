@@ -326,15 +326,12 @@ where
         #[cfg(any(target_os = "linux", target_os = "android"))]
         {
             use libc::timespec;
-            let mut time = timespec {
-                tv_sec: 0,
-                tv_nsec: 0,
-            };
+            let mut time = timespec::default();
             if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut time) } == 0 {
                 let times = [
-                    timespec {
-                        tv_sec: 0,
-                        tv_nsec: libc::UTIME_OMIT, // don't change atime,
+                    libc::timespec {
+                        tv_nsec: libc::UTIME_OMIT,
+                        ..Default::default()
                     },
                     time,
                 ];

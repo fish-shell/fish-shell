@@ -46,7 +46,7 @@ fluent-ftl-tools = { git = "https://codeberg.org/danielrainer/fluent-ftl-tools",
 fluent-syntax = { git = "https://github.com/danielrainer/fluent-rs", rev = "cf712bced280b217b6307edabc2089b3e57204ab" }
 ignore = "0.4.25"
 itertools = "0.14.0"
-libc = "0.2.177"
+libc = "0.2.183"
 # lru pulls in hashbrown by default, which uses a faster (though less DoS resistant) hashing algo.
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
 # files as of 22 April 2024.

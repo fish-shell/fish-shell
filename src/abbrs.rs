@@ -95,11 +95,26 @@ impl Abbreviation {
 
     // Return true if we match a token at a given position.
     pub fn matches(&self, token: &wstr, position: Position, command: &wstr) -> bool {
+        self.matches_cmd_optional(token, position, Some(command))
+    }
+
+    // Skipping the command check is only used in the abbr builtin
+    // This will only match on command-agnostic abbreviations
+    pub fn matches_cmd_optional(
+        &self,
+        token: &wstr,
+        position: Position,
+        command: Option<&wstr>,
+    ) -> bool {
         if !self.matches_position(position) {
             return false;
         }
 
-        if !self.commands.is_empty() && !self.commands.contains(&command.to_owned()) {
+        if let Some(command) = command {
+            if !self.commands.is_empty() && !self.commands.contains(&command.to_owned()) {
+                return false;
+            }
+        } else if !self.commands.is_empty() {
             return false;
         }
 
@@ -181,11 +196,22 @@ impl AbbreviationSet {
     /// Return the list of replacers for an input token, in priority order.
     /// The `position` is given to describe where the token was found.
     pub fn r#match(&self, token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer> {
+        self.match_cmd_optional(token, position, Some(cmd))
+    }
+
+    // Skipping the command check is only used in the abbr builtin
+    // This will only produce command-agnostic abbreviations
+    pub fn match_cmd_optional(
+        &self,
+        token: &wstr,
+        position: Position,
+        cmd: Option<&wstr>,
+    ) -> Vec<Replacer> {
         let mut result = vec![];
 
         // Later abbreviations take precedence so walk backwards.
         for abbr in self.abbrs.iter().rev() {
-            if abbr.matches(token, position, cmd) {
+            if abbr.matches_cmd_optional(token, position, cmd) {
                 result.push(Replacer {
                     replacement: abbr.replacement.clone(),
                     is_function: abbr.replacement_is_function,

@@ -761,3 +761,24 @@ if string match -rq -- '^[a-z]+$' $USER
     string match -rq -- "$USER\t.*" (complete -C "echo ~$first_letter_wrong_case")
     or echo "`complete -C'echo ~$first_letter_wrong_case'` did not yield $USER"
 end
+
+# Test that cd in a && chain after mkdir offers the mkdir target as a completion.
+set -l tmpdir (mktemp -d)
+cd $tmpdir
+complete -C'mkdir will_exist && cd ' | string match -q '*will_exist*'
+and echo "mkdir completion: ok"
+or echo "mkdir completion: FAILED"
+# CHECK: mkdir completion: ok
+
+complete -C'mkdir -p nested/target && cd ' | string match -q '*nested/target*'
+and echo "mkdir -p completion: ok"
+or echo "mkdir -p completion: FAILED"
+# CHECK: mkdir -p completion: ok
+
+# || should NOT offer the mkdir target.
+complete -C'mkdir should_not_appear || cd ' | string match -q '*should_not_appear*'
+and echo "or completion: FAILED (should not offer)"
+or echo "or completion: ok"
+# CHECK: or completion: ok
+
+rm -rf $tmpdir

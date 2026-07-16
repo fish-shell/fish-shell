@@ -1,13 +1,17 @@
+use std::ops::Deref as _;
+
 use super::prelude::*;
 use crate::{
-    abbrs::{self, Abbreviation, Position},
+    abbrs::{self, Abbreviation, Position, Replacement},
     builtins::Error,
     common::valid_func_name,
     env::{EnvMode, EnvStackSetResult},
     err_fmt, err_str,
     highlight::highlight_and_colorize,
+    parse_constants::SourceRange,
     parser::ParserEnvSetMode,
     re::{regex_make_anchored, to_boxed_chars},
+    reader::expand_replacer,
 };
 use fish_common::{EscapeStringStyle, escape, escape_string, help_section};
 use fish_widestring::bytes2wcstring;
@@ -38,6 +42,7 @@ struct Options {
     set_cursor_marker: Option<WString>,
     args: Vec<WString>,
     color: ColorEnabled,
+    do_expand: bool,
 }
 
 impl Options {
@@ -62,6 +67,9 @@ impl Options {
         if self.query {
             cmds.push(L!("query"));
         }
+        if self.do_expand {
+            cmds.push(L!("do-expand"));
+        }
 
         if cmds.len() > 1 {
             return Some(err_fmt!("Cannot combine options %s", join(&cmds, L!(", "))));
@@ -78,7 +86,8 @@ impl Options {
             OPTION_REQUIRES_ARG
             "%s option requires %s"
         }
-        if !self.add && self.position.is_some() {
+        if !self.do_expand && !self.add && self.position.is_some() {
+            // We do not mention --do-expand in the error as --add is much more common and important
             return Some(err_fmt!(OPTION_REQUIRES_ARG, "--position", "--add"));
         }
         if !self.add && self.regex_pattern.is_some() {
@@ -454,6 +463,63 @@ fn abbr_erase(opts: &Options, parser: &mut Parser) -> BuiltinResult {
     })
 }
 
+fn abbr_do_expand(opts: &Options, streams: &mut IoStreams, parser: &mut Parser) -> BuiltinResult {
+    if opts.args.len() != 1 {
+        err_str!("Requires exactly one argument")
+            .subcmd(CMD, L!("--do-expand"))
+            .finish(streams);
+        return Err(STATUS_INVALID_ARGS);
+    }
+    let token = &opts.args[0];
+
+    // Following logic copied from abbr_add
+    let position = opts.position.unwrap_or({
+        if opts.commands.is_empty() {
+            Position::Command
+        } else {
+            // If it is valid for a command, the abbr can't be in command-position.
+            Position::Anywhere
+        }
+    });
+    if !opts.commands.is_empty() && position == Position::Command {
+        err_str!("--command cannot be combined with --position=command")
+            .cmd(CMD)
+            .finish(streams);
+        return Err(STATUS_INVALID_ARGS);
+    }
+
+    for command in opts
+        .commands
+        .iter()
+        .map(|cmd| Some(cmd.deref()))
+        .chain(std::iter::once(None))
+    {
+        let replacement = abbrs::with_abbrs(|abbrs| {
+            for replacer in abbrs.match_cmd_optional(token, position, command) {
+                let replacement = expand_replacer(
+                    SourceRange {
+                        start: 0,
+                        length: token.len() as u32,
+                    },
+                    token,
+                    &replacer,
+                    parser,
+                );
+                if replacement.is_some() {
+                    return replacement;
+                }
+            }
+            None
+        });
+        if let Some(Replacement { mut text, .. }) = replacement {
+            text.push('\n');
+            streams.out.append(&text);
+            return Ok(SUCCESS);
+        }
+    }
+    Err(STATUS_CMD_ERROR)
+}
+
 pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> BuiltinResult {
     let mut argv_read = Vec::with_capacity(argv.len());
     argv_read.extend_from_slice(argv);
@@ -489,6 +555,7 @@ pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         wopt(L!("universal"), ArgType::NoArgument, 'U'),
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
+        wopt(L!("do-expand"), ArgType::NoArgument, 'd'),
     ];
 
     let mut opts = Options::default();
@@ -512,6 +579,7 @@ pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 }
             }
             'a' => opts.add = true,
+            'd' => opts.do_expand = true,
             'c' => opts.commands.push(w.woptarg.map(|x| x.to_owned()).unwrap()),
             'p' => {
                 if opts.position.is_some() {
@@ -600,7 +668,7 @@ pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 opts.color = ColorEnabled::parse_from_opt(streams, cmd, w.woptarg.unwrap())?;
             }
             _ => {
-                panic!("unexpected retval from wgeopter.next()");
+                panic!("unexpected retval from wgetopter.next()");
             }
         }
     }
@@ -631,6 +699,9 @@ pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     }
     if opts.query {
         return abbr_query(&opts);
+    }
+    if opts.do_expand {
+        return abbr_do_expand(&opts, streams, parser);
     }
 
     // validate() should error or ensure at least one path is set.

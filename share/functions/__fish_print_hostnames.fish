@@ -11,12 +11,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     begin
         test -r /etc/hosts && read -z </etc/hosts | string replace -r '#.*$' ''
         or type -q getent && getent hosts 2>/dev/null
-    end |
-        # Ignore own IP addresses (127.*, 0.0[.0[.0]], ::1), non-host IPs (fe00::*, ff00::*),
-        # and leading/trailing whitespace. Split results on whitespace to handle multiple aliases for
-        # one IP.
-        string replace -irf '^\s*?(?!(?:0\.|127\.|ff0|fe0|::1))\S+\s*(.*?)\s*$' '$1' |
-        string split ' '
+    end | __fish_print_hostnames_from_hosts
 
     # Print nfs servers from /etc/fstab
     if test -r /etc/fstab
@@ -140,4 +135,15 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         string split ',' | string replace -r '\[?([^\]]+).*' '$1'
 
     return 0
+end
+
+function __fish_print_hostnames_from_hosts -d "Extract hostnames from hosts file entries"
+    # Ignore own IP addresses (127.*, 0.0[.0[.0]], ::1), broadcast addresses (255.255.255.255),
+    # non-host IPs (fe00::*, ff00::*), and leading/trailing whitespace. Split results on whitespace
+    # to handle multiple aliases for one IP.
+    read -lz entries
+    set entries (string split \n -- $entries)
+    set -l host_entries (string match -reiv '^\s*(?:0\.|127\.|255\.255\.255\.255|ff0|fe0|::1)' -- $entries)
+    set -l hostnames (string replace -r '^\s*\S+\s*' '' -- $host_entries)
+    string split ' ' -- $hostnames
 end

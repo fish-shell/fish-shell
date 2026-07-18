@@ -113,8 +113,7 @@ impl Abbreviation {
             if !self.commands.is_empty() && !self.commands.contains(&command.to_owned()) {
                 return false;
             }
-        }
-        if !self.commands.is_empty() {
+        } else if !self.commands.is_empty() {
             return false;
         }
 

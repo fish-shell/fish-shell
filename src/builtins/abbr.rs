@@ -488,12 +488,10 @@ fn abbr_do_expand(opts: &Options, streams: &mut IoStreams, parser: &mut Parser) 
         return Err(STATUS_INVALID_ARGS);
     }
 
-    for command in opts
-        .commands
-        .iter()
-        .map(|cmd| Some(cmd.deref()))
-        .chain(std::iter::once(None))
-    {
+    for command in std::iter::chain(
+        std::iter::once(None),
+        opts.commands.iter().map(|cmd| Some(cmd.deref())),
+    ) {
         let replacement = abbrs::with_abbrs(|abbrs| {
             for replacer in abbrs.match_cmd_optional(&token, position, command) {
                 let replacement = expand_replacer(

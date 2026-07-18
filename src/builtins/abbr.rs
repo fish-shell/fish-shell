@@ -488,12 +488,12 @@ fn abbr_do_expand(opts: &Options, streams: &mut IoStreams, parser: &mut Parser) 
         return Err(STATUS_INVALID_ARGS);
     }
 
-    let commands_iter: &mut dyn Iterator<Item = Option<&wstr>> = if !opts.commands.is_empty() {
-        &mut opts.commands.iter().map(|cmd| Some(cmd.deref()))
-    } else {
-        &mut std::iter::once(None)
-    };
-    for command in commands_iter {
+    for command in opts
+        .commands
+        .iter()
+        .map(|cmd| Some(cmd.deref()))
+        .chain(std::iter::once(None))
+    {
         let replacement = abbrs::with_abbrs(|abbrs| {
             for replacer in abbrs.match_cmd_optional(&token, position, command) {
                 let replacement = expand_replacer(

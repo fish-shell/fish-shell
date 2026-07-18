@@ -1,6 +1,8 @@
+use std::ops::Deref;
+
 use super::prelude::*;
 use crate::{
-    abbrs::{self, Abbreviation, Position},
+    abbrs::{self, Abbreviation, Position, Replacement},
     builtins::Error,
     common::valid_func_name,
     env::{EnvMode, EnvStackSetResult},
@@ -486,11 +488,15 @@ fn abbr_do_expand(opts: &Options, streams: &mut IoStreams, parser: &mut Parser) 
         return Err(STATUS_INVALID_ARGS);
     }
 
-    let empty_command = L!("").to_owned();
-    for command in opts.commands.iter().chain(std::iter::once(&empty_command)) {
-        if let Some(mut output) = abbrs::with_abbrs(|abbrs| {
-            for replacer in abbrs.r#match(&token, position, command) {
-                if let Some(replacement) = expand_replacer(
+    let commands_iter: &mut dyn Iterator<Item = Option<&wstr>> = if !opts.commands.is_empty() {
+        &mut opts.commands.iter().map(|cmd| Some(cmd.deref()))
+    } else {
+        &mut std::iter::once(None)
+    };
+    for command in commands_iter {
+        let replacement = abbrs::with_abbrs(|abbrs| {
+            for replacer in abbrs.match_cmd_optional(&token, position, command) {
+                let replacement = expand_replacer(
                     SourceRange {
                         start: 0,
                         length: token.len() as u32,
@@ -498,14 +504,16 @@ fn abbr_do_expand(opts: &Options, streams: &mut IoStreams, parser: &mut Parser) 
                     token,
                     &replacer,
                     parser,
-                ) {
-                    return Some(replacement.text);
+                );
+                if replacement.is_some() {
+                    return replacement;
                 }
             }
             None
-        }) {
-            output.push('\n');
-            streams.out.append(&output);
+        });
+        if let Some(Replacement { mut text, .. }) = replacement {
+            text.push('\n');
+            streams.out.append(&text);
             return Ok(SUCCESS);
         }
     }

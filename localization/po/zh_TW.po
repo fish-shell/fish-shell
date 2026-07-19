@@ -3020,6 +3020,9 @@ msgstr "印出命令類型"
 msgid "Print completions for a commandline specified as a parameter"
 msgstr "印出參數指定之命令行的補全"
 
+msgid "Print cursor position after expansion"
+msgstr ""
+
 msgid "Print directory stack"
 msgstr "印出目錄堆疊"
 

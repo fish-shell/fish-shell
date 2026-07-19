@@ -3027,6 +3027,9 @@ msgstr "コマンドの種類を表示"
 msgid "Print completions for a commandline specified as a parameter"
 msgstr "パラメータとして指定されたコマンドラインの補完候補を表示"
 
+msgid "Print cursor position after expansion"
+msgstr ""
+
 msgid "Print directory stack"
 msgstr "ディレクトリスタックを表示"
 

@@ -3045,6 +3045,9 @@ msgstr "打印命令类型"
 msgid "Print completions for a commandline specified as a parameter"
 msgstr "为指定为参数的命令行打印补全"
 
+msgid "Print cursor position after expansion"
+msgstr ""
+
 msgid "Print directory stack"
 msgstr "打印目录栈"
 

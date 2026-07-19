@@ -3153,6 +3153,9 @@ msgstr "Afficher le type de commande"
 msgid "Print completions for a commandline specified as a parameter"
 msgstr ""
 
+msgid "Print cursor position after expansion"
+msgstr ""
+
 msgid "Print directory stack"
 msgstr ""
 

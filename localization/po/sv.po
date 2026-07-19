@@ -20991,6 +20991,9 @@ msgstr ""
 msgid "Do not write anything"
 msgstr "Skriv ingenting"
 
+msgid "Do not write anything to standard output"
+msgstr ""
+
 msgid "Do not write column names in results"
 msgstr ""
 
@@ -36276,6 +36279,9 @@ msgstr ""
 msgid "List the files that are supplied by the named package"
 msgstr ""
 
+msgid "List the full command line as well as the process ID"
+msgstr ""
+
 msgid "List the host and all running local containers"
 msgstr ""
 
@@ -41674,6 +41680,9 @@ msgid "Output system directory"
 msgstr ""
 
 msgid "Output the build plan in JSON (unstable)"
+msgstr ""
+
+msgid "Output the command line in shell-quoted form"
 msgstr ""
 
 msgid "Output the content of specified files or URLs"

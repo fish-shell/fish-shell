@@ -13,6 +13,7 @@ Synopsis
     abbr [--show] [--color WHEN]
     abbr --list
     abbr --query NAME ...
+    abbr --do-expand [--position command | anywhere] [ [-c | --command COMMAND]... ] [--get-cursor] TEXT
 
 Description
 -----------
@@ -155,7 +156,7 @@ Prints the names of all abbreviation
     abbr [-e | --erase] [ [-c | --command COMMAND]... ] NAME ...
 
 Erases the abbreviation with the given name.
-For command-specific abbreviations, the ``--command`` options must be provided to disambiguate which abbreviation to rename.
+For command-specific abbreviations, the ``--command`` options must be provided to disambiguate which abbreviation to erase.
 
 ::
 
@@ -169,3 +170,12 @@ Return 0 (true) if one of the *NAME* is an abbreviation.
 
 Displays help for the `abbr` command.
 
+::
+
+    abbr --do-expand or -d [--position command | anywhere] [ [-c | --command COMMAND]... ] [--get-cursor] TEXT
+
+Tries to expand *TEXT* as an abbreviation.
+For command-specific abbreviations, the ``--command`` options must be provided to allow them to be expanded.
+Passing ``--position=anywhere`` will not expand any ``--position=command`` abbreviations. In other words, ``--position=anywhere`` explicitly excludes the command position for this command.
+
+If ``--get-cursor`` is set, this will print the position in the string where the cursor should be moved to on a new line after the expanded abbreviation. If there is no position set, ``-1`` will be printed.

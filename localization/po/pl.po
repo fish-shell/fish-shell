@@ -1157,6 +1157,9 @@ msgstr ""
 msgid "Requires at least two arguments"
 msgstr ""
 
+msgid "Requires exactly one argument"
+msgstr ""
+
 msgid "Requires exactly two arguments"
 msgstr ""
 
@@ -2624,6 +2627,9 @@ msgstr ""
 msgid "Get current selection starting position"
 msgstr ""
 
+msgid "Get expanded abbreviation text"
+msgstr ""
+
 msgid "Gets the umask in a format that can be used as a command"
 msgstr ""
 
@@ -3012,6 +3018,9 @@ msgid "Print command type"
 msgstr ""
 
 msgid "Print completions for a commandline specified as a parameter"
+msgstr ""
+
+msgid "Print cursor position after expansion"
 msgstr ""
 
 msgid "Print directory stack"

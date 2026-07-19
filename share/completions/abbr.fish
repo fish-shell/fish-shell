@@ -11,10 +11,13 @@ complete -c abbr -f -n $__fish_abbr_not_add_cond -s s -l show -d 'Print all abbr
 complete -c abbr -f -n $__fish_abbr_not_add_cond -s l -l list -d 'Print all abbreviation names'
 complete -c abbr -f -n $__fish_abbr_not_add_cond -l color -d 'When to colorize output' -xa 'always never auto'
 complete -c abbr -f -n $__fish_abbr_not_add_cond -s h -l help -d Help
+complete -c abbr -f -n $__fish_abbr_not_add_cond -s d -l do-expand -d 'Get expanded abbreviation text'
 
 complete -c abbr -f -n $__fish_abbr_add_cond -s p -l position -a 'command anywhere' -d 'Expand only as a command, or anywhere' -x
 complete -c abbr -f -n $__fish_abbr_add_cond -s f -l function -d 'Treat expansion argument as a fish function' -xa '(functions)'
 complete -c abbr -f -n $__fish_abbr_add_cond -s r -l regex -d 'Match a regular expression' -x
 complete -c abbr -f -n $__fish_abbr_add_cond -l set-cursor -d 'Position the cursor at % post-expansion'
+
+complete -c abbr -f -n '__fish_seen_subcommand_from -d --do-expand' -l get-cursor -d 'Print cursor position after expansion'
 
 complete -c abbr -f -n '__fish_seen_subcommand_from -s --show' -l color -d 'When to colorize output' -xa 'always never auto'

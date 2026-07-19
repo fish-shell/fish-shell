@@ -11,6 +11,7 @@ Scripting improvements
 - List indexing can now be nested in more cases; for example ``$foo[$bar[1] 2]`` is now allowed (:issue:`12903`).
 - Builtin help pages now respect an override of the ``man`` function (:issue:`12886`).
 - Commands like ``status=123 echo $status`` now throw an error instead of silently ignore the variable override (:issue:`7790`).
+- The `abbr --do-expand` subcommand has been added to expand abbreviations programmatically
 
 Regression fixes:
 -----------------

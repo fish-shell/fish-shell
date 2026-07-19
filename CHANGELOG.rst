@@ -1,6 +1,11 @@
 fish ?.?.? (released ???)
 =========================
 
+Notable improvements and fixes
+------------------------------
+
+- The `abbr --do-expand` subcommand has been added to expand abbreviations programmatically
+
 fish 4.8.1 (released July 14, 2026)
 ===================================
 

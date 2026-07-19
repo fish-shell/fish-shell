@@ -1156,6 +1156,9 @@ msgstr "請求重新導向至「%s」，但其不是有效的檔案描述子"
 msgid "Requires at least two arguments"
 msgstr "需要至少兩個引數"
 
+msgid "Requires exactly one argument"
+msgstr ""
+
 msgid "Requires exactly two arguments"
 msgstr "需要正好兩個引數"
 
@@ -2623,6 +2626,9 @@ msgstr "取得目前選中區域的終點"
 
 msgid "Get current selection starting position"
 msgstr "取得目前選中區域的起點"
+
+msgid "Get expanded abbreviation text"
+msgstr ""
 
 msgid "Gets the umask in a format that can be used as a command"
 msgstr "取得格式可用作命令的 umask"

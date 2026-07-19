@@ -1161,6 +1161,9 @@ msgstr "Umleitung zu '%s' angefordert, dies ist aber kein gültiger Dateideskrip
 msgid "Requires at least two arguments"
 msgstr "Erfordert mindestens zwei Argumente"
 
+msgid "Requires exactly one argument"
+msgstr ""
+
 msgid "Requires exactly two arguments"
 msgstr "Erfordert genau zwei Argumente"
 
@@ -2626,6 +2629,9 @@ msgid "Get current selection ending position"
 msgstr ""
 
 msgid "Get current selection starting position"
+msgstr ""
+
+msgid "Get expanded abbreviation text"
 msgstr ""
 
 msgid "Gets the umask in a format that can be used as a command"

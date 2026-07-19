@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::ops::Deref as _;
 
 use super::prelude::*;
 use crate::{
@@ -488,12 +488,9 @@ fn abbr_do_expand(opts: &Options, streams: &mut IoStreams, parser: &mut Parser) 
         return Err(STATUS_INVALID_ARGS);
     }
 
-    for command in std::iter::chain(
-        std::iter::once(None),
-        opts.commands.iter().map(|cmd| Some(cmd.deref())),
-    ) {
+    for command in std::iter::once(None).chain(opts.commands.iter().map(|cmd| Some(cmd.deref()))) {
         let replacement = abbrs::with_abbrs(|abbrs| {
-            for replacer in abbrs.match_cmd_optional(&token, position, command) {
+            for replacer in abbrs.match_cmd_optional(token, position, command) {
                 let replacement = expand_replacer(
                     SourceRange {
                         start: 0,

@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Interactive improvements
+------------------------
+- Tab completion can now correct small typos (e.g. ``cd Deks`` completing to ``Desktop``), controlled by the new :envvar:`fish_typo_completion_distance` variable. It is off by default (:issue:`10571`).
+
 fish 4.8.1 (released July 14, 2026)
 ===================================
 

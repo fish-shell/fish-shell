@@ -2,6 +2,7 @@
 
 use fish_fallback::{fish_wcwidth, lowercase, lowercase_rev, wcscasecmp, wcscasecmp_fuzzy};
 use fish_widestring::{ELLIPSIS_CHAR, prelude::*};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Return the number of newlines in a string.
 pub fn count_newlines(s: &wstr) -> usize {
@@ -141,6 +142,11 @@ pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool /* = false */) -> Optio
         })
 }
 
+/// The maximum edit distance tab completion will correct, i.e. the largest distance a candidate may
+/// be from a prefix of the typed token and still match (see [`StringFuzzyMatch::try_create`]).
+/// Configured via `fish_typo_completion_distance`; 0 (the default) disables typo correction
+pub static FISH_TYPO_COMPLETION_DISTANCE: AtomicUsize = AtomicUsize::new(0);
+
 // The ways one string can contain another.
 //
 // Note that the order of entries below affects the sort order of completions.
@@ -154,6 +160,9 @@ pub enum ContainType {
     Substr,
     /// Subsequence match: `fbr` matches `foobar`
     Subseq,
+    /// Typo match: `foovar` matches `foobar` (if within the user specified distance).
+    /// This is the lowest-priority match type and is only used when nothing else matches.
+    EditDistance,
 }
 
 // The case-folding required for the match.
@@ -207,7 +216,10 @@ impl StringFuzzyMatch {
         if self.case_fold != CaseSensitivity::Sensitive {
             return true;
         }
-        matches!(self.typ, ContainType::Substr | ContainType::Subseq)
+        matches!(
+            self.typ,
+            ContainType::Substr | ContainType::Subseq | ContainType::EditDistance
+        )
     }
 
     /// Try creating a fuzzy match for `string` against `match_against`.
@@ -300,6 +312,28 @@ impl StringFuzzyMatch {
         }
 
         // We do not currently test subseq icase.
+
+        // Typo Check
+        let max_dist = max_typo_distance(string.len());
+        if max_dist > 0 {
+            let needle: Vec<char> = string.chars().collect();
+            let haystack: Vec<char> = match_against.chars().collect();
+            // Prefer a same-case correction; fall back to a case-insensitive one.
+            if bounded_prefix_edit_distance(&needle, &haystack, max_dist, |a, b| a == b).is_some() {
+                return Some(StringFuzzyMatch::new(
+                    ContainType::EditDistance,
+                    CaseSensitivity::Sensitive,
+                ));
+            }
+            if bounded_prefix_edit_distance(&needle, &haystack, max_dist, chars_equal_ci).is_some()
+            {
+                return Some(StringFuzzyMatch::new(
+                    ContainType::EditDistance,
+                    get_case_fold(string),
+                ));
+            }
+        }
+
         None
     }
 
@@ -320,7 +354,7 @@ impl StringFuzzyMatch {
         };
 
         // Separator dominates type dominates fold.
-        ((self.from_separator as u32) << 4)
+        ((self.from_separator as u32) << 5)
             + ((effective_type as u32) << 2)
             + (effective_case as u32)
     }
@@ -333,6 +367,70 @@ pub fn string_fuzzy_match_string(
     anchor_start: bool, /* = false */
 ) -> Option<StringFuzzyMatch> {
     StringFuzzyMatch::try_create(string, match_against, anchor_start)
+}
+
+/// Compare two characters ignoring case, for typo matching.
+fn chars_equal_ci(a: char, b: char) -> bool {
+    a == b || a.to_lowercase().eq(b.to_lowercase())
+}
+
+/// Demand minimum size to prevent overly aggressive matching
+fn max_typo_distance(needle_len: usize) -> usize {
+    if needle_len <= 2 {
+        return 0;
+    }
+    FISH_TYPO_COMPLETION_DISTANCE.load(Ordering::Relaxed)
+}
+
+/// Damerau-Levenshtein distance from `needle` to the closest-matching prefix of `haystack`
+/// (e.g. `Deks` is 1 edit from the prefix `Desk` of `Desktop`), comparing characters with
+/// `char_eq`. `None` if it exceeds `max_dist`.
+fn bounded_prefix_edit_distance(
+    needle: &[char],
+    haystack: &[char],
+    max_dist: usize,
+    char_eq: impl Fn(char, char) -> bool,
+) -> Option<usize> {
+    let n = needle.len();
+    let m = haystack.len();
+
+    // D[i][j] is the distance between needle[..i] and haystack[..j]; the answer is min_j D[n][j].
+    // We keep only the last two rows: `prev_prev` is D[i-2], `prev` is D[i-1], `cur` is D[i].
+    let mut prev_prev: Vec<usize> = vec![0; m + 1];
+    let mut prev: Vec<usize> = (0..=m).collect(); // D[0][j] = j
+    let mut cur: Vec<usize> = vec![0; m + 1];
+
+    for i in 1..=n {
+        cur[0] = i; // D[i][0] = i: delete every character of the needle
+        let mut row_min = cur[0];
+        for j in 1..=m {
+            let cost = usize::from(!char_eq(needle[i - 1], haystack[j - 1]));
+            let mut v = (prev[j] + 1) // deletion from needle
+                .min(cur[j - 1] + 1) // insertion into needle
+                .min(prev[j - 1] + cost); // substitution
+            // Adjacent transposition (Damerau).
+            if i > 1
+                && j > 1
+                && char_eq(needle[i - 1], haystack[j - 2])
+                && char_eq(needle[i - 2], haystack[j - 1])
+            {
+                v = v.min(prev_prev[j - 2] + 1);
+            }
+            cur[j] = v;
+            row_min = row_min.min(v);
+        }
+        // The row minimum is non-decreasing as `i` grows, so once it exceeds the budget no prefix
+        // of haystack can be reached within `max_dist`.
+        if row_min > max_dist {
+            return None;
+        }
+        std::mem::swap(&mut prev_prev, &mut prev);
+        std::mem::swap(&mut prev, &mut cur);
+    }
+
+    // `prev` now holds D[n][*]; take the best prefix.
+    let best = prev.iter().copied().min().unwrap_or(usize::MAX);
+    (best <= max_dist).then_some(best)
 }
 
 /// Split a string by runs of any of the separator characters provided in `seps`.
@@ -546,9 +644,10 @@ pub fn fish_wcwidth_visible(c: char) -> isize {
 #[cfg(test)]
 mod tests {
     use super::{
-        CaseSensitivity, ContainType, LineIterator, count_newlines, ifind, join_strings,
-        split_string_tok, string_fuzzy_match_string, string_prefixes_string_case_insensitive,
-        string_suffixes_string_case_insensitive, trim, trim_in_place,
+        CaseSensitivity, ContainType, FISH_TYPO_COMPLETION_DISTANCE, LineIterator, count_newlines,
+        ifind, join_strings, split_string_tok, string_fuzzy_match_string,
+        string_prefixes_string_case_insensitive, string_suffixes_string_case_insensitive, trim,
+        trim_in_place,
     };
     use fish_widestring::prelude::*;
 
@@ -698,6 +797,71 @@ mod tests {
         // no subseq icase
         validate!("lh", "ALPHA!", None);
         validate!("BB", "ALPHA!", None);
+    }
+
+    #[test]
+    fn test_fuzzy_match_typo() {
+        // Typo correction is opt-in, so configure a distance for this test.
+        FISH_TYPO_COMPLETION_DISTANCE.store(1, super::Ordering::Relaxed);
+
+        // Check that a typo match has the expected type and case folding.
+        macro_rules! validate {
+            ($needle:expr, $haystack:expr, $contain_type:expr, $case_fold:expr) => {
+                let m = string_fuzzy_match_string(L!($needle), L!($haystack), false).unwrap();
+                assert_eq!(m.typ, $contain_type);
+                assert_eq!(m.case_fold, $case_fold);
+            };
+            ($needle:expr, $haystack:expr, None) => {
+                assert_eq!(
+                    string_fuzzy_match_string(L!($needle), L!($haystack), false),
+                    None,
+                );
+            };
+        }
+        // transposition
+        validate!(
+            "Deks",
+            "Desktop",
+            ContainType::EditDistance,
+            CaseSensitivity::Sensitive
+        );
+        // substitution
+        validate!(
+            "downloods",
+            "downloads",
+            ContainType::EditDistance,
+            CaseSensitivity::Sensitive
+        );
+        // insertion
+        validate!(
+            "picturres",
+            "pictures-backup",
+            ContainType::EditDistance,
+            CaseSensitivity::Sensitive
+        );
+        // only matches case-insensitively
+        validate!(
+            "dektop",
+            "Desktop",
+            ContainType::EditDistance,
+            CaseSensitivity::Smart
+        );
+        // subseq priority test
+        validate!(
+            "est",
+            "Desktop",
+            ContainType::Subseq,
+            CaseSensitivity::Sensitive
+        );
+        // Check for overly aggressive matching
+        validate!("xyz", "Desktop", None);
+        // too short for sensible correcting
+        validate!("ab", "az", None);
+        // anchored matching never produces a typo correction
+        assert_eq!(
+            string_fuzzy_match_string(L!("Deks"), L!("Desktop"), true),
+            None
+        );
     }
 
     #[test]

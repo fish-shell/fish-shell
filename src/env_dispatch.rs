@@ -76,6 +76,10 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
             vars!(handle_autosuggestion_change),
         );
         table.add_anon(
+            L!("fish_typo_completion_distance"),
+            vars!(handle_typo_completion_change),
+        );
+        table.add_anon(
             L!("fish_transient_prompt"),
             vars!(handle_transient_prompt_change),
         );
@@ -273,6 +277,27 @@ fn handle_autosuggestion_change(vars: &EnvStack) {
     reader_set_autosuggestion_enabled(vars);
 }
 
+/// Allow the user to configure the distance for typo correction
+fn handle_typo_completion_change(vars: &EnvStack) {
+    let max_distance = vars
+        .get_unless_empty(L!("fish_typo_completion_distance"))
+        .map(|v| v.as_string())
+        .and_then(|v| {
+            // We use fish_wcstoul() to ignore leading / trailing whitespace
+            match (crate::wutil::fish_wcstoul(&v).ok()).and_then(|_u64| usize::try_from(_u64).ok())
+            {
+                Some(v) => Some(v),
+                None => {
+                    // We intentionally warn here even in non-interactive mode.
+                    flog!(warning, "Ignoring invalid $fish_typo_completion_distance");
+                    None
+                }
+            }
+        })
+        .unwrap_or(0);
+    fish_wcstringutil::FISH_TYPO_COMPLETION_DISTANCE.store(max_distance, Ordering::Relaxed);
+}
+
 fn handle_transient_prompt_change(vars: &EnvStack) {
     reader_set_transient_prompt(vars);
 }
@@ -367,6 +392,7 @@ fn run_inits(vars: &EnvStack) {
     handle_read_limit_change(vars);
     handle_fish_use_posix_spawn_change(vars);
     handle_fish_trace(vars);
+    handle_typo_completion_change(vars);
 }
 
 /// Updates our idea of whether we support term256 and term24bit (see issue #10222).

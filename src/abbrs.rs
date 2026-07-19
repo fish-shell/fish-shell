@@ -314,7 +314,8 @@ pub fn abbrs_match(token: &wstr, position: Position, cmd: &wstr) -> Vec<Replacer
 
 #[cfg(test)]
 mod tests {
-    use super::{Abbreviation, Position, abbrs_match, with_abbrs_mut};
+    use super::{Abbreviation, Position, abbrs_match, with_abbrs, with_abbrs_mut};
+    use crate::abbrs::Replacer;
     use crate::editable_line::{Edit, apply_edit};
     use crate::highlight::HighlightSpec;
     use crate::prelude::*;
@@ -451,6 +452,118 @@ mod tests {
         validate!("command yin", None, "command yang");
 
         with_abbrs_mut(|abbrset| abbrset.clear());
+    }
+
+    #[test]
+    #[serial]
+    fn test_match_abbreviations_without_cmd() {
+        test_init();
+
+        with_abbrs_mut(|abbrs| {
+            abbrs.add(Abbreviation {
+                name: L!("abbr1").to_owned(),
+                key: L!("abbr").to_owned(),
+                regex: None,
+                commands: vec![L!("cmd1").to_owned()],
+                replacement: L!("expansion1").to_owned(),
+                replacement_is_function: false,
+                position: Position::Anywhere,
+                set_cursor_marker: None,
+                from_universal: false,
+            });
+            abbrs.add(Abbreviation {
+                name: L!("abbr2").to_owned(),
+                key: L!("abbr").to_owned(),
+                regex: None,
+                commands: vec![L!("cmd2").to_owned()],
+                replacement: L!("expansion2").to_owned(),
+                replacement_is_function: false,
+                position: Position::Anywhere,
+                set_cursor_marker: None,
+                from_universal: false,
+            });
+            abbrs.add(Abbreviation {
+                name: L!("abbr_").to_owned(),
+                key: L!("abbr").to_owned(),
+                regex: None,
+                commands: vec![],
+                replacement: L!("expansion_").to_owned(),
+                replacement_is_function: false,
+                position: Position::Anywhere,
+                set_cursor_marker: None,
+                from_universal: false,
+            });
+            abbrs.add(Abbreviation {
+                name: L!("abbr12").to_owned(),
+                key: L!("abbr").to_owned(),
+                regex: None,
+                commands: vec![L!("cmd1").to_owned(), L!("cmd2").to_owned()],
+                replacement: L!("expansion12").to_owned(),
+                replacement_is_function: false,
+                position: Position::Anywhere,
+                set_cursor_marker: None,
+                from_universal: false,
+            });
+        });
+
+        let (cmd1_results, cmd2_results, no_cmd_results) = with_abbrs(|abbrs| {
+            let cmd1_results =
+                abbrs.match_cmd_optional(L!("abbr"), Position::Anywhere, Some(L!("cmd1")));
+            let cmd2_results =
+                abbrs.match_cmd_optional(L!("abbr"), Position::Anywhere, Some(L!("cmd2")));
+            let no_cmd_results = abbrs.match_cmd_optional(L!("abbr"), Position::Anywhere, None);
+            (cmd1_results, cmd2_results, no_cmd_results)
+        });
+
+        assert_matches::assert_matches!(
+            &cmd1_results[..],
+            [
+                Replacer {
+                    replacement: expansion12,
+                    ..
+                },
+                Replacer {
+                    replacement: expansion_,
+                    ..
+                },
+                Replacer {
+                    replacement: expansion1,
+                    ..
+                },
+            ] if expansion1 == L!("expansion1")
+                && expansion_ == L!("expansion_")
+                && expansion12 == L!("expansion12")
+        );
+
+        assert_matches::assert_matches!(
+            &cmd2_results[..],
+            [
+                Replacer {
+                    replacement: expansion12,
+                    ..
+                },
+                Replacer {
+                    replacement: expansion_,
+                    ..
+                },
+                Replacer {
+                    replacement: expansion2,
+                    ..
+                },
+            ] if expansion2 == L!("expansion2")
+                && expansion_ == L!("expansion_")
+                && expansion12 == L!("expansion12")
+        );
+
+        assert_matches::assert_matches!(
+            &no_cmd_results[..],
+            [
+                Replacer {
+                    replacement: expansion_,
+                    ..
+                },
+            ] if expansion_ == L!("expansion_")
+        );
     }
 
     #[test]

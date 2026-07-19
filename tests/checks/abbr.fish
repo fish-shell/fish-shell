@@ -285,3 +285,38 @@ abbr -U
 # CHECKERR: abbr -U
 # CHECKERR: ^
 # CHECKERR: (Type 'help abbr' for related documentation)
+
+abbr --add c++ rust
+abbr --do-expand c++
+# CHECK: rust
+abbr --do-expand --get-cursor c++
+# CHECK: rust
+# CHECK: -1
+
+abbr --add radiology --set-cursor=% %-ray
+abbr --do-expand radiology
+# CHECK: -ray
+abbr --do-expand --get-cursor radiology
+# CHECK: -ray
+# CHECK: 0
+
+abbr --add car --position=anywhere automobile
+abbr --add car --command=train train-wagon
+abbr --add car --command=elevator elevator-carriage
+abbr --do-expand car
+# CHECK: automobile
+abbr --do-expand --command=ufo car
+# CHECK: automobile
+abbr --do-expand --command=train car
+# CHECK: train-wagon
+abbr --do-expand --command=elevator car
+# CHECK: elevator-carriage
+
+abbr --add surgeon mybrother
+abbr --do-expand --position=anywhere surgeon
+# should produce no ouput
+
+abbr --add phrasal-template --set-cursor=@@@ 'It just got @@@% better than ever before'
+abbr --do-expand --get-cursor phrasal-template
+# CHECK: It just got % better than ever before
+# CHECK: 12

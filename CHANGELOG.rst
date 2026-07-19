@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Other Improvements
+------------------
+- Add variants to mode prompt indicating the active mode in the vi key bindings.
+
 fish 4.8.1 (released July 14, 2026)
 ===================================
 

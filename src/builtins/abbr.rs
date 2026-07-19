@@ -43,6 +43,7 @@ struct Options {
     args: Vec<WString>,
     color: ColorEnabled,
     do_expand: bool,
+    get_cursor: bool,
 }
 
 impl Options {
@@ -98,6 +99,9 @@ impl Options {
         }
         if !self.add && self.set_cursor_marker.is_some() {
             return Some(err_fmt!(OPTION_REQUIRES_ARG, "--set-cursor", "--add"));
+        }
+        if !self.do_expand && self.get_cursor {
+            return Some(err_fmt!(OPTION_REQUIRES_ARG, "--get-cursor", "--do-expand"));
         }
         if self
             .set_cursor_marker
@@ -511,9 +515,20 @@ fn abbr_do_expand(opts: &Options, streams: &mut IoStreams, parser: &mut Parser) 
             }
             None
         });
-        if let Some(Replacement { mut text, .. }) = replacement {
+        if let Some(Replacement {
+            mut text, cursor, ..
+        }) = replacement
+        {
             text.push('\n');
             streams.out.append(&text);
+
+            if opts.get_cursor {
+                if let Some(cursor) = cursor {
+                    streams.out.append(&sprintf!("%d\n", cursor));
+                } else {
+                    streams.out.append(L!("-1\n"));
+                }
+            }
             return Ok(SUCCESS);
         }
     }
@@ -529,6 +544,7 @@ pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     const NON_OPTION_ARGUMENT: char = 1 as char;
     const SET_CURSOR_SHORT: char = 2 as char;
     const RENAME_SHORT: char = 3 as char;
+    const GET_CURSOR_SHORT: char = 4 as char;
 
     // Note the leading '-' causes wgetopter to return arguments in order, instead of permuting
     // them. We need this behavior for compatibility with pre-builtin abbreviations where options
@@ -556,6 +572,7 @@ pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
         wopt(L!("do-expand"), ArgType::NoArgument, 'd'),
+        wopt(L!("get-cursor"), ArgType::NoArgument, GET_CURSOR_SHORT),
     ];
 
     let mut opts = Options::default();
@@ -628,6 +645,7 @@ pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     .set_cursor_marker
                     .insert(w.woptarg.unwrap_or(L!("%")).to_owned());
             }
+            GET_CURSOR_SHORT => opts.get_cursor = true,
             'f' => opts.function = w.woptarg.map(ToOwned::to_owned),
             RENAME_SHORT => opts.rename = true,
             'e' => opts.erase = true,

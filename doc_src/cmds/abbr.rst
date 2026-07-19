@@ -13,7 +13,7 @@ Synopsis
     abbr [--show] [--color WHEN]
     abbr --list
     abbr --query NAME ...
-    abbr --do-expand [--position command | anywhere] [ [-c | --command COMMAND]... ] TEXT
+    abbr --do-expand [--position command | anywhere] [ [-c | --command COMMAND]... ] [--get-cursor] TEXT
 
 Description
 -----------
@@ -172,8 +172,10 @@ Displays help for the `abbr` command.
 
 ::
 
-    abbr --do-expand or -d [--position command | anywhere] [ [-c | --command COMMAND]... ] TEXT
+    abbr --do-expand or -d [--position command | anywhere] [ [-c | --command COMMAND]... ] [--get-cursor] TEXT
 
 Tries to expand *TEXT* as an abbreviation.
 For command-specific abbreviations, the ``--command`` options must be provided to allow them to be expanded.
 Passing ``--position=anywhere`` will not expand any ``--position=command`` abbreviations. In other words, ``--position=anywhere`` explicitly excludes the command position for this command.
+
+If ``--get-cursor`` is set, this will print the position in the string where the cursor should be moved to on a new line after the expanded abbreviation. If there is no position set, ``-1`` will be printed.

@@ -18,4 +18,6 @@ complete -c abbr -f -n $__fish_abbr_add_cond -s f -l function -d 'Treat expansio
 complete -c abbr -f -n $__fish_abbr_add_cond -s r -l regex -d 'Match a regular expression' -x
 complete -c abbr -f -n $__fish_abbr_add_cond -l set-cursor -d 'Position the cursor at % post-expansion'
 
+complete -c abbr -f -n '__fish_seen_subcommand_from -d --do-expand' -l get-cursor -d 'Print cursor position after expansion'
+
 complete -c abbr -f -n '__fish_seen_subcommand_from -s --show' -l color -d 'When to colorize output' -xa 'always never auto'

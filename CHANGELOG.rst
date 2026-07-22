@@ -41,6 +41,7 @@ Interactive improvements
 - History search would sometimes forget about commands after those were re-run in concurrent sessions. This has been fixed (:issue:`10300`).
 - ``fish_hg_prompt``, ``fish_git_prompt`` and ``fish_fossil_prompt`` now strip control characters from VCS state read off disk, matching ``prompt_pwd``.
 - Abbreviations with ``--position=anywhere`` can now be completed in argument position, not just in command position (:issue:`12630`).
+- In the default (emacs) key bindings, Shift and the cursor-movement keys now select text the way a graphical editor does: :kbd:`shift-left`/:kbd:`shift-right` extend a selection by a character, :kbd:`alt-shift-left`/:kbd:`alt-shift-right` by a word and :kbd:`shift-home`/:kbd:`shift-end` to the line edges. Typing replaces the selection, :kbd:`backspace`/:kbd:`delete` remove it and plain cursor movement clears it (:issue:`8677`). A new ``begin-selection-if-none`` input function makes this composable in custom bindings. Pasting (via ``fish_clipboard_paste``) and ``yank`` also replace the selection; a new ``delete-selection`` input function deletes the selection without adding it to the killring.
 - Path component movement (:kbd:`ctrl-w`) skips escaped characters.
 - Completion of short option groups will now handle ``--condition`` correctly (:issue:`12821`).
 - Fixed an issue where :kbd:`ctrl-c` might fail to cancel certain functions (:issue:`12802`).

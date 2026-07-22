@@ -9,6 +9,9 @@ function __fish_paste
         return
     end
 
+    # Pasting over a selection replaces it, like typing does.
+    commandline -f delete-selection
+
     # If the current token has an unmatched single-quote,
     # escape all single-quotes (and backslashes) in the paste,
     # in order to turn it into a single literal token.

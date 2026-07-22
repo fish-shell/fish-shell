@@ -17,23 +17,38 @@ function fish_default_key_bindings -d "emacs-like key binds"
     eval "$(__fish_shared_key_bindings)" $argv
     or return # protect against invalid $argv
 
-    bind --preset $argv right forward-char
-    bind --preset $argv left backward-char
+    # Plain cursor movement clears the selection via an end-selection prefix (a no-op when
+    # nothing is selected). The word-motion keys are restated since the shared bindings lack it.
+    bind --preset $argv right end-selection forward-char
+    bind --preset $argv left end-selection backward-char
+    bind --preset $argv ctrl-right end-selection forward-token
+    bind --preset $argv ctrl-left end-selection backward-token
+
+    # Shift+movement starts a selection if needed, then extends it via the trailing movement.
+    bind --preset $argv shift-right begin-selection-if-none forward-single-char
+    bind --preset $argv shift-left begin-selection-if-none backward-char
+    bind --preset $argv shift-home begin-selection-if-none beginning-of-line
+    bind --preset $argv shift-end begin-selection-if-none end-of-line
+    # Alt/Ctrl+Shift+Arrow extend by word/token, matching Alt/Ctrl+Arrow.
+    bind --preset $argv alt-shift-right begin-selection-if-none forward-word
+    bind --preset $argv alt-shift-left begin-selection-if-none backward-word
+    bind --preset $argv ctrl-shift-right begin-selection-if-none forward-token
+    bind --preset $argv ctrl-shift-left begin-selection-if-none backward-token
 
     bind --preset $argv delete delete-char
     bind --preset $argv backspace backward-delete-char
     bind --preset $argv shift-backspace backward-delete-char
 
-    bind --preset $argv home beginning-of-line
-    bind --preset $argv end end-of-line
+    bind --preset $argv home end-selection beginning-of-line
+    bind --preset $argv end end-selection end-of-line
 
-    bind --preset $argv ctrl-a beginning-of-line
-    bind --preset $argv ctrl-e end-of-line
+    bind --preset $argv ctrl-a end-selection beginning-of-line
+    bind --preset $argv ctrl-e end-selection end-of-line
     bind --preset $argv ctrl-h backward-delete-char
     bind --preset $argv ctrl-p up-or-search
     bind --preset $argv ctrl-n down-or-search
-    bind --preset $argv ctrl-f forward-char
-    bind --preset $argv ctrl-b backward-char
+    bind --preset $argv ctrl-f end-selection forward-char
+    bind --preset $argv ctrl-b end-selection backward-char
     bind --preset $argv ctrl-t transpose-chars
     bind --preset $argv ctrl-g cancel
     bind --preset $argv ctrl-/ undo
@@ -52,8 +67,8 @@ function fish_default_key_bindings -d "emacs-like key binds"
     bind --preset $argv alt-delete kill-word
     bind --preset $argv ctrl-delete kill-token
 
-    bind --preset $argv alt-\< beginning-of-buffer
-    bind --preset $argv alt-\> end-of-buffer
+    bind --preset $argv alt-\< end-selection beginning-of-buffer
+    bind --preset $argv alt-\> end-selection end-of-buffer
 
     bind --preset $argv ctrl-r history-pager
 

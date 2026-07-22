@@ -1,6 +1,6 @@
 # localization: skip(private)
 function __fish_print_help --description "Print help for the specified fish function or builtin"
-    if not type -q man
+    if not command -q man
         fish_command_not_found man
         return 1
     end

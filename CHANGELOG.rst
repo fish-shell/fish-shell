@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Interactive improvements
+------------------------
+- ``__fish_print_help`` now checks for the external ``man`` command with ``command -q man`` instead of ``type -q man``, so a user-defined ``man`` function no longer makes ``--help`` fail when no real ``man`` binary is installed (:issue:`12886`).
+
 fish 4.8.1 (released July 14, 2026)
 ===================================
 

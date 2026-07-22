@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Interactive improvements
+------------------------
+- Builtin help pages now respect an override of the ``man`` function (:issue:`12886`).
+
 fish 4.8.1 (released July 14, 2026)
 ===================================
 

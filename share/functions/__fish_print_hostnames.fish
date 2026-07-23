@@ -68,15 +68,23 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
             for config in $argv
                 if test -r "$config" -a -f "$config"
                     set paths $paths (
-                    # Keep only Include lines and remove Include syntax
+                    # Keep only Include lines and remove Include syntax.
+                    # ssh_config allows multiple pathnames per Include directive;
+                    # split them explicitly because fish command substitutions split on newlines.
                     string replace -rfi '^\s*Include\s+' '' <$config \
                     # Normalize whitespace
-                    | string trim | string replace -r -a '\s+' ' ')
+                    | string trim | string replace -r -a '\s+' ' ' | string split ' ')
                 end
             end
 
             set -l new_paths
             for path in $paths
+                # ssh_config allows pathnames to be quoted. Those quotes are
+                # syntactic and should not suppress wildcard expansion here.
+                # For example: Include "~/.ssh/conf.d/*"
+                set path (string replace -r '^"(.*)"$' '$1' -- $path)
+                set path (string replace -r "^'(.*)'\$" '$1' -- $path)
+
                 # while ssh_config is using brackets to resolve env, they should be removed
                 # example
                 # in ssh_config: ${SOME_PATH}

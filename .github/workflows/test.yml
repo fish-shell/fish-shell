@@ -10,8 +10,56 @@ permissions:
   contents: read
 
 jobs:
-  ubuntu:
+  alpine:
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - run:
+        docker/docker_run_tests.sh docker/alpine.Dockerfile
+
+  freebsd:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - uses: vmactions/freebsd-vm@21de0c823079bc57bd8fcf25fb60193f36887e3d # v1, build_tools/update-dependencies.sh
+      with:
+        # # See https://github.com/vmactions/.github/wiki/debug%E2%80%90on%E2%80%90error
+        # debug-on-error: true
+        # vnc-password: fish
+        usesh: true
+        run: |
+          pkg update
+          # TODO This should be shared with .github/actions/install-dependencies/action.yml
+          pkg install -y \
+            cmake-core \
+            devel/ninja \
+            devel/pcre2 \
+            gettext \
+            git-lite \
+            lang/rust \
+            misc/py-pexpect \
+            python \
+            sudo \
+          ;
+          # BSDs have the following behavior: root may open or access files even if
+          # the mode bits would otherwise disallow it. For example root may open()
+          # a file with write privileges even if the file has mode 400. This breaks
+          # our tests for e.g. cd and path. So create a new unprivileged user to run tests.
+          pw user add -n fish-user -s /bin/csh -d /home/fish-user
+          mkdir -p /home/fish-user
+          chown -R fish-user /home/fish-user
+          mkdir build && cd build
+          chown -R fish-user ..
+          sudo -u fish-user -s whoami
+          sudo -u fish-user -s FISH_TEST_MAX_CONCURRENCY=1 cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug ..
+          sudo -u fish-user -s ninja fish
+          sudo -u fish-user -s env CI=1 ninja fish_run_tests
+
+  ubuntu:
+    strategy:
+          matrix:
+            os: [ubuntu-latest, ubuntu-latest-arm64]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported

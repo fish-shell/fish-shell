@@ -6,7 +6,7 @@ import sys
 import time
 import platform
 
-if "CI" in os.environ and platform.system() in ["Darwin", "FreeBSD"]:
+if "CI" in os.environ and platform.system() == "Darwin":
     sys.exit(127)
 
 sp = SpawnedProc()

@@ -3,6 +3,7 @@ set -l commands allow permit grant block deny revoke edit exec fetchurl help hoo
 set -l with_file allow permit grant block deny revoke edit
 
 complete -c direnv -f
+complete -c direnv -n "__fish_seen_subcommand_from $with_file" -F
 
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a "allow permit grant" -d "Grant direnv permission to load the given .envrc or .env file"
@@ -28,8 +29,6 @@ complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a stdlib -d "Display the stdlib available in the .envrc execution context"
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a version -d "Print the version or check that direnv is at least given version"
-
-complete -c direnv -n "__fish_seen_subcommand_from $with_file" -F
 
 # Directory completions for the dir argument of `direnv exec DIR COMMAND [...ARGS]`
 complete -c direnv -n "__fish_seen_subcommand_from exec; and test (__fish_number_of_cmd_args_wo_opts) -eq 2" \

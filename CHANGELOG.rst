@@ -104,6 +104,10 @@ Interactive improvements
 - When at the command token, the :kbd:`alt-o` binding will now open read-only files too (:issue:`12671`).
 - Private mode in-memory history (``set fish_history``) is no longer shared with :doc:`builtin read <cmds/read>` (:issue:`12662`).
 
+Scripting improvements
+----------------------
+- :envvar:`fish_trace_depth` can be set to limit the number of levels that :envvar:`fish_trace` will print. Setting it to 0 will only show top-level commands.
+
 Other improvements
 ------------------
 - History is no longer corrupted with NUL bytes when fish receives SIGTERM or SIGHUP (:issue:`10300`).

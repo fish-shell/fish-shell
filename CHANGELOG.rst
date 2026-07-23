@@ -17,6 +17,10 @@ Interactive improvements
 - Since prompt marking (via :ref:`OSC 133 <term-compat-osc-133>`) causes an issue in `Konsole's <https://apps.kde.org/konsole/>`__ default configuration, prompt marking had been disabled for Konsole in 4.8.0.
   Now the ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be enabled to enable prompt marking on Konsole again (:issue:`12859`).
 
+Scripting improvements
+----------------------
+- Expanded variable values containing ``]`` are no longer treated as closing array index brackets (:issue:`12819`).
+
 Regression fixes:
 -----------------
 - (From 4.8.0) ``abbr --position=anywhere`` completions are no longer offered in argument position, to avoid cluttering the completion pager (:issue:`12838`).

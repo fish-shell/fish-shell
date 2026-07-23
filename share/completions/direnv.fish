@@ -1,6 +1,6 @@
-set -l commands allow permit grant block deny revoke edit exec export fetchurl help hook prune reload status stdlib version
+set -l commands allow permit grant block deny disallow revoke edit exec export fetchurl help hook prune reload status stdlib version
 
-set -l with_file allow permit grant block deny revoke edit
+set -l with_file allow permit grant block deny disallow revoke edit
 
 complete -c direnv -f
 complete -c direnv -n "__fish_seen_subcommand_from $with_file" -F
@@ -8,7 +8,7 @@ complete -c direnv -n "__fish_seen_subcommand_from $with_file" -F
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a "allow permit grant" -d "Grant direnv permission to load the given .envrc or .env file"
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
-    -a "block deny revoke" -d "Revoke the authorization of a given .envrc or .env file"
+    -a "block deny disallow revoke" -d "Revoke the authorization of a given .envrc or .env file"
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a edit -d "Open given file or current .envrc/.env in \$EDITOR and allow it to be loaded afterwards"
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \

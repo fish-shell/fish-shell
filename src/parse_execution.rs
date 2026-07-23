@@ -10,9 +10,12 @@ use crate::{
         STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_UNMATCHED_WILDCARD,
         builtin_exists,
     },
-    common::valid_var_name,
+    common::{get_program_name, valid_var_name},
     complete::CompletionList,
-    env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment as _, Statuses},
+    env::{
+        EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment as _, Statuses,
+        handle_env_return,
+    },
     err_fmt,
     event::{self, Event},
     exec::exec_job,
@@ -21,7 +24,7 @@ use crate::{
     },
     flog::flog,
     function,
-    io::{IoChain, IoStreams, OutputStream, StringOutputStream},
+    io::{FdOutputStream, IoChain, IoStreams, OutputStream, StringOutputStream},
     job_group::JobGroup,
     operation_context::OperationContext,
     parse_constants::{
@@ -644,11 +647,19 @@ impl ExecutionContext {
                     vals.clone(),
                 ));
             }
-            ctx.parser().set_var_and_fire(
+            let set_result = ctx.parser().set_var_and_fire(
                 variable_name,
                 ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
                 vals,
             );
+            // TODO Do we really want to create `IoStreams` here?
+            let mut outs = OutputStream::Fd(FdOutputStream::new(STDOUT_FILENO));
+            let mut errs = OutputStream::Fd(FdOutputStream::new(STDERR_FILENO));
+            let mut streams = IoStreams::new(&mut outs, &mut errs, &self.block_io);
+            handle_env_return(set_result, get_program_name(), variable_name, &mut streams);
+            if set_result != EnvStackSetResult::Ok {
+                return EndExecutionReason::Error;
+            }
         }
         EndExecutionReason::Ok
     }

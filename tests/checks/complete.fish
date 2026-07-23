@@ -515,6 +515,14 @@ complete -C"a=1 b=2 cmd_with_fancy_completion 1 "
 complete -C"cmd_with_fancy_completion </dev/null >/dev/null 2>>/dev/null >?/dev/null &>/dev/null "
 # CHECK: 1
 
+complete -C 'get_file=get-file status $get_file ' |
+string match completions/..fish
+# CHECK: completions/..fish
+complete -C 'version=123 get_file=get-file status $get_file ' | string match 'is-block*'
+# CHECK: is-block	Test if a code block is currently evaluated
+complete -C 'get_file=get-file version=123 status $get_file ' | string match 'is-block*'
+# CHECK: is-block	Test if a code block is currently evaluated
+
 complete -c thing -x -F
 # CHECKERR: complete: invalid option combination, '--exclusive' and '--force-files'
 complete -c thing -F -f

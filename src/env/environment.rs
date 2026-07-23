@@ -11,10 +11,12 @@ use crate::{
         r#impl::is_electric_var,
     },
     env_dispatch::{VarChangeMilieu, env_dispatch_init, env_dispatch_var_change},
+    err_fmt,
     event::Event,
     flog::flog,
     global_safety::RelaxedAtomicBool,
     input::{FISH_BIND_MODE_VAR, init_input},
+    io::IoStreams,
     localization::wgettext,
     null_terminated_array::OwningNullTerminatedArray,
     path::{
@@ -64,6 +66,42 @@ impl From<EnvStackSetResult> for BuiltinResult {
             EnvStackSetResult::Scope => Err(2),
             EnvStackSetResult::Invalid => Err(3),
             EnvStackSetResult::NotFound => Err(4),
+        }
+    }
+}
+
+pub(crate) fn handle_env_return(
+    retval: EnvStackSetResult,
+    cmd: &wstr,
+    key: &wstr,
+    streams: &mut IoStreams,
+) {
+    match retval {
+        EnvStackSetResult::Ok => (),
+        EnvStackSetResult::Perm => {
+            err_fmt!("Tried to change the read-only variable '%s'", key)
+                .cmd(cmd)
+                .finish(streams);
+        }
+        EnvStackSetResult::Scope => {
+            err_fmt!(
+                "Tried to modify the special variable '%s' with the wrong scope",
+                key
+            )
+            .cmd(cmd)
+            .finish(streams);
+        }
+        EnvStackSetResult::Invalid => {
+            err_fmt!(
+                "Tried to modify the special variable '%s' to an invalid value",
+                key
+            )
+            .cmd(cmd)
+            .finish(streams);
+        }
+        EnvStackSetResult::NotFound => {
+            // Only variable deletion can return a `NotFound` error, but that case is explicitly silenced
+            unreachable!("variable not found");
         }
     }
 }

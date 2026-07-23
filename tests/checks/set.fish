@@ -742,6 +742,9 @@ test_ifforwhile_scope
 set -g status 5
 #CHECKERR: set: Tried to change the read-only variable 'status'
 
+status=5 version=123 echo launch-missiles
+#CHECKERR: fish: Tried to modify the special variable 'status' with the wrong scope
+
 while set -e __fish_test_universal_exported_var
 end
 set -xU __fish_test_universal_exported_var 1

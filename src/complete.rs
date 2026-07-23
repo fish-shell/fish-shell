@@ -4,7 +4,7 @@ use crate::{
     autoload::{Autoload, AutoloadResult},
     builtins::{builtin_exists, builtin_get_desc, builtin_get_names},
     common::valid_var_name_char,
-    env::{EnvMode, EnvStack, Environment},
+    env::{EnvMode, EnvStack, EnvStackSetResult, Environment},
     exec::exec_subshell,
     expand::{
         ExpandFlags, ExpandResultCode, expand_escape_string, expand_escape_variable, expand_one,
@@ -1923,11 +1923,15 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             } else {
                 Vec::new()
             };
-            self.ctx.parser().set_var(
+            let set_result = self.ctx.parser().set_var(
                 variable_name,
                 ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
                 vals,
             );
+            if set_result != EnvStackSetResult::Ok {
+                self.ctx.parser().pop_block(block);
+                return None;
+            }
             if self.ctx.check_cancel() {
                 break;
             }

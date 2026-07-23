@@ -2,7 +2,10 @@ use super::prelude::*;
 use crate::{
     builtins::Error,
     common::valid_var_name,
-    env::{EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, INHERITED_VARS},
+    env::{
+        EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, INHERITED_VARS,
+        handle_env_return,
+    },
     err_fmt, err_str,
     event::{self, Event},
     expand::{expand_escape_string, expand_escape_variable},
@@ -333,37 +336,6 @@ fn warn_if_uvar_shadows_global(
         )
         .cmd(cmd)
         .finish(streams);
-    }
-}
-
-fn handle_env_return(retval: EnvStackSetResult, cmd: &wstr, key: &wstr, streams: &mut IoStreams) {
-    match retval {
-        EnvStackSetResult::Ok => (),
-        EnvStackSetResult::Perm => {
-            err_fmt!("Tried to change the read-only variable '%s'", key)
-                .cmd(cmd)
-                .finish(streams);
-        }
-        EnvStackSetResult::Scope => {
-            err_fmt!(
-                "Tried to modify the special variable '%s' with the wrong scope",
-                key
-            )
-            .cmd(cmd)
-            .finish(streams);
-        }
-        EnvStackSetResult::Invalid => {
-            err_fmt!(
-                "Tried to modify the special variable '%s' to an invalid value",
-                key
-            )
-            .cmd(cmd)
-            .finish(streams);
-        }
-        EnvStackSetResult::NotFound => {
-            // Only variable deletion can return a `NotFound` error, but that case is explicitly silenced
-            unreachable!("variable not found");
-        }
     }
 }
 

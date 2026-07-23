@@ -30,3 +30,23 @@ complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a version -d "Print the version or check that direnv is at least given version"
 
 complete -c direnv -n "__fish_seen_subcommand_from $with_file" -F
+
+# Directory completions for the dir argument of `direnv exec DIR COMMAND [...ARGS]`
+complete -c direnv -n "__fish_seen_subcommand_from exec; and test (__fish_number_of_cmd_args_wo_opts) -eq 2" \
+    -a "(__fish_complete_directories)" -d "Directory to load .envrc from"
+
+# Completions for the command or the args in `direnv exec DIR COMMAND [...ARGS]`
+#
+# Complete against the PATH direnv sets up inside its environment for
+# DIR. If direnv fails (DIR doesn't exist, its .envrc isn't allowed,
+# etc.), leave PATH alone and complete against the normal environment.
+function __fish_direnv_exec_complete
+    # `exec` is the first non-option token, DIR is the second.
+    set -l dir (__fish_nth_token 2)
+    if set --path -l dpath (direnv exec $dir (__fish_posix_shell) -c 'printf %s "$PATH"' 2>/dev/null)
+        set -fx PATH $dpath
+    end
+    __fish_complete_subcommand --fcs-skip=3
+end
+complete -c direnv -n "__fish_seen_subcommand_from exec; and test (__fish_number_of_cmd_args_wo_opts) -ge 3" \
+    -xa "(__fish_direnv_exec_complete)"

@@ -1,4 +1,4 @@
-set -l commands allow permit grant block deny revoke edit exec fetchurl help hook prune reload status stdlib version
+set -l commands allow permit grant block deny revoke edit exec export fetchurl help hook prune reload status stdlib version
 
 set -l with_file allow permit grant block deny revoke edit
 
@@ -13,6 +13,8 @@ complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a edit -d "Open given file or current .envrc/.env in \$EDITOR and allow it to be loaded afterwards"
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a exec -d "Execute a command after loading the first .envrc or .env found in DIR"
+complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
+    -a export -d "Load an .envrc/.env and print the diff in terms of exports"
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a fetchurl -d "Fetch a given URL into direnv's CAS"
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
@@ -29,6 +31,15 @@ complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a stdlib -d "Display the stdlib available in the .envrc execution context"
 complete -c direnv -n "not __fish_seen_subcommand_from $commands" \
     -a version -d "Print the version or check that direnv is at least given version"
+
+# List of valid shells/export formats for `direnv export` and `direnv hook` current as of direnv 2.37.1
+# The combined list is from `direnv help`; the subset accepted by `hook` was tested empirically.
+set -l shells "bash zsh fish tcsh elvish pwsh murex"
+set -l additional_export_formats "gha gzenv json vim systemd"
+complete -c direnv -n "__fish_seen_subcommand_from hook; and test (__fish_number_of_cmd_args_wo_opts) -eq 2" \
+    -a "$shells" -d Shell
+complete -c direnv -n "__fish_seen_subcommand_from export; and test (__fish_number_of_cmd_args_wo_opts) -eq 2" \
+    -a "$shells $additional_export_formats" -d "Export format"
 
 # Directory completions for the dir argument of `direnv exec DIR COMMAND [...ARGS]`
 complete -c direnv -n "__fish_seen_subcommand_from exec; and test (__fish_number_of_cmd_args_wo_opts) -eq 2" \

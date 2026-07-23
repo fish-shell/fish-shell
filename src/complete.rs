@@ -944,10 +944,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         let mut tmp = wc_escaped.to_owned();
         if !expand_one(
             &mut tmp,
-            self.expand_flags()
-                | extra_expand_flags
-                | ExpandFlags::FAIL_ON_CMDSUBST
-                | ExpandFlags::SKIP_WILDCARDS,
+            self.expand_flags() | extra_expand_flags | ExpandFlags::SKIP_WILDCARDS,
             self.ctx,
             None,
         ) {
@@ -973,7 +970,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
     fn expand_flags(&self) -> ExpandFlags {
         let mut result = ExpandFlags::empty();
-        result.set(ExpandFlags::FAIL_ON_CMDSUBST, self.flags.autosuggestion);
+        result.set(ExpandFlags::FAIL_ON_CMDSUBST, true);
         result.set(ExpandFlags::FUZZY_MATCH, self.flags.fuzzy_match);
         result.set(ExpandFlags::GEN_DESCRIPTIONS, self.flags.descriptions);
         result
@@ -1580,7 +1577,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         if self.ctx.check_cancel() {
             return;
         }
-        let mut flags = self.completion_expand_flags() | ExpandFlags::FAIL_ON_CMDSUBST;
+        let mut flags = self.completion_expand_flags();
         if !do_file {
             flags |= ExpandFlags::SKIP_WILDCARDS;
         }

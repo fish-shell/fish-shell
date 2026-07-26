@@ -8,10 +8,12 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     # order is now reversed and `getent hosts` is only used if the hosts file is not found at
     # `/etc/hosts` for portability reasons.
 
-    begin
-        test -r /etc/hosts && read -z </etc/hosts | string replace -r '#.*$' ''
-        or type -q getent && getent hosts 2>/dev/null
-    end | __fish_print_hostnames_from_hosts
+    __fish_print_hostnames_from_hosts (
+        begin
+            test -r /etc/hosts && read -z </etc/hosts | string replace -r '#.*$' ''
+            or type -q getent && getent hosts 2>/dev/null
+        end
+    )
 
     # Print nfs servers from /etc/fstab
     if test -r /etc/fstab
@@ -141,9 +143,7 @@ function __fish_print_hostnames_from_hosts -d "Extract hostnames from hosts file
     # Ignore own IP addresses (127.*, 0.0[.0[.0]], ::1), broadcast addresses (255.255.255.255),
     # non-host IPs (fe00::*, ff00::*), and leading/trailing whitespace. Split results on whitespace
     # to handle multiple aliases for one IP.
-    read -lz entries
-    set entries (string split \n -- $entries)
-    set -l host_entries (string match -reiv '^\s*(?:0\.|127\.|255\.255\.255\.255|ff0|fe0|::1)' -- $entries)
+    set -l host_entries (string match -reiv '^\s*(?:0\.|127\.|255\.255\.255\.255|ff0|fe0|::1)' -- $argv)
     set -l hostnames (string replace -r '^\s*\S+\s*' '' -- $host_entries)
     string split ' ' -- $hostnames
 end

@@ -36,6 +36,8 @@ pub unsafe fn set_libc_locales(log_ok: bool) -> bool {
         ok &= locale_string.is_some();
     };
     // For strerror(3p) and strsignal(3p)
+    set("LC_CTYPE", libc::LC_CTYPE, from_environment);
+    set("LC_CTYPE", libc::LC_CTYPE, c"C.UTF-8");
     set("LC_MESSAGES", libc::LC_MESSAGES, from_environment);
     // For builtin printf
     set("LC_NUMERIC", libc::LC_NUMERIC, from_environment);

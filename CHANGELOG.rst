@@ -6,6 +6,10 @@ Interactive improvements
 - Builtin help pages now respect an override of the ``man`` function (:issue:`12886`).
 - Commands like ``status=123 echo $status`` now throw an error instead of silently ignore the variable override (:issue:`7790`).
 
+Regression fixes:
+-----------------
+- (From 4.6.0) Chinese and Japanese translation of error messages owned by the C library (:issue:`12895`).
+
 fish 4.8.1 (released July 14, 2026)
 ===================================
 

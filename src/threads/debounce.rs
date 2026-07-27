@@ -169,7 +169,7 @@ impl<R: Send + 'static> Debounce<R> {
     /// Take the result, waiting up to `timeout` for a result to be available.
     pub fn take_result_with_timeout(&mut self, timeout: Duration) -> Option<R> {
         let timeout = fd_readable_set::Timeout::Duration(timeout);
-        if fd_readable_set::is_fd_readable(self.event_signaller.read_fd(), timeout) {
+        if fd_readable_set::is_fd_readable(self.event_signaller.read_fd_raw(), timeout) {
             self.take_result()
         } else {
             None

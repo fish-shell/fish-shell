@@ -8,12 +8,12 @@ use crate::{
     prelude::*,
     proc::JobGroupRef,
     redirection::{RedirectionMode, RedirectionSpecList},
-    wutil::{perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat},
+    wutil::{perror_io, perror_nix, unescape_bytes_and_write_to_fd, wdirname, wstat},
 };
 use fish_util::perror;
 use fish_widestring::{bytes2wcstring, wcs2bytes};
-use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EWOULDBLOCK, STDOUT_FILENO};
-use nix::{fcntl::OFlag, sys::stat::Mode};
+use libc::{EINTR, ENOENT, ENOTDIR, STDOUT_FILENO};
+use nix::{errno::Errno, fcntl::OFlag, sys::stat::Mode};
 use std::{
     fs::File,
     io,
@@ -411,27 +411,30 @@ impl IoBuffer {
     /// Read some, filling the buffer. The buffer is passed in to enforce that the append lock is
     /// held. Return positive on success, 0 if closed, -1 on error (in which case errno will be
     /// set).
-    pub fn read_once(fd: RawFd, buffer: &mut MutexGuard<'_, SeparatedBuffer>) -> isize {
-        assert!(fd >= 0, "Invalid fd");
+    pub fn read_once(
+        fd: BorrowedFd<'_>,
+        buffer: &mut MutexGuard<'_, SeparatedBuffer>,
+    ) -> Result<usize, nix::errno::Errno> {
         let mut bytes = [b'\0'; 4096 * 4];
 
         // We want to swallow EINTR only; in particular EAGAIN needs to be returned back to the caller.
-        let amt = loop {
-            let amt = unsafe { libc::read(fd, bytes.as_mut_ptr().cast(), size_of_val(&bytes)) };
-            if amt < 0 && errno::errno().0 == EINTR {
-                continue;
+        loop {
+            let amt = nix::unistd::read(fd, &mut bytes);
+            match amt {
+                Ok(amt) => {
+                    if amt != 0 {
+                        buffer.append(&bytes[0..amt], SeparationType::Inferred);
+                    }
+                }
+                Err(Errno::EINTR) => continue,
+                Err(error) => {
+                    if ![nix::Error::EAGAIN, nix::Error::EWOULDBLOCK].contains(&error) {
+                        perror_nix("read", error);
+                    }
+                }
             }
             break amt;
-        };
-        if amt < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0) {
-            perror("read");
-        } else if amt > 0 {
-            buffer.append(
-                &bytes[0..usize::try_from(amt).unwrap()],
-                SeparationType::Inferred,
-            );
         }
-        amt
     }
 
     pub fn read_all_available(&self, fd: BorrowedFd) {
@@ -445,7 +448,7 @@ impl IoBuffer {
         locked_buff: &mut MutexGuard<'_, SeparatedBuffer>,
     ) {
         // Read any remaining data from the pipe.
-        while IoBuffer::read_once(fd.as_raw_fd(), &mut *locked_buff) > 0 {
+        while IoBuffer::read_once(fd, &mut *locked_buff).is_ok_and(|amt| amt != 0) {
             // pass
         }
     }
@@ -485,8 +488,12 @@ fn begin_filling(iobuffer: IoBuffer, fd: OwnedFd) -> FdMonitorItemId {
     // Run our function to read until the receiver is closed.
     let item_callback: Callback = Box::new(move |fd: &mut Option<OwnedFd>| {
         let mut buf = iobuffer.0.lock().unwrap();
-        let ret = IoBuffer::read_once(fd.as_ref().unwrap().as_raw_fd(), &mut buf);
-        if ret == 0 || (ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno::errno().0)) {
+        let ret = IoBuffer::read_once(fd.as_ref().unwrap().as_fd(), &mut buf);
+        if match ret {
+            Err(error) if [nix::Error::EAGAIN, nix::Error::EWOULDBLOCK].contains(&error) => false,
+            Ok(0) | Err(_) => true,
+            _ => false,
+        } {
             // Either it's finished or some other error - we're done.
             drop(fd.take());
         }

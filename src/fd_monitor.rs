@@ -7,7 +7,6 @@ use cfg_if::cfg_if;
 use errno::errno;
 use fish_common::exit_without_destructors;
 use fish_util::perror;
-use libc::{EAGAIN, EINTR, EWOULDBLOCK};
 use std::collections::HashMap;
 use std::os::unix::prelude::*;
 use std::sync::atomic::Ordering;
@@ -73,7 +72,12 @@ impl FdEventSignaller {
     }
 
     /// Return the fd to read from, for notification.
-    pub fn read_fd(&self) -> RawFd {
+    pub fn read_fd(&self) -> BorrowedFd<'_> {
+        self.fd.as_fd()
+    }
+
+    /// Return the fd to read from, for notification.
+    pub fn read_fd_raw(&self) -> RawFd {
         self.fd.as_raw_fd()
     }
 
@@ -86,23 +90,25 @@ impl FdEventSignaller {
         // called many more times. In no case do we care about the data which is read.
         cfg_if!(
             if #[cfg(have_eventfd)] {
-                let mut buff = [0_u64; 1];
+                const BUFFSIZE: usize = size_of::<u64>();
             } else {
-                let mut buff = [0_u8; 1024];
+                const BUFFSIZE: usize = 1024;
             }
         );
-        let mut ret;
+        let mut buff = [0_u8; BUFFSIZE];
         loop {
-            ret =
-                unsafe { libc::read(self.read_fd(), buff.as_mut_ptr().cast(), size_of_val(&buff)) };
-            if ret >= 0 || errno().0 != EINTR {
-                break;
-            }
+            use nix::errno::Errno;
+            return match nix::unistd::read(self.read_fd(), &mut buff) {
+                Ok(amt) => return amt > 0,
+                Err(Errno::EINTR) => continue,
+                Err(error) => {
+                    if ![Errno::EAGAIN, Errno::EWOULDBLOCK].contains(&error) {
+                        perror_nix("read", error);
+                    }
+                    false
+                }
+            };
         }
-        if ret < 0 && ![EAGAIN, EWOULDBLOCK].contains(&errno().0) {
-            perror("read");
-        }
-        ret > 0
     }
 
     /// Mark that an event has been received. This may be coalesced.
@@ -147,7 +153,7 @@ impl FdEventSignaller {
         } else {
             Timeout::ZERO
         };
-        FdReadableSet::is_fd_readable(self.read_fd(), timeout)
+        FdReadableSet::is_fd_readable(self.read_fd_raw(), timeout)
     }
 
     /// Return the fd to write to.
@@ -392,7 +398,7 @@ impl BackgroundFdMonitor {
             // Construct the set of fds to monitor.
             // Our change_signaller is special-cased.
             fds.clear();
-            let change_signal_fd = self.change_signaller.read_fd();
+            let change_signal_fd = self.change_signaller.read_fd_raw();
             fds.add(change_signal_fd);
 
             // Grab the lock and snapshot the item_ids. Skip items with invalid fds.

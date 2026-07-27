@@ -127,7 +127,7 @@ use fish_wcstringutil::{
 };
 use fish_widestring::{ELLIPSIS_CHAR, UTF8_BOM_WCHAR, bytes2wcstring};
 use libc::{
-    _POSIX_VDISABLE, EIO, EISDIR, ENOTTY, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT, STDERR_FILENO,
+    _POSIX_VDISABLE, EISDIR, ENOTTY, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT, STDERR_FILENO,
     STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
 };
 use nix::{
@@ -6346,10 +6346,8 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
             unsafe { OwnedFd::from_raw_fd(res) }
         };
 
-        let mut tmp = 0 as libc::c_char;
-        if unsafe { libc::read(tty_fd.as_raw_fd(), (&raw mut tmp).cast(), 1) } < 0
-            && errno().0 == EIO
-        {
+        #[allow(clippy::byte_char_slices)] // false positive
+        if nix::unistd::read(tty_fd, &mut [b'\0']).is_err_and(|err| err == nix::errno::Errno::EIO) {
             we_think_we_are_orphaned = true;
         }
     }

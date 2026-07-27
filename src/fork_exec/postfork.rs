@@ -12,6 +12,7 @@ use libc::{O_RDONLY, pid_t};
 use nix::unistd::getpid;
 use std::ffi::CStr;
 use std::num::NonZeroU32;
+use std::os::fd::{AsRawFd as _, BorrowedFd};
 use std::os::unix::fs::MetadataExt as _;
 use std::time::Duration;
 
@@ -503,10 +504,13 @@ fn get_interpreter<'a>(command: &CStr, buffer: &'a mut [u8]) -> Option<&'a CStr>
     let fd = unsafe { libc::open(command.as_ptr(), libc::O_RDONLY) };
     let mut idx = 0;
     if fd >= 0 {
+        let fd = unsafe { BorrowedFd::borrow_raw(fd) };
         while idx + 1 < buffer.len() {
             let mut ch = b'\0';
-            let amt = unsafe { libc::read(fd, (&raw mut ch).cast(), size_of_val(&ch)) };
-            if amt <= 0 || ch == b'\n' {
+            if match nix::unistd::read(fd, std::slice::from_mut(&mut ch)) {
+                Ok(n) => n == 0 || ch == b'\n',
+                Err(_) => true,
+            } {
                 break;
             }
             buffer[idx] = ch;
@@ -514,7 +518,7 @@ fn get_interpreter<'a>(command: &CStr, buffer: &'a mut [u8]) -> Option<&'a CStr>
         }
         buffer[idx] = b'\0';
         idx += 1;
-        unsafe { libc::close(fd) };
+        unsafe { libc::close(fd.as_raw_fd()) };
     }
 
     #[allow(clippy::if_same_then_else)]

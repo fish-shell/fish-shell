@@ -6,7 +6,7 @@ use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_pri
 use crate::tty_handoff::signal_safe_mark_tty_invalid;
 use crate::wutil::fish_wcstoi;
 use errno::{errno, set_errno};
-use fish_common::exit_without_destructors;
+use fish_common::{ScopeGuard, exit_without_destructors};
 use fish_util::perror;
 use nix::sys::signal::kill;
 use nix::{
@@ -68,11 +68,10 @@ extern "C" fn fish_signal_handler(
     _context: *mut libc::c_void,
 ) {
     // Ensure we preserve errno.
-    let saved_errno = errno();
+    let _restore_errno = ScopeGuard::new(errno(), set_errno);
 
     // Check if we are a forked child.
     if reraise_if_forked_child(sig) {
-        set_errno(saved_errno);
         return;
     }
 
@@ -116,8 +115,6 @@ extern "C" fn fish_signal_handler(
         }
         _ => {}
     }
-
-    set_errno(saved_errno);
 }
 
 /// Set all signal handlers to SIG_DFL.

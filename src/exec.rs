@@ -43,7 +43,7 @@ use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
 use crate::wutil::{fish_wcstol, perror_io};
-use errno::{Errno, errno, set_errno};
+use errno::{Errno, errno};
 use fish_common::{ScopeGuard, exit_without_destructors, truncate_at_nul, write_loop};
 use fish_widestring::{ToWString as _, bytes2wcstring, wcs2bytes, wcs2zstring};
 use libc::{
@@ -379,19 +379,15 @@ pub fn is_thompson_shell_script(path: &CStr) -> bool {
     if path.to_bytes().ends_with(".fish".as_bytes()) {
         return false;
     }
-    let e = errno();
-    let mut res = false;
-    if let Ok(mut file) = open_cloexec(path, OFlag::O_RDONLY | OFlag::O_NOCTTY, stat::Mode::empty())
-    {
-        let mut buf = [b'\0'; 256];
-        if let Ok(got) = file.read(&mut buf) {
-            if is_thompson_shell_payload(&buf[..got]) {
-                res = true;
-            }
-        }
-    }
-    set_errno(e);
-    res
+    let Ok(mut file) = open_cloexec(path, OFlag::O_RDONLY | OFlag::O_NOCTTY, stat::Mode::empty())
+    else {
+        return false;
+    };
+    let mut buf = [b'\0'; 256];
+    let Ok(got) = file.read(&mut buf) else {
+        return false;
+    };
+    is_thompson_shell_payload(&buf[..got])
 }
 
 /// This function is executed by the child process created by a call to fork(). It should be called

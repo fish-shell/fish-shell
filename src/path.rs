@@ -8,9 +8,9 @@ use crate::flog::{flog, flogf};
 use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use cfg_if::cfg_if;
-use errno::{Errno, errno, set_errno};
+use errno::{Errno, errno};
 use fish_widestring::{HOME_DIRECTORY, wcs2osstring, wcs2zstring};
-use libc::{EACCES, ENOENT, ENOTDIR, X_OK};
+use libc::{EACCES, ENOENT, X_OK};
 use nix::unistd::AccessFlags;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
@@ -309,16 +309,11 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
 /// Returns the full path of the specified directory, using the CDPATH variable as a list of base
 /// directories for relative paths.
 ///
-/// If no valid path is found, false is returned and errno is set to ENOTDIR if at least one such
-/// path was found, but it did not point to a directory, or ENOENT if no file of the specified
-/// name was found.
-///
 /// \param dir The name of the directory.
 /// \param wd The working directory. The working directory must end with a slash.
 /// \param vars The environment variables to use (for the CDPATH variable)
-/// Return the command, or none() if it could not be found.
+/// Return the command, or none if no path resolves to a directory.
 pub fn path_get_cdpath(dir: &wstr, wd: &wstr, vars: &dyn Environment) -> Option<WString> {
-    let mut err = ENOENT;
     if dir.is_empty() {
         return None;
     }
@@ -330,11 +325,9 @@ pub fn path_get_cdpath(dir: &wstr, wd: &wstr, vars: &dyn Environment) -> Option<
             if md.is_dir() {
                 return Some(a_dir);
             }
-            err = ENOTDIR;
         }
     }
 
-    set_errno(Errno(err));
     None
 }
 

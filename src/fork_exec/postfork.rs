@@ -6,6 +6,7 @@ use crate::null_terminated_array::OwningNullTerminatedArray;
 use crate::redirection::Dup2List;
 use crate::signal::signal_reset_handlers;
 use crate::wutil::fstat;
+use errno::Errno;
 use fish_common::exit_without_destructors;
 use libc::{O_RDONLY, pid_t};
 use nix::unistd::getpid;
@@ -225,11 +226,12 @@ pub fn execute_fork() -> pid_t {
 }
 
 pub(crate) fn signal_safe_report_exec_error(
-    err: i32,
+    err: Errno,
     actual_cmd: &CStr,
     argvv: &OwningNullTerminatedArray,
     envv: &OwningNullTerminatedArray,
 ) {
+    let err = err.0;
     match err {
         libc::E2BIG => {
             let szenv = envv.iter().map(|s| s.to_bytes().len()).sum::<usize>();

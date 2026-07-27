@@ -43,7 +43,7 @@ use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
 use crate::wutil::{fish_wcstol, perror_io};
-use errno::{errno, set_errno};
+use errno::{Errno, errno, set_errno};
 use fish_common::{ScopeGuard, exit_without_destructors, truncate_at_nul, write_loop};
 use fish_widestring::{ToWString as _, bytes2wcstring, wcs2bytes, wcs2zstring};
 use libc::{
@@ -319,7 +319,8 @@ static FORK_COUNT: AtomicUsize = AtomicUsize::new(0);
 type LaunchResult = Result<(), ()>;
 
 /// Given an error `err` returned from either posix_spawn or exec, Return a process exit code.
-fn exit_code_from_exec_error(err: libc::c_int) -> libc::c_int {
+fn exit_code_from_exec_error(err: Errno) -> libc::c_int {
+    let err = err.0;
     assert!(err != 0, "Zero is success, not an error");
     match err {
         ENOENT | ENOTDIR => {
@@ -433,9 +434,8 @@ fn signal_safe_launch_process(
         }
     }
 
-    set_errno(err);
-    signal_safe_report_exec_error(errno().0, actual_cmd, argv, envv);
-    exit_without_destructors(exit_code_from_exec_error(err.0));
+    signal_safe_report_exec_error(err, actual_cmd, argv, envv);
+    exit_without_destructors(exit_code_from_exec_error(err));
 }
 
 /// This function is similar to launch_process, except it is not called after a fork (i.e. it only
@@ -911,9 +911,9 @@ fn exec_external_command(
         let pid = match pid {
             Ok(pid) => pid,
             Err(err) => {
-                signal_safe_report_exec_error(err.0, &actual_cmd, &argv, &envv);
+                signal_safe_report_exec_error(err, &actual_cmd, &argv, &envv);
                 p.status
-                    .set(ProcStatus::from_exit_code(exit_code_from_exec_error(err.0)));
+                    .set(ProcStatus::from_exit_code(exit_code_from_exec_error(err)));
                 return Err(());
             }
         };

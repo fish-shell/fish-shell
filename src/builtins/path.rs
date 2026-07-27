@@ -641,8 +641,8 @@ fn path_resolve(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]
     });
     for InputValue { arg, .. } in arguments {
         let mut real = match wrealpath(&arg) {
-            Some(p) => p,
-            None => {
+            Ok(p) => p,
+            Err(_) => {
                 // The path doesn't exist, isn't readable or a symlink loop.
                 // We go up until we find something that works.
                 let mut next = arg;
@@ -658,7 +658,7 @@ fn path_resolve(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]
                 let mut real = None;
                 while !next.is_empty() && next != "/" {
                     next = wdirname(next);
-                    real = wrealpath(next);
+                    real = wrealpath(next).ok();
                     if let Some(ref mut real) = real {
                         real.push('/');
                         real.push_utfstr(&rest);

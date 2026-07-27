@@ -201,7 +201,7 @@ impl EnvUniversal {
             }
         };
 
-        let real_path = wrealpath(&self.vars_path).unwrap_or_else(|| self.vars_path.clone());
+        let real_path = wrealpath(&self.vars_path).unwrap_or_else(|_| self.vars_path.clone());
         match rewrite_via_temporary_file(&real_path, rewrite) {
             Ok((file_id, potential_update)) => {
                 self.last_read_file_id = file_id;

@@ -15,7 +15,6 @@ pub use wcstoi::{
 };
 
 use crate::{fds::BorrowedFdFile, flog, signal::SigChecker};
-use errno::{Errno, set_errno};
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::join_strings;
 use fish_widestring::{
@@ -98,12 +97,10 @@ pub fn wreadlink(file_name: &wstr) -> Option<WString> {
     }
 }
 
-/// Wide character realpath. The last path component does not need to be valid. If an error occurs,
-/// `wrealpath()` returns `None`
-pub fn wrealpath(pathname: &wstr) -> Option<WString> {
+/// Wide character realpath. The last path component does not need to be valid.
+pub fn wrealpath(pathname: &wstr) -> io::Result<WString> {
     if pathname.is_empty() {
-        set_errno(Errno(0));
-        return None;
+        return Err(io::Error::new(io::ErrorKind::InvalidInput, "empty path"));
     }
 
     let mut narrow_path: Vec<u8> = wcs2zstring(pathname).into();
@@ -127,17 +124,13 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
             narrow_path
         } else {
             // Only call realpath() on the portion up to the last component.
-            let narrow_res = if let Some(pathsep_idx) = pathsep_idx {
+            let narrow_result = if let Some(pathsep_idx) = pathsep_idx {
                 // Only call realpath() on the portion up to the last component.
                 canonicalize(OsStr::from_bytes(&narrow_path[0..pathsep_idx]))
             } else {
                 // If there is no "/", this is a file in $PWD, so give the realpath to that.
                 canonicalize(".")
-            };
-
-            let Ok(narrow_result) = narrow_res else {
-                return None;
-            };
+            }?;
 
             let pathsep_idx = pathsep_idx.map_or(0, |idx| idx + 1);
 
@@ -154,7 +147,7 @@ pub fn wrealpath(pathname: &wstr) -> Option<WString> {
         }
     };
 
-    Some(bytes2wcstring(&real_path))
+    Ok(bytes2wcstring(&real_path))
 }
 
 /// Given an input path, "normalize" it:

@@ -779,10 +779,6 @@ msgstr ""
 msgid "Invalid --unknown-arguments value '%s'"
 msgstr ""
 
-#, c-format
-msgid "Invalid arg: %s"
-msgstr ""
-
 msgid "Invalid arguments"
 msgstr "Ungültige Argumente"
 

@@ -800,10 +800,6 @@ msgstr "无效的 --min-args 值 '%s'"
 msgid "Invalid --unknown-arguments value '%s'"
 msgstr "无效的 --unknown-arguments 值 '%s'"
 
-#, c-format
-msgid "Invalid arg: %s"
-msgstr ""
-
 msgid "Invalid arguments"
 msgstr "无效参数"
 

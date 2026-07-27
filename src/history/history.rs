@@ -378,12 +378,8 @@ impl HistoryImpl {
         // For custom directories, skip wrealpath since file may not exist yet
         if self.custom_directory.is_some() {
             Ok(Some(path))
-        } else if let Some(canonicalized_path) = wrealpath(&path) {
-            Ok(Some(canonicalized_path))
         } else {
-            Err(std::io::Error::other(format!(
-                "wrealpath failed to produce a canonical version of '{path}'."
-            )))
+            wrealpath(&path).map(Some)
         }
     }
 

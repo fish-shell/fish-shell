@@ -773,10 +773,6 @@ msgstr "無效的 --min-args 值「%s」"
 msgid "Invalid --unknown-arguments value '%s'"
 msgstr "無效的 --unknown-arguments 值「%s」"
 
-#, c-format
-msgid "Invalid arg: %s"
-msgstr ""
-
 msgid "Invalid arguments"
 msgstr "引數無效"
 

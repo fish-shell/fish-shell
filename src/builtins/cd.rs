@@ -36,7 +36,7 @@ fn try_chdir(parser: &mut Parser, dir: &wstr, deref_symlink: bool) -> Result<(),
 
     let mut new_pwd = norm_dir;
     if deref_symlink {
-        if let Some(real_dir) = wrealpath(&new_pwd) {
+        if let Ok(real_dir) = wrealpath(&new_pwd) {
             new_pwd = real_dir;
         }
     }
@@ -207,7 +207,7 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     // If given -P, deref PWD before applying any CDPATH.
     let mut pwd = vars.get_pwd_slash();
     if deref_symlink {
-        if let Some(mut real_pwd) = wrealpath(&pwd) {
+        if let Ok(mut real_pwd) = wrealpath(&pwd) {
             if !real_pwd.ends_with('/') {
                 real_pwd.push('/');
             }
@@ -228,7 +228,7 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     // current directory; absolute paths and bare relative names are reported as
     // ordinary errors. zsh's `cd_try_chdir` has an equivalent fallback.
     if err.error == Errno::ENOENT && is_relative_cd_path(dir_in) {
-        if let Some(mut real_pwd) = wrealpath(L!(".")) {
+        if let Ok(mut real_pwd) = wrealpath(L!(".")) {
             if !real_pwd.ends_with('/') {
                 real_pwd.push('/');
             }

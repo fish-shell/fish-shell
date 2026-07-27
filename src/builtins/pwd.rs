@@ -1,6 +1,4 @@
 //! Implementation of the pwd builtin.
-use errno::errno;
-
 use super::prelude::*;
 use crate::{builtins::Error, env::Environment as _, err_fmt, wutil::wrealpath};
 
@@ -49,13 +47,14 @@ pub fn pwd(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> 
         pwd = tmp.as_string();
     }
     if resolve_symlinks {
-        if let Some(real_pwd) = wrealpath(&pwd) {
-            pwd = real_pwd;
-        } else {
-            err_fmt!("%s failed: %s", "realpath", errno().to_string())
-                .cmd(cmd)
-                .finish(streams);
-            return Err(STATUS_CMD_ERROR);
+        match wrealpath(&pwd) {
+            Ok(real_pwd) => pwd = real_pwd,
+            Err(error) => {
+                err_fmt!("%s failed: %s", "realpath", error.to_string())
+                    .cmd(cmd)
+                    .finish(streams);
+                return Err(STATUS_CMD_ERROR);
+            }
         }
     }
     if pwd.is_empty() {

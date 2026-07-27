@@ -711,7 +711,7 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                         Absolute(path) => {
                             let path = osstr2wcstring(path);
                             Cow::Owned(match wrealpath(&path) {
-                                Some(p) if waccess(&p, AccessFlags::F_OK).is_ok() => p,
+                                Ok(p) if waccess(&p, AccessFlags::F_OK).is_ok() => p,
                                 // realpath did not work, just append the path
                                 // - maybe this was obtained via $PATH?
                                 _ => path,

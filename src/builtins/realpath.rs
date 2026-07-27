@@ -1,7 +1,5 @@
 //! Implementation of the realpath builtin.
 
-use errno::errno;
-
 use super::prelude::*;
 use crate::env::Environment as _;
 use crate::err_fmt;
@@ -77,35 +75,36 @@ pub fn realpath(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]
 
     for &arg in &args[optind..] {
         if !opts.no_symlinks {
-            if let Some(real_path) = wrealpath(arg) {
-                streams.out.append(&real_path);
-                streams.out.append(L!("\n"));
-            } else {
-                let errno = errno();
-                if errno.0 != 0 {
-                    err_fmt!("%s: %s", arg, errno.to_string())
+            match wrealpath(arg) {
+                Ok(real_path) => {
+                    streams.out.append(&real_path);
+                    streams.out.append(L!("\n"));
+                }
+                Err(error) => {
+                    err_fmt!("%s: %s", arg, error.to_string())
                         .cmd(cmd)
                         .finish(streams);
-                } else {
-                    err_fmt!("Invalid arg: %s", arg).cmd(cmd).finish(streams);
+                    had_error = true;
                 }
-                had_error = true;
             }
         } else {
             let realpwd = wrealpath(&parser.vars().get_pwd_slash());
 
-            if let Some(realpwd) = realpwd {
-                let absolute_arg = if arg.starts_with(L!("/")) {
-                    arg.to_owned()
-                } else {
-                    path_apply_working_directory(arg, &realpwd)
-                };
-                streams.out.appendln(&normalize_path(&absolute_arg, false));
-            } else {
-                err_fmt!("%s failed: %s", "realpath", errno().to_string())
-                    .cmd(cmd)
-                    .finish(streams);
-                had_error = true;
+            match realpwd {
+                Ok(realpwd) => {
+                    let absolute_arg = if arg.starts_with(L!("/")) {
+                        arg.to_owned()
+                    } else {
+                        path_apply_working_directory(arg, &realpwd)
+                    };
+                    streams.out.appendln(&normalize_path(&absolute_arg, false));
+                }
+                Err(error) => {
+                    err_fmt!("%s failed: %s", "realpath", error.to_string())
+                        .cmd(cmd)
+                        .finish(streams);
+                    had_error = true;
+                }
             }
         }
     }

@@ -779,10 +779,6 @@ msgstr "Valor no válido para --min-args '%s'"
 msgid "Invalid --unknown-arguments value '%s'"
 msgstr "Valor no válido para --unknown-arguments '%s'"
 
-#, c-format
-msgid "Invalid arg: %s"
-msgstr ""
-
 msgid "Invalid arguments"
 msgstr "Argumentos inválidos"
 

@@ -778,10 +778,6 @@ msgstr "--min-args の値 '%s' が無効です"
 msgid "Invalid --unknown-arguments value '%s'"
 msgstr "--unknown-arguments の値 '%s' が無効です"
 
-#, c-format
-msgid "Invalid arg: %s"
-msgstr ""
-
 msgid "Invalid arguments"
 msgstr "引数が無効です"
 

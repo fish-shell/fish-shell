@@ -2158,7 +2158,7 @@ impl CmdString {
         let mut path = path_result.path;
         // Resolve commands that use relative paths because we compare full paths with "complete -p".
         if found && !path.is_empty() && path.as_char_slice().first() != Some(&'/') {
-            if let Some(full_path) = wrealpath(&path) {
+            if let Ok(full_path) = wrealpath(&path) {
                 path = full_path;
             }
         }

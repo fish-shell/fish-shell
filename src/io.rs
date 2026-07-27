@@ -10,7 +10,6 @@ use crate::{
     redirection::{RedirectionMode, RedirectionSpecList},
     wutil::{perror_io, unescape_bytes_and_write_to_fd, wdirname, wstat},
 };
-use errno::Errno;
 use fish_util::perror;
 use fish_widestring::{bytes2wcstring, wcs2bytes};
 use libc::{EAGAIN, EINTR, ENOENT, ENOTDIR, EWOULDBLOCK, STDOUT_FILENO};
@@ -414,7 +413,6 @@ impl IoBuffer {
     /// set).
     pub fn read_once(fd: RawFd, buffer: &mut MutexGuard<'_, SeparatedBuffer>) -> isize {
         assert!(fd >= 0, "Invalid fd");
-        errno::set_errno(Errno(0));
         let mut bytes = [b'\0'; 4096 * 4];
 
         // We want to swallow EINTR only; in particular EAGAIN needs to be returned back to the caller.

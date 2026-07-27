@@ -138,9 +138,10 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 end
 
 function __fish_print_hostnames_from_hosts -d "Extract hostnames from hosts file entries"
-    # Ignore own IP addresses (127.*, 0.0[.0[.0]], ::1) non-host IPs (fe00::*,
-    # ff00::*), and leading/trailing whitespace.
-    string replace -irf -- '^\s*?(?!(?:0\.|127\.|ff0|fe0|::1))\S+\s*(.*?)\s*$' '$1' $argv |
+    # Ignore own IP addresses (127.*, 0.0[.0[.0]], ::1), broadcast addresses
+    # (255.255.255.255), non-host IPs (fe00::*, ff00::*), and leading/trailing
+    # whitespace.
+    string replace -irf -- '^\s*?(?!(?:0\.|127\.|ff0|fe0|255\.255\.255\.255|::1))\S+\s*(.*?)\s*$' '$1' $argv |
         # Split results on whitespace to handle multiple aliases for one IP.
         string split ' '
 end

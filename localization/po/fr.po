@@ -32280,6 +32280,9 @@ msgstr ""
 msgid "Include pre-release packages"
 msgstr ""
 
+msgid "Include processes without a controlling terminal"
+msgstr ""
+
 msgid "Include reason for pkg mask"
 msgstr ""
 
@@ -50871,6 +50874,9 @@ msgstr "Répéter l’opération de composition latéralement et verticalement"
 msgid "Repeat header lines, one per page"
 msgstr ""
 
+msgid "Repeat headers on each page"
+msgstr ""
+
 msgid "Repeat headers on each page of output"
 msgstr ""
 
@@ -54702,6 +54708,9 @@ msgstr "Sélectionner tous les processus"
 msgid "Select all patches not in the default push/pull repository or at location URL/PATH"
 msgstr ""
 
+msgid "Select all processes"
+msgstr ""
+
 msgid "Select all processes except session leaders"
 msgstr "Sélectionner tous les processus sauf les meneurs de session"
 
@@ -54746,6 +54755,9 @@ msgstr ""
 
 msgid "Select by parent PID"
 msgstr "Sélectionner par PID parent"
+
+msgid "Select by process group"
+msgstr ""
 
 msgid "Select by session ID"
 msgstr "Sélectionner par ID de session"
@@ -54909,7 +54921,13 @@ msgstr ""
 msgid "Select print mode"
 msgstr "Sélectionner le mode d’affichage"
 
+msgid "Select processes attached to standard input"
+msgstr ""
+
 msgid "Select processes for all users"
+msgstr ""
+
+msgid "Select processes for all users with a terminal"
 msgstr ""
 
 msgid "Select progress meter type"
@@ -59232,6 +59250,9 @@ msgstr "Afficher tous les périphériques, en ignorant les paramétrages précé
 msgid "Show examples in command line mode"
 msgstr "Afficher des exemples en mode ligne de commande"
 
+msgid "Show executable name instead of full command line"
+msgstr ""
+
 msgid "Show execution time statistics"
 msgstr ""
 
@@ -59324,6 +59345,9 @@ msgstr ""
 
 msgid "Show full blob object names"
 msgstr "Afficher les noms complets des objets blob"
+
+msgid "Show full format"
+msgstr ""
 
 msgid "Show full information for specified packages"
 msgstr "Afficher toutes les informations pour les paquets spécifiés"
@@ -60888,6 +60912,9 @@ msgstr "Afficher cet écran"
 msgid "Show this usage message."
 msgstr ""
 
+msgid "Show threads"
+msgstr ""
+
 msgid "Show threads after processes"
 msgstr "Montrer les processus légers après les processus standards"
 
@@ -61882,6 +61909,9 @@ msgid "Skip pre/post hook scripts"
 msgstr ""
 
 msgid "Skip previous image query for first build"
+msgstr ""
+
+msgid "Skip processes without a controlling terminal"
 msgstr ""
 
 msgid "Skip refreshing all module indexes or a specific ecosystem"
@@ -71382,6 +71412,9 @@ msgstr ""
 msgid "Use raw --list output format"
 msgstr ""
 
+msgid "Use raw CPU calculation"
+msgstr ""
+
 msgid "Use raw CPU calculation (ignore resident time)"
 msgstr ""
 
@@ -72716,6 +72749,9 @@ msgstr "Périphérique virtuel à ajouter"
 
 msgid "Virtual device to operate on"
 msgstr "Périphérique virtuel sur lequel opérer"
+
+msgid "Virtual memory format"
+msgstr ""
 
 msgid "Virtual packages this package provides, separated by whitespace"
 msgstr ""

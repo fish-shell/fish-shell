@@ -32172,6 +32172,9 @@ msgstr ""
 msgid "Include pre-release packages"
 msgstr ""
 
+msgid "Include processes without a controlling terminal"
+msgstr ""
+
 msgid "Include reason for pkg mask"
 msgstr ""
 
@@ -50763,6 +50766,9 @@ msgstr ""
 msgid "Repeat header lines, one per page"
 msgstr ""
 
+msgid "Repeat headers on each page"
+msgstr ""
+
 msgid "Repeat headers on each page of output"
 msgstr ""
 
@@ -54594,6 +54600,9 @@ msgstr ""
 msgid "Select all patches not in the default push/pull repository or at location URL/PATH"
 msgstr ""
 
+msgid "Select all processes"
+msgstr ""
+
 msgid "Select all processes except session leaders"
 msgstr ""
 
@@ -54637,6 +54646,9 @@ msgid "Select by jail (name or id)"
 msgstr ""
 
 msgid "Select by parent PID"
+msgstr ""
+
+msgid "Select by process group"
 msgstr ""
 
 msgid "Select by session ID"
@@ -54801,7 +54813,13 @@ msgstr ""
 msgid "Select print mode"
 msgstr ""
 
+msgid "Select processes attached to standard input"
+msgstr ""
+
 msgid "Select processes for all users"
+msgstr ""
+
+msgid "Select processes for all users with a terminal"
 msgstr ""
 
 msgid "Select progress meter type"
@@ -59124,6 +59142,9 @@ msgstr ""
 msgid "Show examples in command line mode"
 msgstr ""
 
+msgid "Show executable name instead of full command line"
+msgstr ""
+
 msgid "Show execution time statistics"
 msgstr ""
 
@@ -59215,6 +59236,9 @@ msgid "Show frequency tables"
 msgstr ""
 
 msgid "Show full blob object names"
+msgstr ""
+
+msgid "Show full format"
 msgstr ""
 
 msgid "Show full information for specified packages"
@@ -60780,6 +60804,9 @@ msgstr ""
 msgid "Show this usage message."
 msgstr ""
 
+msgid "Show threads"
+msgstr ""
+
 msgid "Show threads after processes"
 msgstr ""
 
@@ -61774,6 +61801,9 @@ msgid "Skip pre/post hook scripts"
 msgstr ""
 
 msgid "Skip previous image query for first build"
+msgstr ""
+
+msgid "Skip processes without a controlling terminal"
 msgstr ""
 
 msgid "Skip refreshing all module indexes or a specific ecosystem"
@@ -71274,6 +71304,9 @@ msgstr ""
 msgid "Use raw --list output format"
 msgstr ""
 
+msgid "Use raw CPU calculation"
+msgstr ""
+
 msgid "Use raw CPU calculation (ignore resident time)"
 msgstr ""
 
@@ -72607,6 +72640,9 @@ msgid "Virtual device to add"
 msgstr ""
 
 msgid "Virtual device to operate on"
+msgstr ""
+
+msgid "Virtual memory format"
 msgstr ""
 
 msgid "Virtual packages this package provides, separated by whitespace"

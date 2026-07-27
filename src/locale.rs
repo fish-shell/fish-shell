@@ -9,9 +9,8 @@ pub(crate) static LOCALE_LOCK: Mutex<()> = Mutex::new(());
 /// Call this either before starting any locale-using thread, or while holding a lock on the
 /// above mutex.
 pub unsafe fn set_libc_locales(log_ok: bool) -> bool {
-    let mut ok = true;
     let from_environment = c"";
-    let mut set = |category_name, category, value| {
+    let set = |category_name, category, value| {
         let locale_string = setlocale(category, Some(value));
         if log_ok {
             crate::flog::flog!(env_locale, {
@@ -33,16 +32,17 @@ pub unsafe fn set_libc_locales(log_ok: bool) -> bool {
                 }
             });
         }
-        ok &= locale_string.is_some();
+        locale_string.is_some()
     };
+    let mut ok = true;
     // For strerror(3p) and strsignal(3p)
-    set("LC_CTYPE", libc::LC_CTYPE, from_environment);
-    set("LC_CTYPE", libc::LC_CTYPE, c"C.UTF-8");
-    set("LC_MESSAGES", libc::LC_MESSAGES, from_environment);
+    ok &= set("LC_CTYPE", libc::LC_CTYPE, c"C.UTF-8")
+        || set("LC_CTYPE", libc::LC_CTYPE, from_environment);
+    ok &= set("LC_MESSAGES", libc::LC_MESSAGES, from_environment);
     // For builtin printf
-    set("LC_NUMERIC", libc::LC_NUMERIC, from_environment);
+    ok &= set("LC_NUMERIC", libc::LC_NUMERIC, from_environment);
     // For "history --show-time"
-    set("LC_TIME", libc::LC_TIME, from_environment);
+    ok &= set("LC_TIME", libc::LC_TIME, from_environment);
     ok
 }
 

@@ -9,6 +9,7 @@ use crate::{
     path::path_apply_cdpath,
     wutil::{normalize_path, wreadlink, wrealpath},
 };
+use fish_widestring::str2wcstring;
 use nix::{errno::Errno, unistd::fchdir};
 use std::sync::Arc;
 
@@ -265,8 +266,9 @@ pub fn cd(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) -> B
     } else if errno == Errno::EACCES || errno == Errno::EPERM {
         err_fmt!("Permission denied: '%s'", dir_in)
     } else {
-        Errno::set(errno);
-        err_raw!(builtin_strerror()).cmd(L!("cd")).finish(streams);
+        err_raw!(str2wcstring(errno.to_string()))
+            .cmd(L!("cd"))
+            .finish(streams);
         err_fmt!("Unknown error trying to locate directory '%s'", dir_in)
     };
 

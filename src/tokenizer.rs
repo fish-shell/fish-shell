@@ -53,8 +53,12 @@ pub enum TokenizerError {
     IllegalSlice,
     ClosingUnopenedBrace,
     UnterminatedBrace,
-    ExpectedPcloseFoundBclose,
-    ExpectedBcloseFoundPclose,
+
+    // No errors for "unexpected slice closing" because ']' can be a command argument
+    UnexpectedPcloseWantedBclose,
+    UnexpectedPcloseWantedSclose,
+    UnexpectedBcloseWantedPclose,
+    UnexpectedBcloseWantedSclose,
 }
 
 #[derive(Debug)]
@@ -140,45 +144,51 @@ pub const TOK_CONTINUE_AFTER_ERROR: TokFlags = TokFlags(8);
 /// command-position.
 pub const TOK_ARGUMENT_LIST: TokFlags = TokFlags(16);
 
-impl From<TokenizerError> for &'static wstr {
+localizable_consts!(
+    UNEXPECTED_CLOSING_CHAR "Unexpected '%s' found, expecting '%s'"
+);
+
+impl From<TokenizerError> for WString {
     fn from(err: TokenizerError) -> Self {
         match err {
-            TokenizerError::None => L!(""),
+            TokenizerError::None => L!("").into(),
             TokenizerError::UnterminatedQuote => {
-                wgettext!("Unexpected end of string, quotes are not balanced")
+                wgettext!("Unexpected end of string, quotes are not balanced").into()
             }
             TokenizerError::UnterminatedSubshell => {
-                wgettext!("Unexpected end of string, expecting ')'")
+                wgettext!("Unexpected end of string, expecting ')'").into()
             }
             TokenizerError::UnterminatedSlice => {
-                wgettext!("Unexpected end of string, square brackets do not match")
+                wgettext!("Unexpected end of string, square brackets do not match").into()
             }
             TokenizerError::UnterminatedEscape => {
-                wgettext!("Unexpected end of string, incomplete escape sequence")
+                wgettext!("Unexpected end of string, incomplete escape sequence").into()
             }
-            TokenizerError::InvalidRedirect => {
-                wgettext!("Invalid input/output redirection")
-            }
+            TokenizerError::InvalidRedirect => wgettext!("Invalid input/output redirection").into(),
             TokenizerError::InvalidPipe => {
-                wgettext!("Cannot use stdin (fd 0) as pipe output")
+                wgettext!("Cannot use stdin (fd 0) as pipe output").into()
             }
             TokenizerError::ClosingUnopenedSubshell => {
-                wgettext!("Unexpected ')' for unopened parenthesis")
+                wgettext!("Unexpected ')' for unopened parenthesis").into()
             }
-            TokenizerError::IllegalSlice => {
-                wgettext!("Unexpected '[' at this location")
-            }
+            TokenizerError::IllegalSlice => wgettext!("Unexpected '[' at this location").into(),
             TokenizerError::ClosingUnopenedBrace => {
-                wgettext!("Unexpected '}' for unopened brace")
+                wgettext!("Unexpected '}' for unopened brace").into()
             }
             TokenizerError::UnterminatedBrace => {
-                wgettext!("Unexpected end of string, incomplete parameter expansion")
+                wgettext!("Unexpected end of string, incomplete parameter expansion").into()
             }
-            TokenizerError::ExpectedPcloseFoundBclose => {
-                wgettext!("Unexpected '}' found, expecting ')'")
+            TokenizerError::UnexpectedPcloseWantedBclose => {
+                wgettext_fmt!(UNEXPECTED_CLOSING_CHAR, ')', '}')
             }
-            TokenizerError::ExpectedBcloseFoundPclose => {
-                wgettext!("Unexpected ')' found, expecting '}'")
+            TokenizerError::UnexpectedPcloseWantedSclose => {
+                wgettext_fmt!(UNEXPECTED_CLOSING_CHAR, ')', ']')
+            }
+            TokenizerError::UnexpectedBcloseWantedPclose => {
+                wgettext_fmt!(UNEXPECTED_CLOSING_CHAR, '}', ')')
+            }
+            TokenizerError::UnexpectedBcloseWantedSclose => {
+                wgettext_fmt!(UNEXPECTED_CLOSING_CHAR, '}', ']')
             }
         }
     }
@@ -186,8 +196,7 @@ impl From<TokenizerError> for &'static wstr {
 
 impl fish_printf::ToArg<'static> for TokenizerError {
     fn to_arg(self) -> fish_printf::Arg<'static> {
-        let msg: &'static wstr = self.into();
-        fish_printf::Arg::WStr(msg)
+        fish_printf::Arg::WString(self.into())
     }
 }
 
@@ -637,9 +646,9 @@ impl<'c> Tokenizer<'c> {
         let mut mode = TOK_MODE_REGULAR_TEXT;
         let mut paren_offsets = vec![];
         let mut brace_offsets = vec![];
+        let mut slice_offsets = vec![];
         let mut expecting = vec![];
         let mut quoted_cmdsubs = vec![];
-        let mut slice_offset = 0;
         let buff_start = self.token_cursor;
         let mut is_token_begin = true;
 
@@ -694,28 +703,42 @@ impl<'c> Tokenizer<'c> {
                 expecting.push('}');
                 mode |= TOK_MODE_CURLY_BRACES;
             } else if c == ')' {
-                if expecting.last() == Some(&'}') {
-                    return self.call_error(
-                        TokenizerError::ExpectedBcloseFoundPclose,
-                        self.token_cursor,
-                        self.token_cursor,
-                        Some(1),
-                        1,
-                    );
+                match expecting.pop() {
+                    Some(')') => {
+                        paren_offsets.pop();
+                        if paren_offsets.is_empty() {
+                            mode &= !TOK_MODE_SUBSHELL;
+                        }
+                    }
+                    Some('}') => {
+                        return self.call_error(
+                            TokenizerError::UnexpectedPcloseWantedBclose,
+                            self.token_cursor,
+                            self.token_cursor,
+                            Some(1),
+                            1,
+                        );
+                    }
+                    Some(']') => {
+                        return self.call_error(
+                            TokenizerError::UnexpectedPcloseWantedSclose,
+                            self.token_cursor,
+                            self.token_cursor,
+                            Some(1),
+                            1,
+                        );
+                    }
+                    None => {
+                        return self.call_error(
+                            TokenizerError::ClosingUnopenedSubshell,
+                            self.token_cursor,
+                            self.token_cursor,
+                            Some(1),
+                            1,
+                        );
+                    }
+                    Some(_) => unreachable!(),
                 }
-                if paren_offsets.pop().is_none() {
-                    return self.call_error(
-                        TokenizerError::ClosingUnopenedSubshell,
-                        self.token_cursor,
-                        self.token_cursor,
-                        Some(1),
-                        1,
-                    );
-                }
-                if paren_offsets.is_empty() {
-                    mode &= !TOK_MODE_SUBSHELL;
-                }
-                expecting.pop();
                 // Check if the ) completed a quoted command substitution.
                 if quoted_cmdsubs.last() == Some(&paren_offsets.len()) {
                     quoted_cmdsubs.pop();
@@ -737,37 +760,57 @@ impl<'c> Tokenizer<'c> {
                     }
                 }
             } else if c == '}' {
-                if expecting.last() == Some(&')') {
-                    return self.call_error(
-                        TokenizerError::ExpectedPcloseFoundBclose,
-                        self.token_cursor,
-                        self.token_cursor,
-                        Some(1),
-                        1,
-                    );
+                match expecting.pop() {
+                    Some('}') => {
+                        brace_offsets.pop();
+                        if brace_offsets.is_empty() {
+                            mode &= !TOK_MODE_CURLY_BRACES;
+                        }
+                    }
+                    Some(')') => {
+                        return self.call_error(
+                            TokenizerError::UnexpectedBcloseWantedPclose,
+                            self.token_cursor,
+                            self.token_cursor,
+                            Some(1),
+                            1,
+                        );
+                    }
+                    Some(']') => {
+                        return self.call_error(
+                            TokenizerError::UnexpectedBcloseWantedSclose,
+                            self.token_cursor,
+                            self.token_cursor,
+                            Some(1),
+                            1,
+                        );
+                    }
+                    None => {
+                        // Let the caller throw an error.
+                        break;
+                    }
+                    Some(_) => unreachable!(),
                 }
-                if brace_offsets.pop().is_none() {
-                    // Let the caller throw an error.
-                    break;
-                }
-                if brace_offsets.is_empty() {
-                    mode &= !TOK_MODE_CURLY_BRACES;
-                }
-                expecting.pop();
             } else if c == '[' {
                 if self.token_cursor != buff_start {
-                    mode |= TOK_MODE_ARRAY_BRACKETS;
-                    slice_offset = self.token_cursor;
+                    slice_offsets.push(self.token_cursor);
+                    expecting.push(']');
+                    mode |= TOK_MODE_ARRAY_SLICE;
                 } else {
                     // This is actually allowed so the test operator `[` can be used as the head of a
                     // command
                 }
             }
-            // Only exit bracket mode if we are in bracket mode.
-            // Reason: `]` can be a parameter, e.g. last parameter to `[` test alias.
-            // e.g. echo $argv[([ $x -eq $y ])] # must not end bracket mode on first bracket
-            else if c == ']' && (mode & TOK_MODE_ARRAY_BRACKETS) {
-                mode &= !TOK_MODE_ARRAY_BRACKETS;
+            // Only process a closing bracket if we are expecting one, i.e. we don't have
+            // any unclosed paren or brace since the opening of the slice. If we do, consider
+            // the bracket to be a parameter, e.g. last parameter to `[` test alias,
+            // e.g. `echo $argv[([ $x -eq $y ])]`
+            else if c == ']' && expecting.last() == Some(&']') {
+                slice_offsets.pop();
+                if slice_offsets.is_empty() {
+                    mode &= !TOK_MODE_ARRAY_SLICE;
+                }
+                expecting.pop();
             } else if c == '\'' || c == '"' {
                 if let Err(error_loc) =
                     process_opening_quote(self, &mut quoted_cmdsubs, &paren_offsets, c)
@@ -817,11 +860,12 @@ impl<'c> Tokenizer<'c> {
                     None,
                     1,
                 );
-            } else if mode & TOK_MODE_ARRAY_BRACKETS {
+            } else if mode & TOK_MODE_ARRAY_SLICE {
+                let offset_of_open_slice = *slice_offsets.last().expect("slice_offsets is empty");
                 return self.call_error(
                     TokenizerError::UnterminatedSlice,
                     buff_start,
-                    slice_offset,
+                    offset_of_open_slice,
                     None,
                     1,
                 );
@@ -914,7 +958,7 @@ struct TokModes(u8);
 
 const TOK_MODE_REGULAR_TEXT: TokModes = TokModes(0); // regular text
 const TOK_MODE_SUBSHELL: TokModes = TokModes(1 << 0); // inside of subshell parentheses
-const TOK_MODE_ARRAY_BRACKETS: TokModes = TokModes(1 << 1); // inside of array brackets
+const TOK_MODE_ARRAY_SLICE: TokModes = TokModes(1 << 1); // inside of array brackets
 const TOK_MODE_CURLY_BRACES: TokModes = TokModes(1 << 2);
 const TOK_MODE_CHAR_ESCAPE: TokModes = TokModes(1 << 3);
 
@@ -1285,6 +1329,7 @@ mod tests {
             "&&& ||| ",
             "&& || & |",
             "Compress_Newlines\n  \n\t\n   \nInto_Just_One",
+            "| $brackets[ $with[nested] $brackets]",
         ));
         #[allow(non_camel_case_types)]
         type tt = TokenType;
@@ -1297,12 +1342,20 @@ mod tests {
             tt::AndAnd, tt::Background, tt::OrOr, tt::Pipe,
             tt::AndAnd, tt::OrOr, tt::Background, tt::Pipe, tt::String, tt::End,
             tt::String,
+            tt::Pipe, tt::String,
         ];
 
         {
             let t = Tokenizer::new(s, TokFlags(0));
             let mut actual_types = vec![];
             for token in t {
+                // Print for `cargo test -- --no-capture` and make it easier to debug when the test fails
+                println!(
+                    "tok: {}, {}: '{}'",
+                    token.offset,
+                    token.length,
+                    &s[token.offset()..(token.offset() + token.length())]
+                );
                 actual_types.push(token.type_);
             }
             assert_eq!(&actual_types[..], types);
@@ -1344,6 +1397,30 @@ mod tests {
             assert_eq!(token.type_, TokenType::Error);
             assert_eq!(token.error, TokenizerError::UnterminatedSlice);
             assert_eq!(token.error_offset_within_token, 4);
+        }
+
+        {
+            let input = [
+                L!("abc {a)"),
+                L!("abc def[a)"),
+                L!("abc (a}"),
+                L!("abc def[a}"),
+            ];
+            let err = [
+                TokenizerError::UnexpectedPcloseWantedBclose,
+                TokenizerError::UnexpectedPcloseWantedSclose,
+                TokenizerError::UnexpectedBcloseWantedPclose,
+                TokenizerError::UnexpectedBcloseWantedSclose,
+            ];
+
+            for (i, e) in input.into_iter().zip(err) {
+                let mut t = Tokenizer::new(i, TokFlags(0));
+                let _token = t.next().unwrap();
+                let token = t.next().unwrap();
+                assert_eq!(token.type_, TokenType::Error);
+                assert_eq!(token.error, e);
+                assert_eq!(token.error_offset_within_token, 0);
+            }
         }
 
         // Test some redirection parsing.

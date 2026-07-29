@@ -78,3 +78,16 @@ echo $list # CHECK: 2 1 3
 set -l list 1 2 3
 set list[2..] $list[-1..2]
 echo $list # CHECK: 1 3 2
+
+# nested slices
+set -l foo (seq 2 200)
+echo $foo[$foo[$foo[$foo[1 5]]]]
+#CHECK: 5 9
+echo $foo[1 (echo $foo[2 3]) 4]
+#CHECK: 2 4 5 5
+echo $foo[1(echo $foo[2 3])4]
+#CHECK: 2 4 5 5
+echo $foo[1 $foo[2 3] 4]
+#CHECK: 2 4 5 2 5 5
+echo $foo[1$foo[2 3]4]
+#CHECK: 2 35 2 45

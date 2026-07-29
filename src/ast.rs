@@ -1833,7 +1833,7 @@ impl<'s> NodeVisitorMut for Populator<'s> {
                 token.range(),
                 ParseErrorCode::UnbalancingBrace,
                 "%s",
-                <TokenizerError as Into<&wstr>>::into(token.tok_error)
+                WString::from(token.tok_error)
             );
         }
 

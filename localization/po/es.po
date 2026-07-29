@@ -1406,20 +1406,18 @@ msgstr "No se puede ubicar el directorio %s."
 msgid "Unable to read input file: %s"
 msgstr "No se puede leer el archivo de entrada: %s"
 
+#, c-format
+msgid "Unexpected '%s' found, expecting '%s'"
+msgstr "Se encontró ‘%s’, pero se esperaba ‘%s’"
+
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr "‘)’ inesperado sin un paréntesis de apertura"
-
-msgid "Unexpected ')' found, expecting '}'"
-msgstr "Se encontró ‘)’, pero se esperaba ‘}’"
 
 msgid "Unexpected '[' at this location"
 msgstr "‘[’ inesperado en esta ubicación"
 
 msgid "Unexpected '}' for unopened brace"
 msgstr "‘}’ inesperado sin una llave de apertura"
-
-msgid "Unexpected '}' found, expecting ')'"
-msgstr "Se encontró ‘}’, pero se esperaba ‘)’"
 
 #, c-format
 msgid "Unexpected argument -- '%s'"

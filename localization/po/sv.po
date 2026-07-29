@@ -1403,19 +1403,17 @@ msgstr ""
 msgid "Unable to read input file: %s"
 msgstr ""
 
-msgid "Unexpected ')' for unopened parenthesis"
+#, c-format
+msgid "Unexpected '%s' found, expecting '%s'"
 msgstr ""
 
-msgid "Unexpected ')' found, expecting '}'"
+msgid "Unexpected ')' for unopened parenthesis"
 msgstr ""
 
 msgid "Unexpected '[' at this location"
 msgstr ""
 
 msgid "Unexpected '}' for unopened brace"
-msgstr ""
-
-msgid "Unexpected '}' found, expecting ')'"
 msgstr ""
 
 #, c-format

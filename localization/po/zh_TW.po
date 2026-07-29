@@ -1401,20 +1401,18 @@ msgstr "無法定位 %s 目錄。"
 msgid "Unable to read input file: %s"
 msgstr "無法讀取輸入檔案：%s"
 
+#, c-format
+msgid "Unexpected '%s' found, expecting '%s'"
+msgstr "找到了非預期的「%s」，預期「%s」"
+
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr "非預期的不對稱「)」"
-
-msgid "Unexpected ')' found, expecting '}'"
-msgstr "找到了非預期的「)」，預期「}」"
 
 msgid "Unexpected '[' at this location"
 msgstr "在此處有非預期的「[」"
 
 msgid "Unexpected '}' for unopened brace"
 msgstr "非預期的不對稱「}」"
-
-msgid "Unexpected '}' found, expecting ')'"
-msgstr "找到了非預期的「}」，預期「)」"
 
 #, c-format
 msgid "Unexpected argument -- '%s'"

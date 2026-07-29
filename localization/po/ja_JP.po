@@ -1405,20 +1405,18 @@ msgstr "%s ディレクトリを特定できません"
 msgid "Unable to read input file: %s"
 msgstr "入力ファイルを読み取れません: %s"
 
+#, c-format
+msgid "Unexpected '%s' found, expecting '%s'"
+msgstr "予期しない '%s' が見つかりました。 '%s' が必要です"
+
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr "開かれていない括弧に対応する予期しない ')' があります"
-
-msgid "Unexpected ')' found, expecting '}'"
-msgstr "予期しない ')' が見つかりました。 '}' が必要です"
 
 msgid "Unexpected '[' at this location"
 msgstr "この場所に予期しない '[' があります"
 
 msgid "Unexpected '}' for unopened brace"
 msgstr "開かれていない中括弧に対応する予期しない '}' があります"
-
-msgid "Unexpected '}' found, expecting ')'"
-msgstr "予期しない '}' が見つかりました。 ')' が必要です"
 
 #, c-format
 msgid "Unexpected argument -- '%s'"

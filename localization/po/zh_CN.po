@@ -5561,6 +5561,9 @@ msgstr ""
 msgid "Add a rule to chain in table"
 msgstr ""
 
+msgid "Add a separator between each byte"
+msgstr ""
+
 msgid "Add a service"
 msgstr ""
 
@@ -6207,6 +6210,9 @@ msgid "Address source: 'lease' or 'agent'"
 msgstr ""
 
 msgid "Address to listen on (default: \"127.0.0.1:5000\")"
+msgstr ""
+
+msgid "Addresses in left hand column starts at this address."
 msgstr ""
 
 msgid "Adds a completion for a specific command"
@@ -8129,6 +8135,9 @@ msgstr ""
 msgid "Assemble in MRI compatibility mode"
 msgstr ""
 
+msgid "Assemble shellcode into bytes"
+msgstr ""
+
 msgid "Assemble the local package into a distributable tarball"
 msgstr ""
 
@@ -8465,6 +8474,9 @@ msgstr ""
 msgid "Attempt to detect 802.11s draft mesh headers"
 msgstr ""
 
+msgid "Attempt to download the matching libc.so"
+msgstr ""
+
 msgid "Attempt to dump superblocks with bad magic"
 msgstr ""
 
@@ -8489,7 +8501,13 @@ msgstr ""
 msgid "Attempt to reassign register numbers in move instructions to maximize register tying"
 msgstr ""
 
+msgid "Attempt to searching with offline only mode"
+msgstr ""
+
 msgid "Attempt to transform conditional jumps into branch-less equivalents"
+msgstr ""
+
+msgid "Attempt to unstrip the libc binary inplace with debug symbols from a debuginfod server"
 msgstr ""
 
 msgid "Attempts to repair invalid config items"
@@ -8889,6 +8907,9 @@ msgid "Base URL for PEP refs"
 msgstr ""
 
 msgid "Base URL for RFC refs"
+msgstr ""
+
+msgid "Base address"
 msgstr ""
 
 msgid "Base address for the library to be built"
@@ -9704,6 +9725,9 @@ msgstr ""
 msgid "Byte swapped output"
 msgstr ""
 
+msgid "Byte to highlight."
+msgstr ""
+
 msgid "Bytes per request"
 msgstr ""
 
@@ -10427,6 +10451,9 @@ msgstr ""
 msgid "Check artifacts with the specified profile"
 msgstr ""
 
+msgid "Check binary security settings"
+msgstr ""
+
 msgid "Check bundler requirements for your application"
 msgstr ""
 
@@ -10517,10 +10544,16 @@ msgstr ""
 msgid "Check for patches only in the specified repository"
 msgstr ""
 
+msgid "Check for pre-releases"
+msgstr ""
+
 msgid "Check for problems"
 msgstr ""
 
 msgid "Check for problems in packagedb"
+msgstr ""
+
+msgid "Check for pwntools updates"
 msgstr ""
 
 msgid "Check for the target triple"
@@ -11573,6 +11606,9 @@ msgstr ""
 msgid "Colorize the output"
 msgstr ""
 
+msgid "Colorize the output. When 'auto' output is colorized exactly when stdout is a TTY."
+msgstr ""
+
 msgid "Colorized output"
 msgstr ""
 
@@ -11949,6 +11985,9 @@ msgid "Compare tree to index"
 msgstr ""
 
 msgid "Compare tree to working tree or index"
+msgstr ""
+
+msgid "Compare two ELF files"
 msgstr ""
 
 msgid "Compare two commit ranges"
@@ -14276,6 +14315,9 @@ msgstr ""
 msgid "Cycle the image colormap [amount]"
 msgstr ""
 
+msgid "Cyclic pattern creator/finder"
+msgstr ""
+
 msgid "Cygport file"
 msgstr ""
 
@@ -14465,6 +14507,9 @@ msgstr ""
 msgid "Debug UTF-8 cache"
 msgstr ""
 
+msgid "Debug a binary in GDB"
+msgstr ""
+
 msgid "Debug and run"
 msgstr ""
 
@@ -14499,6 +14544,9 @@ msgid "Debug preferences file"
 msgstr ""
 
 msgid "Debug the build process"
+msgstr ""
+
+msgid "Debug the shellcode with GDB"
 msgstr ""
 
 msgid "Debug the specified VM Runtime instance"
@@ -14556,6 +14604,9 @@ msgid "Decode various information associated with file descriptors"
 msgstr ""
 
 msgid "Decode various information associated with process IDs"
+msgstr ""
+
+msgid "Decodes hex-encoded data provided on the command line or via stdin"
 msgstr ""
 
 msgid "Decompress images larger than N"
@@ -16109,6 +16160,9 @@ msgstr ""
 msgid "Disable CloudFront distribution"
 msgstr ""
 
+msgid "Disable Color output"
+msgstr ""
+
 msgid "Disable EPSC/EPRT command on IPv4 connections"
 msgstr ""
 
@@ -16134,6 +16188,9 @@ msgid "Disable Internet sharing"
 msgstr ""
 
 msgid "Disable LCD font rendering"
+msgstr ""
+
+msgid "Disable NX for an ELF binary"
 msgstr ""
 
 msgid "Disable PATM"
@@ -17261,6 +17318,9 @@ msgstr ""
 msgid "Disallows undefined symbols in shared libraries"
 msgstr ""
 
+msgid "Disassemble bytes into text format"
+msgstr ""
+
 msgid "Discard all but one of any pixel color"
 msgstr ""
 
@@ -17517,6 +17577,9 @@ msgid "Display all matches"
 msgstr ""
 
 msgid "Display all non-opaque values currently available"
+msgstr ""
+
+msgid "Display all offsets relative to this symbol"
 msgstr ""
 
 msgid "Display all packages in GROUP"
@@ -19079,6 +19142,9 @@ msgstr ""
 msgid "Division control"
 msgstr ""
 
+msgid "Do NOT attempt to unstrip the libc binary with debug symbols from adebuginfod server"
+msgstr ""
+
 msgid "Do NOT compute or cache classpath, use this one instead"
 msgstr ""
 
@@ -19097,7 +19163,13 @@ msgstr ""
 msgid "Do SET ROLE before restore"
 msgstr ""
 
+msgid "Do a lookup instead printing the alphabet"
+msgstr ""
+
 msgid "Do additional debug logging during network requests"
+msgstr ""
+
+msgid "Do an exact match for a constant instead of searching for a regex"
 msgstr ""
 
 msgid "Do an inquiry for the drive, print the inquiry info"
@@ -19287,6 +19359,9 @@ msgid "Do not attempt to read from stdin"
 msgstr ""
 
 msgid "Do not authenticate the user if needed"
+msgstr ""
+
+msgid "Do not automatically detect missing binaries"
 msgstr ""
 
 msgid "Do not automatically update database"
@@ -24935,6 +25010,18 @@ msgstr ""
 msgid "Encode scalar EVEX instructions with specific vector length"
 msgstr ""
 
+msgid "Encode the shellcode to avoid NULL bytes"
+msgstr ""
+
+msgid "Encode the shellcode to avoid newlines"
+msgstr ""
+
+msgid "Encode the shellcode to avoid the listed bytes"
+msgstr ""
+
+msgid "Encode the shellcode with an alphanumeric encoder"
+msgstr ""
+
 msgid "Encode using container format"
 msgstr ""
 
@@ -25641,6 +25728,9 @@ msgid "Execute Ex command before loading any vimrc"
 msgstr ""
 
 msgid "Execute GDB commands from <file>"
+msgstr ""
+
+msgid "Execute GDB commands from this file."
 msgstr ""
 
 msgid "Execute Lua script"
@@ -26492,6 +26582,12 @@ msgstr ""
 msgid "Fetch source packages"
 msgstr ""
 
+msgid "Fetch the desired libc categories"
+msgstr ""
+
+msgid "Fetch the libc.so from the libc database"
+msgstr ""
+
 msgid "Fetches all files from SRC_URI"
 msgstr ""
 
@@ -26634,6 +26730,9 @@ msgid "File system"
 msgstr ""
 
 msgid "File system type to use in case of luks storage"
+msgstr ""
+
+msgid "File to debug"
 msgstr ""
 
 msgid "File to embed"
@@ -28532,6 +28631,9 @@ msgstr ""
 msgid "Fuzzy matching algorithm"
 msgstr ""
 
+msgid "GDB sysroot path"
+msgstr ""
+
 msgid "GOPATH environment variable"
 msgstr ""
 
@@ -28884,6 +28986,9 @@ msgid "Generate an exe"
 msgstr ""
 
 msgid "Generate an executable in the ELF format"
+msgstr ""
+
+msgid "Generate an exploit template"
 msgstr ""
 
 msgid "Generate an incremental output file"
@@ -29364,6 +29469,9 @@ msgid "Generate x32 code"
 msgstr ""
 
 msgid "Generate zip archive instead of gzip'ed tar"
+msgstr ""
+
+msgid "Generated ELF is a shared library"
 msgstr ""
 
 msgid "Generated code is not compatible with hardware interrupts"
@@ -30594,6 +30702,9 @@ msgid "Hex-encoded iv"
 msgstr ""
 
 msgid "Hex-encoded key"
+msgstr ""
+
+msgid "Hex-encodes data provided on the command line or stdin"
 msgstr ""
 
 msgid "Hide UI"
@@ -32645,6 +32756,15 @@ msgstr ""
 msgid "Insert VALUE into the plist"
 msgstr ""
 
+msgid "Insert a debug trap after the code"
+msgstr ""
+
+msgid "Insert a debug trap before the code"
+msgstr ""
+
+msgid "Insert a prefix before each byte"
+msgstr ""
+
 msgid "Insert header"
 msgstr ""
 
@@ -33039,6 +33159,9 @@ msgid "Install the project"
 msgstr ""
 
 msgid "Install the starred packages"
+msgstr ""
+
+msgid "Install the update automatically"
 msgstr ""
 
 msgid "Install with pkgadd after build"
@@ -33824,6 +33947,9 @@ msgstr ""
 msgid "Length of upload queue for B-tree nodes"
 msgstr ""
 
+msgid "Less verbose template comments"
+msgstr ""
+
 msgid "Let \"char\" be signed, like \"signed char\""
 msgstr ""
 
@@ -34379,6 +34505,9 @@ msgstr ""
 msgid "List Secondary Controllers associated with a Primary Controller"
 msgstr ""
 
+msgid "List Syscalls"
+msgstr ""
+
 msgid "List USB devices on the host"
 msgstr ""
 
@@ -34926,6 +35055,9 @@ msgid "List available profiles"
 msgstr ""
 
 msgid "List available repository formats"
+msgstr ""
+
+msgid "List available shellcodes, optionally provide a filter"
 msgstr ""
 
 msgid "List available shells and exit"
@@ -35670,6 +35802,9 @@ msgid "List of stylesheet URLs"
 msgstr ""
 
 msgid "List of stylesheet paths"
+msgstr ""
+
+msgid "List of symbol offsets to dump in addition to the common ones"
 msgstr ""
 
 msgid "List of unit states"
@@ -36746,6 +36881,9 @@ msgstr ""
 msgid "Load a specific Zef config file"
 msgstr ""
 
+msgid "Load address"
+msgstr ""
+
 msgid "Load an additional module path"
 msgstr ""
 
@@ -37299,6 +37437,9 @@ msgid "Look for this as an additional keyword"
 msgstr ""
 
 msgid "Look up specific packages for info on their cache entries"
+msgstr ""
+
+msgid "Looking up constants from header files"
 msgstr ""
 
 msgid "Lookup installed module information by short-name, name-path, sha1"
@@ -38456,6 +38597,9 @@ msgstr ""
 msgid "Method used for synchronization: fsync, fdatasync (default: fsync)"
 msgstr ""
 
+msgid "Microwave shellcode -- Easy, fast and delicious"
+msgstr ""
+
 msgid "Migrate domain to another host"
 msgstr ""
 
@@ -39176,6 +39320,9 @@ msgstr ""
 msgid "Name of the process"
 msgstr ""
 
+msgid "Name of the process to attach to"
+msgstr ""
+
 msgid "Name of the source"
 msgstr ""
 
@@ -39633,6 +39780,9 @@ msgid "Number of bits per sample"
 msgstr ""
 
 msgid "Number of blocks is the number of blocks which are tested at a time"
+msgstr ""
+
+msgid "Number of bytes per line."
 msgstr ""
 
 msgid "Number of bytes to skip in keyfile"
@@ -40599,6 +40749,9 @@ msgid "Only show tasks that are not assigned"
 msgstr ""
 
 msgid "Only show the homepage or repository URL"
+msgstr ""
+
+msgid "Only show this many bytes"
 msgstr ""
 
 msgid "Only show trees"
@@ -42227,6 +42380,9 @@ msgstr ""
 msgid "PGP key with which to encrypt"
 msgstr ""
 
+msgid "PID to attach to"
+msgstr ""
+
 msgid "PIN mode"
 msgstr ""
 
@@ -42650,7 +42806,13 @@ msgstr ""
 msgid "Password-based Key Derivation Function to use"
 msgstr ""
 
+msgid "Patch an ELF file"
+msgstr ""
+
 msgid "Patch filename to use inside quilt"
+msgstr ""
+
+msgid "Patch function"
 msgstr ""
 
 msgid "Patch local changes"
@@ -42746,6 +42908,9 @@ msgstr ""
 msgid "Path to a Terraform state file"
 msgstr ""
 
+msgid "Path to a custom template."
+msgstr ""
+
 msgid "Path to a directory of configuration files"
 msgstr ""
 
@@ -42831,6 +42996,9 @@ msgid "Path to image file/directory"
 msgstr ""
 
 msgid "Path to interpreter on the target system"
+msgstr ""
+
+msgid "Path to libc binary to use. If not given, the current directory is searched for a libc binary."
 msgstr ""
 
 msgid "Path to make command"
@@ -44079,6 +44247,9 @@ msgid "Prettify the format of displayed values, make it more human readable"
 msgstr ""
 
 msgid "Pretty format string or preset name"
+msgstr ""
+
+msgid "Pretty hex dump"
 msgstr ""
 
 msgid "Pretty output"
@@ -46262,6 +46433,9 @@ msgstr ""
 msgid "Print the ogeneration of the subvolume"
 msgstr ""
 
+msgid "Print the output in color"
+msgstr ""
+
 msgid "Print the package changelogs"
 msgstr ""
 
@@ -46526,6 +46700,9 @@ msgstr ""
 msgid "Print variable specified by --name"
 msgstr ""
 
+msgid "Print various information about a libc binary"
+msgstr ""
+
 msgid "Print various measured statistics from execution"
 msgstr ""
 
@@ -46782,6 +46959,9 @@ msgid "Prints out an XML representation of the tree"
 msgstr ""
 
 msgid "Prints out debug information"
+msgstr ""
+
+msgid "Prints out error messages"
 msgstr ""
 
 msgid "Prints out help for a specific command, or lists all commands"
@@ -47829,6 +48009,9 @@ msgid "Put uninitialized global variables into the common segment, as C does"
 msgstr ""
 
 msgid "Puts the refs label"
+msgstr ""
+
+msgid "Pwntools version"
 msgstr ""
 
 msgid "Python versions supported by output"
@@ -49520,10 +49703,19 @@ msgstr ""
 msgid "Remote heads are not queried, cached information is used instead"
 msgstr ""
 
+msgid "Remote host / SSH port"
+msgstr ""
+
+msgid "Remote host / SSH server"
+msgstr ""
+
 msgid "Remote name used by `git push`"
 msgstr ""
 
 msgid "Remote path"
+msgstr ""
+
+msgid "Remote path of file on SSH server"
 msgstr ""
 
 msgid "Remote url used by `git push`"
@@ -52931,6 +53123,9 @@ msgstr ""
 msgid "Run operations with become"
 msgstr ""
 
+msgid "Run output"
+msgstr ""
+
 msgid "Run package manager within chroot"
 msgstr ""
 
@@ -53460,6 +53655,12 @@ msgid "SPDX Identifier"
 msgstr ""
 
 msgid "SQL Command to execute when connecting to the server"
+msgstr ""
+
+msgid "SSH Password"
+msgstr ""
+
+msgid "SSH Username"
 msgstr ""
 
 msgid "SSH command to run when setting up session (example: \"ssh -p 2222\") (default: \"ssh\")"
@@ -54057,6 +54258,9 @@ msgid "Search both direct and indirect dependencies"
 msgstr ""
 
 msgid "Search by field"
+msgstr ""
+
+msgid "Search case insensitive"
 msgstr ""
 
 msgid "Search contents of archive"
@@ -57116,6 +57320,9 @@ msgstr ""
 msgid "Set the default target to boot into"
 msgstr ""
 
+msgid "Set the delimiter between multilple shellcodes"
+msgstr ""
+
 msgid "Set the desired package architecture"
 msgstr ""
 
@@ -58188,6 +58395,9 @@ msgid "Shave pixels from the image edges [geometry]"
 msgstr ""
 
 msgid "Shell for account"
+msgstr ""
+
+msgid "Shellcode encoder"
 msgstr ""
 
 msgid "Shift image pixels defined by a displacement map [geometry]"
@@ -60254,6 +60464,9 @@ msgstr ""
 msgid "Show set options"
 msgstr ""
 
+msgid "Show shellcode documentation"
+msgstr ""
+
 msgid "Show short account names as a list"
 msgstr ""
 
@@ -61619,6 +61832,9 @@ msgstr ""
 msgid "Size of the raw input in bytes"
 msgstr ""
 
+msgid "Size of the unique subsequences"
+msgstr ""
+
 msgid "Size to assign the user on disk"
 msgstr ""
 
@@ -61866,6 +62082,9 @@ msgid "Skip the working copy configuration file"
 msgstr ""
 
 msgid "Skip things requiring root access"
+msgstr ""
+
+msgid "Skip this many initial bytes."
 msgstr ""
 
 msgid "Skip to the end of the journal"
@@ -62244,6 +62463,9 @@ msgid "Spatial noise shaping (integer 0…100; default: 50)"
 msgstr ""
 
 msgid "Specific commit to use when installing from git"
+msgstr ""
+
+msgid "Specific encoder to use"
 msgstr ""
 
 msgid "Specific path to potfile"
@@ -65489,6 +65711,12 @@ msgstr ""
 msgid "Strip any ELF binaries found inside the package"
 msgstr ""
 
+msgid "Strip binaries for CTF usage"
+msgstr ""
+
+msgid "Strip build ID"
+msgstr ""
+
 msgid "Strip image of all profiles and comments"
 msgstr ""
 
@@ -66962,6 +67190,9 @@ msgstr ""
 msgid "The age recipient the new group should contain. Can be specified more than once"
 msgstr ""
 
+msgid "The alphabet to use in the cyclic pattern"
+msgstr ""
+
 msgid "The architecture reported by uname in the container"
 msgstr ""
 
@@ -67208,6 +67439,9 @@ msgstr ""
 msgid "The numerical value of the user's ID"
 msgstr ""
 
+msgid "The os/architecture/endianness/bits the shellcode will run in"
+msgstr ""
+
 msgid "The output format (txt, xml, json, or md)"
 msgstr ""
 
@@ -67377,6 +67611,9 @@ msgid "The time (in milliseconds) how long the keys will be held"
 msgstr ""
 
 msgid "The total number of worker threads to create (default: 1)"
+msgstr ""
+
+msgid "The type of the provided hash value"
 msgstr ""
 
 msgid "The unique identifier of the new extension"
@@ -74561,6 +74798,9 @@ msgstr ""
 msgid "assign a permission set to one or more users of an org"
 msgstr ""
 
+msgid "assmebly code"
+msgstr ""
+
 msgid "attach in read-only mode"
 msgstr ""
 
@@ -74700,6 +74940,9 @@ msgid "bundle all changesets in the repository"
 msgstr ""
 
 msgid "bundle compression type to use (default: bzip2)"
+msgstr ""
+
+msgid "c-style array"
 msgstr ""
 
 msgid "cache prototype transitions"
@@ -76142,6 +76385,9 @@ msgstr ""
 msgid "escape non-printable chars"
 msgstr ""
 
+msgid "escaped hex string"
+msgstr ""
+
 msgid "evaluate EXPR"
 msgstr ""
 
@@ -76776,6 +77022,9 @@ msgid "herd(s) for the pkg"
 msgstr ""
 
 msgid "hex dump of traffic"
+msgstr ""
+
+msgid "hex string"
 msgstr ""
 
 msgid "hex-encoded chars"
@@ -78554,6 +78803,9 @@ msgstr ""
 msgid "preprocessor to use [/usr/bin/mcpp]"
 msgstr ""
 
+msgid "preprocssed code"
+msgstr ""
+
 msgid "preserve source changesets order"
 msgstr ""
 
@@ -79608,6 +79860,9 @@ msgid "search for buildfile towards the root and use it"
 msgstr ""
 
 msgid "search for given arch"
+msgstr ""
+
+msgid "search for values not containing strictly less bits that the given value."
 msgstr ""
 
 msgid "search only in the specified repository"

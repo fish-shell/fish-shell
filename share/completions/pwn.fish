@@ -35,10 +35,10 @@ complete -c pwn -f -n __fish_use_subcommand -a unhex -d "Decodes hex-encoded dat
 complete -c pwn -f -n __fish_use_subcommand -a update -d "Check for pwntools updates"
 complete -c pwn -f -n __fish_use_subcommand -a version -d "Pwntools version"
 
-complete -c pwn -f -n "__fish_seen_subcommand_from asm" -s f -l format -ra "raw hex string elf" -d "Output format (defaults to hex for ttys, otherwise raw)"
-complete -c pwn -n "__fish_seen_subcommand_from asm" -s o -l output -d "Output file (defaults to stdout)"
-complete -c pwn -f -n "__fish_seen_subcommand_from asm" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el " -d "Architecture (defaults to current architecture)"
-complete -c pwn -f -n "__fish_seen_subcommand_from asm" -s v -l avoid -d "Encode the shellcode to avoid the listed bytes (provided as hex)"
+complete -c pwn -f -n "__fish_seen_subcommand_from asm" -s f -l format -ra "raw hex string elf" -d "Output format"
+complete -c pwn -n "__fish_seen_subcommand_from asm" -s o -l output -d "Output file"
+complete -c pwn -f -n "__fish_seen_subcommand_from asm" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el " -d "The os/architecture/endianness/bits the shellcode will run in"
+complete -c pwn -f -n "__fish_seen_subcommand_from asm" -s v -l avoid -d "Encode the shellcode to avoid the listed bytes"
 complete -c pwn -f -n "__fish_seen_subcommand_from asm" -s n -l newline -d "Encode the shellcode to avoid newlines"
 complete -c pwn -f -n "__fish_seen_subcommand_from asm" -s z -l zero -d "Encode the shellcode to avoid NULL bytes"
 complete -c pwn -f -n "__fish_seen_subcommand_from asm" -s d -l debug -d "Debug the shellcode with GDB"
@@ -50,23 +50,23 @@ complete -c pwn -n "__fish_seen_subcommand_from checksec" -F
 
 complete -c pwn -n "__fish_seen_subcommand_from constgrep" -s e -l exact -d "Do an exact match for a constant instead of searching for a regex"
 complete -c pwn -n "__fish_seen_subcommand_from constgrep" -s i -l case-insensitive -d "Search case insensitive"
-complete -c pwn -n "__fish_seen_subcommand_from constgrep" -s m -l mask-mode -d "Instead of searching for a specific constant value, search for values not containing strictly less bits that the given value."
-complete -c pwn -n "__fish_seen_subcommand_from constgrep" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el" -d "The os/architecture/endianness/bits the shellcode will run in (default: linux/i386)"
+complete -c pwn -n "__fish_seen_subcommand_from constgrep" -s m -l mask-mode -d "search for values not containing strictly less bits that the given value."
+complete -c pwn -n "__fish_seen_subcommand_from constgrep" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el" -d "The os/architecture/endianness/bits the shellcode will run in"
 
-complete -c pwn -f -n "__fish_seen_subcommand_from cyclic" -s a -l alphabet -d "The alphabet to use in the cyclic pattern (defaults to all lower case letters)"
-complete -c pwn -f -n "__fish_seen_subcommand_from cyclic" -s n -l length -d "Size of the unique subsequences (defaults to 4)"
-complete -c pwn -n "__fish_seen_subcommand_from cyclic" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el" -d "The os/architecture/endianness/bits the shellcode will run in (default: linux/i386)"
+complete -c pwn -f -n "__fish_seen_subcommand_from cyclic" -s a -l alphabet -d "The alphabet to use in the cyclic pattern"
+complete -c pwn -f -n "__fish_seen_subcommand_from cyclic" -s n -l length -d "Size of the unique subsequences"
+complete -c pwn -n "__fish_seen_subcommand_from cyclic" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el" -d "The os/architecture/endianness/bits the shellcode will run in"
 complete -c pwn -f -n "__fish_seen_subcommand_from cyclic" -s o -l offset -d "Do a lookup instead printing the alphabet"
 complete -c pwn -f -n "__fish_seen_subcommand_from cyclic" -s l -l lookup -d "Do a lookup instead printing the alphabet"
 
 complete -c pwn -n "__fish_seen_subcommand_from debug" -s x -rF -d "Execute GDB commands from this file."
 complete -c pwn -f -n "__fish_seen_subcommand_from debug" -l pid -d "PID to attach to"
-complete -c pwn -n "__fish_seen_subcommand_from debug" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el" -d "The os/architecture/endianness/bits the shellcode will run in (default: linux/i386)"
+complete -c pwn -n "__fish_seen_subcommand_from debug" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el" -d "The os/architecture/endianness/bits the shellcode will run in"
 complete -c pwn -n "__fish_seen_subcommand_from debug" -l exec -rF -d "File to debug"
-complete -c pwn -f -n "__fish_seen_subcommand_from debug" -l process -d "Name of the process to attach to (e.g. "bash")"
+complete -c pwn -f -n "__fish_seen_subcommand_from debug" -l process -d "Name of the process to attach to"
 complete -c pwn -n "__fish_seen_subcommand_from debug" -l sysroot -rF -d "GDB sysroot path"
 
-complete -c pwn -n "__fish_seen_subcommand_from disasm" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el" -d "The os/architecture/endianness/bits the shellcode will run in (default: linux/i386)"
+complete -c pwn -n "__fish_seen_subcommand_from disasm" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el" -d "The os/architecture/endianness/bits the shellcode will run in"
 complete -c pwn -f -n "__fish_seen_subcommand_from disasm" -s a -l address -d "Base address"
 complete -c pwn -f -n "__fish_seen_subcommand_from disasm" -l color -d "Color output"
 complete -c pwn -f -n "__fish_seen_subcommand_from disasm" -l no-color -d "Disable color output"
@@ -84,7 +84,7 @@ complete -c pwn -f -n "__fish_seen_subcommand_from libcdb; and not __fish_seen_s
 complete -c pwn -f -n "__fish_check_libcdb_subcommand lookup" -s f -l fetch -d "Fetch the libc.so from the libc database"
 complete -c pwn -f -n "__fish_check_libcdb_subcommand lookup" -l no-unstrip -d "Do NOT attempt to unstrip the libc binary with debug symbols from adebuginfod server"
 complete -c pwn -f -n "__fish_check_libcdb_subcommand lookup" -l offline-only -d "Attempt to searching with offline only mode"
-complete -c pwn -f -n "__fish_check_libcdb_subcommand lookup" -s o -l output -d "Output file (defaults to stdout)"
+complete -c pwn -f -n "__fish_check_libcdb_subcommand lookup" -s o -l output -d "Output file"
 complete -c pwn -f -n "__fish_check_libcdb_subcommand hash" -s t -l hash_type -ra "id buildid md5 sha1 sha256" -d "The type of the provided hash value"
 complete -c pwn -f -n "__fish_check_libcdb_subcommand hash" -s d -l download-libc -d "Attempt to download the matching libc.so"
 complete -c pwn -f -n "__fish_check_libcdb_subcommand hash" -l no-unstrip -d "Do NOT attempt to unstrip the libc binary with debug symbols from adebuginfod server"
@@ -102,25 +102,25 @@ complete -c pwn -f -n "__fish_seen_subcommand_from phd" -s l -l highlight -d "By
 complete -c pwn -f -n "__fish_seen_subcommand_from phd" -s s -l skip -d "Skip this many initial bytes."
 complete -c pwn -f -n "__fish_seen_subcommand_from phd" -s c -l count -d 'Only show this many bytes'
 complete -c pwn -f -n "__fish_seen_subcommand_from phd" -s o -l offset -d "Addresses in left hand column starts at this address."
-complete -c pwn -f -n "__fish_seen_subcommand_from phd" -l color -d "Colorize the output. When 'auto' output is colorized exactly when stdout is a TTY. Default is 'auto'."
+complete -c pwn -f -n "__fish_seen_subcommand_from phd" -l color -d "Colorize the output. When 'auto' output is colorized exactly when stdout is a TTY."
 
 complete -c pwn -n "__fish_seen_subcommand_from pwnstrip" -F
 complete -c pwn -f -n "__fish_seen_subcommand_from pwnstrip" -s o -l output
 complete -c pwn -f -n "__fish_seen_subcommand_from pwnstrip" -s b -l build-id -d "Strip build ID"
 complete -c pwn -f -n "__fish_seen_subcommand_from pwnstrip" -s p -l patch -d "Patch function"
 
-complete -c pwn -f -n "__fish_seen_subcommand_from scramble" -s f -l format -ra "raw hex string elf" -d "Output format (defaults to hex for ttys, otherwise raw)"
-complete -c pwn -f -n "__fish_seen_subcommand_from scramble" -s o -l output -d "Output file (defaults to stdout)"
-complete -c pwn -n "__fish_seen_subcommand_from scramble" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el" -d "The os/architecture/endianness/bits the shellcode will run in (default: linux/i386)"
+complete -c pwn -f -n "__fish_seen_subcommand_from scramble" -s f -l format -ra "raw hex string elf" -d "Output format"
+complete -c pwn -f -n "__fish_seen_subcommand_from scramble" -s o -l output -d "Output file"
+complete -c pwn -n "__fish_seen_subcommand_from scramble" -s c -l context -ra "16 32 64 baremetal freebsd windows android darwin linux cgc powerpc64 aarch64 powerpc riscv32 riscv64 sparc64 mips64 msp430 alpha amd64 sparc thumb cris i386 ia64 m68k mips s390 none avr arm vax little big be eb le el" -d "The os/architecture/endianness/bits the shellcode will run in"
 complete -c pwn -f -n "__fish_seen_subcommand_from scramble" -s p -l alphanumeric -d "Encode the shellcode with an alphanumeric encoder"
-complete -c pwn -f -n "__fish_seen_subcommand_from scramble" -s v -l avoid -d "Encode the shellcode to avoid the listed bytes (provided as hex)"
+complete -c pwn -f -n "__fish_seen_subcommand_from scramble" -s v -l avoid -d "Encode the shellcode to avoid the listed bytes"
 complete -c pwn -f -n "__fish_seen_subcommand_from scramble" -s n -l newline -d "Encode the shellcode to avoid newlines"
 complete -c pwn -f -n "__fish_seen_subcommand_from scramble" -s z -l zero -d "Encode the shellcode to avoid NULL bytes"
 complete -c pwn -f -n "__fish_seen_subcommand_from scramble" -s d -l debug -d "Debug the shellcode with GDB"
 
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s "?" -l show -d "Show shellcode documentation"
-complete -c pwn -n "__fish_seen_subcommand_from shellcraft" -s o -l out -rF -d "Output file (default: stdout)"
-complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s f -l format -d "Output format (default: hex)"
+complete -c pwn -n "__fish_seen_subcommand_from shellcraft" -s o -l out -rF -d "Output file"
+complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s f -l format -d "Output format"
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s f -l format -ra e -d elf
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s f -l format -ra r -d raw
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s f -l format -ra s -d string
@@ -134,9 +134,9 @@ complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s d -l debug -d 
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -l delim -d "Set the delimiter between multilple shellcodes"
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s b -l before -d "Insert a debug trap before the code"
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s a -l after -d "Insert a debug trap after the code"
-complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s v -l avoid -d "Encode the shellcode to avoid the listed bytes (provided as hex)"
+complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s v -l avoid -d "Encode the shellcode to avoid the listed bytes"
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s n -l newline -d "Encode the shellcode to avoid newlines"
-complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s z -l zero -d "Encode the shellcode to avoid NULL bytes"-
+complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s z -l zero -d "Encode the shellcode to avoid NULL bytes"
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -s r -l run -d "Run output"
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -l color -d "Color output"
 complete -c pwn -f -n "__fish_seen_subcommand_from shellcraft" -l no-color -d "Disable Color output"

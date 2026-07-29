@@ -1278,8 +1278,9 @@ mod tests {
         }
 
         let s = L!(concat!(
-            "string <redirection  2>&1 'nested \"quoted\" '(string containing subshells ",
-            "){and,brackets}$as[$well (as variable arrays)] not_a_redirect^ ^ ^^is_a_redirect ",
+            "string <redirection  2>&1 ",
+            "'nested \"quoted\" '(string containing subshells ){and,brackets}$as[$well (as variable arrays)] ",
+            "not_a_redirect^ ^ ^^is_a_redirect ",
             "&| &> ",
             "&&& ||| ",
             "&& || & |",
@@ -1289,9 +1290,12 @@ mod tests {
         type tt = TokenType;
         #[rustfmt::skip]
         let types = [
-            tt::String, tt::Redirect, tt::String, tt::Redirect, tt::String, tt::String, tt::String,
-            tt::String, tt::String, tt::Pipe, tt::Redirect, tt::AndAnd, tt::Background, tt::OrOr,
-            tt::Pipe, tt::AndAnd, tt::OrOr, tt::Background, tt::Pipe, tt::String, tt::End,
+            tt::String, tt::Redirect, tt::String, tt::Redirect, tt::String,
+            tt::String,
+            tt::String, tt::String, tt::String,
+            tt::Pipe, tt::Redirect,
+            tt::AndAnd, tt::Background, tt::OrOr, tt::Pipe,
+            tt::AndAnd, tt::OrOr, tt::Background, tt::Pipe, tt::String, tt::End,
             tt::String,
         ];
 

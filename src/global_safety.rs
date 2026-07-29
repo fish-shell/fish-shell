@@ -1,7 +1,7 @@
 use crate::flog::flog;
 use std::cell::{Ref, RefMut};
 use std::sync::MutexGuard;
-use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
 
 #[derive(Debug, Default)]
 pub struct RelaxedAtomicBool(AtomicBool);
@@ -24,6 +24,30 @@ impl RelaxedAtomicBool {
 impl Clone for RelaxedAtomicBool {
     fn clone(&self) -> Self {
         Self(AtomicBool::new(self.load()))
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct RelaxedAtomicUsize(AtomicUsize);
+
+impl RelaxedAtomicUsize {
+    pub const fn new(value: usize) -> Self {
+        Self(AtomicUsize::new(value))
+    }
+    pub fn load(&self) -> usize {
+        self.0.load(Ordering::Relaxed)
+    }
+    pub fn store(&self, value: usize) {
+        self.0.store(value, Ordering::Relaxed);
+    }
+    pub fn swap(&self, value: usize) -> usize {
+        self.0.swap(value, Ordering::Relaxed)
+    }
+}
+
+impl Clone for RelaxedAtomicUsize {
+    fn clone(&self) -> Self {
+        Self(AtomicUsize::new(self.load()))
     }
 }
 

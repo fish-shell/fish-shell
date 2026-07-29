@@ -819,8 +819,8 @@ impl<'a> Reader<'a> {
                                     escape(
                                         &kevt
                                             .key
-                                            .codepoint_text()
-                                            .map(|c| WString::from_chars(vec![c]))
+                                            .text_to_insert()
+                                            .map(|cs| WString::from_iter(cs))
                                             .unwrap_or_default()
                                     )
                                 ));
@@ -972,9 +972,9 @@ impl<'a> Reader<'a> {
             loop {
                 let evt = self.readch();
                 if let Some(kevt) = evt.get_key() {
-                    if let Some(c) = kevt.key.codepoint_text() {
+                    if let Some(mut cs) = kevt.key.text_to_insert() {
                         // TODO forward the whole key
-                        arg = c;
+                        arg = cs.next().unwrap();
                         break;
                     }
                 }
@@ -1171,7 +1171,8 @@ mod tests {
         // FYI: for codepoints that are not letters with uppercase/lowercase versions, we use
         // the shifted key in the canonical notation, because the unshifted one may depend on the
         // keyboard layout.
-        let ctrl_shift_equals = KeyEvent::new_with(ctrl_shift, true, '=', Some('+'), None);
+        let text = Default::default();
+        let ctrl_shift_equals = KeyEvent::new_with(ctrl_shift, true, '=', Some('+'), None, text);
         validate!(ctrl_shift_equals, Key::new(ctrl_shift, '='), Some(exact));
         validate!(ctrl_shift_equals, Key::new(ctrl, '+'), Some(modulo_shift)); // canonical notation
         validate!(ctrl_shift_equals, Key::new(ctrl_shift, '+'), None);
@@ -1186,14 +1187,14 @@ mod tests {
         validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), None); // can't match without shifted key
         validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
         // With a shifted codepoint, we can match the alternative notation too.
-        let caps_ctrl_shift_ä = KeyEvent::new_with(ctrl_shift, true, 'ä', Some('Ä'), None);
+        let caps_ctrl_shift_ä = KeyEvent::new_with(ctrl_shift, true, 'ä', Some('Ä'), None, text);
         validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'ä'), Some(exact)); // canonical notation
         validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'ä'), None);
         validate!(caps_ctrl_shift_ä, Key::new(ctrl, 'Ä'), Some(modulo_shift)); // matched via shifted key
         validate!(caps_ctrl_shift_ä, Key::new(ctrl_shift, 'Ä'), None);
 
-        let ctrl_ц = KeyEvent::new_with(ctrl, true, 'ц', None, Some('w'));
-        let ctrl_shift_ц = KeyEvent::new_with(ctrl_shift, true, 'ц', Some('Ц'), Some('w'));
+        let ctrl_ц = KeyEvent::new_with(ctrl, true, 'ц', None, Some('w'), text);
+        let ctrl_shift_ц = KeyEvent::new_with(ctrl_shift, true, 'ц', Some('Ц'), Some('w'), text);
         validate!(ctrl_ц, Key::new(ctrl, 'ц'), Some(exact));
         validate!(ctrl_ц, Key::new(ctrl, 'w'), Some(base_layout));
         validate!(ctrl_ц, Key::new(ctrl_shift, 'ц'), None);

@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Interactive improvements
+------------------------
+- On some terminals like kitty, keys like :kbd:`shift-space` and :kbd:`space` can now be mapped independently (:issue:`12898`).
+
 Scripting improvements
 ----------------------
 - Builtin help pages now respect an override of the ``man`` function (:issue:`12886`).

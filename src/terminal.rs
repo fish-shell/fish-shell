@@ -307,7 +307,7 @@ impl Outputter {
             QueryXtgettcap(cap) => query_xtgettcap(self, cap),
             DecsetAlternateScreenBuffer => write(self, b"\x1b[?1049h"),
             DecrstAlternateScreenBuffer => write(self, b"\x1b[?1049l"),
-            KittyKeyboardProgressiveEnhancementsEnable => write(self, b"\x1b[=5u"),
+            KittyKeyboardProgressiveEnhancementsEnable => write(self, b"\x1b[=29u"),
             KittyKeyboardProgressiveEnhancementsDisable => write(self, b"\x1b[=0u"),
             QueryKittyKeyboardProgressiveEnhancements => query_kitty_progressive_enhancements(self),
             ModifyOtherKeysEnable => write(self, b"\x1b[>4;1m"),

@@ -273,12 +273,20 @@ trait InputEventQueuerExt: InputEventQueuer {
             if caps_lock && modifiers == Modifiers::SHIFT && !key.to_uppercase().eq(Some(key)) {
                 modifiers.shift = false;
             }
+
+            let associated_text = std::array::from_fn(|i| {
+                let c = params[2][i];
+                let c = char::try_from(c).unwrap_or_default();
+                if c.is_control() { '\0' } else { c }
+            });
+
             KeyEvent::new_with(
                 modifiers,
                 explicit_modifiers,
                 key,
                 shifted_key,
                 base_layout_key,
+                associated_text,
             )
         };
         let masked_key = |key: char| kitty_key(key, None, None);
@@ -443,7 +451,11 @@ trait InputEventQueuerExt: InputEventQueuer {
 
                 // Treat numpad keys the same as their non-numpad counterparts. Could add a numpad modifier here.
                 let key = match params[0][0] {
+                    57358 => return None, // CAPS_LOCK
+                    57359 => return None, // SCROLL_LOCK
+                    57360 => return None, // NUM_LOCK
                     57361 => key::PRINT_SCREEN,
+                    57362 => return None, // PAUSE
                     57363 => key::MENU,
                     57399 => '0',
                     57400 => '1',
@@ -462,6 +474,7 @@ trait InputEventQueuerExt: InputEventQueuer {
                     57413 => '+',
                     57414 => key::ENTER,
                     57415 => '=',
+                    57416 => return None, // SEPARATOR
                     57417 => key::LEFT,
                     57418 => key::RIGHT,
                     57419 => key::UP,
@@ -472,6 +485,33 @@ trait InputEventQueuerExt: InputEventQueuer {
                     57424 => key::END,
                     57425 => key::INSERT,
                     57426 => key::DELETE,
+                    57428 => return None, // MEDIA_PLAY
+                    57429 => return None, // MEDIA_PAUSE
+                    57430 => return None, // MEDIA_PLAY_PAUSE
+                    57431 => return None, // MEDIA_REVERSE
+                    57432 => return None, // MEDIA_STOP
+                    57433 => return None, // MEDIA_FAST_FORWARD
+                    57434 => return None, // MEDIA_REWIND
+                    57435 => return None, // MEDIA_TRACK_NEXT
+                    57436 => return None, // MEDIA_TRACK_PREVIOUS
+                    57437 => return None, // MEDIA_RECORD
+                    57438 => return None, // LOWER_VOLUME
+                    57439 => return None, // RAISE_VOLUME
+                    57440 => return None, // MUTE_VOLUME
+                    57441 => return None, // LEFT_SHIFT
+                    57442 => return None, // LEFT_CONTROL
+                    57443 => return None, // LEFT_ALT
+                    57444 => return None, // LEFT_SUPER
+                    57445 => return None, // LEFT_HYPER
+                    57446 => return None, // LEFT_META
+                    57447 => return None, // RIGHT_SHIFT
+                    57448 => return None, // RIGHT_CONTROL
+                    57449 => return None, // RIGHT_ALT
+                    57450 => return None, // RIGHT_SUPER
+                    57451 => return None, // RIGHT_HYPER
+                    57452 => return None, // RIGHT_META
+                    57453 => return None, // ISO_LEVEL3_SHIFT
+                    57454 => return None, // ISO_LEVEL5_SHIFT
                     cp => {
                         let Some(key) = char::from_u32(cp) else {
                             return invalid_sequence(buffer);
@@ -848,8 +888,9 @@ mod tests {
 
         let legacy_escape = || e(Key::from_raw(key::ESCAPE), "\x1b");
         let legacy_alt_escape = || e(alt(key::ESCAPE), "\x1b\x1b");
-        let kitty_a = KeyEvent::new_with(Modifiers::default(), true, 'a', None, None);
-        let kitty_alt_a = KeyEvent::new_with(Modifiers::ALT, true, 'a', None, None);
+        let text = Default::default();
+        let kitty_a = KeyEvent::new_with(Modifiers::default(), true, 'a', None, None, text);
+        let kitty_alt_a = KeyEvent::new_with(Modifiers::ALT, true, 'a', None, None, text);
         validate!(b"A", &[e(Key::from_single_char('A'), "A")]);
         validate!(b"\x1b", &[legacy_escape()]);
         validate!(b"\x1bA", &[e(alt('A'), "\x1bA")]);

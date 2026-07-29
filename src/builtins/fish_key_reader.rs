@@ -121,6 +121,17 @@ fn process_input(
             shifted_key.codepoint = kevt.key.shifted_codepoint;
             keys.push((shifted_key, "shifted key"));
         }
+        if kevt.key.associated_text[0] != '\0' {
+            let associated_text = WString::from_iter(kevt.key.text_to_insert().unwrap());
+            if associated_text.char_count() > 1
+                || associated_text.as_char_slice().first() != kevt.key.codepoint_text().as_ref()
+            {
+                streams.out.append(&sprintf!(
+                    "# text for insertion (not used for bind matching): %s\n",
+                    associated_text
+                ));
+            }
+        }
         if kevt.key.base_layout_codepoint != '\0' {
             let mut base_layout_key = kevt.key.key;
             base_layout_key.codepoint = kevt.key.base_layout_codepoint;

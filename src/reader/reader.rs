@@ -2741,8 +2741,8 @@ impl<'a> Reader<'a> {
                 continue;
             }
 
-            if let Some(c) = kevt.key.codepoint_text() {
-                accumulated_chars.push(c);
+            if let Some(cs) = kevt.key.text_to_insert() {
+                accumulated_chars.extend(cs);
             } else {
                 continue;
             }
@@ -2877,8 +2877,8 @@ impl<'a> Reader<'a> {
                 } else {
                     // Regular character.
                     let (elt, _el) = self.active_edit_line();
-                    if let Some(c) = kevt.key.codepoint_text() {
-                        self.insert_char(elt, c);
+                    if let Some(cs) = kevt.key.text_to_insert() {
+                        self.insert_string(elt, WString::from_iter(cs));
 
                         if elt == EditableLineTag::Commandline {
                             self.clear_pager();

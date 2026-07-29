@@ -178,7 +178,10 @@ pub struct KeyEvent {
     pub(crate) explicit_modifiers: bool,
     pub shifted_codepoint: char,
     pub base_layout_codepoint: char,
+    pub associated_text: [char; 4],
 }
+
+pub type CharIterator = std::iter::TakeWhile<std::array::IntoIter<char, 4>, fn(&char) -> bool>;
 
 impl KeyEvent {
     pub(super) fn new(modifiers: Modifiers, codepoint: char) -> Self {
@@ -190,12 +193,14 @@ impl KeyEvent {
         codepoint: char,
         shifted_key: Option<char>,
         base_layout_key: Option<char>,
+        associated_text: [char; 4],
     ) -> Self {
         Self {
             key: Key::new(modifiers, codepoint),
             explicit_modifiers,
             shifted_codepoint: shifted_key.unwrap_or_default(),
             base_layout_codepoint: base_layout_key.unwrap_or_default(),
+            associated_text,
         }
     }
     pub(super) fn from_raw(codepoint: char) -> Self {
@@ -203,6 +208,19 @@ impl KeyEvent {
     }
     pub fn from_single_byte(c: u8) -> Self {
         Self::from(Key::from_single_byte(c))
+    }
+
+    pub fn text_to_insert(&self) -> Option<CharIterator> {
+        let until_zero = |cs: [char; 4]| {
+            Some(
+                cs.into_iter()
+                    .take_while((|c| *c != '\0') as fn(&char) -> bool),
+            )
+        };
+        if self.associated_text[0] != '\0' {
+            return until_zero(self.associated_text);
+        }
+        until_zero([self.codepoint_text()?, '\0', '\0', '\0'])
     }
 
     pub fn codepoint_text(&self) -> Option<char> {
@@ -233,7 +251,14 @@ impl KeyEvent {
 
 impl From<Key> for KeyEvent {
     fn from(key: Key) -> Self {
-        Self::new_with(key.modifiers, false, key.codepoint, None, None)
+        Self::new_with(
+            key.modifiers,
+            false,
+            key.codepoint,
+            None,
+            None,
+            Default::default(),
+        )
     }
 }
 

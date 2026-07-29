@@ -12288,7 +12288,13 @@ msgstr ""
 msgid "Compute the best common ancestors of all supplied commits"
 msgstr ""
 
+msgid "Compute the blake3 hash of a file"
+msgstr ""
+
 msgid "Compute the password using the given method"
+msgstr ""
+
+msgid "Compute the sha256 hash of a file"
 msgstr ""
 
 msgid "Computes public key given a private key"
@@ -15265,6 +15271,9 @@ msgid "Delete subvolumes beneath each subvolume recursively"
 msgstr ""
 
 msgid "Delete tag"
+msgstr ""
+
+msgid "Delete the cache directory"
 msgstr ""
 
 msgid "Delete the feature branch in the remote after landing it"
@@ -26478,6 +26487,9 @@ msgstr ""
 msgid "Fetch from multiple remotes"
 msgstr ""
 
+msgid "Fetch given URL, generate JSON template with size and hash filled in"
+msgstr ""
+
 msgid "Fetch history leading to the given revision"
 msgstr ""
 
@@ -26494,6 +26506,9 @@ msgid "Fetch source package from STDIN"
 msgstr ""
 
 msgid "Fetch source packages"
+msgstr ""
+
+msgid "Fetch the artifact, print its path instead of running it"
 msgstr ""
 
 msgid "Fetches all files from SRC_URI"
@@ -42414,6 +42429,9 @@ msgstr ""
 msgid "Parsable list format"
 msgstr ""
 
+msgid "Parse a DotSlash file and print it as JSON"
+msgstr ""
+
 msgid "Parse a JJTree grammar file (*.jjt) and transform it to source files and a JavaCC grammar file"
 msgstr ""
 
@@ -46077,6 +46095,9 @@ msgstr ""
 msgid "Print the URL for the upstream"
 msgstr ""
 
+msgid "Print the cache directory"
+msgstr ""
+
 msgid "Print the command line on the standard error output before executing it"
 msgstr ""
 
@@ -46129,6 +46150,9 @@ msgid "Print the description of a key"
 msgstr ""
 
 msgid "Print the domain's hostname"
+msgstr ""
+
+msgid "Print the dotslash version"
 msgstr ""
 
 msgid "Print the dput configuration"
@@ -46621,6 +46645,9 @@ msgid "Print what is done"
 msgstr ""
 
 msgid "Print what would be done"
+msgstr ""
+
+msgid "Print where the artifact would be cached, without fetching it"
 msgstr ""
 
 msgid "Print whether the current working directory is in the .git directory"
@@ -52537,6 +52564,9 @@ msgid "Run a command with Wine-related environment variables set"
 msgstr ""
 
 msgid "Run a defined package script"
+msgstr ""
+
+msgid "Run a dotslash subcommand"
 msgstr ""
 
 msgid "Run a faster version of the benchmarks in headless mode"
@@ -66759,6 +66789,12 @@ msgstr ""
 msgid "Test if bundle has been given no subcommand"
 msgstr ""
 
+msgid "Test if completing a dotslash subcommand, immediately following a --"
+msgstr ""
+
+msgid "Test if completing the argument of any of the given subcommands"
+msgstr ""
+
 msgid "Test if given subcommand is used"
 msgstr ""
 
@@ -66793,6 +66829,9 @@ msgid "Test if snap command should have files as potential completion"
 msgstr ""
 
 msgid "Test if snap has yet to be given the subcommand"
+msgstr ""
+
+msgid "Test if the dotslash subcommand form is being used"
 msgstr ""
 
 msgid "Test if there is a subcommand given"

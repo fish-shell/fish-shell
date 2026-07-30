@@ -38,46 +38,39 @@ use std::{
 /// Return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.
 /// This never accepts incomplete slices.
 pub fn slice_length(input: &wstr) -> Option<usize> {
-    let openc = '[';
-    let closec = ']';
-    let mut escaped = false;
+    const OPENC: char = '[';
+    const CLOSEC: char = ']';
 
     // Check for initial opening [
-    let mut chars = input.chars();
-    if chars.next() != Some(openc) {
+    let mut chars = input.chars().enumerate();
+    if chars.next() != Some((0, OPENC)) {
         return Some(0);
     }
     let mut bracket_count = 1;
 
-    let mut pos = 0;
-    while let Some(c) = chars.next() {
-        pos += 1;
-        if !escaped {
-            if ['\'', '"'].contains(&c) {
-                let oldpos = pos;
-                pos = quote_end(input, pos, c)?;
-                // We need to advance the iterator as well
-                if pos - oldpos > 0 {
-                    // nth(0) advances by 1
-                    chars.nth(pos - oldpos - 1)?;
-                } else {
-                    // Quotes aren't over, slice is invalid
-                    return None;
-                }
-            } else if c == openc {
+    while let Some((pos, c)) = chars.next() {
+        match c {
+            '\'' | '"' => {
+                let q_pos = quote_end(input, pos, c)?;
+                // We need to advance the iterator as well.
+                // Subtract 1 because `nth(0)` advances by 1.
+                chars.nth(q_pos - pos - 1);
+            }
+            OPENC => {
                 bracket_count += 1;
-            } else if c == closec {
+            }
+            CLOSEC => {
                 bracket_count -= 1;
                 if bracket_count == 0 {
                     // pos points at the closing ], so add 1.
                     return Some(pos + 1);
                 }
             }
-        }
-        if c == '\\' {
-            escaped = !escaped;
-        } else {
-            escaped = false;
+            '\\' => {
+                // Escape sequence, skip the next char
+                let _ = chars.next();
+            }
+            _ => {}
         }
     }
     assert!(bracket_count > 0, "Should have unclosed brackets");
@@ -2025,10 +2018,21 @@ mod tests {
     #[serial]
     fn test_slice_length() {
         test_init();
-        assert_eq!(slice_length(L!("[2]")), Some(3));
-        assert_eq!(slice_length(L!("[12]")), Some(4));
-        assert_eq!(slice_length(L!("[\"foo\"]")), Some(7));
+        assert_eq!(slice_length(L!("")), Some(0));
+        assert_eq!(slice_length(L!("foo]bar")), Some(0));
+        assert_eq!(slice_length(L!("[2]bar")), Some(3));
+        assert_eq!(slice_length(L!("[12]bar")), Some(4));
+
+        assert_eq!(slice_length(L!("[\"foo\"]bar")), Some(7));
+        assert_eq!(slice_length(L!("[\"fo]o\"]bar")), Some(8));
         assert_eq!(slice_length(L!("[\"foo\"")), None);
+
+        assert_eq!(slice_length(L!("['foo']bar")), Some(7));
+        assert_eq!(slice_length(L!("['fo]o']bar")), Some(8));
+        assert_eq!(slice_length(L!("['foo'")), None);
+
+        assert_eq!(slice_length(L!("[fo\\]o]bar")), Some(7));
+        assert_eq!(slice_length(L!("[foo\\")), None);
     }
 
     #[test]

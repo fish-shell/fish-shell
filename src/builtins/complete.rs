@@ -13,6 +13,7 @@ use crate::{
     parse_util::{detect_errors_in_argument_list, detect_parse_errors, get_token_extent},
     proc::is_interactive_session,
     reader::{commandline_get_state, completion_apply_to_command_line},
+    threads::is_main_thread,
 };
 use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::string_suffixes_string;
@@ -476,7 +477,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
         let do_complete_param = match do_complete_param {
             None => {
                 // No argument given, try to use the current commandline.
-                let commandline_state = commandline_get_state(true);
+                let commandline_state = commandline_get_state(is_main_thread());
                 if !parser.interactive_initialized && !is_interactive_session() {
                     err_str!("Can not get commandline in non-interactive mode")
                         .cmd(cmd)

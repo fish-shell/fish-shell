@@ -14,6 +14,7 @@ use crate::reader::{
 };
 use crate::screen::{IS_DUMB, ONLY_GRAYSCALE, screen_set_midnight_commander_hack};
 use crate::terminal::ColorSupport;
+use crate::threads::is_main_thread;
 use crate::wutil::fish_wcstoi;
 use fish_wcstringutil::{bool_from_string, string_prefixes_string};
 use std::collections::HashMap;
@@ -200,7 +201,7 @@ pub fn env_dispatch_var_change(milieu: VarChangeMilieu, key: &wstr, vars: &EnvSt
         dispatch_table.dispatch(key, vars, suppress_repaint);
     }
 
-    if !suppress_repaint {
+    if !suppress_repaint && is_main_thread() {
         if let Some(data) = reader_current_data() {
             if string_prefixes_string(L!("fish_color_"), key) || {
                 // TODO Don't re-exec prompt when only pager color changed.

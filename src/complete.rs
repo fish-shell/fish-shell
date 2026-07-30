@@ -207,6 +207,15 @@ impl Completion {
 }
 
 impl CompletionRequestOptions {
+    /// Options for autoshow.
+    pub fn autoshow() -> Self {
+        Self {
+            autosuggestion: false,
+            descriptions: true,
+            fuzzy_match: true,
+        }
+    }
+
     /// Options for an autosuggestion.
     pub fn autosuggest() -> Self {
         Self {
@@ -973,7 +982,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
     fn expand_flags(&self) -> ExpandFlags {
         let mut result = ExpandFlags::empty();
-        result.set(ExpandFlags::FAIL_ON_CMDSUBST, true);
+        result.set(
+            ExpandFlags::FAIL_ON_CMDSUBST,
+            self.flags.autosuggestion || !self.ctx.has_parser(),
+        );
         result.set(ExpandFlags::FUZZY_MATCH, self.flags.fuzzy_match);
         result.set(ExpandFlags::GEN_DESCRIPTIONS, self.flags.descriptions);
         result
@@ -1950,7 +1962,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // Perhaps set a transient commandline so that custom completions
         // builtin_commandline will refer to the wrapped command. But not if
         // we're doing autosuggestions.
-        let _remove_transient = (!is_autosuggest).then(|| {
+        let _remove_transient = (!is_autosuggest && self.ctx.has_parser()).then(|| {
             self.ctx
                 .parser()
                 .libdata()

@@ -645,23 +645,27 @@ fn path_resolve(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]
             None => {
                 // The path doesn't exist, isn't readable or a symlink loop.
                 // We go up until we find something that works.
-                let mut next = arg.into_owned();
+                let mut next = arg;
                 // First add $PWD if we're relative
                 if !next.is_empty() && next.char_at(0) != '/' {
-                    next = path_apply_working_directory(&next, &parser.vars().get_pwd_slash());
+                    next = Cow::Owned(path_apply_working_directory(
+                        &next,
+                        &parser.vars().get_pwd_slash(),
+                    ));
                 }
-                let mut rest = wbasename(&next).to_owned();
+                let mut next: &wstr = &next;
+                let mut rest = wbasename(next).to_owned();
                 let mut real = None;
                 while !next.is_empty() && next != "/" {
-                    next = wdirname(&next).to_owned();
-                    real = wrealpath(&next);
+                    next = wdirname(next);
+                    real = wrealpath(next);
                     if let Some(ref mut real) = real {
                         real.push('/');
                         real.push_utfstr(&rest);
                         *real = normalize_path(real, false);
                         break;
                     }
-                    rest = (wbasename(&next).to_owned() + L!("/")) + rest.as_utfstr();
+                    rest = (wbasename(next).to_owned() + L!("/")) + rest.as_utfstr();
                 }
 
                 match real {

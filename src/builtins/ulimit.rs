@@ -1,5 +1,6 @@
 use std::{cmp::Ordering, sync::LazyLock};
 
+use fish_widestring::str2wcstring;
 use libc::{RLIM_INFINITY, c_uint, rlim_t};
 use nix::errno::Errno;
 use nix::sys::resource::Resource as ResourceEnum;
@@ -206,7 +207,9 @@ fn set_limit(
             .cmd(cmd)
             .finish(streams);
         } else {
-            err_raw!(builtin_strerror()).cmd(cmd).finish(streams);
+            err_raw!(str2wcstring(errno.desc()))
+                .cmd(cmd)
+                .finish(streams);
         }
 
         Err(STATUS_CMD_ERROR)

@@ -970,7 +970,7 @@ fn read_ni(parser: &mut Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode
                     // Fatal error.
                     flog!(
                         error,
-                        wgettext_fmt!("Unable to read input file: %s", err.to_string())
+                        wgettext_fmt!("Unable to read input file: %s", err.desc())
                     );
                     return Err(STATUS_CMD_ERROR);
                 }

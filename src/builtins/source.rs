@@ -4,6 +4,7 @@ use crate::{
     reader::reader_read,
 };
 use fish_common::{FilenameRef, escape};
+use fish_widestring::str2wcstring;
 use nix::{fcntl::OFlag, sys::stat::Mode};
 use std::os::fd::AsRawFd as _;
 
@@ -51,11 +52,11 @@ pub fn source(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
             Ok(file) => {
                 opened_file = file;
             }
-            Err(_) => {
+            Err(err) => {
                 let esc = escape(args[optind]);
                 err_fmt!("Error encountered while sourcing file '%s':", &esc)
                     .append_to_msg('\n')
-                    .append_to_msg(&err_raw!(&builtin_strerror()).cmd(cmd).to_string())
+                    .append_to_msg(&err_raw!(str2wcstring(err.desc())).cmd(cmd).to_string())
                     .cmd(cmd)
                     .finish(streams);
 

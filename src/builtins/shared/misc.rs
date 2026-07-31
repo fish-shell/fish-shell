@@ -9,10 +9,9 @@ use crate::{
     proc::{Pid, ProcStatus, no_exec},
     wutil,
 };
-use errno::errno;
 use fish_common::{Named, assert_sorted_by_name, escape, get_by_sorted_name};
 use fish_fluent::{LocalizedMessage, ToFluentValue};
-use fish_widestring::{L, bytes2wcstring, str2wcstring};
+use fish_widestring::{L, bytes2wcstring};
 use std::io::{BufRead as _, BufReader, Read as _};
 
 pub type BuiltinCmd = fn(&mut Parser, &mut IoStreams, &mut [&wstr]) -> BuiltinResult;
@@ -641,10 +640,6 @@ pub fn builtin_print_error_trailer(parser: &Parser, b: &mut OutputStream, cmd: &
         "(Type 'help %s' for related documentation)",
         cmd
     ));
-}
-
-pub fn builtin_strerror() -> WString {
-    str2wcstring(errno().to_string())
 }
 
 pub struct HelpOnlyCmdOpts {

@@ -328,7 +328,15 @@ fn wildcard_test_flags_then_complete(
     // and we don't need to do anything else, just return it.
     // This is a common case for cd completions, and removes the `stat` entirely in case the system
     // supports it.
-    if entry.is_dir() && !executables_only && !expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS)
+    //
+    // Use is_dir_fast() rather than is_dir() here: for a symlink, d_type can't tell us the target's
+    // type, so is_dir() would fall back to a stat() that follows the link. That can be arbitrarily
+    // slow (e.g. a autofs, dead network mount, FUSE, or such), and even in the typical case costs
+    // extra lookups in some different tree, so we don't want to pay that cost before even checking
+    // whether the name matches what's being completed below.
+    if entry.is_dir_fast() == Some(true)
+        && !executables_only
+        && !expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS)
     {
         return wildcard_complete(
             &(filename.to_owned() + L!("/")),

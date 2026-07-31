@@ -16,8 +16,8 @@ use fish_wcstringutil::{
 };
 use fish_widestring::{
     ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP, HOME_DIRECTORY,
-    INTERNAL_SEPARATOR, L, PROCESS_EXPAND_SELF, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, WExt as _,
-    WString, wstr,
+    INTERNAL_SEPARATOR, L, PROCESS_EXPAND_SELF, SLICE_BEGIN, SLICE_END, VARIABLE_EXPAND,
+    VARIABLE_EXPAND_SINGLE, WExt as _, WString, wstr,
 };
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
@@ -248,8 +248,8 @@ fn is_potential_path(
         expand_tilde(&mut path_fragment, ctx.vars());
     }
 
-    for c in path_fragment.chars() {
-        match c {
+    for c in path_fragment.as_char_slice_mut() {
+        match *c {
             PROCESS_EXPAND_SELF
             | VARIABLE_EXPAND
             | VARIABLE_EXPAND_SINGLE
@@ -261,6 +261,12 @@ fn is_potential_path(
             | ANY_STRING_RECURSIVE => {
                 // It has magic, we don't know what the real fragment is
                 return false;
+            }
+            SLICE_BEGIN => {
+                *c = '[';
+            }
+            SLICE_END => {
+                *c = ']';
             }
             _ => {}
         }

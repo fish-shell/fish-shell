@@ -3,8 +3,9 @@ use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_widestring::{
     ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, ASCII_MAX, BRACE_BEGIN, BRACE_END, BRACE_SEP,
     BRACE_SPACE, BYTE_MAX, HOME_DIRECTORY, INTERNAL_SEPARATOR, L, PROCESS_EXPAND_SELF,
-    PROCESS_EXPAND_SELF_STR, UCS2_MAX, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, WExt as _, WString,
-    bytes2wcstring, decode_byte_from_char, fish_reserved_codepoint, wcs2bytes, wstr,
+    PROCESS_EXPAND_SELF_STR, SLICE_BEGIN, SLICE_END, UCS2_MAX, VARIABLE_EXPAND,
+    VARIABLE_EXPAND_SINGLE, WExt as _, WString, bytes2wcstring, decode_byte_from_char,
+    fish_reserved_codepoint, wcs2bytes, wstr,
 };
 use libc::{SIG_IGN, SIGTTOU, STDIN_FILENO};
 use std::{
@@ -632,6 +633,12 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                         }
                     }
                 }
+                '[' if unescape_special => {
+                    to_append_or_none = Some(SLICE_BEGIN);
+                }
+                ']' if unescape_special => {
+                    to_append_or_none = Some(SLICE_END);
+                }
                 ',' if unescape_special && brace_count > 0 => {
                     to_append_or_none = Some(BRACE_SEP);
                     vars_or_seps.push(input_position);
@@ -727,6 +734,12 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                 '$' if unescape_special => {
                     to_append_or_none = Some(VARIABLE_EXPAND_SINGLE);
                     vars_or_seps.push(input_position);
+                }
+                '[' if unescape_special => {
+                    to_append_or_none = Some(SLICE_BEGIN);
+                }
+                ']' if unescape_special => {
+                    to_append_or_none = Some(SLICE_END);
                 }
                 _ => (),
             }

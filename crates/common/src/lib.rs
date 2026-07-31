@@ -591,7 +591,6 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                     if !is_cmdsub {
                         to_append_or_none = Some(VARIABLE_EXPAND);
                         vars_or_seps.push(input_position);
-                        potential_word_start = Some(input_position + 1);
                     }
                 }
                 '{' if unescape_special => {

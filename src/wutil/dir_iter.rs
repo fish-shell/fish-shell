@@ -68,6 +68,13 @@ impl DirEntry {
         self.check_type() == Some(DirEntryType::Dir)
     }
 
+    /// Return whether this is a directory, if that's already known. None means we don't know
+    /// yet (e.g. this is a symlink, whose target type can only be learned by following it,
+    /// i.e. calling stat()).
+    pub fn is_dir_fast(&self) -> Option<bool> {
+        self.typ.get().map(|t| t == DirEntryType::Dir)
+    }
+
     /// Return false if we know this can't be a link via d_type, true if it could be.
     pub fn is_possible_link(&self) -> Option<bool> {
         self.possible_link
@@ -480,5 +487,44 @@ mod tests {
             );
         }
         assert_eq!(seen, names.len());
+    }
+
+    #[test]
+    fn test_is_dir_fast() {
+        // is_dir_fast() must not require a stat(): for a symlink it should report None
+        // (unknown) until something else (e.g. is_dir()) has resolved and cached the type.
+        // This is the property completion code relies on to avoid following symlinks that
+        // point at something slow (e.g. a stalled network mount) unless it actually has to.
+        let temp_dir = fish_tempfile::new_dir().unwrap();
+        let basepath = WString::from(temp_dir.path().to_str().unwrap());
+        let makepath = |s: &str| -> PathBuf { temp_dir.path().join(s) };
+
+        nix::unistd::mkdir(&makepath("dir"), Mode::from_bits(0o700).unwrap()).unwrap();
+        File::create(makepath("reg")).unwrap();
+        #[cfg(not(cygwin))]
+        {
+            use std::os::unix::fs::symlink;
+            symlink(makepath("dir"), makepath("dirlink")).unwrap();
+            symlink(makepath("reg"), makepath("reglink")).unwrap();
+        }
+
+        let mut iter = DirIter::new(&basepath).expect("Should be able to open directory");
+        while let Some(entry) = iter.next() {
+            let entry = entry.expect("Should not have gotten error");
+            match entry.name.to_string().as_str() {
+                "dir" => assert_eq!(entry.is_dir_fast(), Some(true)),
+                "reg" => assert_eq!(entry.is_dir_fast(), Some(false)),
+                #[cfg(not(cygwin))]
+                name @ ("dirlink" | "reglink") => {
+                    // Unknown before we've resolved the symlink...
+                    assert_eq!(entry.is_dir_fast(), None);
+                    // ...and correctly known, without a further stat(), once we have.
+                    let expected = name == "dirlink";
+                    assert_eq!(entry.is_dir(), expected);
+                    assert_eq!(entry.is_dir_fast(), Some(expected));
+                }
+                other => panic!("Unexpected entry {other}"),
+            }
+        }
     }
 }

@@ -311,16 +311,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
-name = "errno"
-version = "0.3.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
-dependencies = [
- "libc",
- "windows-sys 0.61.2",
-]
-
-[[package]]
 name = "fastrand"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -340,7 +330,6 @@ dependencies = [
  "bitflags",
  "cc",
  "cfg-if",
- "errno",
  "fish-build-helper",
  "fish-build-man-pages",
  "fish-color",
@@ -529,7 +518,6 @@ dependencies = [
 name = "fish-util"
 version = "0.0.0"
 dependencies = [
- "errno",
  "fish-widestring",
  "libc",
  "nix 0.31.3",

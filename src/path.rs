@@ -8,9 +8,9 @@ use crate::flog::{flog, flogf};
 use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use cfg_if::cfg_if;
-use errno::{Errno, errno};
 use fish_widestring::{HOME_DIRECTORY, wcs2osstring, wcs2zstring};
-use libc::{EACCES, ENOENT, X_OK};
+use libc::X_OK;
+use nix::errno::Errno;
 use nix::unistd::AccessFlags;
 use std::ffi::OsStr;
 use std::io::ErrorKind;
@@ -244,22 +244,22 @@ pub fn path_get_paths(cmd: &wstr, vars: &dyn Environment) -> Vec<WString> {
 }
 
 fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult {
-    let noent_res = GetPathResult::new(Some(Errno(ENOENT)), WString::new());
+    let noent_res = GetPathResult::new(Some(Errno::ENOENT), WString::new());
     // Test if the given path can be executed.
     // Return 0 on success, an errno value on failure.
     let test_path = |path: &wstr| -> Result<(), Errno> {
         let narrow = wcs2zstring(path);
         if unsafe { libc::access(narrow.as_ptr(), X_OK) } != 0 {
-            return Err(errno());
+            return Err(Errno::last());
         }
         let narrow: Vec<u8> = narrow.into();
         let Ok(md) = std::fs::metadata(OsStr::from_bytes(&narrow)) else {
-            return Err(errno());
+            return Err(Errno::last());
         };
         if md.is_file() {
             Ok(())
         } else {
-            Err(Errno(EACCES))
+            Err(Errno::EACCES)
         }
     };
 
@@ -292,7 +292,7 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
                 return GetPathResult::new(None, proposed_path);
             }
             Err(err) => {
-                if err.0 != ENOENT && best.err == Some(Errno(ENOENT)) {
+                if err != Errno::ENOENT && best.err == Some(Errno::ENOENT) {
                     // Keep the first *interesting* error and path around.
                     // ENOENT isn't interesting because not having a file is the normal case.
                     // Ignore if the parent directory is already inaccessible.

@@ -12,7 +12,7 @@ use crate::{
 };
 use fish_util::perror;
 use fish_widestring::{bytes2wcstring, wcs2bytes};
-use libc::{EINTR, ENOENT, ENOTDIR, STDOUT_FILENO};
+use libc::STDOUT_FILENO;
 use nix::{errno::Errno, fcntl::OFlag, sys::stat::Mode};
 use std::{
     fs::File,
@@ -548,7 +548,7 @@ impl IoChain {
             // If the error is that the file doesn't exist
             // or there's a non-directory component,
             // find the first problematic component for a better message.
-            if [ENOENT, ENOTDIR].contains(&err) {
+            if [Errno::ENOENT, Errno::ENOTDIR].contains(&err) {
                 flogf!(warning, FILE_ERROR, target);
                 let mut dname: &wstr = target;
                 while !dname.is_empty() {
@@ -563,7 +563,7 @@ impl IoChain {
                     }
                     dname = next;
                 }
-            } else if err != EINTR {
+            } else if err != Errno::EINTR {
                 // If we get EINTR we had a cancel signal.
                 // That's expected (ctrl-c on the commandline),
                 // so no warning.
@@ -600,7 +600,7 @@ impl IoChain {
                             } else if spec.mode != RedirectionMode::TryInput
                                 && should_flog!(warning)
                             {
-                                print_error(errno::errno().0, &spec.target);
+                                print_error(Errno::last(), &spec.target);
                             }
                             // If opening a file fails, insert a closed FD instead of the file redirection
                             // and return false. This lets execution potentially recover and at least gives
@@ -618,7 +618,7 @@ impl IoChain {
                                     _ => {
                                         // /dev/null can't be opened???
                                         if should_flog!(warning) {
-                                            print_error(errno::errno().0, L!("/dev/null"));
+                                            print_error(Errno::last(), L!("/dev/null"));
                                         }
                                         self.push(Arc::new(IoClose::new(spec.fd)));
                                         have_error = true;

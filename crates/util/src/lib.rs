@@ -1,7 +1,7 @@
 //! Generic utilities library.
 
-use errno::errno;
 use fish_widestring::prelude::*;
+use nix::errno::Errno;
 use rand::{SeedableRng as _, rngs::SmallRng};
 use std::{
     cmp::Ordering,
@@ -256,7 +256,7 @@ pub fn write_to_fd(input: &[u8], fd: RawFd) -> nix::Result<usize> {
 /// Prints the provided string, followed by a colon, space, and the string representation of the
 /// current errno via [`libc::strerror`].
 pub fn perror(s: &str) {
-    let e = errno().0;
+    let e = Errno::last_raw();
     let mut stderr = std::io::stderr().lock();
     if !s.is_empty() {
         let _ = write!(stderr, "{s}: ");

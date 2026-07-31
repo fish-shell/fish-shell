@@ -43,14 +43,13 @@ use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
 use crate::wutil::{fish_wcstol, perror_io};
-use errno::{Errno, errno};
 use fish_common::{ScopeGuard, exit_without_destructors, truncate_at_nul, write_loop};
 use fish_widestring::{ToWString as _, bytes2wcstring, wcs2bytes, wcs2zstring};
 use libc::{
-    EACCES, ENOENT, ENOEXEC, ENOTDIR, EPIPE, EXIT_FAILURE, EXIT_SUCCESS, SIGINT, SIGQUIT,
-    STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
+    EPIPE, EXIT_FAILURE, EXIT_SUCCESS, SIGINT, SIGQUIT, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
 };
 use nix::{
+    errno::Errno,
     fcntl::OFlag,
     sys::stat,
     unistd::{getpgrp, getpid},
@@ -320,20 +319,18 @@ type LaunchResult = Result<(), ()>;
 
 /// Given an error `err` returned from either posix_spawn or exec, Return a process exit code.
 fn exit_code_from_exec_error(err: Errno) -> libc::c_int {
-    let err = err.0;
-    assert!(err != 0, "Zero is success, not an error");
     match err {
-        ENOENT | ENOTDIR => {
+        Errno::ENOENT | Errno::ENOTDIR => {
             // This indicates either the command was not found, or a file redirection was not found.
             // We do not use posix_spawn file redirections so this is always command-not-found.
             STATUS_CMD_UNKNOWN
         }
-        EACCES | ENOEXEC => {
+        Errno::EACCES | Errno::ENOEXEC => {
             // The file is not executable for various reasons.
             STATUS_NOT_EXECUTABLE
         }
         #[cfg(apple)]
-        libc::EBADARCH | libc::EBADMACHO => {
+        Errno::EBADARCH | Errno::EBADMACHO => {
             // This is for e.g. running ARM app on Intel Mac or a bad Mach-O executable
             STATUS_NOT_EXECUTABLE
         }
@@ -402,14 +399,14 @@ fn signal_safe_launch_process(
     // This function never returns, so we take certain liberties with constness.
 
     unsafe { libc::execve(actual_cmd.as_ptr(), argv.get(), envv.get()) };
-    let err = errno();
+    let err = Errno::last();
 
     // The shebang wasn't introduced until UNIX Seventh Edition, so if
     // the kernel won't run the binary we hand it off to the interpreter
     // after performing a binary safety check, recommended by POSIX: a
     // line needs to exist before the first \0 with a lowercase letter
 
-    if err.0 == ENOEXEC && is_thompson_shell_script(actual_cmd) {
+    if err == Errno::ENOEXEC && is_thompson_shell_script(actual_cmd) {
         // Construct new argv.
         // We must not allocate memory, so only 128 args are supported.
         const MAXARGS: usize = 128;
@@ -747,9 +744,8 @@ fn fork_child_for_process(
         PgroupPolicy::Join(pgid) => Some(pgid),
         PgroupPolicy::Lead => Some(pid),
     } {
-        let err = execute_setpgid(pid, pgid, is_parent);
-        // Note this error is not fatal.
-        if err != 0 {
+        if let Err(err) = execute_setpgid(pid, pgid, is_parent) {
+            // Note this error is not fatal.
             report_setpgid_error(
                 err,
                 is_parent,
@@ -933,7 +929,7 @@ fn exec_external_command(
             // In glibc, posix_spawn uses fork() and the pgid group is set on the child side;
             // therefore the parent may not have seen it be set yet.
             // Ensure it gets set. See #4715, also https://github.com/Microsoft/WSL/issues/2997.
-            execute_setpgid(pid.as_pid_t(), pid.as_pid_t(), true /* is parent */);
+            let _ = execute_setpgid(pid.as_pid_t(), pid.as_pid_t(), true /* is parent */);
         }
         return Ok(());
     }

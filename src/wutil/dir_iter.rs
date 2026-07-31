@@ -2,10 +2,8 @@ use super::wopendir;
 use crate::wutil::DevInode;
 use cfg_if::cfg_if;
 use fish_widestring::{WString, bytes2wcstring, wcs2zstring, wstr};
-use libc::{
-    EACCES, EIO, ELOOP, ENAMETOOLONG, ENODEV, ENOENT, ENOTDIR, S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO,
-    S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK,
-};
+use libc::{S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK};
+use nix::errno::Errno;
 use std::{cell::Cell, io, mem::MaybeUninit, os::fd::RawFd, ptr::NonNull, rc::Rc};
 
 /// Types of files that may be in a directory.
@@ -118,11 +116,16 @@ impl DirEntry {
             self.dev_inode.set(Some(dev_inode));
             self.typ.set(stat_mode_to_entry_type(s.st_mode));
         } else {
-            match errno::errno().0 {
-                ELOOP => {
+            match Errno::last() {
+                Errno::ELOOP => {
                     self.typ.set(Some(DirEntryType::Lnk));
                 }
-                EACCES | EIO | ENOENT | ENOTDIR | ENAMETOOLONG | ENODEV => {
+                Errno::EACCES
+                | Errno::EIO
+                | Errno::ENOENT
+                | Errno::ENOTDIR
+                | Errno::ENAMETOOLONG
+                | Errno::ENODEV => {
                     // These are "expected" errors.
                     self.typ.set(None);
                 }
@@ -258,16 +261,17 @@ impl DirIter {
     /// This is slightly more efficient than the Iterator version, as it avoids allocating.
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Option<io::Result<&DirEntry>> {
-        errno::set_errno(errno::Errno(0));
+        let no_errno = Errno::from_raw(0);
+        Errno::set(no_errno);
         let dent = unsafe { libc::readdir(self.dir.dir()).as_ref() };
         let Some(dent) = dent else {
             // readdir distinguishes between EOF and error via errno.
-            let err = errno::errno().0;
-            if err == 0 {
+            let err = Errno::last_raw();
+            if err == no_errno as _ {
                 return None;
-            } else {
-                return Some(Err(io::Error::from_raw_os_error(err)));
             }
+            let err = Errno::from_raw(err);
+            return Some(Err(io::Error::from(err)));
         };
 
         // dent.d_name is c_char; pretend it's u8.

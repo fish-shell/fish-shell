@@ -2,7 +2,8 @@ use crate::{flog::flog, prelude::*, signal::signal_check_cancel, wutil::perror_n
 use cfg_if::cfg_if;
 use fish_util::perror;
 use fish_widestring::wcs2zstring;
-use libc::{EINTR, F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
+use libc::{F_GETFD, F_GETFL, F_SETFD, F_SETFL, FD_CLOEXEC, O_NONBLOCK, c_int};
+use nix::errno::Errno;
 use nix::fcntl::{FcntlArg, OFlag};
 use std::{
     ffi::CStr,
@@ -218,7 +219,7 @@ pub fn open_dir(path: &CStr, flags: OFlag) -> nix::Result<OwnedFd> {
 pub fn exec_close(fd: RawFd) {
     assert!(fd >= 0, "Invalid fd");
     while unsafe { libc::close(fd) } == -1 {
-        if errno::errno().0 != EINTR {
+        if Errno::last() != Errno::EINTR {
             perror("close");
             break;
         }

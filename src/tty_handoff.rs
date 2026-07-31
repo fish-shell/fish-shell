@@ -19,7 +19,8 @@ use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror_nix, wcstoi};
 use fish_common::write_loop;
 use fish_util::perror;
-use libc::{EINVAL, ENOTTY, EPERM, STDIN_FILENO, WNOHANG};
+use libc::{STDIN_FILENO, WNOHANG};
+use nix::errno::Errno;
 use nix::sys::termios::tcgetattr;
 use nix::unistd::getpgrp;
 use std::os::fd::BorrowedFd;
@@ -471,7 +472,7 @@ impl TtyHandoff {
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
         while unsafe { libc::tcsetpgrp(STDIN_FILENO, pgid.as_pid_t()) } != 0 {
-            flogf!(proc_termowner, "tcsetpgrp failed: %d", errno::errno().0);
+            flogf!(proc_termowner, "tcsetpgrp failed: %d", Errno::last_raw());
 
             // Before anything else, make sure that it's even necessary to call tcsetpgrp.
             // Since it usually _is_ necessary, we only check in case it fails so as to avoid the
@@ -479,8 +480,8 @@ impl TtyHandoff {
             // a significant cost when running process groups in quick succession.
             let getpgrp_res = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
             if getpgrp_res < 0 {
-                match errno::errno().0 {
-                    ENOTTY => {
+                match Errno::last() {
+                    Errno::ENOTTY => {
                         // stdin is not a tty. This may come about if job control is enabled but we are
                         // not a tty - see #6573.
                         return false;
@@ -501,12 +502,12 @@ impl TtyHandoff {
             }
 
             let pgroup_terminated;
-            if errno::errno().0 == EINVAL {
+            if Errno::last() == Errno::EINVAL {
                 // OS X returns EINVAL if the process group no longer lives. Probably other OSes,
                 // too. Unlike EPERM below, EINVAL can only happen if the process group has
                 // terminated.
                 pgroup_terminated = true;
-            } else if errno::errno().0 == EPERM {
+            } else if Errno::last() == Errno::EPERM {
                 // Retry so long as this isn't because the process group is dead.
                 let mut result: libc::c_int = 0;
                 let wait_result = unsafe { libc::waitpid(-pgid.as_pid_t(), &mut result, WNOHANG) };
@@ -527,7 +528,7 @@ impl TtyHandoff {
                     );
                     continue;
                 }
-            } else if errno::errno().0 == ENOTTY {
+            } else if Errno::last() == Errno::ENOTTY {
                 // stdin is not a TTY. In general we expect this to be caught via the tcgetpgrp
                 // call's EBADF handler above.
                 return false;
@@ -571,7 +572,7 @@ impl Drop for TtyHandoff {
                 flog!(
                     warning,
                     "Could not return shell to foreground:",
-                    errno::errno()
+                    Errno::last_raw()
                 );
                 perror("tcsetpgrp");
             }

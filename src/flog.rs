@@ -195,7 +195,7 @@ macro_rules! default_flog_impls_lifetimes {
 }
 
 default_flog_impls! {
-    String, &str, u8, u16, u32, u64, usize, i8, i16, i32, i64, isize, f32, f64, bool, char, std::io::Error, nix::errno::Errno, errno::Errno, std::backtrace::Backtrace, crate::key::Key
+    String, &str, u8, u16, u32, u64, usize, i8, i16, i32, i64, isize, f32, f64, bool, char, std::io::Error, nix::errno::Errno, std::backtrace::Backtrace, crate::key::Key
 }
 default_flog_impls_lifetimes! {
     std::path::Display<'a>, std::borrow::Cow<'a, str>

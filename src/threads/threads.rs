@@ -1,5 +1,6 @@
 //! Support for thread pools and thread management.
 use crate::flog::{FloggableDebug, flog};
+use nix::errno::Errno;
 use nix::sys::signal::{SigSet, SigmaskHow, Signal};
 use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
@@ -38,7 +39,7 @@ pub fn init() {
     }
     unsafe {
         let result = libc::pthread_atfork(None, None, Some(child_post_fork));
-        assert_eq!(result, 0, "pthread_atfork() failure: {}", errno::errno());
+        assert_eq!(result, 0, "pthread_atfork() failure: {}", Errno::last());
     }
 }
 

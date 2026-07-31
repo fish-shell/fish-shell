@@ -15,6 +15,7 @@ use crate::{
 };
 use fish_common::read_blocked;
 use fish_feature_flags::{FeatureFlag, feature_test};
+use nix::errno::Errno;
 use nix::sys::{select::FdSet, signal::SigSet, time::TimeSpec};
 use std::{
     collections::VecDeque,
@@ -813,8 +814,8 @@ pub(super) fn next_input_event(
         // Here's where we call select().
         let select_res = fdset.check_readable(timeout);
         if select_res < 0 {
-            let err = errno::errno().0;
-            if err == libc::EINTR || err == libc::EAGAIN {
+            let err = Errno::last();
+            if err == Errno::EINTR || err == Errno::EAGAIN {
                 // A signal.
                 return InputEventTrigger::Interrupted;
             } else {

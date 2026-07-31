@@ -4,9 +4,9 @@ use crate::portable_atomic::AtomicU64;
 use crate::threads::assert_is_background_thread;
 use crate::wutil::perror_nix;
 use cfg_if::cfg_if;
-use errno::errno;
 use fish_common::exit_without_destructors;
 use fish_util::perror;
+use nix::errno::Errno;
 use std::collections::HashMap;
 use std::os::unix::prelude::*;
 use std::sync::atomic::Ordering;
@@ -97,7 +97,6 @@ impl FdEventSignaller {
         );
         let mut buff = [0_u8; BUFFSIZE];
         loop {
-            use nix::errno::Errno;
             return match nix::unistd::read(self.read_fd(), &mut buff) {
                 Ok(amt) => return amt > 0,
                 Err(Errno::EINTR) => continue,
@@ -437,8 +436,10 @@ impl BackgroundFdMonitor {
             drop(data);
             let ret = fds.check_readable(timeout.map_or(Timeout::Forever, Timeout::Duration));
             // TODO Cygwin reports ret < 0 && errno == 0 as success. Remove the workaround for msys2-runtime>=3.6.9, see https://github.com/msys2/msys2-runtime/issues/308#issuecomment-4301066343
-            let err = errno().0;
-            if ret < 0 && !matches!(err, libc::EINTR | libc::EAGAIN) && !(cfg!(cygwin) && err == 0)
+            let err = Errno::last();
+            if ret < 0
+                && !matches!(err, Errno::EINTR | Errno::EAGAIN)
+                && !(cfg!(cygwin) && err == Errno::from_raw(0))
             {
                 // Surprising error
                 perror("select");

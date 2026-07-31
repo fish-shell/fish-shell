@@ -111,7 +111,6 @@ use crate::{
     wutil::{fstat, perror_nix, wstat},
 };
 use assert_matches::assert_matches;
-use errno::{Errno, errno};
 use fish_common::{
     EscapeFlags, EscapeStringStyle, ScopeGuard, escape, escape_string, escape_string_with_quote,
     exit_without_destructors, get_obfuscation_read_char, help_section,
@@ -127,9 +126,10 @@ use fish_wcstringutil::{
 };
 use fish_widestring::{ELLIPSIS_CHAR, UTF8_BOM_WCHAR, bytes2wcstring};
 use libc::{
-    _POSIX_VDISABLE, EISDIR, ENOTTY, ESRCH, O_NONBLOCK, O_RDONLY, SIGINT, STDERR_FILENO,
-    STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
+    _POSIX_VDISABLE, O_NONBLOCK, O_RDONLY, SIGINT, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
+    VMIN, VQUIT, VSUSP, VTIME, c_char,
 };
+use nix::errno::Errno;
 use nix::{
     fcntl::OFlag,
     sys::{
@@ -940,7 +940,7 @@ fn read_ni(parser: &mut Parser, fd: RawFd, io: &IoChain) -> Result<(), ErrorCode
     if fd != STDIN_FILENO && md.is_dir() {
         flog!(
             error,
-            wgettext_fmt!("Unable to read input file: %s", Errno(EISDIR).to_string())
+            wgettext_fmt!("Unable to read input file: %s", Errno::EISDIR.desc())
         );
         return Err(STATUS_CMD_ERROR);
     }
@@ -4935,7 +4935,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
             // avoid a second pass through this loop.
             owner = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
         }
-        if owner == -1 && errno().0 == ENOTTY {
+        if owner == -1 && Errno::last() == Errno::ENOTTY {
             if !is_interactive_session() {
                 // It's OK if we're not able to take control of the terminal. We handle
                 // the fallout from this in a few other places.
@@ -6321,7 +6321,10 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
     // Try kill-0'ing the process whose pid corresponds to our process group ID. It's possible this
     // will fail because we don't have permission to signal it. But more likely it will fail because
     // it no longer exists, and we are orphaned.
-    if loop_count % 64 == 0 && unsafe { libc::kill(shell_pgid, 0) } < 0 && errno().0 == ESRCH {
+    if loop_count % 64 == 0
+        && unsafe { libc::kill(shell_pgid, 0) } < 0
+        && Errno::last() == Errno::ESRCH
+    {
         we_think_we_are_orphaned = true;
     }
 

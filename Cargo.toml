@@ -19,7 +19,6 @@ cc = "1.0.94"
 cfg-if = "1.0.3"
 clap = { version = "4.5.54", features = ["derive"] }
 clap_complete = { version = "4.6.4", features = ["unstable-dynamic"] }
-errno = "0.3.0"
 fish-build-helper = { path = "crates/build-helper" }
 fish-build-man-pages = { path = "crates/build-man-pages" }
 fish-color = { path = "crates/color" }
@@ -118,7 +117,6 @@ readme = "README.rst"
 assert_matches.workspace = true
 bitflags.workspace = true
 cfg-if.workspace = true
-errno.workspace = true
 fish-build-helper.workspace = true
 fish-build-man-pages = { workspace = true, optional = true }
 fish-color.workspace = true

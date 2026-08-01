@@ -35,6 +35,8 @@ const LOCALE_VARIABLES: [&wstr; 8] = [
 /// Whether to use `posix_spawn()` when possible.
 static USE_POSIX_SPAWN: AtomicBool = AtomicBool::new(false);
 
+const TIMEZONE_VARNAME: &wstr = L!("TZ");
+
 /// The variable dispatch table. This is set at startup and cannot be modified after.
 static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
     once_cell::sync::Lazy::new(|| {
@@ -47,49 +49,49 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         }
 
         for name in LOCALE_VARIABLES {
-            table.add_anon(name, vars!(handle_locale_change));
+            table.add(name, vars!(handle_locale_change));
         }
 
-        table.add_anon(L!("TERM"), handle_term_change);
+        table.add(L!("TERM"), handle_term_change);
 
-        table.add(L!("TZ"), handle_tz_change);
-        table.add_anon(L!("COLORTERM"), handle_fish_term_change);
-        table.add_anon(L!("fish_term256"), handle_fish_term_change);
-        table.add_anon(L!("fish_term24bit"), handle_fish_term_change);
-        table.add_anon(L!("fish_escape_delay_ms"), vars!(update_wait_on_escape_ms));
-        table.add_anon(
+        table.add(TIMEZONE_VARNAME, handle_timezone_change);
+        table.add(L!("COLORTERM"), handle_fish_term_change);
+        table.add(L!("fish_term256"), handle_fish_term_change);
+        table.add(L!("fish_term24bit"), handle_fish_term_change);
+        table.add(L!("fish_escape_delay_ms"), vars!(update_wait_on_escape_ms));
+        table.add(
             L!("fish_sequence_key_delay_ms"),
             vars!(update_wait_on_sequence_key_ms),
         );
-        table.add_anon(L!("fish_emoji_width"), vars!(handle_emoji_width));
-        table.add_anon(
+        table.add(L!("fish_emoji_width"), vars!(handle_emoji_width));
+        table.add(
             L!("fish_ambiguous_width"),
             vars!(handle_change_ambiguous_width),
         );
-        table.add_anon(L!("LINES"), vars!(handle_term_size_change));
-        table.add_anon(L!("COLUMNS"), vars!(handle_term_size_change));
-        table.add_anon(L!("fish_complete_path"), vars!(handle_complete_path_change));
-        table.add_anon(L!("fish_function_path"), vars!(handle_function_path_change));
-        table.add_anon(L!("fish_read_limit"), vars!(handle_read_limit_change));
-        table.add_anon(L!("fish_history"), vars!(handle_fish_history_change));
-        table.add_anon(
+        table.add(L!("LINES"), vars!(handle_term_size_change));
+        table.add(L!("COLUMNS"), vars!(handle_term_size_change));
+        table.add(L!("fish_complete_path"), vars!(handle_complete_path_change));
+        table.add(L!("fish_function_path"), vars!(handle_function_path_change));
+        table.add(L!("fish_read_limit"), vars!(handle_read_limit_change));
+        table.add(L!("fish_history"), vars!(handle_fish_history_change));
+        table.add(
             L!("fish_autosuggestion_enabled"),
             vars!(handle_autosuggestion_change),
         );
-        table.add_anon(
+        table.add(
             L!("fish_transient_prompt"),
             vars!(handle_transient_prompt_change),
         );
-        table.add_anon(
+        table.add(
             L!("fish_use_posix_spawn"),
             vars!(handle_fish_use_posix_spawn_change),
         );
-        table.add_anon(L!("fish_trace"), vars!(handle_fish_trace));
-        table.add_anon(
+        table.add(L!("fish_trace"), vars!(handle_fish_trace));
+        table.add(
             L!("fish_cursor_selection_mode"),
             vars!(handle_fish_cursor_selection_mode_change),
         );
-        table.add_anon(
+        table.add(
             L!("fish_cursor_end_mode"),
             vars!(handle_fish_cursor_end_mode_change),
         );
@@ -97,13 +99,7 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         table
     });
 
-type NamedEnvCallback = fn(name: &wstr, env: &EnvStack);
-type AnonEnvCallback = fn(env: &EnvStack, suppress_repaint: bool);
-
-enum EnvCallback {
-    Named(NamedEnvCallback),
-    Anon(AnonEnvCallback),
-}
+type EnvCallback = fn(env: &EnvStack, suppress_repaint: bool);
 
 #[derive(Default)]
 struct VarDispatchTable {
@@ -112,49 +108,15 @@ struct VarDispatchTable {
 
 impl VarDispatchTable {
     /// Add a callback for the variable `name`. We must not already be observing this variable.
-    pub fn add(&mut self, name: &'static wstr, callback: NamedEnvCallback) {
-        let prev = self.table.insert(name, EnvCallback::Named(callback));
-        assert!(prev.is_none(), "Already observing {}", name);
-    }
-
-    /// Add an callback for the variable `name`. We must not already be observing this variable.
-    pub fn add_anon(&mut self, name: &'static wstr, callback: AnonEnvCallback) {
-        let prev = self.table.insert(name, EnvCallback::Anon(callback));
+    pub fn add(&mut self, name: &'static wstr, callback: EnvCallback) {
+        let prev = self.table.insert(name, callback);
         assert!(prev.is_none(), "Already observing {}", name);
     }
 
     pub fn dispatch(&self, key: &wstr, vars: &EnvStack, suppress_repaint: bool) {
-        match self.table.get(key) {
-            Some(EnvCallback::Named(named)) => (named)(key, vars),
-            Some(EnvCallback::Anon(anon)) => (anon)(vars, suppress_repaint),
-            None => (),
+        if let Some(cb) = self.table.get(key) {
+            (cb)(vars, suppress_repaint);
         }
-    }
-}
-
-fn handle_timezone(var_name: &wstr, vars: &EnvStack) {
-    let var = vars.get_unless_empty(var_name).map(|v| v.as_string());
-    flog!(
-        env_dispatch,
-        "handle_timezone() current timezone var:",
-        var_name,
-        "=>",
-        var.as_ref()
-            .map(|v| v.as_utfstr())
-            .unwrap_or(L!("MISSING/EMPTY")),
-    );
-    if let Some(value) = var {
-        setenv_lock(var_name, &value, true);
-    } else {
-        unsetenv_lock(var_name);
-    }
-
-    unsafe extern "C" {
-        unsafe fn tzset();
-    }
-
-    unsafe {
-        tzset();
     }
 }
 
@@ -286,8 +248,32 @@ fn handle_complete_path_change(_: &EnvStack) {
     complete_invalidate_path();
 }
 
-fn handle_tz_change(var_name: &wstr, vars: &EnvStack) {
-    handle_timezone(var_name, vars);
+fn handle_timezone_change(vars: &EnvStack, _suppress_repaint: bool) {
+    let var = vars
+        .get_unless_empty(TIMEZONE_VARNAME)
+        .map(|v| v.as_string());
+    flog!(
+        env_dispatch,
+        "handle_timezone_change() current timezone var:",
+        TIMEZONE_VARNAME,
+        "=>",
+        var.as_ref()
+            .map(|v| v.as_utfstr())
+            .unwrap_or(L!("MISSING/EMPTY")),
+    );
+    if let Some(value) = var {
+        setenv_lock(TIMEZONE_VARNAME, &value, true);
+    } else {
+        unsetenv_lock(TIMEZONE_VARNAME);
+    }
+
+    unsafe extern "C" {
+        unsafe fn tzset();
+    }
+
+    unsafe {
+        tzset();
+    }
 }
 
 fn handle_locale_change(vars: &EnvStack) {

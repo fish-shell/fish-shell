@@ -11,12 +11,14 @@ use crate::{
     wutil::FileId,
 };
 use fish_widestring::wcs2bytes;
-use libc::{ENODEV, MAP_ANONYMOUS, MAP_FAILED, MAP_PRIVATE, PROT_READ, PROT_WRITE};
+use nix::errno::Errno;
+use nix::sys::mman::{MapFlags, ProtFlags};
+use std::num::NonZeroUsize;
+use std::ptr::NonNull;
 use std::{
     fs::File,
     io::Read as _,
     ops::{Deref, DerefMut},
-    os::fd::AsRawFd as _,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -30,61 +32,45 @@ pub enum HistoryFileType {
 
 /// A type wrapping up the logic around mmap and munmap.
 struct MmapRegion {
-    ptr: *mut u8,
-    len: usize,
+    ptr: NonNull<u8>,
+    len: NonZeroUsize,
 }
 
 impl MmapRegion {
-    /// Creates a new mmap'ed region.
-    ///
-    /// # Safety
-    ///
-    /// `ptr` must be the result of a successful `mmap()` call with length `len`.
-    unsafe fn new(ptr: *mut u8, len: usize) -> Self {
-        assert_ne!(ptr.cast(), MAP_FAILED);
-        assert!(len > 0);
-        Self { ptr, len }
-    }
-
     /// Map a region `[0, len)` from a locked file.
-    pub fn map_file(file: &File, len: usize) -> std::io::Result<Self> {
+    pub fn map_file(file: &File, len: NonZeroUsize) -> nix::Result<Self> {
         let ptr = unsafe {
-            libc::mmap(
-                std::ptr::null_mut(),
+            nix::sys::mman::mmap(
+                None,
                 len,
-                PROT_READ,
-                MAP_PRIVATE,
-                file.as_raw_fd(),
+                ProtFlags::PROT_READ,
+                MapFlags::MAP_PRIVATE,
+                file,
                 0,
             )
-        };
+        }?;
 
-        if ptr == MAP_FAILED {
-            return Err(std::io::Error::last_os_error());
-        }
-
-        // SAFETY: mmap of `len` was successful and returned `ptr`
-        Ok(unsafe { Self::new(ptr.cast(), len) })
+        Ok(Self {
+            ptr: ptr.cast(),
+            len,
+        })
     }
 
     /// Map anonymous memory of a given length.
-    pub fn map_anon(len: usize) -> std::io::Result<Self> {
+    pub fn map_anon(len: NonZeroUsize) -> nix::Result<Self> {
         let ptr = unsafe {
-            libc::mmap(
-                std::ptr::null_mut(),
+            nix::sys::mman::mmap_anonymous(
+                None,
                 len,
-                PROT_READ | PROT_WRITE,
-                MAP_PRIVATE | MAP_ANONYMOUS,
-                -1,
-                0,
+                ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
+                MapFlags::MAP_PRIVATE,
             )
-        };
-        if ptr == MAP_FAILED {
-            return Err(std::io::Error::last_os_error());
-        }
+        }?;
 
-        // SAFETY: mmap of `len` was successful and returned `ptr`
-        Ok(unsafe { Self::new(ptr.cast(), len) })
+        Ok(Self {
+            ptr: ptr.cast(),
+            len,
+        })
     }
 }
 
@@ -97,19 +83,19 @@ impl Deref for MmapRegion {
     type Target = [u8];
 
     fn deref(&self) -> &[u8] {
-        unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
+        unsafe { std::slice::from_raw_parts(self.ptr.as_ptr(), self.len.get()) }
     }
 }
 
 impl DerefMut for MmapRegion {
     fn deref_mut(&mut self) -> &mut [u8] {
-        unsafe { std::slice::from_raw_parts_mut(self.ptr, self.len) }
+        unsafe { std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len.get()) }
     }
 }
 
 impl Drop for MmapRegion {
     fn drop(&mut self) {
-        unsafe { libc::munmap(self.ptr.cast(), self.len) };
+        let _ = unsafe { nix::sys::mman::munmap(self.ptr.cast(), self.len.get()) };
     }
 }
 
@@ -131,12 +117,12 @@ impl RawHistoryFile {
                 ));
             }
         };
-        if len == 0 {
+        let Ok(len) = NonZeroUsize::try_from(len) else {
             return Err(std::io::Error::other(
                 "History file is empty. Cannot create memory mapping with length 0.",
             ));
-        }
-        let map_anon = |mut file: &File, len: usize| -> std::io::Result<MmapRegion> {
+        };
+        let map_anon = |mut file: &File, len: NonZeroUsize| -> std::io::Result<MmapRegion> {
             let mut region = MmapRegion::map_anon(len)?;
             // If we mapped anonymous memory, we have to read from the file.
             file.read_exact(&mut region)?;
@@ -146,13 +132,13 @@ impl RawHistoryFile {
             match MmapRegion::map_file(history_file, len) {
                 Ok(region) => region,
                 Err(err) => {
-                    if err.raw_os_error() == Some(ENODEV) {
+                    if err == Errno::ENODEV {
                         // Our mmap failed with ENODEV, which means the underlying
                         // filesystem does not support mapping.
                         // Create an anonymous mapping and read() the file into it.
                         map_anon(history_file, len)?
                     } else {
-                        return Err(err);
+                        return Err(std::io::Error::from(err));
                     }
                 }
             }

@@ -55,6 +55,7 @@ nix = { version = "0.31.1", default-features = false, features = [
   "fs",
   "hostname",
   "inotify",
+  "mman",
   "process",
   "resource",
   "signal",

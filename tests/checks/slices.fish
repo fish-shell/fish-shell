@@ -91,3 +91,9 @@ echo $foo[1 $foo[2 3] 4]
 #CHECK: 2 4 5 2 5 5
 echo $foo[1$foo[2 3]4]
 #CHECK: 2 35 2 45
+
+set -l tens 1 2
+set -l ones 3 4
+set -l values (seq 24)
+echo $values[$tens$ones]
+#CHECK: 13 23 14 24

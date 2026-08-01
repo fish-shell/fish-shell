@@ -33,7 +33,7 @@ use fish_wcstringutil::{join_strings, trim};
 use fish_widestring::{
     ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE,
     HOME_DIRECTORY, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, VARIABLE_EXPAND,
-    VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, osstr2wcstring,
+    VARIABLE_EXPAND_BOUNDARY, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, osstr2wcstring,
 };
 use nix::unistd::{User, getpid};
 
@@ -385,6 +385,71 @@ enum ParseSliceError {
     InvalidIndex,
 }
 
+fn skip_slice_separators(input: &wstr, pos: &mut usize, in_expansion: &mut bool, whitespace: bool) {
+    loop {
+        match input.char_at(*pos) {
+            c if whitespace && c.is_whitespace() => *pos += 1,
+            INTERNAL_SEPARATOR => *pos += 1,
+            VARIABLE_EXPAND_BOUNDARY => {
+                *in_expansion = !*in_expansion;
+                *pos += 1;
+            }
+            _ => break,
+        }
+    }
+}
+
+fn parse_slice_integer(
+    input: &wstr,
+    consumed: &mut usize,
+    in_expansion: &mut bool,
+) -> Result<i64, wcstoi::Error> {
+    if !input.chars().any(|c| c == VARIABLE_EXPAND_BOUNDARY) {
+        return wcstoi_partial(input, wcstoi::Options::default(), consumed);
+    }
+
+    let mut sanitized = WString::with_capacity(input.len());
+    let mut source_ends = Vec::with_capacity(input.len());
+    let mut expansion_states = Vec::with_capacity(input.len());
+    let mut local_in_expansion = *in_expansion;
+    let mut just_exited_expansion = false;
+    for (index, c) in input.chars().enumerate() {
+        if c == VARIABLE_EXPAND_BOUNDARY {
+            if local_in_expansion {
+                local_in_expansion = false;
+                just_exited_expansion = true;
+            } else if sanitized.is_empty() || just_exited_expansion {
+                local_in_expansion = true;
+                just_exited_expansion = false;
+            } else {
+                break;
+            }
+            continue;
+        }
+
+        just_exited_expansion = false;
+        sanitized.push(c);
+        source_ends.push(index + 1);
+        expansion_states.push(local_in_expansion);
+    }
+
+    let mut sanitized_consumed = 0;
+    let result = wcstoi_partial(
+        &sanitized,
+        wcstoi::Options::default(),
+        &mut sanitized_consumed,
+    );
+    *consumed = if sanitized_consumed == 0 {
+        0
+    } else {
+        source_ends[sanitized_consumed - 1]
+    };
+    if sanitized_consumed > 0 {
+        *in_expansion = expansion_states[sanitized_consumed - 1];
+    }
+    result
+}
+
 /// Parse an array slicing specification Returns 0 on success. If a parse error occurs, returns the
 /// index of the bad token. Note that 0 can never be a bad index because the string always starts
 /// with [.
@@ -395,11 +460,10 @@ fn parse_slice(
 ) -> Result<usize, (usize, ParseSliceError)> {
     let size = i64::try_from(array_size).unwrap();
     let mut pos = 1; // skip past the opening square bracket
+    let mut in_expansion = false;
 
     loop {
-        while input.char_at(pos).is_whitespace() || input.char_at(pos) == INTERNAL_SEPARATOR {
-            pos += 1;
-        }
+        skip_slice_separators(input, &mut pos, &mut in_expansion, true);
         if input.char_at(pos) == ']' {
             pos += 1;
             break;
@@ -411,7 +475,7 @@ fn parse_slice(
             1 // first index
         } else {
             let mut consumed = 0;
-            match wcstoi_partial(&input[pos..], wcstoi::Options::default(), &mut consumed) {
+            match parse_slice_integer(&input[pos..], &mut consumed, &mut in_expansion) {
                 Ok(tmp) => {
                     if tmp == 0 {
                         // Explicitly refuse $foo[0] as valid syntax, regardless of whether or
@@ -438,17 +502,10 @@ fn parse_slice(
         };
 
         let mut i1 = if tmp > -1 { tmp } else { size + tmp + 1 };
-        while input.char_at(pos) == INTERNAL_SEPARATOR {
-            pos += 1;
-        }
+        skip_slice_separators(input, &mut pos, &mut in_expansion, false);
         if input.char_at(pos) == '.' && input.char_at(pos + 1) == '.' {
             pos += 2;
-            while input.char_at(pos) == INTERNAL_SEPARATOR {
-                pos += 1;
-            }
-            while input.char_at(pos).is_whitespace() {
-                pos += 1; // Allow the space in "[.. ]".
-            }
+            skip_slice_separators(input, &mut pos, &mut in_expansion, true);
 
             // If we are at the last index range expression  then a missing end-index means the
             // range spans until the last item.
@@ -456,7 +513,7 @@ fn parse_slice(
                 -1 // last index
             } else {
                 let mut consumed = 0;
-                match wcstoi_partial(&input[pos..], wcstoi::Options::default(), &mut consumed) {
+                match parse_slice_integer(&input[pos..], &mut consumed, &mut in_expansion) {
                     Ok(tmp) => {
                         if tmp == 0 {
                             return Err((pos, ParseSliceError::ZeroIndex));
@@ -712,9 +769,11 @@ fn expand_variables(
             var.as_ref().unwrap().delimiter()
         };
         let mut res = instr[..varexp_char_idx].to_owned();
+        let mut add_expansion_boundary = false;
         if !res.is_empty() {
             if res.as_char_slice().last() != Some(&VARIABLE_EXPAND_SINGLE) {
-                res.push(INTERNAL_SEPARATOR);
+                res.push(VARIABLE_EXPAND_BOUNDARY);
+                add_expansion_boundary = true;
             } else if var_item_list.is_empty() || var_item_list[0].is_empty() {
                 // First expansion is empty, but we need to recursively expand.
                 res.push(VARIABLE_EXPAND_EMPTY);
@@ -723,6 +782,9 @@ fn expand_variables(
 
         // Append all entries in var_item_list, separated by the delimiter.
         res.push_utfstr(&join_strings(&var_item_list, delimit));
+        if add_expansion_boundary {
+            res.push(VARIABLE_EXPAND_BOUNDARY);
+        }
         res.push_utfstr(&instr[var_name_and_slice_stop..]);
         return expand_variables(res, out, varexp_char_idx, vars, errors);
     } else {
@@ -734,14 +796,19 @@ fn expand_variables(
                 }
             } else {
                 let mut new_in = instr[..varexp_char_idx].to_owned();
+                let mut add_expansion_boundary = false;
                 if !new_in.is_empty() {
                     if new_in.as_char_slice().last() != Some(&VARIABLE_EXPAND) {
-                        new_in.push(INTERNAL_SEPARATOR);
+                        new_in.push(VARIABLE_EXPAND_BOUNDARY);
+                        add_expansion_boundary = true;
                     } else if item.is_empty() {
                         new_in.push(VARIABLE_EXPAND_EMPTY);
                     }
                 }
                 new_in.push_utfstr(&item);
+                if add_expansion_boundary {
+                    new_in.push(VARIABLE_EXPAND_BOUNDARY);
+                }
                 new_in.push_utfstr(&instr[var_name_and_slice_stop..]);
                 let res = expand_variables(new_in, out, varexp_char_idx, vars, errors);
                 if res.result != ExpandResultCode::Ok {
@@ -1148,8 +1215,8 @@ fn expand_percent_self(input: &mut WString) {
 /// Remove any internal separators. Also optionally convert wildcard characters to regular
 /// equivalents. This is done to support skip_wildcards.
 fn remove_internal_separator(s: &mut WString, conv: bool) {
-    // Remove all instances of INTERNAL_SEPARATOR.
-    s.retain(|c| c != INTERNAL_SEPARATOR);
+    // Remove all transient expansion markers.
+    s.retain(|c| c != INTERNAL_SEPARATOR && c != VARIABLE_EXPAND_BOUNDARY);
 
     // If conv is true, replace all instances of ANY_STRING with '*',
     // ANY_STRING_RECURSIVE with '*'.
@@ -1560,7 +1627,7 @@ mod tests {
         prelude::*,
         tests::prelude::*,
     };
-    use fish_widestring::{ANY_STRING, str2wcstring};
+    use fish_widestring::{ANY_STRING, VARIABLE_EXPAND_BOUNDARY, str2wcstring};
     use std::collections::{HashMap, HashSet, hash_map::RandomState};
 
     fn expand_test_impl(
@@ -1597,6 +1664,26 @@ mod tests {
             "{}",
             error_message.unwrap_or("expand mismatch")
         );
+    }
+
+    #[test]
+    fn test_parse_slice_with_adjacent_expansions() {
+        let input = WString::from_chars([
+            '[',
+            VARIABLE_EXPAND_BOUNDARY,
+            '1',
+            VARIABLE_EXPAND_BOUNDARY,
+            VARIABLE_EXPAND_BOUNDARY,
+            '3',
+            VARIABLE_EXPAND_BOUNDARY,
+            ']',
+        ]);
+        let mut indices = vec![];
+
+        let result = super::parse_slice(&input, &mut indices, 20);
+
+        assert_eq!(result.ok(), Some(input.len()));
+        assert_eq!(indices, [13]);
     }
 
     // Test globbing and other parameter expansion.

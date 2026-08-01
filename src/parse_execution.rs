@@ -55,7 +55,8 @@ use crate::{
 };
 use fish_common::{ScopeGuard, escape, help_section, truncate_at_nul};
 use fish_widestring::WExt as _;
-use libc::{ENOTDIR, EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};
+use libc::{EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};
+use nix::errno::Errno;
 use std::{io::ErrorKind, rc::Rc, sync::Arc};
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
@@ -273,7 +274,7 @@ impl ExecutionContext {
             // but this mainly applies to EACCES. We could also feasibly get:
             // ELOOP
             // ENAMETOOLONG
-            if err.raw_os_error() == Some(ENOTDIR) {
+            if matches!(Errno::try_from(err), Ok(Errno::ENOTDIR)) {
                 // If the original command did not include a "/", assume we found it via $PATH.
                 let src = self.node_source(&statement.command);
                 if !src.contains('/') {

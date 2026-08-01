@@ -42,11 +42,11 @@ use crate::signal::RawSignal;
 use crate::threads::{ThreadPool, is_forked_child};
 use crate::trace::trace_if_enabled_with_args;
 use crate::tty_handoff::TtyHandoff;
-use crate::wutil::{fish_wcstol, perror_io};
+use crate::wutil::{fish_wcstol, perror_nix};
 use fish_common::{ScopeGuard, exit_without_destructors, truncate_at_nul, write_loop};
 use fish_widestring::{ToWString as _, bytes2wcstring, wcs2bytes, wcs2zstring};
 use libc::{
-    EPIPE, EXIT_FAILURE, EXIT_SUCCESS, SIGINT, SIGQUIT, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
+    EXIT_FAILURE, EXIT_SUCCESS, SIGINT, SIGQUIT, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
 };
 use nix::{
     errno::Errno,
@@ -621,8 +621,8 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
         let mut status = f.success_status;
         if !f.skip_out() {
             if let Err(err) = write_loop(&f.src_outfd, &f.outdata) {
-                if err.raw_os_error() != Some(EPIPE) {
-                    perror_io("write", &err);
+                if err != Errno::EPIPE {
+                    perror_nix("write", err);
                 }
                 if status.is_success() {
                     status = ProcStatus::from_exit_code(1);
@@ -631,8 +631,8 @@ fn run_internal_process(p: &Process, outdata: Vec<u8>, errdata: Vec<u8>, ios: &I
         }
         if !f.skip_err() {
             if let Err(err) = write_loop(&f.src_errfd, &f.errdata) {
-                if err.raw_os_error() != Some(EPIPE) {
-                    perror_io("write", &err);
+                if err != Errno::EPIPE {
+                    perror_nix("write", err);
                 }
                 if status.is_success() {
                     status = ProcStatus::from_exit_code(1);

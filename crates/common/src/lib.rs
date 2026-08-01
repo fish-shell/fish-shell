@@ -1074,7 +1074,7 @@ impl<T: Read + ?Sized> ReadExt for T {
 
 /// A rusty port of the C++ `write_loop()` function from `common.cpp`. This should be deprecated in
 /// favor of native rust read/write methods at some point.
-pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
+pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> nix::Result<()> {
     let fd = fd.as_raw_fd();
     let mut total = 0;
     while total < buf.len() {
@@ -1086,7 +1086,7 @@ pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> std::io::Result<()> {
                 if matches!(err, nix::Error::EAGAIN | nix::Error::EINTR) {
                     continue;
                 }
-                return Err(std::io::Error::from(err));
+                return Err(err);
             }
         }
     }

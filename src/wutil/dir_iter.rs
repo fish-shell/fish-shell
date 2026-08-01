@@ -349,6 +349,7 @@ mod tests {
     use crate::prelude::*;
     use assert_matches::assert_matches;
     use fish_widestring::L;
+    use nix::errno::Errno;
     use nix::sys::stat::Mode;
     use std::fs::File;
     use std::path::PathBuf;
@@ -392,15 +393,13 @@ mod tests {
     #[test]
     #[allow(clippy::if_same_then_else)]
     fn test_dir_iter() {
-        use libc::{EACCES, ENOENT};
-
         let baditer = DirIter::new(L!("/definitely/not/a/valid/directory/for/sure"));
         assert!(baditer.is_err());
         let Err(err) = baditer else {
             panic!("Expected error");
         };
-        let err = err.raw_os_error().expect("Should have an errno value");
-        assert_matches!(err, ENOENT | EACCES);
+        let err = Errno::try_from(err).expect("Should have an errno value");
+        assert_matches!(err, Errno::ENOENT | Errno::EACCES);
 
         let temp_dir = fish_tempfile::new_dir().unwrap();
         let basepath = WString::from(temp_dir.path().to_str().unwrap());

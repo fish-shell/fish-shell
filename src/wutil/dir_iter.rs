@@ -46,12 +46,6 @@ pub struct DirEntry {
 }
 
 impl DirEntry {
-    /// Return the type of this entry if it is already available, otherwise none().
-    #[cfg(test)]
-    fn fast_type(&self) -> Option<DirEntryType> {
-        self.typ.get()
-    }
-
     /// Return the type of this entry, falling back to stat() if necessary.
     /// If stat() fails because the file has disappeared, this will return none().
     /// If stat() fails because of a broken symlink, this will return type lnk.
@@ -68,13 +62,6 @@ impl DirEntry {
         self.check_type() == Some(DirEntryType::Dir)
     }
 
-    /// Return whether this is a directory, if that's already known. None means we don't know
-    /// yet (e.g. this is a symlink, whose target type can only be learned by following it,
-    /// i.e. calling stat()).
-    pub fn is_dir_fast(&self) -> Option<bool> {
-        self.typ.get().map(|t| t == DirEntryType::Dir)
-    }
-
     /// Return false if we know this can't be a link via d_type, true if it could be.
     pub fn is_possible_link(&self) -> Option<bool> {
         self.possible_link
@@ -85,6 +72,20 @@ impl DirEntry {
             self.do_stat();
         }
         self.dev_inode.get()
+    }
+
+    /// Return the type of this entry if it is already available, otherwise none().
+    #[cfg(test)]
+    fn fast_type(&self) -> Option<DirEntryType> {
+        self.typ.get()
+    }
+
+    /// Return whether this is a directory, if that's already known. None means we don't know
+    /// yet (e.g. this is a symlink, whose target type can only be learned by following it,
+    /// i.e. calling stat()).
+    #[cfg(test)]
+    fn is_dir_fast(&self) -> Option<bool> {
+        self.typ.get().map(|t| t == DirEntryType::Dir)
     }
 
     // Reset our fields.

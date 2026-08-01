@@ -19,7 +19,10 @@ use fish_wcstringutil::{
 };
 use fish_widestring::{ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE};
 use nix::unistd::AccessFlags;
-use std::{cell::LazyCell, cmp::Ordering, collections::HashSet, os::unix::fs::MetadataExt as _};
+use std::{
+    borrow::Cow, cell::LazyCell, cmp::Ordering, collections::HashSet,
+    os::unix::fs::MetadataExt as _,
+};
 
 localizable_consts!(
     COMPLETE_EXEC_DESC "command"
@@ -324,29 +327,7 @@ fn wildcard_test_flags_then_complete(
     if expand_flags.contains(ExpandFlags::NO_SPACE_FOR_UNCLOSED_BRACE) {
         flags |= CompleteFlags::NO_SPACE;
     }
-    // Fast path: If we need directories, and we already know it is one,
-    // and we don't need to do anything else, just return it.
-    // This is a common case for cd completions, and removes the `stat` entirely in case the system
-    // supports it.
-    //
-    // Use is_dir_fast() rather than is_dir() here: for a symlink, d_type can't tell us the target's
-    // type, so is_dir() would fall back to a stat() that follows the link. That can be arbitrarily
-    // slow (e.g. a autofs, dead network mount, FUSE, or such), and even in the typical case costs
-    // extra lookups in some different tree, so we don't want to pay that cost before even checking
-    // whether the name matches what's being completed below.
-    if entry.is_dir_fast() == Some(true)
-        && !executables_only
-        && !expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS)
-    {
-        return wildcard_complete(
-            &(filename.to_owned() + L!("/")),
-            wc,
-            Some(&|_| L!("").to_owned()),
-            Some(out),
-            expand_flags,
-            CompleteFlags::NO_SPACE,
-        ) == WildcardResult::Match;
-    }
+
     // Check if it will match before stat().
     if wildcard_complete(filename, wc, None, None, expand_flags, flags) != WildcardResult::Match {
         return false;
@@ -364,9 +345,10 @@ fn wildcard_test_flags_then_complete(
     }
 
     // regular file *excludes* broken links - we have no use for them as commands.
-    let is_regular_file = entry.check_type().is_some_and(|x| x == DirEntryType::Reg);
+    let is_regular_file =
+        LazyCell::new(|| entry.check_type().is_some_and(|x| x == DirEntryType::Reg));
     let is_executable =
-        LazyCell::new(|| is_regular_file && waccess(filepath, AccessFlags::X_OK).is_ok());
+        LazyCell::new(|| *is_regular_file && waccess(filepath, AccessFlags::X_OK).is_ok());
     if executables_only && !*is_executable {
         return false;
     }
@@ -423,18 +405,15 @@ fn wildcard_test_flags_then_complete(
         None => WString::new(),
     };
     let desc_func: Option<&dyn Fn(&wstr) -> WString> = Some(&desc_func);
-    if entry.is_dir() {
-        return wildcard_complete(
-            &(filename.to_owned() + L!("/")),
-            wc,
-            desc_func,
-            Some(out),
-            expand_flags,
-            CompleteFlags::NO_SPACE,
-        ) == WildcardResult::Match;
-    }
 
-    wildcard_complete(filename, wc, desc_func, Some(out), expand_flags, flags)
+    let filename = if entry.is_dir() {
+        flags |= CompleteFlags::NO_SPACE;
+        Cow::Owned(filename.to_owned() + L!("/"))
+    } else {
+        Cow::Borrowed(filename)
+    };
+
+    wildcard_complete(&filename, wc, desc_func, Some(out), expand_flags, flags)
         == WildcardResult::Match
 }
 

@@ -1581,6 +1581,34 @@ You can change the settings of fish by changing the values of certain variables.
 
    controls if :ref:`autosuggestions` are enabled. Set it to 0 to disable, anything else to enable. By default they are on.
 
+.. envvar:: fish_autocomplete_autoshow
+
+   controls whether fish should surface the completion pager automatically as you type.
+   Set it to 1 to display completions (options, files, etc.) without pressing :kbd:`tab`.
+   This also works when :envvar:`fish_autosuggestion_enabled` is 0,
+   if you only want the live completion list.
+
+.. envvar:: fish_autoshow_complete_commands
+
+   controls whether autoshow should appear while typing the command token itself.
+   Set it to 0 to suppress autoshow at command position (for example while typing ``git``),
+   while still allowing autoshow for subcommands and arguments after a space.
+   Set it to 1 to keep command-position autoshow enabled (the default).
+
+.. envvar:: fish_autoshow_blocklist
+
+   list of commands for which the autoshow completion pager should be suppressed.
+   This is useful for commands with slow completion scripts (for example, ``git``).
+   Autosuggestions (ghost text) still work even when a command is blocklisted.
+
+.. envvar:: fish_autoshow_completion_limit
+
+   controls how many completion candidates autoshow surfaces at once.
+   The default is 40. Set it to a positive number to cap autoshow to that many items,
+   or set it to 0 to show every autoshow completion candidate that fish computed.
+   Autoshow uses that capped list as its fully expanded pager view, so pressing :kbd:`tab`
+   will navigate the existing autoshow list instead of expanding it further.
+
 .. envvar:: fish_transient_prompt
 
    If this is set to 1, fish will redraw prompts with a ``--final-rendering`` argument before running a commandline, allowing you to change it before pushing it to the scrollback. This enables :ref:`transient prompts <transient-prompt>`.

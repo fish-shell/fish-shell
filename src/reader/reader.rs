@@ -73,7 +73,7 @@ use crate::{
         get_offset_from_line, get_process_extent, get_process_first_token_offset, get_token_extent,
         lineno, locate_cmdsubst_range,
     },
-    parser::{BlockType, EvalRes, Parser, ParserEnvSetMode},
+    parser::{BlockType, CancelBehavior, EvalRes, Parser, ParserEnvSetMode},
     portable_atomic::AtomicU64,
     prelude::*,
     proc::{
@@ -98,7 +98,7 @@ use crate::{
     },
     termsize::{signal_safe_termsize_invalidate_tty, termsize_last, termsize_update},
     text_face::{TextFace, parse_text_face},
-    threads::{assert_is_background_thread, assert_is_main_thread},
+    threads::{assert_is_background_thread, assert_is_main_thread, is_main_thread},
     tokenizer::{
         TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType, Tokenizer, quote_end, tok_command,
         variable_assignment_equals_pos,
@@ -108,7 +108,7 @@ use crate::{
         deactivate_tty_protocols, get_tty_protocols_active, initialize_tty_protocols,
     },
     wildcard::wildcard_has,
-    wutil::{fstat, perror_nix, wstat},
+    wutil::{fish_wcstoi, fstat, perror_nix, wstat},
 };
 use assert_matches::assert_matches;
 use errno::{Errno, errno};
@@ -121,8 +121,8 @@ use fish_fallback::{fish_wcwidth, lowercase};
 use fish_feature_flags::FeatureFlag;
 use fish_util::{perror, write_to_fd};
 use fish_wcstringutil::{
-    CaseSensitivity, IsPrefix, StringFuzzyMatch, count_preceding_backslashes, is_prefix,
-    join_strings, string_prefixes_string, string_prefixes_string_case_insensitive,
+    CaseSensitivity, ContainType, IsPrefix, StringFuzzyMatch, count_preceding_backslashes,
+    is_prefix, join_strings, string_prefixes_string, string_prefixes_string_case_insensitive,
     string_prefixes_string_maybe_case_insensitive,
 };
 use fish_widestring::{ELLIPSIS_CHAR, UTF8_BOM_WCHAR, bytes2wcstring};
@@ -473,6 +473,9 @@ pub struct ReaderConfig {
     /// Whether to allow autosuggestions.
     pub autosuggest_ok: bool,
 
+    /// Whether to automatically show completion candidates while typing.
+    pub autoshow_completions: bool,
+
     /// Whether to reexecute prompt function before final rendering.
     pub transient_prompt: bool,
 
@@ -657,6 +660,43 @@ enum TransientEdit {
     HistorySearch,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Default)]
+enum PagerOwner {
+    #[default]
+    None,
+    Autoshow,
+    Completion,
+    History,
+}
+
+#[derive(Clone)]
+struct CompletionPagerData {
+    prefix: WString,
+    completions: CompletionList,
+}
+
+#[derive(Clone)]
+struct CompletionPrefixInsertion {
+    completion: WString,
+    flags: CompleteFlags,
+}
+
+enum CompletionDispatchPlan {
+    Flash,
+    InsertUnique(Completion),
+    ShowPager {
+        pager: CompletionPagerData,
+        insertion: Option<CompletionPrefixInsertion>,
+    },
+}
+
+#[derive(Clone)]
+struct AutoshowTabHandoff {
+    command_line: WString,
+    cursor_pos: usize,
+    cycle_cursor_pos: usize,
+}
+
 /// A struct describing the state of the interactive reader. These states can be stacked, in case
 /// reader_readline() calls are nested. This happens when the 'read' builtin is used.
 /// ReaderData does not contain a Parser - by itself it cannot execute fish script.
@@ -679,6 +719,8 @@ pub struct ReaderData {
     pager: Pager,
     /// The output of the pager.
     current_page_rendering: PageRendering,
+    /// Which subsystem currently owns pager contents.
+    pager_owner: PagerOwner,
     /// When backspacing, we temporarily suppress autosuggestions.
     suppress_autosuggestion: bool,
 
@@ -724,6 +766,9 @@ pub struct ReaderData {
     /// This is the saved command line before modification.
     cycle_command_line: WString,
     cycle_cursor_pos: usize,
+    /// Cached autoshow state that allows first tab to reuse the visible autoshow pager when
+    /// manual completion would only begin pager navigation.
+    autoshow_tab_handoff: Option<AutoshowTabHandoff>,
 
     /// If set, a key binding or the 'exit' command has asked us to exit our read loop.
     exit_loop_requested: bool,
@@ -746,6 +791,7 @@ pub struct ReaderData {
     /// If these differs from the text of the command line, then we must kick off a new request.
     in_flight_highlight_request: WString,
     in_flight_autosuggest_request: WString,
+    in_flight_autosuggest_request_cursor_pos: usize,
 
     rls: Option<ReadlineLoopState>,
 
@@ -829,6 +875,11 @@ fn read_i(parser: &mut Parser) {
         syntax_check_ok: true,
         expand_abbrev_ok: true,
         autosuggest_ok: check_bool_var(parser.vars(), L!("fish_autosuggestion_enabled"), true),
+        autoshow_completions: check_bool_var(
+            parser.vars(),
+            L!("fish_autocomplete_autoshow"),
+            false,
+        ),
         transient_prompt: check_bool_var(parser.vars(), L!("fish_transient_prompt"), false),
         ..Default::default()
     };
@@ -1112,6 +1163,14 @@ fn check_bool_var(vars: &dyn Environment, name: &wstr, default: bool) -> bool {
         .map_or(default, |v| v != L!("0"))
 }
 
+fn autoshow_completion_limit(vars: &dyn Environment) -> usize {
+    vars.get(L!("fish_autoshow_completion_limit"))
+        .map(|v| v.as_string())
+        .and_then(|v| fish_wcstoi(&v).ok())
+        .and_then(|limit| usize::try_from(limit).ok())
+        .unwrap_or(AUTOSHOW_COMPLETION_LIMIT_DEFAULT)
+}
+
 /// Enable or disable autosuggestions based on the associated variable.
 pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
     // We don't need to _change_ if we're not initialized yet.
@@ -1120,6 +1179,22 @@ pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
         if data.conf.autosuggest_ok != enable {
             data.conf.autosuggest_ok = enable;
             data.schedule_prompt_repaint();
+        }
+    }
+}
+
+/// Enable or disable automatic completion popups based on the associated variable.
+pub fn reader_set_autocomplete_autoshow(vars: &dyn Environment) {
+    if let Some(data) = current_data() {
+        let enable = check_bool_var(vars, L!("fish_autocomplete_autoshow"), false);
+        if data.conf.autoshow_completions != enable {
+            data.conf.autoshow_completions = enable;
+            if !enable {
+                data.clear_autoshow_pager();
+            } else {
+                data.input_data
+                    .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+            }
         }
     }
 }
@@ -1243,7 +1318,7 @@ pub fn reader_readline(
 
 /// Get the command line state. This may be fetched on a background thread.
 pub fn commandline_get_state(sync: bool) -> CommandlineState {
-    if sync {
+    if sync && is_main_thread() {
         current_data().map(|data| data.update_commandline_state());
     }
     commandline_state_snapshot().clone()
@@ -1299,6 +1374,8 @@ const ENV_CMD_DURATION: &wstr = L!("CMD_DURATION");
 /// Maximum length of prefix string when printing completion list. Longer prefixes will be
 /// ellipsized.
 const PREFIX_MAX_LEN: usize = 9;
+/// Default maximum number of autoshow completions we surface automatically while typing.
+const AUTOSHOW_COMPLETION_LIMIT_DEFAULT: usize = 40;
 
 /// A simple prompt for reading shell commands that does not rely on fish specific commands, meaning
 /// it will work even if fish is not installed. This is used by read_i.
@@ -1396,6 +1473,7 @@ impl ReaderData {
             saved_autosuggestion: Default::default(),
             pager: Default::default(),
             current_page_rendering: Default::default(),
+            pager_owner: PagerOwner::None,
             suppress_autosuggestion: Default::default(),
             reset_loop_state: Default::default(),
             first_prompt: true,
@@ -1415,6 +1493,7 @@ impl ReaderData {
             right_prompt_buff: Default::default(),
             cycle_command_line: Default::default(),
             cycle_cursor_pos: Default::default(),
+            autoshow_tab_handoff: Default::default(),
             exit_loop_requested: Default::default(),
             did_warn_for_bg_jobs: Default::default(),
             kill_item: Default::default(),
@@ -1424,6 +1503,7 @@ impl ReaderData {
             last_jump_precision: JumpPrecision::To,
             in_flight_highlight_request: Default::default(),
             in_flight_autosuggest_request: Default::default(),
+            in_flight_autosuggest_request_cursor_pos: Default::default(),
             rls: None,
             debouncers: Debouncers::new(),
         }))
@@ -1504,6 +1584,7 @@ impl ReaderData {
                         self.suppress_autosuggestion = false;
                     }
                 }
+                self.clear_autoshow_pager();
             }
             EditableLineTag::SearchField => {
                 if self.history_pager.is_some() {
@@ -2057,6 +2138,10 @@ fn try_apply_edit_to_autosuggestion(
     let search_string_range = autosuggestion.search_string_range.clone();
 
     let replacement = &edit.replacement;
+    // Deletions widen the candidate pool, so recompute instead of preserving a stale suggestion.
+    if replacement.is_empty() && !edit.range.is_empty() {
+        return false;
+    }
     let mut matched_codepoints_delta = 0_isize;
     // This is a heuristic with false negatives but that seems fine.
     if edit.range.start < search_string_range.start
@@ -2224,7 +2309,6 @@ impl ReaderData {
                 break;
             }
         }
-        self.suppress_autosuggestion = true;
         self.erase_substring(elt, pos..pos_end);
         self.update_buff_pos(elt, None);
     }
@@ -2311,11 +2395,6 @@ impl ReaderData {
         // If we are moving left, buff_pos-1 is the index of the first character we do not delete
         // (possibly -1). If we are moving right, then buff_pos is that index - possibly el->size().
         if erase {
-            // Don't autosuggest after a kill.
-            if elt == EditableLineTag::Commandline {
-                self.suppress_autosuggestion = true;
-            }
-
             if move_right {
                 self.kill(
                     elt,
@@ -2748,17 +2827,22 @@ impl<'a> Reader<'a> {
             }
         }
 
+        let mut did_complete = false;
         if !accumulated_chars.is_empty() {
             let (elt, _el) = self.active_edit_line();
+            let last_char = accumulated_chars.as_char_slice().last().copied();
             self.insert_string(elt, accumulated_chars);
 
             // End paging upon inserting into the normal command line.
             if elt == EditableLineTag::Commandline {
                 self.clear_pager();
+                did_complete = self.maybe_force_autoshow_after_insertion(last_char);
             }
 
             // Since we handled a normal character, we don't have a last command.
-            self.rls_mut().last_cmd = None;
+            if !did_complete {
+                self.rls_mut().last_cmd = None;
+            }
         }
 
         event_needing_handling
@@ -2774,6 +2858,48 @@ impl<'a> Reader<'a> {
             self.layout_and_repaint(L!("toplevel"));
         }
         self.force_exec_prompt_and_repaint = false;
+    }
+
+    /// Force an autoshow refresh after inserting characters that should immediately update the
+    /// completion pager (e.g. `cd ` or `-` for options).
+    fn maybe_force_autoshow_after_insertion(&mut self, last_char: Option<char>) -> bool {
+        if !self.conf.autoshow_completions || !self.conf.complete_ok {
+            return false;
+        }
+        let Some(last_char) = last_char else {
+            return false;
+        };
+        let cursor = self.command_line.position();
+        let text = self.command_line.text().to_owned();
+        let line_range = range_of_line_at_cursor(&text, cursor);
+        let at_line_end = cursor == line_range.end;
+        if !at_line_end {
+            return false;
+        }
+        if matches!(last_char, ' ' | '\t') {
+            self.update_autosuggestion();
+            return false;
+        }
+        if last_char == '-' && self.token_is_only_dashes(&text, cursor) {
+            self.update_autosuggestion();
+        }
+        false
+    }
+
+    fn token_is_only_dashes(&self, text: &wstr, cursor: usize) -> bool {
+        let cmdsub = get_cmdsubst_extent(text, cursor);
+        let position_in_cmdsub = cursor - cmdsub.start;
+        let (mut token_range, _) = get_token_extent(&text[cmdsub.clone()], position_in_cmdsub);
+        if token_range.end > cmdsub.len() {
+            token_range.end = cmdsub.len();
+        }
+        token_range.start += cmdsub.start;
+        token_range.end += cmdsub.start;
+        if token_range.start >= token_range.end {
+            return false;
+        }
+        let token = &text[token_range];
+        token.chars().all(|c| c == '-')
     }
 
     fn handle_char_event(&mut self, injected_event: Option<CharEvent>) -> ControlFlow<()> {
@@ -2869,6 +2995,7 @@ impl<'a> Reader<'a> {
                 self.run_input_command_scripts(&command);
             }
             CharEvent::Key(kevt) => {
+                let mut did_complete = false;
                 // Ordinary char.
                 if kevt.input_style == CharInputStyle::NotFirst
                     && self.active_edit_line().1.position() == 0
@@ -2878,16 +3005,21 @@ impl<'a> Reader<'a> {
                     // Regular character.
                     let (elt, _el) = self.active_edit_line();
                     if let Some(cs) = kevt.key.text_to_insert() {
-                        self.insert_string(elt, WString::from_iter(cs));
+                        let chars = WString::from_iter(cs);
+                        let last_char = chars.as_char_slice().last().copied();
+                        self.insert_string(elt, chars);
 
                         if elt == EditableLineTag::Commandline {
                             self.clear_pager();
                             // We end history search. We could instead update the search string.
                             self.history_search.reset();
+                            did_complete = self.maybe_force_autoshow_after_insertion(last_char);
                         }
                     }
                 }
-                self.rls_mut().last_cmd = None;
+                if !did_complete {
+                    self.rls_mut().last_cmd = None;
+                }
             }
             CharEvent::Implicit(implicit_event) => {
                 use ImplicitEvent::*;
@@ -3183,6 +3315,9 @@ impl<'a> Reader<'a> {
             }
             rl::Complete | rl::CompleteAndSearch => {
                 if !self.conf.complete_ok {
+                    return;
+                }
+                if self.try_promote_autoshow_pager(c) {
                     return;
                 }
                 if self.is_navigating_pager_contents()
@@ -3509,6 +3644,7 @@ impl<'a> Reader<'a> {
                 self.cycle_cursor_pos = self.command_line.position();
 
                 self.history_pager = Some(0..1);
+                self.pager_owner = PagerOwner::History;
                 // Update the pager data.
                 self.pager.set_search_field_shown(true);
                 self.pager.set_prefix(Cow::Borrowed(L!("► ")), false);
@@ -4592,10 +4728,22 @@ impl<'a> Reader<'a> {
 impl ReaderData {
     // Ensure we have no pager contents.
     fn clear_pager(&mut self) {
+        self.reset_pager_state();
+    }
+
+    fn clear_autoshow_pager(&mut self) {
+        if self.pager_owner == PagerOwner::Autoshow {
+            self.reset_pager_state();
+        }
+    }
+
+    fn reset_pager_state(&mut self) {
         self.pager.clear();
         self.history_pager = None;
         self.clear(EditableLineTag::SearchField);
         self.command_line_transient_edit = None;
+        self.pager_owner = PagerOwner::None;
+        self.autoshow_tab_handoff = None;
     }
 
     fn get_selection(&self) -> Option<Range<usize>> {
@@ -5258,9 +5406,20 @@ pub(super) struct AutosuggestionResult {
 
     // The commandline this result is based off.
     command_line: WString,
+    // The cursor position this result is based off.
+    cursor_pos: usize,
 
     // The list of completions which may need loading.
     needs_load: Vec<WString>,
+
+    // Cheap completions we can surface automatically.
+    cheap_completions: CompletionList,
+    // Render-only text for autoshow entries.
+    autoshow_display_completions: Vec<WString>,
+    // Prefix to highlight inside autoshow completion display text.
+    autoshow_highlight_prefix_match: WString,
+    // Cached first-tab handoff metadata for autoshow.
+    autoshow_tab_handoff: Option<AutoshowTabHandoff>,
 }
 
 impl std::ops::Deref for AutosuggestionResult {
@@ -5273,10 +5432,12 @@ impl std::ops::Deref for AutosuggestionResult {
 impl AutosuggestionResult {
     fn new(
         command_line: WString,
+        cursor_pos: usize,
         search_string_range: Range<usize>,
         text: WString,
         icase_matched_codepoints: Option<usize>,
         is_whole_item_from_history: bool,
+        cheap_completions: CompletionList,
     ) -> Self {
         Self {
             autosuggestion: Autosuggestion {
@@ -5286,7 +5447,12 @@ impl AutosuggestionResult {
                 is_whole_item_from_history,
             },
             command_line,
+            cursor_pos,
             needs_load: vec![],
+            cheap_completions,
+            autoshow_display_completions: vec![],
+            autoshow_highlight_prefix_match: WString::new(),
+            autoshow_tab_handoff: None,
         }
     }
 
@@ -5296,31 +5462,202 @@ impl AutosuggestionResult {
     }
 }
 
-// Returns a function that can be invoked (potentially
-// on a background thread) to determine the autosuggestion
+fn autoshow_token_at_cursor(command_line: &wstr, cursor_pos: usize) -> WString {
+    if command_line.is_empty() || cursor_pos > command_line.len() {
+        return WString::new();
+    }
+
+    let cmdsub = get_cmdsubst_extent(command_line, cursor_pos);
+    let position_in_cmdsub = cursor_pos - cmdsub.start;
+    let (mut token_range, _) = get_token_extent(&command_line[cmdsub.clone()], position_in_cmdsub);
+    if token_range.end > cmdsub.len() {
+        token_range.end = cmdsub.len();
+    }
+    token_range.start += cmdsub.start;
+    token_range.end += cmdsub.start;
+    command_line[token_range].to_owned()
+}
+
+fn autoshow_display_completions_for_cursor(
+    command_line: &wstr,
+    cursor_pos: usize,
+    completions: &[Completion],
+) -> (Vec<WString>, WString) {
+    let token = autoshow_token_at_cursor(command_line, cursor_pos);
+    let token_slice: &wstr = &token;
+    let last_slash_idx = token_slice.chars().rposition(|c| c == '/');
+    let (dir_part, file_part) = if let Some(idx) = last_slash_idx {
+        token_slice.split_at(idx + 1)
+    } else {
+        (L!("").as_ref(), token_slice)
+    };
+
+    let mut display_completions = Vec::with_capacity(completions.len());
+    for comp in completions {
+        let completion_matches_prefix = !file_part.is_empty()
+            && (comp.completion.starts_with(file_part)
+                || string_prefixes_string_case_insensitive(file_part, &comp.completion));
+        let completion_is_fuzzy_interior_match =
+            matches!(comp.r#match.typ, ContainType::Substr | ContainType::Subseq);
+        let display = if comp.replaces_token() {
+            if !dir_part.is_empty() && comp.completion.starts_with(dir_part) {
+                comp.completion[dir_part.len()..].to_owned()
+            } else if completion_matches_prefix
+                || completion_is_fuzzy_interior_match
+                || file_part.starts_with('-')
+            {
+                comp.completion.clone()
+            } else {
+                let mut new_comp = file_part.to_owned();
+                new_comp.push_utfstr(&comp.completion);
+                new_comp
+            }
+        } else {
+            let mut new_comp = file_part.to_owned();
+            new_comp.push_utfstr(&comp.completion);
+            new_comp
+        };
+        display_completions.push(display);
+    }
+    (display_completions, file_part.to_owned())
+}
+
+fn autoshow_blocklist_command_token(command_line: &wstr, cursor_pos: usize) -> WString {
+    let process_range = get_process_extent(command_line, cursor_pos, None);
+    tok_command(&command_line[process_range])
+}
+
+fn autoshow_cursor_in_command_position(command_line: &wstr, cursor_pos: usize) -> bool {
+    let cursor_pos = cursor_pos.min(command_line.len());
+
+    // Mirror completion parsing: if the cursor is past trailing spaces, backtrack so we can resolve
+    // the active process.
+    let mut position_in_statement = cursor_pos;
+    while position_in_statement > 0 && command_line.char_at(position_in_statement - 1) == ' ' {
+        position_in_statement -= 1;
+    }
+
+    let mut tokens = Vec::new();
+    get_process_extent(command_line, position_in_statement, Some(&mut tokens));
+
+    // Skip variable assignments that appear before the cursor.
+    let mut assignment_count = 0;
+    for tok in &tokens {
+        if tok.location_in_or_at_end_of_source_range(cursor_pos) {
+            break;
+        }
+        if variable_assignment_equals_pos(tok.get_source(command_line)).is_none() {
+            break;
+        }
+        assignment_count += 1;
+    }
+    tokens.drain(..assignment_count);
+
+    let Some(cmd_tok) = tokens.first() else {
+        return true;
+    };
+    if cmd_tok.type_ != TokenType::String {
+        return false;
+    }
+    cmd_tok.location_in_or_at_end_of_source_range(cursor_pos)
+}
+
+fn autoshow_command_basename(command: &wstr) -> &wstr {
+    if let Some(idx) = command.chars().rposition(|c| c == '/') {
+        if idx + 1 < command.len() {
+            return &command[idx + 1..];
+        }
+    }
+    command
+}
+
+fn autoshow_blocklist_matches_command(blocklist: &[WString], command: &wstr) -> bool {
+    if command.is_empty() {
+        return false;
+    }
+    let command_base = autoshow_command_basename(command);
+    blocklist.iter().any(|entry| {
+        if entry.is_empty() {
+            return false;
+        }
+        let entry: &wstr = entry;
+        let entry_base = autoshow_command_basename(entry);
+        entry == command
+            || entry == command_base
+            || entry_base == command
+            || entry_base == command_base
+    })
+}
+
 fn get_autosuggestion_performer(
     parser: &Parser,
     command_line: WString,
     cursor_pos: usize,
     history: Arc<History>,
+    want_autoshow: bool,
 ) -> impl FnOnce() -> AutosuggestionResult + use<> {
     let generation_count = read_generation_count();
-    let vars = parser.vars().snapshot();
+    let vars = parser.vars().create_child(false);
     let working_directory = parser.vars().get_pwd_slash();
     move || {
         assert_is_background_thread();
         let nothing = AutosuggestionResult::default();
-        let ctx = &mut get_bg_context(&vars, generation_count);
+        let cancel_checker = move || generation_count != read_generation_count();
+
+        // Check blocklist to see if we should suppress autoshow for this command.
+        let mut want_autoshow_pager = want_autoshow;
+        if want_autoshow_pager {
+            let complete_commands =
+                check_bool_var(&vars, L!("fish_autoshow_complete_commands"), true);
+            if !complete_commands && autoshow_cursor_in_command_position(&command_line, cursor_pos)
+            {
+                want_autoshow_pager = false;
+            }
+        }
+        if want_autoshow_pager {
+            if let Some(blocklist) = vars.get(L!("fish_autoshow_blocklist")) {
+                let cmd = autoshow_blocklist_command_token(&command_line, cursor_pos);
+                if autoshow_blocklist_matches_command(blocklist.as_list(), &cmd) {
+                    want_autoshow_pager = false;
+                }
+            }
+        }
+
+        // If we want autoshow, we need a parser to run completions that require command substitutions.
+        let mut parser = if want_autoshow_pager {
+            Some(Parser::new(
+                vars.create_child(false),
+                CancelBehavior::Return,
+            ))
+        } else {
+            None
+        };
+
+        let mut ctx = if let Some(parser) = &mut parser {
+            OperationContext::foreground(
+                parser,
+                Box::new(cancel_checker),
+                crate::operation_context::EXPANSION_LIMIT_BACKGROUND,
+            )
+        } else {
+            OperationContext::background_with_cancel_checker(
+                &vars,
+                Box::new(cancel_checker),
+                crate::operation_context::EXPANSION_LIMIT_BACKGROUND,
+            )
+        };
         if ctx.check_cancel() {
             return nothing;
         }
 
         // Only to be used if no case-sensitive suggestions are found.
+        let mut history_result = None;
+        let mut history_result_is_whole = false;
         let mut icase_history_result = None;
 
         let line_range = range_of_line_at_cursor(&command_line, cursor_pos);
         // Search history for a matching item unless this line is not a continuation line or quoted.
-        for (search_type, range) in [
+        'history_search: for (search_type, range) in [
             (SearchType::Prefix, 0..command_line.len()),
             (SearchType::LinePrefix, line_range.clone()),
         ] {
@@ -5409,21 +5746,27 @@ fn get_autosuggestion_performer(
                     suggested_range.clone(),
                     item.get_required_paths(),
                     &working_directory,
-                    ctx,
+                    &mut ctx,
                 ) {
                     // The command autosuggestion was handled specially, so we're done.
                     let is_whole = suggested_range.len() == item.str().len();
                     let result = AutosuggestionResult::new(
                         command_line.clone(),
+                        cursor_pos,
                         range.clone(),
                         full[suggested_range].into(),
                         icase.then(|| searcher.canon_term().char_count()),
                         is_whole,
+                        CompletionList::new(),
                     );
                     if icase {
-                        icase_history_result = Some(result);
+                        if icase_history_result.is_none() {
+                            icase_history_result = Some(result);
+                        }
                     } else {
-                        return result;
+                        history_result_is_whole = is_whole;
+                        history_result = Some(result);
+                        break 'history_search;
                     }
                 }
             }
@@ -5432,6 +5775,12 @@ fn get_autosuggestion_performer(
         // Maybe cancel here.
         if ctx.check_cancel() {
             return nothing;
+        }
+
+        if !want_autoshow_pager && history_result_is_whole {
+            if let Some(result) = history_result.take() {
+                return result;
+            }
         }
 
         let Some(last_char) = command_line[line_range.clone()].chars().next_back() else {
@@ -5453,50 +5802,153 @@ fn get_autosuggestion_performer(
             return nothing;
         }
 
-        // Try normal completions.
-        let complete_flags = CompletionRequestOptions::autosuggest();
-        let mut would_be_cursor = line_range.end;
-        let (mut completions, needs_load) =
-            complete(&command_line[..would_be_cursor], complete_flags, ctx);
-
-        let suggestion = if completions.is_empty() {
-            // If there are no completions to suggest, fall back to icase history.
-            if let Some(result) = icase_history_result {
+        if !want_autoshow_pager {
+            if let Some(result) = history_result.take() {
                 return result;
             }
-            WString::new()
-        } else {
-            sort_and_prioritize(&mut completions, complete_flags);
-            let comp = &completions[0];
+        }
 
-            // Prefer icase history over smartcase/icase completions.
-            if let (Some(result), CaseSensitivity::Smart | CaseSensitivity::Insensitive) =
-                (icase_history_result, comp.r#match.case_fold)
-            {
-                return result;
+        let mut completion_result = None;
+        let mut completion_case_fold = None;
+        let need_completions_for_autosuggestion =
+            history_result.is_none() || !history_result_is_whole;
+        if need_completions_for_autosuggestion || want_autoshow_pager {
+            let complete_flags = if want_autoshow_pager {
+                CompletionRequestOptions::autoshow()
+            } else {
+                // Try normal completions for autosuggestion.
+                CompletionRequestOptions::autosuggest()
+            };
+            let autoshow_limit = autoshow_completion_limit(&vars);
+            let would_be_cursor = line_range.end;
+            let (mut completions, needs_load) =
+                complete(&command_line[..would_be_cursor], complete_flags, &mut ctx);
+
+            if !completions.is_empty() {
+                sort_and_prioritize(&mut completions, complete_flags);
+                let autoshow_tab_handoff = if want_autoshow_pager {
+                    parser.as_ref().and_then(|parser| {
+                        maybe_make_autoshow_tab_handoff(
+                            parser,
+                            &command_line,
+                            cursor_pos,
+                            &completions,
+                            want_autoshow_pager,
+                        )
+                    })
+                } else {
+                    None
+                };
+                let cheap_menu: CompletionList = if want_autoshow_pager {
+                    if autoshow_limit == 0 {
+                        completions.clone()
+                    } else {
+                        completions.iter().take(autoshow_limit).cloned().collect()
+                    }
+                } else {
+                    CompletionList::new()
+                };
+                let (autoshow_display_completions, autoshow_highlight_prefix_match) =
+                    if want_autoshow_pager {
+                        autoshow_display_completions_for_cursor(
+                            &command_line,
+                            would_be_cursor,
+                            &cheap_menu,
+                        )
+                    } else {
+                        (Vec::new(), WString::new())
+                    };
+                let comp = &completions[0];
+                completion_case_fold = Some(comp.r#match.case_fold);
+
+                let mut cursor = would_be_cursor;
+                let full_line = completion_apply_to_command_line(
+                    &mut OperationContext::background_interruptible(&vars),
+                    &comp.completion,
+                    comp.flags,
+                    &command_line,
+                    &mut cursor,
+                    /*append_only=*/ true,
+                    /*is_unique=*/ false,
+                );
+                let suggestion = line_at_cursor(&full_line, cursor).to_owned();
+                let lowercase_char_count =
+                    lowercase(command_line[line_range.clone()].chars()).count();
+                let mut result = AutosuggestionResult::new(
+                    command_line.clone(),
+                    cursor_pos,
+                    line_range,
+                    suggestion,
+                    Some(lowercase_char_count), // normal completions are case-insensitive
+                    /*is_whole_item_from_history=*/ false,
+                    cheap_menu,
+                );
+                result.needs_load = needs_load;
+                result.autoshow_display_completions = autoshow_display_completions;
+                result.autoshow_highlight_prefix_match = autoshow_highlight_prefix_match;
+                result.autoshow_tab_handoff = autoshow_tab_handoff;
+                completion_result = Some(result);
             }
+        }
 
-            let full_line = completion_apply_to_command_line(
-                &mut OperationContext::background_interruptible(&vars),
-                &comp.completion,
-                comp.flags,
-                &command_line,
-                &mut would_be_cursor,
-                /*append_only=*/ true,
-                /*is_unique=*/ false,
-            );
-            line_at_cursor(&full_line, would_be_cursor).to_owned()
-        };
-        let lowercase_char_count = lowercase(command_line[line_range.clone()].chars()).count();
-        let mut result = AutosuggestionResult::new(
-            command_line,
-            line_range,
-            suggestion,
-            Some(lowercase_char_count), // normal completions are case-insensitive
-            /*is_whole_item_from_history=*/ false,
-        );
-        result.needs_load = needs_load;
-        result
+        if let Some(mut history_res) = history_result {
+            if !history_result_is_whole {
+                if let Some(comp_res) = completion_result {
+                    return comp_res;
+                }
+                return history_res;
+            }
+            if let Some(comp_res) = &completion_result {
+                history_res
+                    .cheap_completions
+                    .clone_from(&comp_res.cheap_completions);
+                history_res.needs_load.clone_from(&comp_res.needs_load);
+                history_res
+                    .autoshow_display_completions
+                    .clone_from(&comp_res.autoshow_display_completions);
+                history_res.autoshow_highlight_prefix_match =
+                    comp_res.autoshow_highlight_prefix_match.clone();
+                history_res
+                    .autoshow_tab_handoff
+                    .clone_from(&comp_res.autoshow_tab_handoff);
+            }
+            return history_res;
+        }
+
+        if let Some(case_fold) = completion_case_fold {
+            if matches!(
+                case_fold,
+                CaseSensitivity::Smart | CaseSensitivity::Insensitive
+            ) {
+                if let Some(mut icase_res) = icase_history_result.take() {
+                    if let Some(comp_res) = &completion_result {
+                        icase_res
+                            .cheap_completions
+                            .clone_from(&comp_res.cheap_completions);
+                        icase_res.needs_load.clone_from(&comp_res.needs_load);
+                        icase_res
+                            .autoshow_display_completions
+                            .clone_from(&comp_res.autoshow_display_completions);
+                        icase_res.autoshow_highlight_prefix_match =
+                            comp_res.autoshow_highlight_prefix_match.clone();
+                        icase_res
+                            .autoshow_tab_handoff
+                            .clone_from(&comp_res.autoshow_tab_handoff);
+                    }
+                    return icase_res;
+                }
+            }
+        }
+
+        if let Some(result) = completion_result {
+            return result;
+        }
+
+        if let Some(result) = icase_history_result {
+            return result;
+        }
+
+        nothing
     }
 }
 
@@ -5511,11 +5963,17 @@ enum AutosuggestionPortion {
 
 impl<'a> Reader<'a> {
     fn can_autosuggest(&self) -> bool {
-        // We autosuggest if suppress_autosuggestion is not set, if we're not doing a history search,
-        // and our command line contains a non-whitespace character.
+        self.conf.autosuggest_ok && self.commandline_ready_for_background_completion()
+    }
+
+    fn should_compute_background_completion(&self) -> bool {
+        (self.conf.autosuggest_ok || self.conf.autoshow_completions)
+            && self.commandline_ready_for_background_completion()
+    }
+
+    fn commandline_ready_for_background_completion(&self) -> bool {
         let (elt, el) = self.active_edit_line();
-        self.conf.autosuggest_ok
-            && !self.suppress_autosuggestion
+        !self.suppress_autosuggestion
             && self.history_search.is_at_present()
             && elt == EditableLineTag::Commandline
             && el
@@ -5525,12 +5983,17 @@ impl<'a> Reader<'a> {
     }
 
     // Called after an autosuggestion has been computed on a background thread.
-    fn autosuggest_completed(&mut self, result: AutosuggestionResult) {
+    fn autosuggest_completed(&mut self, mut result: AutosuggestionResult) {
         assert_is_main_thread();
-        if result.command_line == self.data.in_flight_autosuggest_request {
+        if result.command_line == self.data.in_flight_autosuggest_request
+            && result.cursor_pos == self.data.in_flight_autosuggest_request_cursor_pos
+        {
             self.data.in_flight_autosuggest_request.clear();
+            self.data.in_flight_autosuggest_request_cursor_pos = 0;
         }
-        if result.command_line != self.command_line.text() {
+        if result.command_line != self.command_line.text()
+            || result.cursor_pos != self.command_line.position()
+        {
             // This autosuggestion is stale.
             return;
         }
@@ -5550,27 +6013,42 @@ impl<'a> Reader<'a> {
             // We loaded new completions for this command.
             // Re-do our autosuggestion.
             self.update_autosuggestion();
-        } else if !result.is_empty()
-            && self.can_autosuggest()
-            && string_prefixes_string_maybe_case_insensitive(
-                result.icase_matched_codepoints.is_some(),
-                result.search_string(),
-                &result.text,
-            )
-        {
-            // Autosuggestion is active and the search term has not changed, so we're good to go.
-            self.autosuggestion = result.autosuggestion;
-            if self.is_repaint_needed(None) {
-                self.layout_and_repaint(L!("autosuggest"));
+        } else {
+            let cheap_menu = std::mem::take(&mut result.cheap_completions);
+            let display_completions = std::mem::take(&mut result.autoshow_display_completions);
+            let highlight_prefix_match =
+                std::mem::take(&mut result.autoshow_highlight_prefix_match);
+            let autoshow_tab_handoff = result.autoshow_tab_handoff.take();
+            self.update_autoshow_completions(
+                cheap_menu,
+                display_completions,
+                highlight_prefix_match,
+                autoshow_tab_handoff,
+            );
+            if !result.is_empty()
+                && self.can_autosuggest()
+                && string_prefixes_string_maybe_case_insensitive(
+                    result.icase_matched_codepoints.is_some(),
+                    result.search_string(),
+                    &result.text,
+                )
+            {
+                // Autosuggestion is active and the search term has not changed, so we're good to go.
+                self.autosuggestion = result.autosuggestion;
+                if self.is_repaint_needed(None) {
+                    self.layout_and_repaint(L!("autosuggest"));
+                }
             }
         }
     }
 
     fn update_autosuggestion(&mut self) {
         // If we can't autosuggest, just clear it.
-        if !self.can_autosuggest() {
+        if !self.should_compute_background_completion() {
             self.data.in_flight_autosuggest_request.clear();
+            self.data.in_flight_autosuggest_request_cursor_pos = 0;
             self.data.autosuggestion.clear();
+            self.clear_autoshow_pager();
             return;
         }
 
@@ -5582,23 +6060,31 @@ impl<'a> Reader<'a> {
                 &el.text()[autosuggestion.search_string_range.clone()],
                 &autosuggestion.text
             ));
-            return;
+            if !self.conf.autoshow_completions {
+                return;
+            }
         }
 
         // Do nothing if we've already kicked off this autosuggest request.
-        if el.text() == self.in_flight_autosuggest_request {
+        if el.text() == self.in_flight_autosuggest_request
+            && el.position() == self.in_flight_autosuggest_request_cursor_pos
+        {
             return;
         }
         self.data.in_flight_autosuggest_request = el.text().to_owned();
+        self.data.in_flight_autosuggest_request_cursor_pos = el.position();
 
         // Clear the autosuggestion and kick it off in the background.
         flog!(reader_render, "Autosuggesting");
-        self.data.autosuggestion.clear();
+        if !self.is_at_line_with_autosuggestion() {
+            self.data.autosuggestion.clear();
+        }
         let performer = get_autosuggestion_performer(
             self.parser,
             el.text().to_owned(),
             el.position(),
             self.history.clone(),
+            self.conf.autoshow_completions,
         );
         self.debouncers.autosuggestions.perform(performer);
     }
@@ -5715,6 +6201,61 @@ impl<'a> Reader<'a> {
         self.data
             .replace_substring(EditableLineTag::Commandline, range, replacement);
         self.update_buff_pos(self.active_edit_line_tag(), None);
+    }
+
+    fn update_autoshow_completions(
+        &mut self,
+        completions: CompletionList,
+        mut display_completions: Vec<WString>,
+        highlight_prefix_match: WString,
+        autoshow_tab_handoff: Option<AutoshowTabHandoff>,
+    ) {
+        if completions.is_empty() {
+            self.clear_autoshow_pager();
+            return;
+        }
+
+        if !self.conf.autoshow_completions || !self.conf.complete_ok {
+            self.clear_autoshow_pager();
+            return;
+        }
+
+        if self.history_pager.is_some() {
+            self.clear_autoshow_pager();
+            return;
+        }
+
+        if self.pager_owner != PagerOwner::None && self.pager_owner != PagerOwner::Autoshow {
+            // Another pager (history search or manual completion) owns the view.
+            self.autoshow_tab_handoff = None;
+            return;
+        }
+
+        if self.active_edit_line_tag() != EditableLineTag::Commandline {
+            self.clear_autoshow_pager();
+            return;
+        }
+
+        if display_completions.len() != completions.len() {
+            display_completions = completions.iter().map(|c| c.completion.clone()).collect();
+        }
+
+        // Render autoshow candidates using display-only text while preserving insertion completion
+        // semantics.
+        let prefix = WString::new();
+        self.pager.set_search_field_shown(false);
+        self.pager.set_prefix(Cow::Owned(prefix), true);
+        self.pager
+            .set_highlight_prefix_match(highlight_prefix_match);
+        self.pager
+            .set_completions_with_display(&completions, &display_completions, true);
+        self.pager.set_fully_disclosed();
+        // Record the command line so pager navigation applies relative to it.
+        self.cycle_command_line = self.command_line.text().to_owned();
+        self.cycle_cursor_pos = self.command_line.position();
+        self.autoshow_tab_handoff = autoshow_tab_handoff;
+        self.pager_owner = PagerOwner::Autoshow;
+        self.layout_and_repaint(L!("autoshow"));
     }
 }
 
@@ -5976,6 +6517,7 @@ impl<'a> Reader<'a> {
                 L!("").to_owned()
             };
         self.pager.set_completions(&result.matched_commands, false);
+        self.pager_owner = PagerOwner::History;
         if why == HistoryPagerInvocation::Refresh {
             self.pager.set_selected_completion_index(old_pager_index);
             self.pager_selection_changed();
@@ -6895,7 +7437,257 @@ fn reader_can_replace(s: &wstr, flags: CompleteFlags) -> bool {
         .any(|c| matches!(c, '$' | '*' | '?' | '(' | '{' | '}' | ')'))
 }
 
+struct CompletionTokenExtent {
+    token_range: Range<usize>,
+    position_in_token: usize,
+}
+
+fn completion_token_extent_at_cursor(
+    command_line: &wstr,
+    cursor_pos: usize,
+) -> CompletionTokenExtent {
+    // Figure out the extent of the command substitution surrounding the cursor.
+    let cmdsub_range = get_cmdsubst_extent(command_line, cursor_pos);
+    let position_in_cmdsub = cursor_pos - cmdsub_range.start;
+
+    // Figure out the extent of the token within the command substitution.
+    let (mut token_range, _) =
+        get_token_extent(&command_line[cmdsub_range.clone()], position_in_cmdsub);
+    let position_in_token = position_in_cmdsub - token_range.start;
+
+    // The token may extend past the end of the command substitution, e.g. in `(echo foo)` the last
+    // token is reported as `foo)`. Clamp it back to the command substitution.
+    if token_range.end > cmdsub_range.len() {
+        token_range.end = cmdsub_range.len();
+    }
+    token_range.start += cmdsub_range.start;
+    token_range.end += cmdsub_range.start;
+
+    CompletionTokenExtent {
+        token_range,
+        position_in_token,
+    }
+}
+
+fn completion_dispatch_plan(
+    command_line: &wstr,
+    token_range: Range<usize>,
+    mut comp: Vec<Completion>,
+    autoshow_completions: bool,
+) -> CompletionDispatchPlan {
+    let tok = command_line[token_range].to_owned();
+
+    comp.retain({
+        let best_rank = comp.iter().map(|c| c.rank()).min().unwrap_or(u32::MAX);
+        move |c| {
+            // Ignore completions with a less suitable match rank than the best.
+            assert!(c.rank() >= best_rank);
+            c.rank() == best_rank
+        }
+    });
+
+    // Determine whether we are going to replace the token or not. If any commands of the best rank
+    // do not require replacement, then ignore all those that want to use replacement.
+    let will_replace_token = comp.iter().all(|c| c.replaces_token());
+
+    comp.retain(|c| !c.replaces_token() || reader_can_replace(&tok, c.flags));
+
+    for c in &mut comp {
+        if !will_replace_token && c.replaces_token() {
+            c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
+        }
+    }
+
+    match comp.len() {
+        0 => return CompletionDispatchPlan::Flash,
+        1 => return CompletionDispatchPlan::InsertUnique(comp.remove(0)),
+        _ => {}
+    }
+
+    let mut use_prefix = false;
+    let mut common_prefix = L!("");
+    let mut prefix_insertion = None;
+    let all_matches_exact_or_prefix = comp.iter().all(|c| c.r#match.is_exact_or_prefix());
+    assert!(will_replace_token || all_matches_exact_or_prefix);
+    if all_matches_exact_or_prefix {
+        // Try to find a common prefix to insert among the surviving completions.
+        let mut flags = CompleteFlags::empty();
+        let mut prefix_is_partial_completion = false;
+        let mut first = true;
+        for c in &comp {
+            if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                continue;
+            }
+            if first {
+                // First entry, use the whole string.
+                common_prefix = &c.completion;
+                flags = c.flags;
+                first = false;
+            } else {
+                // Determine the shared prefix length.
+                let max = std::cmp::min(common_prefix.len(), c.completion.len());
+                let mut idx = 0;
+                while idx < max {
+                    if common_prefix.as_char_slice()[idx] != c.completion.as_char_slice()[idx] {
+                        break;
+                    }
+                    idx += 1;
+                }
+
+                // idx is now the length of the new common prefix.
+                common_prefix = common_prefix.slice_to(idx);
+                prefix_is_partial_completion = true;
+
+                // Early out if we decide there's no common prefix.
+                if idx == 0 {
+                    break;
+                }
+            }
+        }
+
+        // We use the common prefix if it would actually make the command line longer.
+        use_prefix = common_prefix.len() > if will_replace_token { tok.len() } else { 0 };
+        assert!(!use_prefix || !common_prefix.is_empty());
+
+        if use_prefix {
+            if prefix_is_partial_completion {
+                flags |= CompleteFlags::NO_SPACE;
+            }
+            prefix_insertion = Some(CompletionPrefixInsertion {
+                completion: common_prefix.to_owned(),
+                flags,
+            });
+        }
+    }
+
+    let prefix = if will_replace_token && !use_prefix {
+        WString::new()
+    } else {
+        let mut prefix = WString::new();
+        let full = if will_replace_token {
+            common_prefix.to_owned()
+        } else {
+            tok + common_prefix
+        };
+        if autoshow_completions || full.len() <= PREFIX_MAX_LEN {
+            prefix = full;
+        } else {
+            // Collapse parent directories and append end of string.
+            prefix.push(ELLIPSIS_CHAR);
+
+            let truncated = &full[full.len() - PREFIX_MAX_LEN..];
+            let (i, last_component) = truncated.split('/').enumerate().last().unwrap();
+            if i == 0 {
+                prefix.push_utfstr(&truncated);
+            } else {
+                prefix.push('/');
+                prefix.push_utfstr(last_component);
+            }
+        }
+        prefix
+    };
+
+    if use_prefix {
+        let common_prefix_len = common_prefix.len();
+        for c in &mut comp {
+            if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                // Keep replacement semantics and the original prefix so these completions can fix
+                // casing when selected.
+                continue;
+            }
+            c.flags &= !CompleteFlags::REPLACES_TOKEN;
+            c.completion.replace_range(0..common_prefix_len, L!(""));
+        }
+    }
+
+    CompletionDispatchPlan::ShowPager {
+        pager: CompletionPagerData {
+            prefix,
+            completions: comp,
+        },
+        insertion: prefix_insertion,
+    }
+}
+
+fn maybe_make_autoshow_tab_handoff(
+    parser: &Parser,
+    command_line: &wstr,
+    cursor_pos: usize,
+    completions: &[Completion],
+    autoshow_completions: bool,
+) -> Option<AutoshowTabHandoff> {
+    // Autoshow completions are computed for the end of the current line. If the cursor is elsewhere
+    // then a manual tab-completion may legitimately operate on a different token, so do not try to
+    // hand off the autoshow pager.
+    let line_range = range_of_line_at_cursor(command_line, cursor_pos);
+    if cursor_pos != line_range.end {
+        return None;
+    }
+
+    let token_extent = completion_token_extent_at_cursor(command_line, cursor_pos);
+    let mut wc_expanded = WString::new();
+    match try_expand_wildcard(
+        parser,
+        command_line[token_extent.token_range.clone()].to_owned(),
+        token_extent.position_in_token,
+        &mut wc_expanded,
+    ) {
+        ExpandResultCode::Error | ExpandResultCode::WildcardNoMatch => {}
+        ExpandResultCode::Overflow | ExpandResultCode::Cancel | ExpandResultCode::Ok => {
+            return None;
+        }
+    }
+
+    match completion_dispatch_plan(
+        command_line,
+        token_extent.token_range.clone(),
+        completions.to_vec(),
+        autoshow_completions,
+    ) {
+        CompletionDispatchPlan::ShowPager {
+            insertion: None, ..
+        } => Some(AutoshowTabHandoff {
+            command_line: command_line.to_owned(),
+            cursor_pos,
+            cycle_cursor_pos: token_extent.token_range.end,
+        }),
+        CompletionDispatchPlan::Flash
+        | CompletionDispatchPlan::InsertUnique(_)
+        | CompletionDispatchPlan::ShowPager {
+            insertion: Some(_), ..
+        } => None,
+    }
+}
+
 impl<'a> Reader<'a> {
+    fn try_promote_autoshow_pager(&mut self, c: ReadlineCmd) -> bool {
+        if self.pager_owner != PagerOwner::Autoshow || self.pager.is_empty() {
+            return false;
+        }
+        if self.active_edit_line_tag() != EditableLineTag::Commandline {
+            return false;
+        }
+
+        let Some(handoff) = self.data.autoshow_tab_handoff.take() else {
+            return false;
+        };
+        if handoff.command_line != self.command_line.text()
+            || handoff.cursor_pos != self.command_line.position()
+        {
+            return false;
+        }
+
+        self.cycle_command_line = handoff.command_line;
+        self.cycle_cursor_pos = handoff.cycle_cursor_pos;
+        self.pager_owner = PagerOwner::Completion;
+        self.rls_mut().completion_action = Some(CompletionAction::ShownAmbiguous);
+        if c == ReadlineCmd::CompleteAndSearch {
+            self.pager.set_search_field_shown(true);
+        }
+        self.select_completion_in_direction(SelectionMotion::Next, false);
+        true
+    }
+
     /// Compute completions and update the pager and/or commandline as needed.
     fn compute_and_apply_completions(&mut self, c: ReadlineCmd) {
         assert_matches!(c, ReadlineCmd::Complete | ReadlineCmd::CompleteAndSearch);
@@ -6904,33 +7696,21 @@ impl<'a> Reader<'a> {
             "should not be called with TTY protocols active"
         );
 
-        // Remove a trailing backslash. This may trigger an extra repaint, but this is
-        // rare.
+        self.data.autoshow_tab_handoff = None;
+        // If autoshow completions are currently displayed, clear them safely before manual
+        // completion updates pager ownership.
+        self.clear_autoshow_pager();
+
+        // Remove a trailing backslash. This may trigger an extra repaint, but this is rare.
         let el = &self.command_line;
         if is_backslashed(el.text(), el.position()) {
             self.delete_char(true);
         }
 
-        // Figure out the extent of the command substitution surrounding the cursor.
-        // This is because we only look at the current command substitution to form
-        // completions - stuff happening outside of it is not interesting.
         let el = &self.command_line;
-        let cmdsub_range = get_cmdsubst_extent(el.text(), el.position());
-        let position_in_cmdsub = el.position() - cmdsub_range.start;
-
-        // Figure out the extent of the token within the command substitution. Note we
-        // pass cmdsub_begin here, not buff.
-        let (mut token_range, _) =
-            get_token_extent(&el.text()[cmdsub_range.clone()], position_in_cmdsub);
-        let position_in_token = position_in_cmdsub - token_range.start;
-
-        // Hack: the token may extend past the end of the command substitution, e.g. in
-        // (echo foo) the last token is 'foo)'. Don't let that happen.
-        if token_range.end > cmdsub_range.len() {
-            token_range.end = cmdsub_range.len();
-        }
-        token_range.start += cmdsub_range.start;
-        token_range.end += cmdsub_range.start;
+        let token_extent = completion_token_extent_at_cursor(el.text(), el.position());
+        let mut token_range = token_extent.token_range.clone();
+        let position_in_token = token_extent.position_in_token;
 
         // Check if we have a wildcard within this string; if so we first attempt to expand the
         // wildcard; if that succeeds we don't then apply user completions (#8593).
@@ -6965,6 +7745,7 @@ impl<'a> Reader<'a> {
 
         // Construct a copy of the string from the beginning of the command substitution
         // up to the end of the token we're completing.
+        let cmdsub_range = get_cmdsubst_extent(el.text(), el.position());
 
         let (mut comp, _needs_load) = {
             let cmdsub = &self.data.command_line.text()[cmdsub_range.start..token_range.end];
@@ -6990,6 +7771,7 @@ impl<'a> Reader<'a> {
         self.cycle_cursor_pos = token_range.end;
 
         let inserted_unique = self.handle_completions(token_range, comp);
+
         self.rls_mut().completion_action = if inserted_unique {
             Some(CompletionAction::InsertedUnique)
         } else {
@@ -7033,155 +7815,44 @@ impl<'a> Reader<'a> {
     /// Return true if we inserted text into the command line, false if we did not.
     fn handle_completions(&mut self, token_range: Range<usize>, mut comp: Vec<Completion>) -> bool {
         let tok = self.command_line.text()[token_range.clone()].to_owned();
-
-        comp.retain({
-            let best_rank = comp.iter().map(|c| c.rank()).min().unwrap_or(u32::MAX);
-            move |c| {
-                // Ignore completions with a less suitable match rank than the best.
-                assert!(c.rank() >= best_rank);
-                c.rank() == best_rank
-            }
-        });
-
-        // Determine whether we are going to replace the token or not. If any commands of the best
-        // rank do not require replacement, then ignore all those that want to use replacement.
-        let will_replace_token = comp.iter().all(|c| c.replaces_token());
-
-        comp.retain(|c| !c.replaces_token() || reader_can_replace(&tok, c.flags));
-
-        if !will_replace_token {
-            for c in &mut comp {
-                if c.replaces_token() {
-                    c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
-                }
-            }
-        }
-
-        let len = comp.len();
-        if len == 0 {
-            // No suitable completions found, flash screen and return.
-            if token_range.is_empty() {
-                self.flash(0..self.command_line.len());
-            } else {
-                self.flash(token_range);
-            }
-            return false;
-        } else if len == 1 {
-            // Exactly one suitable completion found - insert it.
-            let c = std::mem::take(&mut comp[0]);
-            self.try_insert(c, &tok, token_range);
-            return true;
-        }
-
-        let mut use_prefix = false;
-        let mut common_prefix = L!("");
-        let all_matches_exact_or_prefix = comp.iter().all(|c| c.r#match.is_exact_or_prefix());
-        assert!(will_replace_token || all_matches_exact_or_prefix);
-        if all_matches_exact_or_prefix {
-            // Try to find a common prefix to insert among the surviving completions.
-            let mut flags = CompleteFlags::empty();
-            let mut first = true;
-            for c in &comp {
-                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
-                    continue;
-                }
-                if first {
-                    // First entry, use the whole string.
-                    common_prefix = &c.completion;
-                    flags = c.flags;
-                    first = false;
+        match completion_dispatch_plan(
+            self.command_line.text(),
+            token_range.clone(),
+            std::mem::take(&mut comp),
+            self.conf.autoshow_completions,
+        ) {
+            CompletionDispatchPlan::Flash => {
+                // No suitable completions found, flash screen and return.
+                if token_range.is_empty() {
+                    self.flash(0..self.command_line.len());
                 } else {
-                    // Determine the shared prefix length.
-                    let max = std::cmp::min(common_prefix.len(), c.completion.len());
-                    let mut idx = 0;
-                    while idx < max {
-                        if common_prefix.as_char_slice()[idx] != c.completion.as_char_slice()[idx] {
-                            break;
-                        }
-                        idx += 1;
-                    }
-
-                    // idx is now the length of the new common prefix.
-                    common_prefix = common_prefix.slice_to(idx);
-
-                    // Early out if we decide there's no common prefix.
-                    if idx == 0 {
-                        break;
-                    }
+                    self.flash(token_range);
                 }
+                false
             }
-
-            // Determine if we use the prefix. We use it if it's non-empty and it will actually make
-            // the command line longer. It may make the command line longer by virtue of not using
-            // REPLACE_TOKEN (so it always appends to the command line), or by virtue of replacing
-            // the token but being longer than it.
-            use_prefix = common_prefix.len() > if will_replace_token { tok.len() } else { 0 };
-            assert!(!use_prefix || !common_prefix.is_empty());
-
-            if use_prefix {
-                // More than one completion contributed, so don't insert a space after it.
-                flags |= CompleteFlags::NO_SPACE;
-                self.completion_insert(
-                    common_prefix,
-                    token_range.end,
-                    flags,
-                    /*is_unique=*/ false,
-                );
-                self.cycle_command_line = self.command_line.text().to_owned();
-                self.cycle_cursor_pos = self.command_line.position();
+            CompletionDispatchPlan::InsertUnique(c) => {
+                self.try_insert(c, &tok, token_range);
+                true
+            }
+            CompletionDispatchPlan::ShowPager { pager, insertion } => {
+                if let Some(insertion) = insertion {
+                    self.completion_insert(
+                        &insertion.completion,
+                        token_range.end,
+                        insertion.flags,
+                        /*is_unique=*/ false,
+                    );
+                    self.cycle_command_line = self.command_line.text().to_owned();
+                    self.cycle_cursor_pos = self.command_line.position();
+                }
+                self.pager.set_prefix(Cow::Owned(pager.prefix), true);
+                self.pager.set_completions(&pager.completions, true);
+                self.pager_owner = PagerOwner::Completion;
+                // Modify the command line to reflect the new pager.
+                self.pager_selection_changed();
+                false
             }
         }
-
-        // Print the completion list.
-        let prefix = if will_replace_token && !use_prefix {
-            Cow::Borrowed(L!(""))
-        } else {
-            let mut prefix = WString::new();
-            let full = if will_replace_token {
-                common_prefix.to_owned()
-            } else {
-                tok + common_prefix
-            };
-            if full.len() <= PREFIX_MAX_LEN {
-                prefix = full;
-            } else {
-                // Collapse parent directories and append end of string
-                prefix.push(ELLIPSIS_CHAR);
-
-                let truncated = &full[full.len() - PREFIX_MAX_LEN..];
-                let (i, last_component) = truncated.split('/').enumerate().last().unwrap();
-                if i == 0 {
-                    // No path separators were found in the common prefix, so we can't collapse
-                    // any further
-                    prefix.push_utfstr(&truncated);
-                } else {
-                    // Discard any parent directories and include whats left
-                    prefix.push('/');
-                    prefix.push_utfstr(last_component);
-                }
-            }
-            Cow::Owned(prefix)
-        };
-
-        if use_prefix {
-            let common_prefix_len = common_prefix.len();
-            for c in &mut comp {
-                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
-                    // Keep replacement semantics and the original prefix so these completions can
-                    // fix casing when selected.
-                    continue;
-                }
-                c.flags &= !CompleteFlags::REPLACES_TOKEN;
-                c.completion.replace_range(0..common_prefix_len, L!(""));
-            }
-        }
-
-        // Update the pager data.
-        self.pager.set_prefix(prefix, true);
-        self.pager.set_completions(&comp, true);
-        // Modify the command line to reflect the new pager.
-        self.pager_selection_changed();
-        false
     }
 
     /// Insert the string at the current cursor position. The function checks if the string is quoted or
@@ -7222,11 +7893,29 @@ impl<'a> Reader<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{combine_command_and_autosuggestion, completion_apply_to_command_line};
+    use super::*;
     use crate::complete::CompleteFlags;
     use crate::operation_context::{OperationContext, no_cancel};
-    use crate::prelude::*;
     use crate::tests::prelude::*;
+
+    fn unique_suffix() -> u128 {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    }
+
+    fn unique_test_dir(prefix: &str) -> String {
+        format!("test/{}_{}", prefix, unique_suffix())
+    }
+
+    fn unique_history_name(prefix: &wstr) -> WString {
+        let mut name = prefix.to_owned();
+        name.push_utfstr(L!("_"));
+        name.push_utfstr(&unique_suffix().to_wstring());
+        name
+    }
 
     #[test]
     fn test_autosuggestion_combining() {
@@ -7413,7 +8102,6 @@ mod tests {
         // See #6130
         validate!(": (:^ ''", "", CompleteFlags::default(), false, ": (: ^''");
     }
-
     #[test]
     fn test_try_apply_edit_to_autosuggestion() {
         use super::Autosuggestion;
@@ -7518,12 +8206,7 @@ mod tests {
             },
             "echo",
             Edit::new(3..4, L!("").to_owned()),
-            Some(Autosuggestion {
-                text: L!("Echo hest").to_owned(),
-                search_string_range: 0..3,
-                icase_matched_codepoints: Some(3),
-                is_whole_item_from_history: true,
-            })
+            None,
         );
 
         validate!(
@@ -7538,5 +8221,910 @@ mod tests {
             Edit::new(6..6, L!("n").to_owned()),
             None,
         );
+    }
+
+    // Autoshow tests
+
+    #[test]
+    #[serial]
+    fn test_generic_autoshow_lists_files() {
+        test_init();
+        let parser = TestParser::new();
+
+        let test_dir = unique_test_dir("autoshow_generic");
+        std::fs::remove_dir_all(&test_dir).ok();
+        std::fs::create_dir_all(format!("{}/dir_A", test_dir)).unwrap();
+        std::fs::create_dir_all(format!("{}/dir_B", test_dir)).unwrap();
+        let mut pushed_dirs = vec![];
+        parser.pushd(&mut pushed_dirs, &test_dir);
+
+        let hist_name = unique_history_name(L!("autoshow_generic_history"));
+        let history = History::new(HistoryId::Disk {
+            session_id: hist_name,
+        });
+        history.clear();
+
+        let cmd = L!("cat ");
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let result = performer();
+
+        assert!(
+            !result.cheap_completions.is_empty(),
+            "cat with an empty argument should surface path completions"
+        );
+
+        let completions: Vec<String> = result
+            .cheap_completions
+            .iter()
+            .map(|c| c.completion.to_string())
+            .collect();
+        assert!(
+            completions.iter().any(|c| c.contains("dir_A")),
+            "Expected completions to contain 'dir_A', but found: {:?}",
+            completions
+        );
+
+        parser.popd(&mut pushed_dirs);
+        history.clear();
+        std::fs::remove_dir_all(&test_dir).ok();
+    }
+
+    #[test]
+    #[serial]
+    fn test_autoshow_with_matching_autosuggestion() {
+        test_init();
+        let parser = TestParser::new();
+
+        let test_dir = unique_test_dir("autoshow_match");
+        std::fs::remove_dir_all(&test_dir).ok();
+        std::fs::create_dir_all(format!("{}/dir_unique", test_dir)).unwrap();
+        let mut pushed_dirs = vec![];
+        parser.pushd(&mut pushed_dirs, &test_dir);
+
+        let hist_name = unique_history_name(L!("autoshow_match_history"));
+        let history = History::new(HistoryId::Disk {
+            session_id: hist_name,
+        });
+        history.clear();
+        history.add_commandline(L!("cat dir_unique").to_owned());
+
+        let cmd = L!("cat dir");
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let result = performer();
+
+        assert_eq!(result.autosuggestion.text, L!("cat dir_unique"));
+        assert!(
+            !result.cheap_completions.is_empty(),
+            "Should produce completions even when autosuggestion matches"
+        );
+
+        let completions: Vec<String> = result
+            .cheap_completions
+            .iter()
+            .map(|c| c.completion.to_string())
+            .collect();
+        assert!(
+            completions.iter().any(|c| c.contains("unique")),
+            "Expected completions to contain 'dir_unique', but found: {:?}",
+            completions
+        );
+
+        parser.popd(&mut pushed_dirs);
+        history.clear();
+        std::fs::remove_dir_all(&test_dir).ok();
+    }
+
+    #[test]
+    #[serial]
+    fn test_autoshow_continues_when_input_matches_autosuggestion() {
+        test_init();
+        let parser = TestParser::new();
+
+        let test_dir = unique_test_dir("autoshow_match_regression");
+        std::fs::remove_dir_all(&test_dir).ok();
+        std::fs::create_dir_all(format!("{}/dir_unique", test_dir)).unwrap();
+        let mut pushed_dirs = vec![];
+        parser.pushd(&mut pushed_dirs, &test_dir);
+
+        let hist_name = unique_history_name(L!("autoshow_match_regression_history"));
+        let history = History::new(HistoryId::Disk {
+            session_id: hist_name,
+        });
+        history.clear();
+        history.add_commandline(L!("cat dir_unique").to_owned());
+
+        // Step 1: "cat dir"
+        let cmd1 = L!("cat dir");
+        let performer = get_autosuggestion_performer(
+            &parser,
+            cmd1.to_owned(),
+            cmd1.len(),
+            history.clone(),
+            true,
+        );
+        let result = performer();
+
+        assert_eq!(
+            result.autosuggestion.text,
+            L!("cat dir_unique"),
+            "Step 1: Should match the autosuggestion"
+        );
+        assert!(
+            !result.cheap_completions.is_empty(),
+            "Step 1: Autoshow completions should not be suppressed when matching autosuggestion"
+        );
+
+        let completions: Vec<String> = result
+            .cheap_completions
+            .iter()
+            .map(|c| c.completion.to_string())
+            .collect();
+        assert!(
+            completions.iter().any(|c| c.contains("unique")),
+            "Step 1: Expected completions to contain 'dir_unique', but found: {:?}",
+            completions
+        );
+
+        // Step 2: "cat dir_"
+        let cmd2 = L!("cat dir_");
+        let performer = get_autosuggestion_performer(
+            &parser,
+            cmd2.to_owned(),
+            cmd2.len(),
+            history.clone(),
+            true,
+        );
+        let result = performer();
+
+        assert_eq!(
+            result.autosuggestion.text,
+            L!("cat dir_unique"),
+            "Step 2: Should still match the autosuggestion"
+        );
+        assert!(
+            !result.cheap_completions.is_empty(),
+            "Step 2: Autoshow completions should continue to be produced"
+        );
+
+        let completions: Vec<String> = result
+            .cheap_completions
+            .iter()
+            .map(|c| c.completion.to_string())
+            .collect();
+        assert!(
+            completions.iter().any(|c| c.contains("unique")),
+            "Step 2: Expected completions to contain 'dir_unique', but found: {:?}",
+            completions
+        );
+
+        parser.popd(&mut pushed_dirs);
+        history.clear();
+        std::fs::remove_dir_all(&test_dir).ok();
+    }
+
+    #[test]
+    #[serial]
+    fn test_autoshow_icase_history_result_preserves_display_payloads() {
+        test_init();
+        let parser = TestParser::new();
+
+        let test_dir = unique_test_dir("autoshow_icase_history_display");
+        std::fs::remove_dir_all(&test_dir).ok();
+        std::fs::create_dir_all(format!("{}/context", test_dir)).unwrap();
+        std::fs::write(format!("{}/Caaa", test_dir), "").unwrap();
+        let mut pushed_dirs = vec![];
+        parser.pushd(&mut pushed_dirs, &test_dir);
+
+        let hist_name = unique_history_name(L!("autoshow_icase_history_display_history"));
+        let history = History::new(HistoryId::Disk {
+            session_id: hist_name,
+        });
+        history.clear();
+        // Case-insensitive history hit for "cat c" so this takes the icase-history path.
+        history.add_commandline(L!("CAT context").to_owned());
+
+        let cmd = L!("cat c");
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let result = performer();
+
+        assert!(
+            !result.cheap_completions.is_empty(),
+            "expected completions to be available"
+        );
+        assert_eq!(
+            result.autoshow_display_completions.len(),
+            result.cheap_completions.len(),
+            "display payloads must stay aligned with completion payloads"
+        );
+
+        let display_completions: Vec<String> = result
+            .autoshow_display_completions
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        assert!(
+            display_completions.iter().any(|s| s == "context/"),
+            "expected full display item 'context/', got: {:?}",
+            display_completions
+        );
+        assert!(
+            !display_completions.iter().any(|s| s == "ontext/"),
+            "display payload must not regress to suffix-only item, got: {:?}",
+            display_completions
+        );
+
+        parser.popd(&mut pushed_dirs);
+        history.clear();
+        std::fs::remove_dir_all(&test_dir).ok();
+    }
+
+    #[test]
+    #[serial]
+    fn test_autoshow_history_result_preserves_display_payloads() {
+        test_init();
+        let parser = TestParser::new();
+
+        let test_dir = unique_test_dir("autoshow_history_display");
+        std::fs::remove_dir_all(&test_dir).ok();
+        std::fs::create_dir_all(format!("{}/context", test_dir)).unwrap();
+        std::fs::write(format!("{}/contrib", test_dir), "").unwrap();
+        let mut pushed_dirs = vec![];
+        parser.pushd(&mut pushed_dirs, &test_dir);
+
+        let hist_name = unique_history_name(L!("autoshow_history_display_history"));
+        let history = History::new(HistoryId::Disk {
+            session_id: hist_name,
+        });
+        history.clear();
+        // Case-sensitive history hit for "cat co" takes the whole-history path.
+        history.add_commandline(L!("cat context").to_owned());
+
+        let cmd = L!("cat co");
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let result = performer();
+
+        assert!(
+            !result.cheap_completions.is_empty(),
+            "expected completions to be available"
+        );
+        assert_eq!(
+            result.autoshow_display_completions.len(),
+            result.cheap_completions.len(),
+            "display payloads must stay aligned with completion payloads"
+        );
+
+        let display_completions: Vec<String> = result
+            .autoshow_display_completions
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        assert!(
+            display_completions.iter().any(|s| s == "context/"),
+            "expected full display item 'context/', got: {:?}",
+            display_completions
+        );
+        assert!(
+            display_completions.iter().any(|s| s == "contrib"),
+            "expected full display item 'contrib', got: {:?}",
+            display_completions
+        );
+        assert!(
+            !display_completions.iter().any(|s| s == "ntext/"),
+            "display payload must not regress to suffix-only item, got: {:?}",
+            display_completions
+        );
+        assert!(
+            !display_completions.iter().any(|s| s == "ntrib"),
+            "display payload must not regress to suffix-only item, got: {:?}",
+            display_completions
+        );
+
+        parser.popd(&mut pushed_dirs);
+        history.clear();
+        std::fs::remove_dir_all(&test_dir).ok();
+    }
+
+    #[test]
+    #[serial]
+    fn test_autoshow_history_result_preserves_display_payloads_with_path_prefix() {
+        test_init();
+        let parser = TestParser::new();
+
+        let test_dir = unique_test_dir("autoshow_history_display_path_prefix");
+        std::fs::remove_dir_all(&test_dir).ok();
+        std::fs::create_dir_all(format!("{}/history_case/context", test_dir)).unwrap();
+        std::fs::write(format!("{}/history_case/contrib", test_dir), "").unwrap();
+        let mut pushed_dirs = vec![];
+        parser.pushd(&mut pushed_dirs, &test_dir);
+
+        let hist_name = unique_history_name(L!("autoshow_history_display_path_prefix_history"));
+        let history = History::new(HistoryId::Disk {
+            session_id: hist_name,
+        });
+        history.clear();
+        history.add_commandline(L!("cat history_case/context").to_owned());
+
+        let cmd = L!("cat history_case/co");
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let result = performer();
+
+        assert!(
+            !result.cheap_completions.is_empty(),
+            "expected completions to be available"
+        );
+        assert_eq!(
+            result.autoshow_display_completions.len(),
+            result.cheap_completions.len(),
+            "display payloads must stay aligned with completion payloads"
+        );
+
+        let display_completions: Vec<String> = result
+            .autoshow_display_completions
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        assert!(
+            display_completions.iter().any(|s| s == "context/"),
+            "expected full display item 'context/', got: {:?}",
+            display_completions
+        );
+        assert!(
+            display_completions.iter().any(|s| s == "contrib"),
+            "expected full display item 'contrib', got: {:?}",
+            display_completions
+        );
+        assert!(
+            !display_completions.iter().any(|s| s == "ntext/"),
+            "display payload must not regress to suffix-only item, got: {:?}",
+            display_completions
+        );
+        assert!(
+            !display_completions.iter().any(|s| s == "ntrib"),
+            "display payload must not regress to suffix-only item, got: {:?}",
+            display_completions
+        );
+
+        parser.popd(&mut pushed_dirs);
+        history.clear();
+        std::fs::remove_dir_all(&test_dir).ok();
+    }
+
+    #[test]
+    fn test_autoshow_display_text_does_not_mutate_completion_insertions() {
+        let replacement_completion = Completion::new(
+            L!("test_autoshow/stable/test2.txt").to_owned(),
+            WString::new(),
+            StringFuzzyMatch::exact_match(),
+            CompleteFlags::REPLACES_TOKEN,
+        );
+        let suffix_completion = Completion::new(
+            L!("st2.txt").to_owned(),
+            WString::new(),
+            StringFuzzyMatch::exact_match(),
+            CompleteFlags::default(),
+        );
+        let completions = vec![replacement_completion.clone(), suffix_completion.clone()];
+
+        let cmd = L!("cat test_autoshow/stable/te");
+        let (display, highlight_prefix_match) =
+            autoshow_display_completions_for_cursor(cmd, cmd.len(), &completions);
+
+        assert_eq!(highlight_prefix_match, L!("te"));
+        assert_eq!(
+            display,
+            vec![L!("test2.txt").to_owned(), L!("test2.txt").to_owned()]
+        );
+        assert_eq!(
+            completions[0].completion, replacement_completion.completion,
+            "display shaping must not alter insertion payloads"
+        );
+        assert_eq!(
+            completions[1].completion, suffix_completion.completion,
+            "display shaping must not alter insertion payloads"
+        );
+    }
+
+    #[test]
+    fn test_autoshow_display_text_without_path_separator() {
+        let completion = Completion::new(
+            L!("st2").to_owned(),
+            WString::new(),
+            StringFuzzyMatch::exact_match(),
+            CompleteFlags::default(),
+        );
+        let completions = vec![completion];
+        let cmd = L!("cat te");
+        let (display, highlight_prefix_match) =
+            autoshow_display_completions_for_cursor(cmd, cmd.len(), &completions);
+
+        assert_eq!(highlight_prefix_match, L!("te"));
+        assert_eq!(display, vec![L!("test2").to_owned()]);
+    }
+
+    #[test]
+    fn test_autoshow_display_text_reconstructs_replace_token_suffix() {
+        let completion = Completion::new(
+            L!("ext").to_owned(),
+            WString::new(),
+            StringFuzzyMatch::exact_match(),
+            CompleteFlags::REPLACES_TOKEN,
+        );
+        let completions = vec![completion];
+        let cmd = L!("cat test_autoshow/issue4/cont");
+        let (display, highlight_prefix_match) =
+            autoshow_display_completions_for_cursor(cmd, cmd.len(), &completions);
+
+        assert_eq!(highlight_prefix_match, L!("cont"));
+        assert_eq!(display, vec![L!("context").to_owned()]);
+    }
+
+    #[test]
+    fn test_autoshow_display_text_reconstructs_replace_token_suffix_without_path_separator() {
+        let completion = Completion::new(
+            L!("ext").to_owned(),
+            WString::new(),
+            StringFuzzyMatch::exact_match(),
+            CompleteFlags::REPLACES_TOKEN,
+        );
+        let completions = vec![completion];
+        let cmd = L!("cat cont");
+        let (display, highlight_prefix_match) =
+            autoshow_display_completions_for_cursor(cmd, cmd.len(), &completions);
+
+        assert_eq!(highlight_prefix_match, L!("cont"));
+        assert_eq!(display, vec![L!("context").to_owned()]);
+    }
+
+    #[test]
+    fn test_autoshow_display_text_preserves_fuzzy_substring_match_without_prefixing() {
+        let completion = Completion::new(
+            L!("stylua.toml").to_owned(),
+            WString::new(),
+            StringFuzzyMatch::new(ContainType::Substr, CaseSensitivity::Sensitive),
+            CompleteFlags::REPLACES_TOKEN,
+        );
+        let completions = vec![completion];
+        let cmd = L!("cat o");
+        let (display, highlight_prefix_match) =
+            autoshow_display_completions_for_cursor(cmd, cmd.len(), &completions);
+
+        assert_eq!(highlight_prefix_match, L!("o"));
+        assert_eq!(display, vec![L!("stylua.toml").to_owned()]);
+    }
+
+    #[test]
+    fn test_autoshow_display_text_preserves_fuzzy_subsequence_match_without_prefixing() {
+        let completion = Completion::new(
+            L!("stylua.toml").to_owned(),
+            WString::new(),
+            StringFuzzyMatch::new(ContainType::Subseq, CaseSensitivity::Sensitive),
+            CompleteFlags::REPLACES_TOKEN,
+        );
+        let completions = vec![completion];
+        let cmd = L!("cat ytm");
+        let (display, highlight_prefix_match) =
+            autoshow_display_completions_for_cursor(cmd, cmd.len(), &completions);
+
+        assert_eq!(highlight_prefix_match, L!("ytm"));
+        assert_eq!(display, vec![L!("stylua.toml").to_owned()]);
+    }
+
+    #[test]
+    fn test_autoshow_display_text_respects_case_insensitive_prefix_match() {
+        let mut completion = Completion::new(
+            L!("Bdir/").to_owned(),
+            WString::new(),
+            StringFuzzyMatch::exact_match(),
+            CompleteFlags::REPLACES_TOKEN,
+        );
+        completion.r#match.case_fold = CaseSensitivity::Insensitive;
+        let completions = vec![completion];
+        let cmd = L!("cd b");
+        let (display, highlight_prefix_match) =
+            autoshow_display_completions_for_cursor(cmd, cmd.len(), &completions);
+
+        assert_eq!(highlight_prefix_match, L!("b"));
+        assert_eq!(display, vec![L!("Bdir/").to_owned()]);
+    }
+
+    #[test]
+    fn test_autoshow_display_text_does_not_prefix_option_replacements() {
+        let completion = Completion::new(
+            L!("--color").to_owned(),
+            WString::new(),
+            StringFuzzyMatch::exact_match(),
+            CompleteFlags::REPLACES_TOKEN,
+        );
+        let completions = vec![completion];
+        let cmd = L!("cmd -c");
+        let (display, highlight_prefix_match) =
+            autoshow_display_completions_for_cursor(cmd, cmd.len(), &completions);
+
+        assert_eq!(highlight_prefix_match, L!("-c"));
+        assert_eq!(display, vec![L!("--color").to_owned()]);
+    }
+
+    #[test]
+    fn test_autoshow_token_at_cursor_for_single_char_argument() {
+        let cmd = L!("t c");
+        assert_eq!(autoshow_token_at_cursor(cmd, cmd.len()), L!("c"));
+    }
+
+    #[test]
+    fn test_autoshow_cursor_in_command_position_detects_command_token() {
+        let cmd = L!("git");
+        assert!(autoshow_cursor_in_command_position(cmd, cmd.len()));
+
+        let cmd = L!("git ");
+        assert!(!autoshow_cursor_in_command_position(cmd, cmd.len()));
+
+        let cmd = L!("FOO=bar ./git");
+        assert!(autoshow_cursor_in_command_position(cmd, cmd.len()));
+
+        let cmd = L!("git status");
+        assert!(!autoshow_cursor_in_command_position(cmd, cmd.len()));
+    }
+
+    #[test]
+    fn test_autoshow_blocklist_command_token_skips_assignments() {
+        let line = L!("FOO=bar BAZ=qux /usr/bin/git status");
+        assert_eq!(
+            autoshow_blocklist_command_token(line, line.len()),
+            L!("/usr/bin/git")
+        );
+
+        let line = L!("echo hi; FOO=bar ./git status");
+        assert_eq!(
+            autoshow_blocklist_command_token(line, line.len()),
+            L!("./git")
+        );
+    }
+
+    #[test]
+    fn test_autoshow_blocklist_matches_command_basename() {
+        let blocklist = vec![L!("git").to_owned()];
+        assert!(autoshow_blocklist_matches_command(&blocklist, L!("git")));
+        assert!(autoshow_blocklist_matches_command(
+            &blocklist,
+            L!("/usr/bin/git")
+        ));
+        assert!(autoshow_blocklist_matches_command(&blocklist, L!("./git")));
+        assert!(!autoshow_blocklist_matches_command(&blocklist, L!("gitk")));
+
+        let blocklist = vec![L!("/usr/bin/git").to_owned()];
+        assert!(autoshow_blocklist_matches_command(&blocklist, L!("git")));
+    }
+
+    #[test]
+    #[serial]
+    fn test_autoshow_complete_commands_suppresses_command_token_only() {
+        test_init();
+        let mut parser = TestParser::new();
+
+        let hist_name = unique_history_name(L!("autoshow_complete_commands_history"));
+        let history = History::new(HistoryId::Disk {
+            session_id: hist_name,
+        });
+        history.clear();
+
+        let eval_res = parser.eval(L!("function autoshowgatecmd; end"), &IoChain::new());
+        assert!(eval_res.status.is_success());
+        let eval_res = parser.eval(
+            L!("complete -c autoshowgatecmd -f -a 'alpha beta'"),
+            &IoChain::new(),
+        );
+        assert!(eval_res.status.is_success());
+
+        let cmd = L!("autoshowgate");
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let command_allowed = performer();
+        assert!(
+            !command_allowed.cheap_completions.is_empty(),
+            "expected command-position autoshow completions when fish_autoshow_complete_commands is enabled"
+        );
+
+        parser.set_one(
+            L!("fish_autoshow_complete_commands"),
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            L!("0").to_owned(),
+        );
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let command_suppressed = performer();
+        assert!(
+            command_suppressed.cheap_completions.is_empty(),
+            "expected command-position autoshow completions to be suppressed when fish_autoshow_complete_commands=0"
+        );
+
+        let cmd = L!("autoshowgatecmd ");
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let argument_result = performer();
+        assert!(
+            !argument_result.cheap_completions.is_empty(),
+            "expected argument-position autoshow completions to remain enabled when fish_autoshow_complete_commands=0"
+        );
+        let completions: Vec<String> = argument_result
+            .cheap_completions
+            .iter()
+            .map(|c| c.completion.to_string())
+            .collect();
+        assert!(
+            completions.iter().any(|c| c == "alpha"),
+            "expected custom argument completion 'alpha', got: {:?}",
+            completions
+        );
+
+        let _ = parser.eval(L!("complete -e -c autoshowgatecmd"), &IoChain::new());
+        let _ = parser.eval(L!("functions -e autoshowgatecmd"), &IoChain::new());
+        let _ = parser.set_var(
+            L!("fish_autoshow_complete_commands"),
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            vec![],
+        );
+        history.clear();
+    }
+
+    #[test]
+    #[serial]
+    fn test_autoshow_completion_limit_caps_visible_candidates() {
+        test_init();
+        let mut parser = TestParser::new();
+
+        let hist_name = unique_history_name(L!("autoshow_completion_limit_history"));
+        let history = History::new(HistoryId::Disk {
+            session_id: hist_name,
+        });
+        history.clear();
+
+        let eval_res = parser.eval(L!("function autoshowlimitcmd; end"), &IoChain::new());
+        assert!(eval_res.status.is_success());
+        let eval_res = parser.eval(
+            L!("complete -c autoshowlimitcmd -f -a 'alpha beta gamma'"),
+            &IoChain::new(),
+        );
+        assert!(eval_res.status.is_success());
+
+        parser.set_one(
+            L!("fish_autoshow_completion_limit"),
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            L!("2").to_owned(),
+        );
+        let cmd = L!("autoshowlimitcmd ");
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let capped = performer();
+        let capped_completions: Vec<String> = capped
+            .cheap_completions
+            .iter()
+            .map(|c| c.completion.to_string())
+            .collect();
+        assert_eq!(
+            capped_completions,
+            vec!["alpha".to_owned(), "beta".to_owned()],
+            "expected autoshow candidates to be capped by fish_autoshow_completion_limit"
+        );
+
+        parser.set_one(
+            L!("fish_autoshow_completion_limit"),
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            L!("0").to_owned(),
+        );
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let uncapped = performer();
+        let uncapped_completions: Vec<String> = uncapped
+            .cheap_completions
+            .iter()
+            .map(|c| c.completion.to_string())
+            .collect();
+        assert_eq!(
+            uncapped_completions,
+            vec!["alpha".to_owned(), "beta".to_owned(), "gamma".to_owned()],
+            "expected fish_autoshow_completion_limit=0 to surface all autoshow candidates"
+        );
+
+        let _ = parser.eval(L!("complete -e -c autoshowlimitcmd"), &IoChain::new());
+        let _ = parser.eval(L!("functions -e autoshowlimitcmd"), &IoChain::new());
+        let _ = parser.set_var(
+            L!("fish_autoshow_completion_limit"),
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            vec![],
+        );
+        history.clear();
+    }
+
+    #[test]
+    fn test_autoshow_tab_handoff_available_for_pager_only_completion() {
+        let parser = TestParser::new();
+        let completions = vec![
+            Completion::new(
+                L!("add").to_owned(),
+                WString::new(),
+                StringFuzzyMatch::exact_match(),
+                CompleteFlags::REPLACES_TOKEN,
+            ),
+            Completion::new(
+                L!("commit").to_owned(),
+                WString::new(),
+                StringFuzzyMatch::exact_match(),
+                CompleteFlags::REPLACES_TOKEN,
+            ),
+        ];
+        let cmd = L!("autoshowcmd ");
+        let handoff = maybe_make_autoshow_tab_handoff(&parser, cmd, cmd.len(), &completions, true);
+
+        let handoff = handoff.expect("expected autoshow handoff for ambiguous pager-only result");
+        assert_eq!(handoff.command_line, cmd);
+        assert_eq!(handoff.cursor_pos, cmd.len());
+        assert_eq!(handoff.cycle_cursor_pos, cmd.len());
+    }
+
+    #[test]
+    fn test_autoshow_tab_handoff_rejected_for_unique_completion() {
+        let parser = TestParser::new();
+        let completions = vec![Completion::new(
+            L!("add").to_owned(),
+            WString::new(),
+            StringFuzzyMatch::exact_match(),
+            CompleteFlags::REPLACES_TOKEN,
+        )];
+        let cmd = L!("git ad");
+        let handoff = maybe_make_autoshow_tab_handoff(&parser, cmd, cmd.len(), &completions, true);
+
+        assert!(
+            handoff.is_none(),
+            "unique completion should keep normal manual completion behavior"
+        );
+    }
+
+    #[test]
+    fn test_autoshow_tab_handoff_rejected_when_manual_completion_would_insert_prefix() {
+        let parser = TestParser::new();
+        let completions = vec![
+            Completion::new(
+                L!("checkout").to_owned(),
+                WString::new(),
+                StringFuzzyMatch::exact_match(),
+                CompleteFlags::REPLACES_TOKEN,
+            ),
+            Completion::new(
+                L!("cherry-pick").to_owned(),
+                WString::new(),
+                StringFuzzyMatch::exact_match(),
+                CompleteFlags::REPLACES_TOKEN,
+            ),
+        ];
+        let cmd = L!("git ch");
+        let handoff = maybe_make_autoshow_tab_handoff(&parser, cmd, cmd.len(), &completions, true);
+
+        assert!(
+            handoff.is_none(),
+            "common-prefix insertion should stay on the normal manual completion path"
+        );
+    }
+
+    #[test]
+    fn test_autoshow_tab_handoff_rejected_when_cursor_not_at_line_end() {
+        let parser = TestParser::new();
+        let completions = vec![
+            Completion::new(
+                L!("checkout").to_owned(),
+                WString::new(),
+                StringFuzzyMatch::exact_match(),
+                CompleteFlags::REPLACES_TOKEN,
+            ),
+            Completion::new(
+                L!("cherry-pick").to_owned(),
+                WString::new(),
+                StringFuzzyMatch::exact_match(),
+                CompleteFlags::REPLACES_TOKEN,
+            ),
+        ];
+        let cmd = L!("git checkout");
+        let cursor_pos = L!("git ch").len();
+        let handoff = maybe_make_autoshow_tab_handoff(&parser, cmd, cursor_pos, &completions, true);
+
+        assert!(
+            handoff.is_none(),
+            "autoshow handoff must not reuse line-end completions when the cursor is mid-line"
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn test_autoshow_tab_handoff_rejected_for_wildcard_expansion() {
+        test_init();
+        let parser = TestParser::new();
+
+        let test_dir = unique_test_dir("autoshow_handoff_wildcard");
+        std::fs::remove_dir_all(&test_dir).ok();
+        std::fs::create_dir_all(&test_dir).unwrap();
+        std::fs::write(format!("{}/test1.txt", test_dir), "").unwrap();
+        std::fs::write(format!("{}/test2.txt", test_dir), "").unwrap();
+        let mut pushed_dirs = vec![];
+        parser.pushd(&mut pushed_dirs, &test_dir);
+
+        let completions = vec![
+            Completion::new(
+                L!("test1.txt").to_owned(),
+                WString::new(),
+                StringFuzzyMatch::exact_match(),
+                CompleteFlags::REPLACES_TOKEN,
+            ),
+            Completion::new(
+                L!("test2.txt").to_owned(),
+                WString::new(),
+                StringFuzzyMatch::exact_match(),
+                CompleteFlags::REPLACES_TOKEN,
+            ),
+        ];
+        let cmd = L!("cat te*");
+        let handoff = maybe_make_autoshow_tab_handoff(&parser, cmd, cmd.len(), &completions, true);
+
+        assert!(
+            handoff.is_none(),
+            "wildcard expansion should keep normal manual completion behavior"
+        );
+
+        parser.popd(&mut pushed_dirs);
+        std::fs::remove_dir_all(&test_dir).ok();
+    }
+
+    #[test]
+    #[serial]
+    fn test_autoshow_blocklist_suppresses_path_command_by_basename() {
+        test_init();
+        let mut parser = TestParser::new();
+
+        let test_dir = unique_test_dir("autoshow_blocklist_basename");
+        std::fs::remove_dir_all(&test_dir).ok();
+        std::fs::create_dir_all(&test_dir).unwrap();
+        std::fs::write(format!("{}/file_one", test_dir), "").unwrap();
+        let mut pushed_dirs = vec![];
+        parser.pushd(&mut pushed_dirs, &test_dir);
+
+        let hist_name = unique_history_name(L!("autoshow_blocklist_basename_history"));
+        let history = History::new(HistoryId::Disk {
+            session_id: hist_name,
+        });
+        history.clear();
+
+        let cmd = L!("/bin/cat ");
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let unblocked = performer();
+        assert!(
+            !unblocked.cheap_completions.is_empty(),
+            "expected autoshow completions for /bin/cat when blocklist is unset"
+        );
+
+        parser.set_one(
+            L!("fish_autoshow_blocklist"),
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            L!("cat").to_owned(),
+        );
+        let performer =
+            get_autosuggestion_performer(&parser, cmd.to_owned(), cmd.len(), history.clone(), true);
+        let blocked = performer();
+        assert!(
+            blocked.cheap_completions.is_empty(),
+            "expected autoshow completions to be suppressed by blocklist basename match"
+        );
+
+        let _ = parser.set_var(
+            L!("fish_autoshow_blocklist"),
+            ParserEnvSetMode::new(EnvMode::GLOBAL),
+            vec![],
+        );
+        parser.popd(&mut pushed_dirs);
+        history.clear();
+        std::fs::remove_dir_all(&test_dir).ok();
     }
 }

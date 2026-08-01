@@ -209,6 +209,8 @@ Deprecations and removed features
 
 Interactive improvements
 ------------------------
+- New "live completions" feature: the completion pager can now be automatically shown as you type by setting ``$fish_autocomplete_autoshow`` to 1. This surfaces relevant completions (options, files, etc.) in real-time, including after spaces and when backspacing (:issue:`12095`).
+- Autoshow completions can be disabled for specific commands by adding them to the ``$fish_autoshow_blocklist`` list. This is useful for commands with slow completion scripts (e.g. ``git``) (:issue:`12095`).
 - The ``bind`` builtin lists mappings from all modes if ``--mode`` is not provided (:issue:`12214`).
 - Line-wise autosuggestions that don't start a command are no longer shown (739b82c34db, 58e7a50de8a).
 - Builtin ``history`` now assumes that :envvar:`PAGER` supports ANSI color sequences.
@@ -302,6 +304,9 @@ Scripting improvements
 Interactive improvements
 ------------------------
 - When typing immediately after starting fish, the first prompt is now rendered correctly.
+- Setting :envvar:`fish_autocomplete_autoshow` to ``1`` now surfaces a live completion menu
+  using the same "cheap" completions that power autosuggestions, so the pager can appear
+  automatically while you type (:issue:`3567`).
 - Completion accuracy was improved for file paths containing ``=`` or ``:`` (:issue:`5363`).
 - Prefix-matching completions are now shown even if they don't match the case typed by the user (:issue:`7944`).
 - On Cygwin/MSYS, command name completion will favor the non-exe name (``foo``) unless the user started typing the extension.

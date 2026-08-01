@@ -20,6 +20,7 @@ use crate::{
         commandline_set_search_field, reader_execute_readline_cmd, reader_jump,
         reader_showing_suggestion,
     },
+    threads::is_main_thread,
     tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer},
 };
 use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
@@ -246,7 +247,7 @@ pub fn commandline(
     streams: &mut IoStreams,
     args: &mut [&wstr],
 ) -> BuiltinResult {
-    let rstate = commandline_get_state(true);
+    let rstate = commandline_get_state(is_main_thread());
 
     let mut buffer_part = None;
     let mut cut_at_cursor = false;

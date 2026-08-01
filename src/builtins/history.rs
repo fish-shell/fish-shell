@@ -4,6 +4,7 @@ use crate::builtins::Error;
 use crate::history::in_private_mode;
 use crate::history::{self, History, history_id};
 use crate::reader::commandline_get_state;
+use crate::threads::is_main_thread;
 use crate::{err_fmt, err_str};
 
 use super::prelude::*;
@@ -254,7 +255,7 @@ pub fn history(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr])
 
     // Use the default history if we have none (which happens if invoked non-interactively, e.g.
     // from webconfig.py.
-    let history = commandline_get_state(true)
+    let history = commandline_get_state(is_main_thread())
         .history
         .unwrap_or_else(|| History::new(history_id(parser.vars())));
 

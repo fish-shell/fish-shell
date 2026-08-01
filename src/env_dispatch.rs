@@ -9,11 +9,12 @@ use crate::locale::{invalidate_numeric_locale, set_libc_locales};
 use crate::prelude::*;
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
-    reader_current_data, reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled,
-    reader_set_transient_prompt,
+    reader_current_data, reader_schedule_prompt_repaint, reader_set_autocomplete_autoshow,
+    reader_set_autosuggestion_enabled, reader_set_transient_prompt,
 };
 use crate::screen::{IS_DUMB, ONLY_GRAYSCALE, screen_set_midnight_commander_hack};
 use crate::terminal::ColorSupport;
+use crate::threads::is_main_thread;
 use crate::wutil::fish_wcstoi;
 use fish_wcstringutil::{bool_from_string, string_prefixes_string};
 use std::collections::HashMap;
@@ -79,6 +80,10 @@ static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
         table.add_anon(
             L!("fish_transient_prompt"),
             vars!(handle_transient_prompt_change),
+        );
+        table.add_anon(
+            L!("fish_autocomplete_autoshow"),
+            vars!(handle_autocomplete_autoshow_change),
         );
         table.add_anon(
             L!("fish_use_posix_spawn"),
@@ -196,7 +201,7 @@ pub fn env_dispatch_var_change(milieu: VarChangeMilieu, key: &wstr, vars: &EnvSt
         dispatch_table.dispatch(key, vars, suppress_repaint);
     }
 
-    if !suppress_repaint {
+    if !suppress_repaint && is_main_thread() {
         if let Some(data) = reader_current_data() {
             if string_prefixes_string(L!("fish_color_"), key) || {
                 // TODO Don't re-exec prompt when only pager color changed.
@@ -272,6 +277,10 @@ pub fn handle_fish_cursor_end_mode_change(vars: &EnvStack) {
 
 fn handle_autosuggestion_change(vars: &EnvStack) {
     reader_set_autosuggestion_enabled(vars);
+}
+
+fn handle_autocomplete_autoshow_change(vars: &EnvStack) {
+    reader_set_autocomplete_autoshow(vars);
 }
 
 fn handle_transient_prompt_change(vars: &EnvStack) {

@@ -10,13 +10,14 @@ use crate::{
     termsize::Termsize,
 };
 use fish_common::{EscapeFlags, EscapeStringStyle, escape_string};
-use fish_wcstringutil::string_fuzzy_match_string;
+use fish_wcstringutil::{
+    CaseSensitivity, string_fuzzy_match_string, string_prefixes_string_maybe_case_insensitive,
+};
 use fish_widestring::{ELLIPSIS_CHAR, decoded_width};
 use std::{
     borrow::Cow,
     collections::{HashMap, hash_map::Entry},
 };
-
 /// Represents rendering from the pager.
 #[derive(Default)]
 pub struct PageRendering {
@@ -112,6 +113,7 @@ pub struct Pager {
 
     prefix: Cow<'static, wstr>,
     highlight_prefix: bool,
+    highlight_prefix_match: WString,
 
     // The text of the search field.
     pub search_field_line: EditableLine,
@@ -553,11 +555,37 @@ impl Pager {
                     &mut line_data,
                 );
             }
+            let highlight_prefix_len = if !self.highlight_prefix_match.is_empty()
+                && c.colors.is_empty()
+                && !selected
+                && matches!(prefix, Some(p) if p.is_empty())
+                && !c
+                    .representative
+                    .flags
+                    .contains(CompleteFlags::SUPPRESS_PAGER_PREFIX)
+            {
+                let icase = c.representative.r#match.case_fold != CaseSensitivity::Sensitive;
+                if string_prefixes_string_maybe_case_insensitive(
+                    icase,
+                    &self.highlight_prefix_match,
+                    comp,
+                ) {
+                    self.highlight_prefix_match.len()
+                } else {
+                    0
+                }
+            } else {
+                0
+            };
+
             comp_remaining -= print_max_impl(
                 offset_in_cmdline,
                 comp.chars(),
                 |i| {
                     if c.colors.is_empty() {
+                        if highlight_prefix_len > 0 && i < highlight_prefix_len {
+                            return prefix_col;
+                        }
                         return comp_col; // Not a shell command.
                     }
                     if selected {
@@ -662,9 +690,31 @@ impl Pager {
 
     // Sets the set of completions.
     pub fn set_completions(&mut self, raw_completions: &[Completion], enable_refilter: bool) {
+        self.set_completions_impl(raw_completions, None, enable_refilter);
+    }
+
+    // Sets completions, rendering the given display strings while preserving insertion completions.
+    pub fn set_completions_with_display(
+        &mut self,
+        raw_completions: &[Completion],
+        display_completions: &[WString],
+        enable_refilter: bool,
+    ) {
+        let display_completions =
+            (display_completions.len() == raw_completions.len()).then_some(display_completions);
+        self.set_completions_impl(raw_completions, display_completions, enable_refilter);
+    }
+
+    fn set_completions_impl(
+        &mut self,
+        raw_completions: &[Completion],
+        display_completions: Option<&[WString]>,
+        enable_refilter: bool,
+    ) {
         self.selected_completion_idx = None;
         // Get completion infos out of it.
-        self.unfiltered_completion_infos = process_completions_into_infos(raw_completions);
+        self.unfiltered_completion_infos =
+            process_completions_into_infos(raw_completions, display_completions);
 
         // Maybe join them.
         if *self.prefix == "-" {
@@ -687,6 +737,12 @@ impl Pager {
     pub fn set_prefix(&mut self, prefix: Cow<'static, wstr>, highlight: bool /* = true */) {
         self.prefix = prefix;
         self.highlight_prefix = highlight;
+        self.highlight_prefix_match.clear();
+    }
+
+    // Sets the prefix to highlight within completion strings.
+    pub fn set_highlight_prefix_match(&mut self, prefix: WString) {
+        self.highlight_prefix_match = prefix;
     }
 
     // Sets the terminal size.
@@ -1025,6 +1081,7 @@ impl Pager {
         self.completion_infos.clear();
         self.prefix = Cow::Borrowed(L!(""));
         self.highlight_prefix = false;
+        self.highlight_prefix_match.clear();
         self.selected_completion_idx = None;
         self.fully_disclosed = false;
         self.search_field_shown = false;
@@ -1264,16 +1321,23 @@ fn join_completions(comps: &mut Vec<PagerComp>) {
 }
 
 /// Generate a list of comp_t structures from a list of completions.
-fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
+fn process_completions_into_infos(
+    lst: &[Completion],
+    display_completions: Option<&[WString]>,
+) -> Vec<PagerComp> {
     // Make the list of the correct size up-front.
     let mut result = Vec::with_capacity(lst.len());
     for (i, comp) in lst.iter().enumerate() {
         result.push(PagerComp::default());
         let comp_info = &mut result[i];
 
+        let display_completion: &wstr = display_completions
+            .and_then(|displays| displays.get(i))
+            .map_or(&comp.completion, |s| s.as_ref());
+
         // Append the single completion string. We may later merge these into multiple.
         comp_info.comp.push(escape_string(
-            &comp.completion,
+            display_completion,
             EscapeStringStyle::Script(
                 EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED | EscapeFlags::SYMBOLIC,
             ),
@@ -1289,7 +1353,7 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
         // so it matches the escaped string.
         if comp.replaces_line() {
             highlight_shell(
-                &comp.completion,
+                display_completion,
                 &mut comp_info.colors,
                 &mut OperationContext::empty(),
                 false,

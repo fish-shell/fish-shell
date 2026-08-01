@@ -207,6 +207,15 @@ impl Completion {
 }
 
 impl CompletionRequestOptions {
+    /// Options for autoshow.
+    pub fn autoshow() -> Self {
+        Self {
+            autosuggestion: false,
+            descriptions: true,
+            fuzzy_match: true,
+        }
+    }
+
     /// Options for an autosuggestion.
     pub fn autosuggest() -> Self {
         Self {
@@ -806,6 +815,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     UnescapeStringStyle::Script(UnescapeFlags::INCOMPLETE),
                 );
             }
+            let mut cd_like = exp_command == "cd";
             if let (Some(prev), Some(cur)) = (prev, cur) {
                 arg_data.previous_argument = prev;
                 arg_data.current_argument = cur;
@@ -819,15 +829,17 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 );
                 do_file = arg_data.do_file;
 
-                // If we're autosuggesting, and the token is empty, don't do file suggestions.
-                if is_autosuggest && arg_data.current_argument.is_empty() {
+                cd_like =
+                    exp_command == "cd" || arg_data.visited_wrapped_commands.contains(L!("cd"));
+                // If we're autosuggesting, and the token is empty, don't do file suggestions,
+                // except for cd (and wrappers) where directory listings are the only signal.
+                if is_autosuggest && arg_data.current_argument.is_empty() && !cd_like {
                     do_file = false;
                 }
             }
 
             // Hack. If we're cd, handle it specially (issue #1059, others).
-            handle_as_special_cd =
-                exp_command == "cd" || arg_data.visited_wrapped_commands.contains(L!("cd"));
+            handle_as_special_cd = cd_like;
         }
 
         // Maybe apply variable assignments.
@@ -970,7 +982,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
     fn expand_flags(&self) -> ExpandFlags {
         let mut result = ExpandFlags::empty();
-        result.set(ExpandFlags::FAIL_ON_CMDSUBST, true);
+        result.set(
+            ExpandFlags::FAIL_ON_CMDSUBST,
+            self.flags.autosuggestion || !self.ctx.has_parser(),
+        );
         result.set(ExpandFlags::FUZZY_MATCH, self.flags.fuzzy_match);
         result.set(ExpandFlags::GEN_DESCRIPTIONS, self.flags.descriptions);
         result
@@ -1947,7 +1962,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // Perhaps set a transient commandline so that custom completions
         // builtin_commandline will refer to the wrapped command. But not if
         // we're doing autosuggestions.
-        let _remove_transient = (!is_autosuggest).then(|| {
+        let _remove_transient = (!is_autosuggest && self.ctx.has_parser()).then(|| {
             self.ctx
                 .parser()
                 .libdata()
@@ -3353,6 +3368,17 @@ mod tests {
         );
 
         parser.pushd(pushed_dirs, wd);
+        {
+            let mut empty_cd = complete(
+                L!("cd "),
+                CompletionRequestOptions::autosuggest(),
+                &mut OperationContext::background(&vars, EXPANSION_LIMIT_BACKGROUND),
+            )
+            .0;
+            assert!(!empty_cd.is_empty());
+            sort_and_prioritize(&mut empty_cd, CompletionRequestOptions::autosuggest());
+            assert_eq!(empty_cd[0].completion, L!("0foobar/"));
+        }
         perform_one_autosuggestion_cd_test!("cd 0", "foobar/", &vars);
         perform_one_autosuggestion_cd_test!("cd \"0", "foobar/", &vars);
         perform_one_autosuggestion_cd_test!("cd '0", "foobar/", &vars);

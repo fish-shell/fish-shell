@@ -1237,20 +1237,14 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                 }
                 let this_result = (stage)(&mut expand, comp.completion, &mut output_storage);
                 total_result = this_result;
-                if matches!(
-                    total_result.result,
-                    ExpandResultCode::Error | ExpandResultCode::Overflow
-                ) {
+                if total_result.failed() {
                     break;
                 }
             }
 
             // Output becomes our next stage's input.
             completions = output_storage.take();
-            if matches!(
-                total_result.result,
-                ExpandResultCode::Error | ExpandResultCode::Overflow
-            ) {
+            if total_result.failed() {
                 break;
             }
         }
@@ -1545,6 +1539,17 @@ pub struct ExpandResult {
     /// If expansion resulted in an error, this is an appropriate value with which to populate
     /// $status.
     pub status: libc::c_int,
+}
+
+impl ExpandResult {
+    #[must_use]
+    #[inline]
+    pub fn failed(&self) -> bool {
+        matches!(
+            self.result,
+            ExpandResultCode::Error | ExpandResultCode::Overflow
+        )
+    }
 }
 
 #[cfg(test)]

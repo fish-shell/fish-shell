@@ -112,9 +112,9 @@ use crate::{
 };
 use assert_matches::assert_matches;
 use fish_common::{
-    EscapeFlags, EscapeStringStyle, ScopeGuard, escape, escape_string, escape_string_with_quote,
-    exit_without_destructors, get_obfuscation_read_char, help_section,
-    restore_term_foreground_process_group_for_exit, write_loop,
+    EscapeFlags, EscapeStringStyle, STDERR_FD, STDIN_FD, STDOUT_FD, ScopeGuard, escape,
+    escape_string, escape_string_with_quote, exit_without_destructors, get_obfuscation_read_char,
+    help_section, restore_term_foreground_process_group_for_exit, write_loop,
 };
 use fish_fallback::{fish_wcwidth, lowercase};
 use fish_feature_flags::FeatureFlag;
@@ -126,8 +126,8 @@ use fish_wcstringutil::{
 };
 use fish_widestring::{ELLIPSIS_CHAR, UTF8_BOM_WCHAR, bytes2wcstring};
 use libc::{
-    _POSIX_VDISABLE, O_NONBLOCK, O_RDONLY, SIGINT, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO,
-    VMIN, VQUIT, VSUSP, VTIME, c_char,
+    _POSIX_VDISABLE, O_NONBLOCK, O_RDONLY, SIGINT, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP,
+    VTIME, c_char,
 };
 use nix::errno::Errno;
 use nix::{
@@ -223,12 +223,9 @@ fn redirect_tty_after_sighup() {
         return;
     };
     let fd = devnull.as_raw_fd();
-    for stdfd in [STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO] {
-        if matches!(
-            tcgetattr(unsafe { BorrowedFd::borrow_raw(stdfd) }),
-            Err(nix::Error::EIO | nix::Error::ENOTTY)
-        ) {
-            unsafe { libc::dup2(fd, stdfd) };
+    for stdfd in [STDIN_FD, STDOUT_FD, STDERR_FD] {
+        if matches!(tcgetattr(stdfd), Err(nix::Error::EIO | nix::Error::ENOTTY)) {
+            unsafe { libc::dup2(fd, stdfd.as_raw_fd()) };
         }
     }
 }
@@ -1005,8 +1002,7 @@ const FLOW_CONTROL_FLAGS: termios::InputFlags = {
 /// Initialize the reader.
 pub fn reader_init(will_restore_foreground_pgroup: bool) {
     assert_is_main_thread();
-    let terminal_mode_on_startup = match tcgetattr(unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) })
-    {
+    let terminal_mode_on_startup = match tcgetattr(STDIN_FD) {
         Ok(modes) => {
             // Save the initial terminal mode.
             // TODO: rationalize behavior if initial tcgetattr() fails.
@@ -4801,7 +4797,7 @@ fn term_fix_external_modes(modes: &mut Termios) {
 fn term_donate(quiet: bool /* = false */) {
     loop {
         match tcsetattr(
-            unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) },
+            STDIN_FD,
             SetArg::TCSANOW,
             &TTY_MODES_FOR_EXTERNAL_CMDS.lock().unwrap(),
         ) {
@@ -4824,8 +4820,7 @@ fn term_donate(quiet: bool /* = false */) {
 
 /// Copy the (potentially changed) terminal modes and use them from now on.
 pub fn term_copy_modes() {
-    let mut external_modes = tcgetattr(unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) })
-        .unwrap_or_else(|_| zeroed_termios());
+    let mut external_modes = tcgetattr(STDIN_FD).unwrap_or_else(|_| zeroed_termios());
     // We still want to fix most egregious breakage.
     // E.g. OPOST is *not* something that should be set globally,
     // and 99% triggered by a crashed program.

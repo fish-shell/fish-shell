@@ -17,13 +17,12 @@ use crate::terminal::TerminalCommand::{
 };
 use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror_nix, wcstoi};
-use fish_common::write_loop;
+use fish_common::{STDIN_FD, write_loop};
 use fish_util::perror;
 use libc::{STDIN_FILENO, WNOHANG};
 use nix::errno::Errno;
 use nix::sys::termios::tcgetattr;
 use nix::unistd::getpgrp;
-use std::os::fd::BorrowedFd;
 use std::sync::{
     OnceLock,
     atomic::{AtomicPtr, Ordering},
@@ -406,7 +405,7 @@ impl TtyHandoff {
         let Some(ref mut owner) = self.owner else {
             return;
         };
-        match tcgetattr(unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) }) {
+        match tcgetattr(STDIN_FD) {
             Ok(modes) => {
                 owner.tmodes.replace(Some(modes));
             }

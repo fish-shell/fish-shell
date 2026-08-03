@@ -7,10 +7,10 @@ use crate::reader::{reader_save_screen_state, reader_write_title};
 use crate::tokenizer::tok_command;
 use crate::{env::EnvMode, tty_handoff::TtyHandoff};
 use crate::{err_fmt, err_str};
+use fish_common::STDIN_FD;
 use fish_util::perror;
 use libc::STDIN_FILENO;
 use nix::sys::termios::{self, tcsetattr};
-use std::os::fd::BorrowedFd;
 
 use super::prelude::*;
 
@@ -141,13 +141,7 @@ pub fn fg(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         let tmodes = job_group.tmodes.borrow();
         if job_group.wants_terminal() && tmodes.is_some() {
             let tmodes = tmodes.as_ref().unwrap();
-            if tcsetattr(
-                unsafe { BorrowedFd::borrow_raw(STDIN_FILENO) },
-                termios::SetArg::TCSADRAIN,
-                tmodes,
-            )
-            .is_err()
-            {
+            if tcsetattr(STDIN_FD, termios::SetArg::TCSADRAIN, tmodes).is_err() {
                 perror("tcsetattr");
             }
         }

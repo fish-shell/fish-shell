@@ -1,6 +1,7 @@
 use crate::{common::get_program_name, nix::isatty, threads::is_main_thread};
 use fish_common::read_blocked;
 use libc::STDIN_FILENO;
+use nix::unistd::getpid;
 use std::{
     panic::{UnwindSafe, set_hook, take_hook},
     sync::{
@@ -41,9 +42,7 @@ pub fn panic_handler(main: impl FnOnce() -> i32 + UnwindSafe) -> ! {
                 eprintf!("\n");
                 std::thread::sleep(Duration::from_secs(1));
             } else {
-                eprintf!(" Debug PID %d or press Enter to exit\n", unsafe {
-                    libc::getpid()
-                });
+                eprintf!(" Debug PID %d or press Enter to exit\n", getpid().as_raw());
                 let mut buf = [0_u8; 1];
                 while let Ok(n) = read_blocked(STDIN_FILENO, &mut buf) {
                     if n == 0 || matches!(buf[0], b'q' | b'\n' | b'\r') {

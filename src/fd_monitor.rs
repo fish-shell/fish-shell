@@ -7,6 +7,7 @@ use cfg_if::cfg_if;
 use fish_common::exit_without_destructors;
 use fish_util::perror;
 use nix::errno::Errno;
+use nix::unistd;
 use std::collections::HashMap;
 use std::os::unix::prelude::*;
 use std::sync::atomic::Ordering;
@@ -124,7 +125,7 @@ impl FdEventSignaller {
         let mut ret;
         loop {
             let bytes = c.to_ne_bytes();
-            ret = nix::unistd::write(unsafe { BorrowedFd::borrow_raw(self.write_fd()) }, &bytes);
+            ret = unistd::write(unsafe { BorrowedFd::borrow_raw(self.write_fd()) }, &bytes);
 
             match ret {
                 Ok(_) => break,

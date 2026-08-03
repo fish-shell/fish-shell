@@ -9,9 +9,8 @@ use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use cfg_if::cfg_if;
 use fish_widestring::{HOME_DIRECTORY, wcs2osstring, wcs2zstring};
-use libc::X_OK;
 use nix::errno::Errno;
-use nix::unistd::AccessFlags;
+use nix::unistd::{AccessFlags, access};
 use std::ffi::OsStr;
 use std::io::ErrorKind;
 use std::os::unix::prelude::*;
@@ -249,9 +248,7 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
     // Return 0 on success, an errno value on failure.
     let test_path = |path: &wstr| -> Result<(), Errno> {
         let narrow = wcs2zstring(path);
-        if unsafe { libc::access(narrow.as_ptr(), X_OK) } != 0 {
-            return Err(Errno::last());
-        }
+        access(narrow.as_c_str(), AccessFlags::X_OK)?;
         let narrow: Vec<u8> = narrow.into();
         let Ok(md) = std::fs::metadata(OsStr::from_bytes(&narrow)) else {
             return Err(Errno::last());
@@ -662,19 +659,17 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
             DirRemoteness::Unknown
         } else {
             let narrow = wcs2zstring(path);
-            use std::mem::MaybeUninit;
             cfg_if! {
                 if #[cfg(any(target_os = "linux", cygwin))] {
-                    let mut buf = MaybeUninit::uninit();
-                    if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
+                    use nix::sys::statfs::statfs;
+                    let Ok(buf) = statfs(narrow.as_c_str()) else {
                         return DirRemoteness::Unknown;
-                    }
-                    let buf = unsafe { buf.assume_init() };
+                    };
                     // Linux has constants for these like NFS_SUPER_MAGIC, SMB_SUPER_MAGIC, CIFS_MAGIC_NUMBER but
                     // these are in varying headers. Simply hard code them.
                     // Note that we treat FUSE filesystems as remote, which means we lock less on such filesystems.
                     // NOTE: The cast is necessary for 32-bit systems because of the 4-byte CIFS_MAGIC_NUMBER
-                    match buf.f_type as usize  {
+                    match buf.filesystem_type().0 as usize  {
                         0x5346414F | // AFS_SUPER_MAGIC - Andrew File System
                         0x6B414653 | // AFS_FS_MAGIC - Kernel AFS and AuriStorFS
                         0x73757245 | // CODA_SUPER_MAGIC - Coda File System
@@ -698,11 +693,9 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
                     }
                 } else if #[cfg(target_os = "netbsd")] {
                     // NetBSD doesn't have statfs, but MNT_LOCAL works for statvfs.
-                    let mut buf = MaybeUninit::uninit();
-                    if unsafe { libc::statvfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
+                    let Ok(buf) = nix::sys::statvfs::statvfs(narrow) else {
                         return DirRemoteness::Unknown;
-                    }
-                    let buf = unsafe { buf.assume_init() };
+                    };
                     #[allow(clippy::useless_conversion)]
                     let flags = buf.f_flag as u64;
                     #[allow(clippy::unnecessary_cast)]
@@ -712,11 +705,10 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
                         DirRemoteness::Remote
                     }
                 } else {
-                    let mut buf = MaybeUninit::uninit();
-                    if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
+                    use nix::sys::statfs::statfs;
+                    let Ok(buf) = statfs(path) else {
                         return DirRemoteness::Unknown;
-                    }
-                    let buf = unsafe { buf.assume_init() };
+                    };
                     // statfs::f_flags types differ.
                     #[allow(clippy::useless_conversion)]
                     let flags = buf.f_flags as u64;

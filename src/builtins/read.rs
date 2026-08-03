@@ -16,14 +16,17 @@ use crate::{
         set_shell_modes_temporarily,
     },
     tokenizer::{TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, Tok, Tokenizer},
-    wutil,
+    wutil::{self, perror_nix},
 };
 use fish_common::{UnescapeStringStyle, escape, read_blocked, unescape_string};
-use fish_util::perror;
 use fish_wcstringutil::{split_about, split_string_tok};
 use fish_widestring::bytes2wcstring;
-use libc::SEEK_CUR;
-use std::{num::NonZeroUsize, os::fd::RawFd, sync::atomic::Ordering};
+use nix::unistd::{Whence, lseek};
+use std::{
+    num::NonZeroUsize,
+    os::fd::{BorrowedFd, RawFd},
+    sync::atomic::Ordering,
+};
 
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(crate) enum TokenOutputMode {
@@ -334,20 +337,18 @@ fn read_in_chunks(fd: RawFd, buff: &mut WString, split_null: bool, do_seek: bool
         if bytes_consumed < bytes_read {
             // We found a splitter. The +1 because we need to treat the splitter as consumed, but
             // not append it to the string.
-            if do_seek
-                && unsafe {
-                    libc::lseek(
-                        fd,
-                        libc::off_t::try_from(
-                            isize::try_from(bytes_consumed).unwrap() - (bytes_read as isize) + 1,
-                        )
-                        .unwrap(),
-                        SEEK_CUR,
+            if do_seek {
+                if let Err(err) = lseek(
+                    unsafe { BorrowedFd::borrow_raw(fd) },
+                    libc::off_t::try_from(
+                        isize::try_from(bytes_consumed).unwrap() - (bytes_read as isize) + 1,
                     )
-                } == -1
-            {
-                perror("lseek");
-                return Err(STATUS_CMD_ERROR);
+                    .unwrap(),
+                    Whence::SeekCur,
+                ) {
+                    perror_nix("lseek", err);
+                    return Err(STATUS_CMD_ERROR);
+                }
             }
             finished = true;
         } else if narrow_buff.len() > READ_BYTE_LIMIT.load(Ordering::Relaxed) {
@@ -609,8 +610,14 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             // if we're chunking we could get multiple lines so we would have to advance
             // more than 1 per run through the loop. Let's skip that for now.
             !opts.one_line &&
-            (streams.stdin_is_directly_redirected ||
-                    unsafe {libc::lseek(streams.stdin_fd(), 0, SEEK_CUR)} != -1)
+            (
+                streams.stdin_is_directly_redirected ||
+                    lseek(
+                        unsafe { BorrowedFd::borrow_raw(streams.stdin_fd()) },
+                        0,
+                        Whence::SeekCur
+                    ).is_ok()
+            )
         {
             // We read in chunks when we either can seek (so we put the bytes back),
             // or we have the bytes to ourselves (because it's directly redirected).

@@ -126,14 +126,17 @@ use fish_wcstringutil::{
 };
 use fish_widestring::{ELLIPSIS_CHAR, UTF8_BOM_WCHAR, bytes2wcstring};
 use libc::{
-    _POSIX_VDISABLE, O_NONBLOCK, O_RDONLY, SIGINT, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP,
-    VTIME, c_char,
+    _POSIX_VDISABLE, SIGINT, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
 };
-use nix::{errno::Errno, unistd};
+use nix::{
+    errno::Errno,
+    fcntl,
+    unistd::{self, tcgetpgrp, tcsetpgrp},
+};
 use nix::{
     fcntl::OFlag,
     sys::{
-        signal::{Signal, killpg},
+        signal::{self, Signal, killpg},
         stat::Mode,
         termios::{self, SetArg, Termios, tcgetattr, tcsetattr},
     },
@@ -143,10 +146,11 @@ use std::{
     borrow::Cow,
     cell::UnsafeCell,
     cmp,
+    ffi::CStr,
     io::BufReader,
     num::NonZeroUsize,
     ops::{ControlFlow, DerefMut, Range},
-    os::fd::{AsRawFd as _, BorrowedFd, FromRawFd as _, OwnedFd, RawFd},
+    os::fd::{AsRawFd as _, BorrowedFd, RawFd},
     pin::Pin,
     sync::{
         Arc, LazyLock, Mutex, MutexGuard, OnceLock,
@@ -4858,7 +4862,7 @@ pub fn set_shell_modes_temporarily(inputfd: RawFd) -> Option<Termios> {
     // It may happen that a command we ran when job control was disabled nevertheless stole the tty
     // from us. In that case when we read from our fd, it will trigger SIGTTIN. So just
     // unconditionally reclaim the tty. See #9181.
-    unsafe { libc::tcsetpgrp(inputfd, libc::getpgrp()) };
+    let _ = tcsetpgrp(unsafe { BorrowedFd::borrow_raw(inputfd) }, getpgrp());
 
     // Get the current terminal modes. These will be restored when the function returns.
     let old_modes = tcgetattr(unsafe { BorrowedFd::borrow_raw(inputfd) }).ok();
@@ -4880,23 +4884,26 @@ fn term_steal(copy_modes: bool) {
 
 // Ensure that fish owns the terminal, possibly waiting. If we cannot acquire the terminal, then
 // report an error and exit.
-fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
+fn acquire_tty_or_exit(shell_pgid: NullablePid) {
     assert_is_main_thread();
 
     // Check if we are in control of the terminal, so that we don't do semi-expensive things like
     // reset signal handlers unless we really have to, which we often don't.
     // Common case.
-    let mut owner = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
-    if owner == shell_pgid {
+    let mut owner = tcgetpgrp(STDIN_FD);
+    if owner == Ok(shell_pgid) {
         return;
     }
 
     // In some strange cases the tty may be come preassigned to fish's pid, but not its pgroup.
     // In that case we simply attempt to claim our own pgroup.
     // See #7388.
-    if owner == getpid().as_raw() {
-        unsafe { libc::setpgid(owner, owner) };
-        return;
+    {
+        let shell_pid = getpid();
+        if owner == Ok(shell_pid) {
+            let _ = setpgid(shell_pid, shell_pid);
+            return;
+        }
     }
 
     // Bummer, we are not in control of the terminal. Stop until parent has given us control of
@@ -4918,19 +4925,19 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
     // harder, because it may succeed or block. So we loop for a while, trying those strategies.
     // Eventually we just give up and assume we're orphaend.
     for loop_count in 0.. {
-        owner = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
+        owner = tcgetpgrp(STDIN_FD);
         // 0 is a valid return code from `tcgetpgrp()` under at least FreeBSD and testing
         // indicates that a subsequent call to `tcsetpgrp()` will succeed. 0 is the
         // pid of the top-level kernel process, so I'm not sure if this means ownership
         // of the terminal has gone back to the kernel (i.e. it's not owned) or if it is
         // just an "invalid" pid for all intents and purposes.
-        if owner == 0 {
-            unsafe { libc::tcsetpgrp(STDIN_FILENO, shell_pgid) };
+        if owner == Ok(NullablePid::from_raw(0)) {
+            let _ = tcsetpgrp(STDIN_FD, shell_pgid);
             // Since we expect the above to work, call `tcgetpgrp()` immediately to
             // avoid a second pass through this loop.
-            owner = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
+            owner = tcgetpgrp(STDIN_FD);
         }
-        if owner == -1 && Errno::last() == Errno::ENOTTY {
+        if owner == Err(Errno::ENOTTY) {
             if !is_interactive_session() {
                 // It's OK if we're not able to take control of the terminal. We handle
                 // the fallout from this in a few other places.
@@ -4944,7 +4951,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
             perror("setpgid");
             exit_without_destructors(1);
         }
-        if owner == shell_pgid {
+        if owner == Ok(shell_pgid) {
             break; // success
         } else {
             if check_for_orphaned_process(loop_count, shell_pgid) {
@@ -4961,7 +4968,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
             }
 
             // Try stopping us.
-            if let Err(err) = killpg(NullablePid::from_raw(shell_pgid), Signal::SIGTTIN) {
+            if let Err(err) = killpg(shell_pgid, Signal::SIGTTIN) {
                 perror_nix("killpg(shell_pgid, SIGTTIN)", err);
                 exit_without_destructors(1);
             }
@@ -4980,7 +4987,7 @@ fn reader_interactive_init() {
     signal_set_handlers_once(true);
 
     // Wait until we own the terminal.
-    acquire_tty_or_exit(shell_pgid.as_raw());
+    acquire_tty_or_exit(shell_pgid);
 
     // If fish has no valid pgroup (possible with firejail, see #5295) or is interactive,
     // ensure it owns the terminal. Also see #5909, #7060.
@@ -5002,9 +5009,9 @@ fn reader_interactive_init() {
         }
 
         // Take control of the terminal
-        if unsafe { libc::tcsetpgrp(STDIN_FILENO, shell_pgid.as_raw()) } == -1 {
+        if let Err(err) = tcsetpgrp(STDIN_FD, shell_pgid) {
             flog!(error, wgettext!("Failed to take control of the terminal"));
-            perror("tcsetpgrp");
+            perror_nix("tcsetpgrp", err);
             exit_without_destructors(1);
         }
 
@@ -6311,15 +6318,12 @@ fn command_only_affects_rendering(c: ReadlineCmd) -> bool {
 
 /// Return true if we believe ourselves to be orphaned. loop_count is how many times we've tried to
 /// stop ourselves via SIGGTIN.
-fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> bool {
+fn check_for_orphaned_process(loop_count: usize, shell_pgid: NullablePid) -> bool {
     let mut we_think_we_are_orphaned = false;
     // Try kill-0'ing the process whose pid corresponds to our process group ID. It's possible this
     // will fail because we don't have permission to signal it. But more likely it will fail because
     // it no longer exists, and we are orphaned.
-    if loop_count % 64 == 0
-        && unsafe { libc::kill(shell_pgid, 0) } < 0
-        && Errno::last() == Errno::ESRCH
-    {
+    if loop_count % 64 == 0 && signal::kill(shell_pgid, None) == Err(Errno::ESRCH) {
         we_think_we_are_orphaned = true;
     }
 
@@ -6334,15 +6338,15 @@ fn check_for_orphaned_process(loop_count: usize, shell_pgid: libc::pid_t) -> boo
             perror("ctermid");
             exit_without_destructors(1);
         }
+        let tty = unsafe { CStr::from_ptr(tty) };
 
         // Open the tty. Presumably this is stdin, but maybe not?
-        let tty_fd = {
-            let res = unsafe { libc::open(tty, O_RDONLY | O_NONBLOCK) };
-            if res < 0 {
-                perror("open");
+        let tty_fd = match fcntl::open(tty, OFlag::O_RDONLY | OFlag::O_NONBLOCK, Mode::empty()) {
+            Ok(fd) => fd,
+            Err(err) => {
+                perror_nix("open", err);
                 exit_without_destructors(1);
             }
-            unsafe { OwnedFd::from_raw_fd(res) }
         };
 
         #[allow(clippy::byte_char_slices)] // false positive

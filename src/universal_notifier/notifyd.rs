@@ -4,6 +4,7 @@ use crate::flog::{flog, flogf};
 use crate::prelude::*;
 use crate::universal_notifier::UniversalNotifier;
 use libc::{c_char, c_int};
+use nix::unistd;
 use std::ffi::CString;
 use std::os::fd::{BorrowedFd, RawFd};
 
@@ -39,7 +40,7 @@ impl NotifydNotifier {
         let program_name = *PROGRAM_NAME.get().unwrap_or(&L!("fish"));
         let local_name = format!(
             "user.uid.{}.{}.uvars",
-            unsafe { libc::getuid() },
+            unistd::getuid().as_raw(),
             program_name
         );
         let name = CString::new(local_name).ok()?;
@@ -114,8 +115,7 @@ impl UniversalNotifier for NotifydNotifier {
         let mut read_something = false;
         let mut buff: [u8; 64] = [0; 64];
         loop {
-            let res =
-                nix::unistd::read(unsafe { BorrowedFd::borrow_raw(self.notify_fd) }, &mut buff);
+            let res = unistd::read(unsafe { BorrowedFd::borrow_raw(self.notify_fd) }, &mut buff);
 
             if let Ok(amt_read) = res {
                 read_something |= amt_read > 0;

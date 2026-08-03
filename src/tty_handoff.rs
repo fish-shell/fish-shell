@@ -19,10 +19,10 @@ use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror_nix, wcstoi};
 use fish_common::{STDIN_FD, write_loop};
 use fish_util::perror;
-use libc::{STDIN_FILENO, WNOHANG};
 use nix::errno::Errno;
 use nix::sys::termios::tcgetattr;
-use nix::unistd::getpgrp;
+use nix::sys::wait::{WaitPidFlag, waitpid};
+use nix::unistd::{Pid as NullablePid, getpgrp, tcgetpgrp, tcsetpgrp};
 use std::sync::{
     OnceLock,
     atomic::{AtomicPtr, Ordering},
@@ -450,18 +450,22 @@ impl TtyHandoff {
         //   3. The tty is owned by a different process. This may come about if fish is running in the
         //      background with job control enabled. Do not transfer it.
         //   4. The tty is owned by fish. In that case we want to transfer the pgid.
-        let current_owner = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
-        if current_owner < 0 {
-            // Case 1.
-            return false;
-        } else if current_owner == pgid.get() {
-            // Case 2.
-            return true;
-        } else if current_owner != pgid.get() && current_owner != fish_pgrp.as_raw() {
-            // Case 3.
-            return false;
+        let current_owner = tcgetpgrp(STDIN_FD);
+        match current_owner {
+            Err(_) => {
+                // Case 1.
+                return false;
+            }
+            Ok(current_owner) => {
+                if current_owner == pgid.as_nullable_pid() {
+                    // Case 2.
+                    return true;
+                } else if current_owner != fish_pgrp {
+                    // Case 3.
+                    return false;
+                }
+            } // Case 4 - we do want to transfer it.
         }
-        // Case 4 - we do want to transfer it.
 
         // The tcsetpgrp(2) man page says that EPERM is thrown if "pgrp has a supported value, but
         // is not the process group ID of a process in the same session as the calling process."
@@ -472,28 +476,25 @@ impl TtyHandoff {
         // 4.4.0), EPERM does indeed disappear on retry. The important thing is that we can
         // guarantee the process isn't going to exit while we wait (which would cause us to possibly
         // block indefinitely).
-        while unsafe { libc::tcsetpgrp(STDIN_FILENO, pgid.as_pid_t()) } != 0 {
-            flogf!(proc_termowner, "tcsetpgrp failed: %d", Errno::last_raw());
+        while let Err(err) = tcsetpgrp(STDIN_FD, pgid.as_nullable_pid()) {
+            flogf!(proc_termowner, "tcsetpgrp failed: %d", err as i32);
 
             // Before anything else, make sure that it's even necessary to call tcsetpgrp.
             // Since it usually _is_ necessary, we only check in case it fails so as to avoid the
             // unnecessary syscall and associated context switch, which profiling has shown to have
             // a significant cost when running process groups in quick succession.
-            let getpgrp_res = unsafe { libc::tcgetpgrp(STDIN_FILENO) };
-            if getpgrp_res < 0 {
-                match Errno::last() {
-                    Errno::ENOTTY => {
-                        // stdin is not a tty. This may come about if job control is enabled but we are
-                        // not a tty - see #6573.
-                        return false;
+            let getpgrp_res = match tcgetpgrp(STDIN_FD) {
+                Ok(pgid) => pgid,
+                Err(err) => {
+                    // This may come about if job control is enabled but we are not a tty -
+                    // see #6573.
+                    if err != Errno::ENOTTY {
+                        perror_nix("tcgetpgrp", err);
                     }
-                    _ => {
-                        perror("tcgetpgrp");
-                        return false;
-                    }
+                    return false;
                 }
-            }
-            if getpgrp_res == pgid.get() {
+            };
+            if getpgrp_res == pgid.as_nullable_pid() {
                 flogf!(
                     proc_termowner,
                     "Process group %d already has control of terminal",
@@ -510,24 +511,28 @@ impl TtyHandoff {
                 pgroup_terminated = true;
             } else if Errno::last() == Errno::EPERM {
                 // Retry so long as this isn't because the process group is dead.
-                let mut result: libc::c_int = 0;
-                let wait_result = unsafe { libc::waitpid(-pgid.as_pid_t(), &mut result, WNOHANG) };
-                if wait_result == -1 {
-                    // Note that -1 is technically an "error" for waitpid in the sense that an
-                    // invalid argument was specified because no such process group exists any
-                    // longer. This is the observed behavior on Linux 4.4.0. a "success" result
-                    // would mean processes from the group still exist but is still running in some
-                    // state or the other.
-                    pgroup_terminated = true;
-                } else {
-                    // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
-                    // then retry until not EPERM or the process group has exited.
-                    flogf!(
-                        proc_termowner,
-                        "terminal_give_to_job(): EPERM with pgid %d.",
-                        pgid
-                    );
-                    continue;
+                match waitpid(
+                    NullablePid::from_raw(-pgid.as_pid_t()),
+                    Some(WaitPidFlag::WNOHANG),
+                ) {
+                    Ok(_) => {
+                        // Debug the original tcsetpgrp error (not the waitpid errno) to the log, and
+                        // then retry until not EPERM or the process group has exited.
+                        flogf!(
+                            proc_termowner,
+                            "terminal_give_to_job(): EPERM with pgid %d.",
+                            pgid
+                        );
+                        continue;
+                    }
+                    Err(_) => {
+                        // Note that -1 is technically an "error" for waitpid in the sense that an
+                        // invalid argument was specified because no such process group exists any
+                        // longer. This is the observed behavior on Linux 4.4.0. a "success" result
+                        // would mean processes from the group still exist but is still running in some
+                        // state or the other.
+                        pgroup_terminated = true;
+                    }
                 }
             } else if Errno::last() == Errno::ENOTTY {
                 // stdin is not a TTY. In general we expect this to be caught via the tcgetpgrp
@@ -569,13 +574,9 @@ impl Drop for TtyHandoff {
     fn drop(&mut self) {
         if self.owner.is_some() {
             flog!(proc_pgroup, "fish reclaiming terminal");
-            if unsafe { libc::tcsetpgrp(STDIN_FILENO, libc::getpgrp()) } == -1 {
-                flog!(
-                    warning,
-                    "Could not return shell to foreground:",
-                    Errno::last_raw()
-                );
-                perror("tcsetpgrp");
+            if let Err(err) = tcsetpgrp(STDIN_FD, getpgrp()) {
+                flog!(warning, "Could not return shell to foreground:", err);
+                perror_nix("tcsetpgrp", err);
             }
             self.owner = None;
         }

@@ -1,4 +1,4 @@
-use libc::VERASE;
+use nix::sys::termios::SpecialCharacterIndices;
 
 use crate::{
     flog::FloggableDebug, localizable_string, reader::get_terminal_mode_on_startup, wgettext_fmt,
@@ -194,7 +194,7 @@ pub(crate) fn canonicalize_keyed_control_char(c: char) -> char {
         return SPACE;
     }
     if let Some(tm) = get_terminal_mode_on_startup() {
-        if c == char::from(tm.c_cc[VERASE]) {
+        if c == char::from(tm.c_cc[SpecialCharacterIndices::VERASE as usize]) {
             return BACKSPACE;
         }
     }

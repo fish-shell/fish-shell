@@ -4,7 +4,7 @@ use cfg_if::cfg_if;
 use fish_widestring::{WString, bytes2wcstring, wcs2zstring, wstr};
 use libc::{S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK};
 use nix::errno::Errno;
-use std::{cell::Cell, io, mem::MaybeUninit, os::fd::RawFd, ptr::NonNull, rc::Rc};
+use std::{cell::Cell, io, mem::MaybeUninit, os::fd::RawFd, ptr::NonNull};
 
 /// Types of files that may be in a directory.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -20,7 +20,6 @@ pub enum DirEntryType {
 }
 
 /// An entry returned by DirIter.
-#[derive(Clone)]
 pub struct DirEntry {
     /// File name of this entry.
     pub name: WString,
@@ -40,7 +39,7 @@ pub struct DirEntry {
     possible_link: Option<bool>,
 
     // fd of the DIR*, used for fstatat().
-    dirfd: Rc<DirFd>,
+    dirfd: DirFd,
 }
 
 impl DirEntry {
@@ -207,9 +206,6 @@ pub struct DirIter {
     /// Whether this dir_iter considers the "." and ".." filesystem entries.
     withdot: bool,
 
-    /// A reference to the underlying directory fd.
-    dir: Rc<DirFd>,
-
     /// The storage for our entry. This allows us to iterate without allocating.
     entry: DirEntry,
 }
@@ -230,30 +226,29 @@ impl DirIter {
         let Some(dir) = NonNull::new(dir) else {
             return Err(io::Error::last_os_error());
         };
-        let dir = Rc::new(DirFd(dir));
         let entry = DirEntry {
             name: WString::new(),
             inode: 0,
             dev_inode: Cell::new(None),
             typ: Cell::new(None),
-            dirfd: dir.clone(),
+            dirfd: DirFd(dir),
             possible_link: None,
         };
-        Ok(DirIter {
-            withdot,
-            dir,
-            entry,
-        })
+        Ok(DirIter { withdot, entry })
+    }
+
+    pub fn dir(&self) -> *mut libc::DIR {
+        self.entry.dirfd.dir()
     }
 
     /// Return the underlying file descriptor.
     pub fn fd(&self) -> RawFd {
-        self.dir.fd()
+        self.entry.dirfd.fd()
     }
 
     /// Rewind the directory to the beginning. This cannot fail.
     pub fn rewind(&mut self) {
-        unsafe { libc::rewinddir(self.dir.dir()) };
+        unsafe { libc::rewinddir(self.dir()) };
     }
 
     /// Read the next entry in the directory.
@@ -263,7 +258,7 @@ impl DirIter {
     pub fn next(&mut self) -> Option<io::Result<&DirEntry>> {
         let no_errno = Errno::from_raw(0);
         Errno::set(no_errno);
-        let dent = unsafe { libc::readdir(self.dir.dir()).as_ref() };
+        let dent = unsafe { libc::readdir(self.dir()).as_ref() };
         let Some(dent) = dent else {
             // readdir distinguishes between EOF and error via errno.
             let err = Errno::last_raw();

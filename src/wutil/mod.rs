@@ -15,13 +15,13 @@ pub use wcstoi::{
 };
 
 use crate::{fds::BorrowedFdFile, flog, signal::SigChecker};
-use fish_util::{perror, write_to_fd};
+use fish_util::perror;
 use fish_wcstringutil::join_strings;
 use fish_widestring::{
     IntoCharIter, L, WExt as _, WString, bytes2wcstring, fish_reserved_codepoint, osstr2wcstring,
     str2bytes_callback, wcs2osstring, wcs2zstring, wstr,
 };
-use nix::unistd::AccessFlags;
+use nix::unistd::{self, AccessFlags};
 use std::{
     ffi::OsStr,
     fs::{self, canonicalize},
@@ -341,7 +341,7 @@ pub fn unescape_bytes_and_write_to_fd(input: impl IntoCharIter, fd: RawFd) -> Op
         mut buf: &[u8],
     ) -> bool {
         while !buf.is_empty() {
-            let amt = match write_to_fd(buf, fd) {
+            let amt = match unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, buf) {
                 Ok(amt) => amt,
                 Err(err) => {
                     // Some of our builtins emit multiple screens worth of data sent to a pager (the primary

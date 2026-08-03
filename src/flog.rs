@@ -1,9 +1,10 @@
 use crate::prelude::*;
 use crate::wildcard::wildcard_match;
 use crate::{parse_util::unescape_wildcards, wutil::unescape_bytes_and_write_to_fd};
-use fish_util::write_to_fd;
 use fish_widestring::wcs2bytes;
 use libc::c_int;
+use nix::unistd;
+use std::os::fd::BorrowedFd;
 use std::sync::atomic::{AtomicI32, Ordering};
 
 #[rustfmt::skip::macros(category)]
@@ -213,7 +214,7 @@ pub fn flog_impl(s: &[u8]) {
     if fd < 0 {
         return;
     }
-    let _ = write_to_fd(s, fd);
+    let _ = unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, s);
 }
 
 /// The entry point for flogging.

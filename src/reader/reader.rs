@@ -118,7 +118,7 @@ use fish_common::{
 };
 use fish_fallback::{fish_wcwidth, lowercase};
 use fish_feature_flags::FeatureFlag;
-use fish_util::{perror, write_to_fd};
+use fish_util::perror;
 use fish_wcstringutil::{
     CaseSensitivity, IsPrefix, StringFuzzyMatch, count_preceding_backslashes, is_prefix,
     join_strings, string_prefixes_string, string_prefixes_string_case_insensitive,
@@ -129,7 +129,7 @@ use libc::{
     _POSIX_VDISABLE, O_NONBLOCK, O_RDONLY, SIGINT, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP,
     VTIME, c_char,
 };
-use nix::errno::Errno;
+use nix::{errno::Errno, unistd};
 use nix::{
     fcntl::OFlag,
     sys::{
@@ -2643,7 +2643,7 @@ impl<'a> Reader<'a> {
         // Emit a newline so that the output is on the line after the command.
         // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.
         if !self.screen.cursor_is_wrapped_to_own_line() {
-            let _ = write_to_fd(b"\n", STDOUT_FILENO);
+            let _ = unistd::write(STDOUT_FD, b"\n");
         }
 
         // HACK: If stdin isn't the same terminal as stdout, we just moved the cursor.

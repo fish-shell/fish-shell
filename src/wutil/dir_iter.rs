@@ -322,27 +322,6 @@ impl DirIter {
     }
 }
 
-impl IntoIterator for DirIter {
-    type Item = io::Result<DirEntry>;
-    type IntoIter = Iter;
-    fn into_iter(self) -> Self::IntoIter {
-        Iter(self)
-    }
-}
-
-/// A convenient iterator over the entries in a directory.
-/// This differs from DirIter::next() in that it allocates.
-pub struct Iter(DirIter);
-impl Iterator for Iter {
-    type Item = io::Result<DirEntry>;
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.0.next()? {
-            Ok(entry) => Some(Ok(entry.clone())),
-            Err(e) => Some(Err(e)),
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::{DirEntryType, DirIter};
@@ -364,8 +343,8 @@ mod tests {
     #[test]
     fn test_no_dots() {
         // DirIter does not return . or .. by default.
-        let dir = DirIter::new(L!(".")).expect("Should be able to open CWD");
-        for entry in dir {
+        let mut dir = DirIter::new(L!(".")).expect("Should be able to open CWD");
+        while let Some(entry) = dir.next() {
             let entry = entry.unwrap();
             assert_ne!(entry.name, ".");
             assert_ne!(entry.name, "..");
@@ -375,10 +354,10 @@ mod tests {
     #[test]
     fn test_dots() {
         // DirIter returns . or .. if you ask nicely.
-        let dir = DirIter::new_with_dots(L!(".")).expect("Should be able to open CWD");
+        let mut dir = DirIter::new_with_dots(L!(".")).expect("Should be able to open CWD");
         let mut seen_dot = false;
         let mut seen_dotdot = false;
-        for entry in dir {
+        while let Some(entry) = dir.next() {
             let entry = entry.unwrap();
             if entry.name == "." {
                 seen_dot = true;

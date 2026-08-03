@@ -21,10 +21,10 @@ use fish_widestring::{
 };
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
-use std::{
-    collections::{HashMap, hash_map},
-    os::fd::RawFd,
-};
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+use nix::unistd::{PathconfVar, fpathconf};
+use std::collections::{HashMap, hash_map};
+use std::os::fd::BorrowedFd;
 
 // This is used only internally to this file, and is exposed only for testing.
 #[derive(Clone, Copy, Default)]
@@ -415,7 +415,7 @@ type CaseSensitivityCache = HashMap<WString, bool>;
 #[cfg(apple)]
 fn fs_is_case_insensitive(
     path: &wstr,
-    fd: RawFd,
+    fd: Option<BorrowedFd<'_>>,
     case_sensitivity_cache: &mut CaseSensitivityCache,
 ) -> bool {
     if let Some(cached) = case_sensitivity_cache.get(path) {
@@ -423,8 +423,7 @@ fn fs_is_case_insensitive(
     }
     // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
     // sensitive, and a 0 value means case insensitive.
-    let ret = unsafe { libc::fpathconf(fd, libc::_PC_CASE_SENSITIVE) };
-    let icase = ret == 0;
+    let icase = fd.is_some_and(|fd| fpathconf(fd, PathconfVar::_PC_CASE_SENSITIVE).is_ok());
     case_sensitivity_cache.insert(path.to_owned(), icase);
     icase
 }
@@ -432,7 +431,7 @@ fn fs_is_case_insensitive(
 #[cfg(not(apple))]
 fn fs_is_case_insensitive(
     _path: &wstr,
-    _fd: RawFd,
+    _fd: Option<BorrowedFd<'_>>,
     _case_sensitivity_cache: &mut CaseSensitivityCache,
 ) -> bool {
     // Other platforms don’t have _PC_CASE_SENSITIVE.

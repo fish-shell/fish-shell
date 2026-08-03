@@ -3,8 +3,8 @@ use crate::wutil::DevInode;
 use cfg_if::cfg_if;
 use fish_widestring::{WString, bytes2wcstring, wcs2zstring, wstr};
 use libc::{S_IFBLK, S_IFCHR, S_IFDIR, S_IFIFO, S_IFLNK, S_IFMT, S_IFREG, S_IFSOCK};
-use nix::errno::Errno;
-use std::{cell::Cell, io, mem::MaybeUninit, os::fd::RawFd, ptr::NonNull};
+use nix::{errno::Errno, fcntl::AtFlags, sys::stat::fstatat};
+use std::{cell::Cell, io, os::unix::prelude::BorrowedFd, ptr::NonNull};
 
 /// Types of files that may be in a directory.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -98,43 +98,41 @@ impl DirEntry {
         // We want to set both our type and our stat buffer.
         // If we follow symlinks and stat() errors with a bad symlink, set the type to link, but do not
         // populate the stat buffer.
-        let fd = self.dirfd.fd();
-        if fd < 0 {
-            return;
-        }
+        let Some(fd) = self.dirfd.fd() else { return };
         let narrow = wcs2zstring(&self.name);
-        let mut s = MaybeUninit::uninit();
-        if unsafe { libc::fstatat(fd, narrow.as_ptr(), s.as_mut_ptr(), 0) } == 0 {
-            let s = unsafe { s.assume_init() };
-            // st_dev is a dev_t, which is i32 on OpenBSD/Haiku and u32 in FreeBSD 11
-            #[allow(clippy::unnecessary_cast)]
-            let dev_inode = DevInode {
-                device: s.st_dev as u64,
-                inode: s.st_ino as u64,
-            };
-            self.dev_inode.set(Some(dev_inode));
-            self.typ.set(stat_mode_to_entry_type(s.st_mode));
-        } else {
-            match Errno::last() {
-                Errno::ELOOP => {
-                    self.typ.set(Some(DirEntryType::Lnk));
-                }
-                Errno::EACCES
-                | Errno::EIO
-                | Errno::ENOENT
-                | Errno::ENOTDIR
-                | Errno::ENAMETOOLONG
-                | Errno::ENODEV => {
-                    // These are "expected" errors.
-                    self.typ.set(None);
-                }
-                _ => {
-                    self.typ.set(None);
-                    // This used to print an error, but given that we have seen
-                    // both ENODEV (above) and ENOTCONN,
-                    // and that the error isn't actionable and shows up while typing,
-                    // let's not do that.
-                    // perror("fstatat");
+        match fstatat(fd, narrow.as_c_str(), AtFlags::empty()) {
+            Ok(s) => {
+                // st_dev is a dev_t, which is i32 on OpenBSD/Haiku and u32 in FreeBSD 11
+                #[allow(clippy::unnecessary_cast)]
+                let dev_inode = DevInode {
+                    device: s.st_dev as u64,
+                    inode: s.st_ino as u64,
+                };
+                self.dev_inode.set(Some(dev_inode));
+                self.typ.set(stat_mode_to_entry_type(s.st_mode));
+            }
+            Err(err) => {
+                match err {
+                    Errno::ELOOP => {
+                        self.typ.set(Some(DirEntryType::Lnk));
+                    }
+                    Errno::EACCES
+                    | Errno::EIO
+                    | Errno::ENOENT
+                    | Errno::ENOTDIR
+                    | Errno::ENAMETOOLONG
+                    | Errno::ENODEV => {
+                        // These are "expected" errors.
+                        self.typ.set(None);
+                    }
+                    _ => {
+                        self.typ.set(None);
+                        // This used to print an error, but given that we have seen
+                        // both ENODEV (above) and ENOTCONN,
+                        // and that the error isn't actionable and shows up while typing,
+                        // let's not do that.
+                        // perror("fstatat");
+                    }
                 }
             }
         }
@@ -177,8 +175,13 @@ struct DirFd(NonNull<libc::DIR>);
 impl DirFd {
     /// Return the underlying file descriptor.
     #[inline]
-    fn fd(&self) -> RawFd {
-        unsafe { libc::dirfd(self.dir()) }
+    fn fd(&self) -> Option<BorrowedFd<'_>> {
+        let fd = unsafe { libc::dirfd(self.dir()) };
+        if fd < 0 {
+            assert_ne!(Errno::last(), Errno::EINVAL);
+            return None;
+        }
+        Some(unsafe { BorrowedFd::borrow_raw(fd) })
     }
 
     /// Return the underlying DIR*.
@@ -242,7 +245,7 @@ impl DirIter {
     }
 
     /// Return the underlying file descriptor.
-    pub fn fd(&self) -> RawFd {
+    pub fn fd(&self) -> Option<BorrowedFd<'_>> {
         self.entry.dirfd.fd()
     }
 

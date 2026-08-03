@@ -62,24 +62,24 @@ pub mod limits {
     define_on!(RSS, RLIMIT_RSS; "linux", "freebsd", "netbsd", "openbsd", "dragonfly");
     // TODO(MSRV >= 1.86): target_os = "cygwin" triggers a warning on Rust 1.85.
     #[cfg(any(
+        apple,
+        cygwin,
         target_os = "linux",
         target_os = "ios",
         target_os = "macos",
         target_os = "freebsd",
         target_os = "netbsd",
         target_os = "dragonfly",
-        cygwin
     ))]
     pub const AS: libc::c_int = libc::RLIMIT_AS as _;
     // TODO(MSRV >= 1.86): target_os = "cygwin" triggers a warning on Rust 1.85.
     #[cfg(not(any(
+        apple,
+        cygwin,
         target_os = "linux",
-        target_os = "ios",
-        target_os = "macos",
         target_os = "freebsd",
         target_os = "netbsd",
         target_os = "dragonfly",
-        cygwin
     )))]
     pub const AS: libc::c_int = -1;
     define_on!(SBSIZE, RLIMIT_SBSIZE; "freebsd", "netbsd", "dragonfly");

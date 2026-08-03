@@ -412,7 +412,7 @@ fn is_potential_cd_path(
 ///     true: the file system is case insensitive
 type CaseSensitivityCache = HashMap<WString, bool>;
 
-#[cfg(any(target_os = "macos", target_os = "ios"))]
+#[cfg(apple)]
 fn fs_is_case_insensitive(
     path: &wstr,
     fd: RawFd,
@@ -429,7 +429,7 @@ fn fs_is_case_insensitive(
     icase
 }
 
-#[cfg(not(any(target_os = "macos", target_os = "ios")))]
+#[cfg(not(apple))]
 fn fs_is_case_insensitive(
     _path: &wstr,
     _fd: RawFd,

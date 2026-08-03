@@ -52,8 +52,7 @@ pub fn make_autoclose_pipes() -> nix::Result<AutoClosePipes> {
             target_os = "android",
             bsd,
             cygwin,
-            target_os = "solaris",
-            target_os = "illumos",
+            solarish,
         ))] {
             let pipes = match nix::unistd::pipe2(OFlag::O_CLOEXEC) {
                 Ok(pipes) => {

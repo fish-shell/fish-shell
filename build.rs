@@ -94,6 +94,9 @@ fn detect_cfgs(target: &mut Target) {
             }
         }),
         ("small_main_stack", &has_small_stack),
+        ("solarish", &|_target| {
+            matches!(target_os().as_str(), "illumos" | "solaris")
+        }),
         ("using_cmake", &|_| {
             option_env!("FISH_CMAKE_BINARY_DIR").is_some()
         }),

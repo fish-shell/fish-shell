@@ -661,31 +661,7 @@ mod expander {
                 return;
             };
 
-            // wreaddir_resolving without the out argument is just wreaddir.
-            // So we can use the information in case we need it.
-            let need_dir = self.flags.contains(ExpandFlags::DIRECTORIES_ONLY);
-
-            while let Some(Ok(entry)) = dir.next() {
-                if self.interrupted_or_overflowed() {
-                    break;
-                }
-
-                // Note that is_dir() may cause a stat() call.
-                let known_dir = need_dir && entry.is_dir();
-                if need_dir && !known_dir {
-                    continue;
-                }
-                if !entry.name.is_empty() && !entry.name.starts_with('.') {
-                    self.try_add_completion_result(
-                        &(base_dir.to_owned() + entry.name.as_utfstr()),
-                        &entry.name,
-                        L!(""),
-                        prefix,
-                        entry,
-                        info,
-                    );
-                }
-            }
+            self.expand_last_segment(base_dir, &mut dir, L!(""), prefix, info);
         }
 
         /// Given a directory base_dir, which is opened as base_dir_iter, expand an intermediate segment
@@ -826,6 +802,8 @@ mod expander {
             prefix: &wstr,
             info: ParentInfo,
         ) {
+            // wreaddir_resolving without the out argument is just wreaddir.
+            // So we can use the information in case we need it.
             let need_dir = self.flags.contains(ExpandFlags::DIRECTORIES_ONLY);
 
             while !self.interrupted_or_overflowed() {
@@ -833,6 +811,7 @@ mod expander {
                     break;
                 };
 
+                // Note that is_dir() may cause a stat() call.
                 if need_dir && !entry.is_dir() {
                     continue;
                 }

@@ -7,6 +7,7 @@ use fish_widestring::{
     bytes2wcstring, decode_byte_from_char, fish_reserved_codepoint, wcs2bytes, wstr,
 };
 use libc::{SIG_IGN, SIGTTOU, STDERR_FILENO, STDIN_FILENO, STDOUT_FILENO};
+use nix::unistd;
 use std::{
     cell::{Cell, RefCell},
     env,
@@ -1082,7 +1083,7 @@ pub fn write_loop<Fd: AsRawFd>(fd: &Fd, buf: &[u8]) -> nix::Result<()> {
     let fd = fd.as_raw_fd();
     let mut total = 0;
     while total < buf.len() {
-        match nix::unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, &buf[total..]) {
+        match unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, &buf[total..]) {
             Ok(written) => {
                 total += written;
             }

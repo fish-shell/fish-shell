@@ -1,5 +1,5 @@
 function __reg_run_reg_safely
-    set -l output (reg $argv | tr -d '\r' | tail --lines +2 | string collect)
+    set -l output (reg $argv | string replace -a '\r' '' | tail --lines +2 | string collect)
     if not string match -q -r "reg: Invalid syntax*" -- $output
         set output (string split \n -- $output)
         echo $output | string replace -a " " \n

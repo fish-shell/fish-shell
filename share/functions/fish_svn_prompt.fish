@@ -116,7 +116,7 @@ function fish_svn_prompt --description "Prompt function for svn"
         # 2. cut out the current column of characters
         # 3. remove duplicates
         # 4. remove spaces
-        set -l column_status (printf '%s\n' $svn_status_lines | string -s $col -e $col | sort -u | string trim)
+        set -l column_status (printf '%s\n' $svn_status_lines | string -s $col -e $col | sort -u | string replace -a ' ' '')
 
         # check that the column status list does not only contain an empty element (if it does, this column is empty)
         if test (count $column_status) -gt 1 -o -n "$column_status[1]"

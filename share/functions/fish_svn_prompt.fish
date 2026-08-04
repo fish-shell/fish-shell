@@ -104,7 +104,7 @@ function fish_svn_prompt --description "Prompt function for svn"
     # 1. perform `svn status`
     # 2. remove extra lines that aren't necessary
     # 3. cut the output down to the first 7 columns, as these contain the information needed
-    set -l svn_status_lines (command svn status | sed -e 's=^Summary of conflicts.*==' -e 's=^  Text conflicts.*==' -e 's=^  Property conflicts.*==' -e 's=^  Tree conflicts.*==' -e 's=.*incoming .* upon update.*==' | cut -c 1-7)
+    set -l svn_status_lines (command svn status | sed -e 's=^Summary of conflicts.*==' -e 's=^  Text conflicts.*==' -e 's=^  Property conflicts.*==' -e 's=^  Tree conflicts.*==' -e 's=.*incoming .* upon update.*==' | string sub -l7)
 
     # track the last column to contain a status flag
     set -l last_column 0
@@ -116,7 +116,7 @@ function fish_svn_prompt --description "Prompt function for svn"
         # 2. cut out the current column of characters
         # 3. remove duplicates
         # 4. remove spaces
-        set -l column_status (printf '%s\n' $svn_status_lines | cut -c $col | sort -u | tr -d ' ')
+        set -l column_status (printf '%s\n' $svn_status_lines | string -s $col -e $col | sort -u | string trim)
 
         # check that the column status list does not only contain an empty element (if it does, this column is empty)
         if test (count $column_status) -gt 1 -o -n "$column_status[1]"

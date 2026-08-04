@@ -155,7 +155,7 @@ complete -c fossil -n '__fish_fossil_command clone' -l ssl-identity -r -d 'Use S
 
 # commit
 complete -c fossil -n __fish_fossil_needs_command -a 'ci commit' -d 'Create new revision'
-complete -c fossil -n '__fish_fossil_command ci commit' -a '(__fish_fossil changes --rel-paths | cut -c12-)' -x -d File
+complete -c fossil -n '__fish_fossil_command ci commit' -a '(__fish_fossil changes --rel-paths | strings sub -s 12)' -x -d File
 complete -c fossil -n '__fish_fossil_command ci commit' -l allow-conflict -d 'Allow unresolved merge conflicts'
 complete -c fossil -n '__fish_fossil_command ci commit' -l allow-empty -d 'Allow empty check-ins'
 complete -c fossil -n '__fish_fossil_command ci commit' -l allow-fork -d 'Allow forking'

@@ -120,7 +120,7 @@ complete -f -c machinectl -n "__fish_seen_subcommand_from login bind copy-to cop
 
 complete -f -c machinectl -n "__fish_seen_subcommand_from login bind copy-to copy-from shell; and not __fish_systemd_has_machine" -a "(__fish_systemd_machines)"
 # This is imperfect as we print the _local_ users
-complete -f -c machinectl -n "__fish_seen_subcommand_from shell; and not __fish_systemd_has_machine (commandline -xpc | cut -d"@" -f2-)" -a "(__fish_print_users)@(__fish_systemd_machines)"
+complete -f -c machinectl -n "__fish_seen_subcommand_from shell; and not __fish_systemd_has_machine (commandline -xpc | string split -f2 '@')" -a "(__fish_print_users)@(__fish_systemd_machines)"
 
 complete -f -c machinectl -n "__fish_seen_subcommand_from read-only; and not __fish_systemd_has_machine_image" -a "(__fish_systemd_machine_images)"
 complete -f -c machinectl -n "__fish_seen_subcommand_from read-only; and __fish_systemd_has_machine_image" -a "yes no"

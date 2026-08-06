@@ -21,9 +21,9 @@ use fish_widestring::{
 };
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
-#[cfg(any(target_os = "macos", target_os = "ios"))]
-use nix::unistd::{PathconfVar, fpathconf};
 use std::collections::{HashMap, hash_map};
+#[cfg(any(target_os = "macos", target_os = "ios"))]
+use std::os::fd::AsRawFd as _;
 use std::os::fd::BorrowedFd;
 
 // This is used only internally to this file, and is exposed only for testing.
@@ -423,7 +423,9 @@ fn fs_is_case_insensitive(
     }
     // Ask the system. A -1 value means error (so assume case sensitive), a 1 value means case
     // sensitive, and a 0 value means case insensitive.
-    let icase = fd.is_some_and(|fd| fpathconf(fd, PathconfVar::_PC_CASE_SENSITIVE).is_ok());
+    let icase = fd.is_some_and(|fd| unsafe {
+        libc::fpathconf(fd.as_raw_fd(), libc::_PC_CASE_SENSITIVE) == 0
+    });
     case_sensitivity_cache.insert(path.to_owned(), icase);
     icase
 }

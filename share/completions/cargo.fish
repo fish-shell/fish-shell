@@ -792,4 +792,4 @@ function __cargo_dispatch_subcommand
     end
 end
 
-complete -c cargo -n "__cargo_dispatch_subcommand" -f
+complete -c cargo -n __cargo_dispatch_subcommand -f

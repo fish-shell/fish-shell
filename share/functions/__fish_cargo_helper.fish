@@ -1,3 +1,4 @@
+# localization: skip(private)
 function __cargo
     set -l tmp $__cargo_wrapping cargo --color=never $argv
     RUSTUP_AUTO_INSTALL=0 $tmp

@@ -810,35 +810,24 @@ complete -c cargo -n "__fish_seen_subcommand_from help" -l frozen -d 'Require Ca
 complete -c cargo -n "__fish_seen_subcommand_from help" -l locked -d 'Require Cargo.lock is up to date'
 complete -c cargo -n "__fish_seen_subcommand_from help" -l offline -d 'Run without accessing the network'
 
-# Add completions for popular cargo addon `cargo-asm` (that at least one fish dev uses)
-if command -q cargo-asm
+# Dispatch cargo-plugin by sourcing the appropriate completion file, if one exists.
+function __cargo_dispatch_subcommand
+    set -l cmd (commandline -opc)
 
-    # Flags (no parameters)
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l comments -d "Print asm comments"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l debug-info -d "Generate asm w/ debug info even if not required"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l debug-mode -d "Print output useful for debugging"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l directives -d "Print asm directives"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l help -s h -d "Print cargo-asm help info"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l json -d "Serialize asm AST to JSON"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l lib -d "Build only the lib target"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l no-color -d "Disable color output"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l no-default-features -d "Disable all cargo features on build"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l rust -d "Interleave asm output w/ rust code"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -l version -s V -d "Print cargo-asm version info"
+    # cmd[1] is cargo, cmd[2] is the subcommand
+    if test (count $cmd) -ge 2
+        set -l subcommand $cmd[2]
+        set -l completion "cargo-$subcommand.fish"
 
-    # Options (require a parameter)
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -rl target -d "Build for target" -xa "(__fish_cargo_targets)"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -rl asm-style -d "ASM style (default: intel)" -xa "intel att"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -rl build-type -d "Build type (default: release)" -xa "debug release"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -rl features -d "Cargo features to enable" -xa "(__fish_cargo_features)"
-    complete -c cargo -n "__fish_seen_subcommand_from asm" -rl manifest-path -d "Run cargo-asm in a different directory"
+        for dir in $fish_complete_path
+            set -l file "$dir/$completion"
 
-    # Dynamically generate completions for the function/impl path to translate to asm (the reason these completions exist)
-    # Warning: this will build the project and can take time! We make sure to only call it if it's not a switch so completions
-    # for --foo will always be fast.
-    if command -q timeout
-        complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(__fish_cargo_wrapping={timeout,1} __fish_cargo asm)"
-    else
-        complete -c cargo -n "__fish_seen_subcommand_from asm; and not __fish_is_switch" -xa "(__fish_cargo asm)"
+            if test -f $file
+                source $file
+                return
+            end
+        end
     end
 end
+
+complete -c cargo -n "__cargo_dispatch_subcommand" -f

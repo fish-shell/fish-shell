@@ -504,12 +504,12 @@ impl TtyHandoff {
             }
 
             let pgroup_terminated;
-            if Errno::last() == Errno::EINVAL {
+            if err == Errno::EINVAL {
                 // OS X returns EINVAL if the process group no longer lives. Probably other OSes,
                 // too. Unlike EPERM below, EINVAL can only happen if the process group has
                 // terminated.
                 pgroup_terminated = true;
-            } else if Errno::last() == Errno::EPERM {
+            } else if err == Errno::EPERM {
                 // Retry so long as this isn't because the process group is dead.
                 match waitpid(
                     NullablePid::from_raw(-pgid.as_pid_t()),
@@ -534,7 +534,7 @@ impl TtyHandoff {
                         pgroup_terminated = true;
                     }
                 }
-            } else if Errno::last() == Errno::ENOTTY {
+            } else if err == Errno::ENOTTY {
                 // stdin is not a TTY. In general we expect this to be caught via the tcgetpgrp
                 // call's EBADF handler above.
                 return false;

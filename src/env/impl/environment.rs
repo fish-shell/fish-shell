@@ -1086,8 +1086,8 @@ impl<T> EnvMutex<T> {
 }
 
 // Safety: we use a global lock.
-unsafe impl<T> Sync for EnvMutex<T> {}
-unsafe impl<T> Send for EnvMutex<T> {}
+unsafe impl<T: Send> Sync for EnvMutex<T> {}
+unsafe impl<T: Send> Send for EnvMutex<T> {}
 
 #[cfg(test)]
 mod tests {

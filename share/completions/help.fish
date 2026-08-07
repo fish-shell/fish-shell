@@ -37,6 +37,8 @@ function __fish_help_describe -a help_item
             return
         case contributing#adding-translations-for-a-new-language
             return
+        case contributing#ai-contributions-policy
+            return
         case contributing#code-style
             return
         case contributing#commit-history

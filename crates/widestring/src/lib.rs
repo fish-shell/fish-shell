@@ -97,9 +97,11 @@ pub const INTERNAL_SEPARATOR: char = char_offset(EXPAND_RESERVED_BASE, 8);
 /// Character representing an empty variable expansion. Only used transitively while expanding
 /// variables.
 pub const VARIABLE_EXPAND_EMPTY: char = char_offset(EXPAND_RESERVED_BASE, 9);
+/// Character representing the boundary around a transitive expansion.
+pub const EXPANSION_BOUNDARY: char = char_offset(EXPAND_RESERVED_BASE, 10);
 
 const _: () = assert!(
-    EXPAND_RESERVED_END as u32 > VARIABLE_EXPAND_EMPTY as u32,
+    EXPAND_RESERVED_END as u32 > EXPANSION_BOUNDARY as u32,
     "Characters used in expansions must stay within private use area"
 );
 

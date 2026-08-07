@@ -246,6 +246,22 @@ echo $foo[d]
 #CHECKERR: echo $foo[d]
 #CHECKERR: ^
 
+# see https://github.com/fish-shell/fish-shell/issues/12819
+set -l close_bracket_index '1]'
+echo $foo[$close_bracket_index]
+#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): Invalid index value
+#CHECKERR: echo $foo[$close_bracket_index]
+#CHECKERR: ^
+echo $foo["$close_bracket_index"]
+#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): Invalid index value
+#CHECKERR: echo $foo["$close_bracket_index"]
+#CHECKERR: ^
+set -l close_bracket ']'
+echo "$foo[1$close_bracket"
+#CHECKERR: {{.*}}expansion.fish (line {{\d+}}): Invalid index value
+#CHECKERR: echo "$foo[1$close_bracket"
+#CHECKERR: ^
+
 echo ()[1]
 # No output
 echo ()[d]

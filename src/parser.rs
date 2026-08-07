@@ -10,7 +10,7 @@ use crate::{
         FISH_TERMINAL_COLOR_THEME_VAR, Statuses,
     },
     event::{self, Event},
-    expand::{ExpandFlags, ExpandResultCode, expand_string, replace_home_directory_with_tilde},
+    expand::{ExpandFlags, expand_string, replace_home_directory_with_tilde},
     fds::{BEST_O_SEARCH, open_dir},
     flog, flogf, function,
     io::IoChain,
@@ -742,10 +742,7 @@ impl Parser {
         let mut result = vec![];
         for arg in &ast.top().arguments {
             let arg_src = arg.source(arg_list_src);
-            if matches!(
-                expand_string(arg_src.to_owned(), &mut result, flags, ctx, None).result,
-                ExpandResultCode::Error | ExpandResultCode::Overflow
-            ) {
+            if expand_string(arg_src.to_owned(), &mut result, flags, ctx, None).failed() {
                 break; // failed to expand a string
             }
         }

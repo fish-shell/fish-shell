@@ -3,6 +3,8 @@
 //! from using a more clever memory allocation scheme, perhaps an evil combination of talloc,
 //! string buffers and reference counting.
 
+use std::ops::DerefMut as _;
+
 use crate::{
     builtins::{
         STATUS_CMD_ERROR, STATUS_CMD_UNKNOWN, STATUS_EXPAND_ERROR, STATUS_ILLEGAL_CMD,
@@ -32,8 +34,8 @@ use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::{join_strings, trim};
 use fish_widestring::{
     ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE,
-    HOME_DIRECTORY, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, VARIABLE_EXPAND,
-    VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, osstr2wcstring,
+    HOME_DIRECTORY, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, SLICE_BEGIN, SLICE_END,
+    VARIABLE_EXPAND, VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, osstr2wcstring,
 };
 use nix::unistd::{User, getpid};
 
@@ -392,15 +394,17 @@ fn parse_slice(
     input: &wstr,
     idx: &mut Vec<i64>,
     array_size: usize,
+    unescaped: bool,
 ) -> Result<usize, (usize, ParseSliceError)> {
     let size = i64::try_from(array_size).unwrap();
     let mut pos = 1; // skip past the opening square bracket
+    let end_char = if unescaped { SLICE_END } else { ']' };
 
     loop {
         while input.char_at(pos).is_whitespace() || input.char_at(pos) == INTERNAL_SEPARATOR {
             pos += 1;
         }
-        if input.char_at(pos) == ']' {
+        if input.char_at(pos) == end_char {
             pos += 1;
             break;
         }
@@ -452,7 +456,7 @@ fn parse_slice(
 
             // If we are at the last index range expression  then a missing end-index means the
             // range spans until the last item.
-            let tmp1 = if input.char_at(pos) == ']' {
+            let tmp1 = if input.char_at(pos) == end_char {
                 -1 // last index
             } else {
                 let mut consumed = 0;
@@ -611,7 +615,7 @@ fn expand_variables(
     let slice_start = var_name_stop;
     let mut var_idx_list = vec![];
 
-    if instr.as_char_slice().get(slice_start) == Some(&'[') {
+    if instr.as_char_slice().get(slice_start) == Some(&SLICE_BEGIN) {
         all_values = false;
         // If a variable is missing, behave as though we have one value, so that $var[1] always
         // works.
@@ -625,6 +629,7 @@ fn expand_variables(
             &instr[slice_start..],
             &mut var_idx_list,
             effective_val_count,
+            true,
         ) {
             Ok(offset) => {
                 var_name_and_slice_stop = slice_start + offset;
@@ -971,24 +976,29 @@ pub fn expand_cmdsubst(
     if input.as_char_slice().get(tail_begin) == Some(&'[') {
         let mut slice_idx = vec![];
         let slice_begin = tail_begin;
-        let slice_end = match parse_slice(&input[slice_begin..], &mut slice_idx, sub_res.len()) {
-            Ok(offset) => slice_begin + offset,
-            Err((bad_pos, error)) => {
-                match error {
-                    ParseSliceError::ZeroIndex => {
-                        append_syntax_error!(
-                            errors,
-                            slice_begin + bad_pos,
-                            "array indices start at 1, not 0."
-                        );
+        let slice_end =
+            match parse_slice(&input[slice_begin..], &mut slice_idx, sub_res.len(), false) {
+                Ok(offset) => slice_begin + offset,
+                Err((bad_pos, error)) => {
+                    match error {
+                        ParseSliceError::ZeroIndex => {
+                            append_syntax_error!(
+                                errors,
+                                slice_begin + bad_pos,
+                                "array indices start at 1, not 0."
+                            );
+                        }
+                        ParseSliceError::InvalidIndex => {
+                            append_syntax_error!(
+                                errors,
+                                slice_begin + bad_pos,
+                                "Invalid index value"
+                            );
+                        }
                     }
-                    ParseSliceError::InvalidIndex => {
-                        append_syntax_error!(errors, slice_begin + bad_pos, "Invalid index value");
-                    }
+                    return ExpandResult::make_error(STATUS_EXPAND_ERROR);
                 }
-                return ExpandResult::make_error(STATUS_EXPAND_ERROR);
-            }
-        };
+            };
 
         let mut sub_res2 = vec![];
         tail_begin = slice_end;
@@ -1170,6 +1180,22 @@ fn remove_internal_separator(s: &mut WString, conv: bool) {
     }
 }
 
+fn restore_slice_operator(s: &mut WString) {
+    for idx in s.as_char_slice_mut() {
+        match *idx {
+            SLICE_BEGIN => {
+                *idx = '[';
+            }
+            SLICE_END => {
+                *idx = ']';
+            }
+            _ => {
+                // we ignore all other characters
+            }
+        }
+    }
+}
+
 /// A type that knows how to perform expansions.
 struct Expander<'a, 'b, 'c> {
     /// Operation context for this expansion.
@@ -1237,20 +1263,14 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                 }
                 let this_result = (stage)(&mut expand, comp.completion, &mut output_storage);
                 total_result = this_result;
-                if matches!(
-                    total_result.result,
-                    ExpandResultCode::Error | ExpandResultCode::Overflow
-                ) {
+                if total_result.failed() {
                     break;
                 }
             }
 
             // Output becomes our next stage's input.
             completions = output_storage.take();
-            if matches!(
-                total_result.result,
-                ExpandResultCode::Error | ExpandResultCode::Overflow
-            ) {
+            if total_result.failed() {
                 break;
             }
         }
@@ -1330,6 +1350,10 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             for i in next.as_char_slice_mut() {
                 if [VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE].contains(i) {
                     *i = '$';
+                } else if *i == SLICE_BEGIN {
+                    *i = '[';
+                } else if *i == SLICE_END {
+                    *i = ']';
                 }
             }
             if !out.add(next) {
@@ -1338,7 +1362,13 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             ExpandResult::ok()
         } else {
             let size = next.len();
-            expand_variables(next, out, size, self.ctx.vars(), self.errors)
+            let result = expand_variables(next, out, size, self.ctx.vars(), self.errors);
+            if result.success() {
+                for comp in out.deref_mut() {
+                    restore_slice_operator(&mut comp.completion);
+                }
+            }
+            result
         }
     }
 
@@ -1545,6 +1575,23 @@ pub struct ExpandResult {
     /// If expansion resulted in an error, this is an appropriate value with which to populate
     /// $status.
     pub status: libc::c_int,
+}
+
+impl ExpandResult {
+    #[must_use]
+    #[inline]
+    pub fn failed(&self) -> bool {
+        matches!(
+            self.result,
+            ExpandResultCode::Error | ExpandResultCode::Overflow
+        )
+    }
+
+    #[must_use]
+    #[inline]
+    pub fn success(&self) -> bool {
+        !self.failed()
+    }
 }
 
 #[cfg(test)]

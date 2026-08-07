@@ -1633,11 +1633,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 flags -= ExpandFlags::FUZZY_MATCH;
             }
 
-            if matches!(
-                expand_to_receiver(s.to_owned(), &mut self.completions, flags, self.ctx, None)
-                    .result,
-                ExpandResultCode::Error | ExpandResultCode::Overflow,
-            ) {
+            if expand_to_receiver(s.to_owned(), &mut self.completions, flags, self.ctx, None)
+                .failed()
+            {
                 flogf!(complete, "Error while expanding string '%s'", s);
             }
             Self::escape_opening_brackets(&mut self.completions[first_from_start..], s);
@@ -1649,17 +1647,15 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
         let sep_string = s.slice_from(sep_index + 1);
         let mut local_completions = Vec::new();
-        if matches!(
-            expand_string(
-                sep_string.to_owned(),
-                &mut local_completions,
-                flags,
-                self.ctx,
-                None,
-            )
-            .result,
-            ExpandResultCode::Error | ExpandResultCode::Overflow
-        ) {
+        if expand_string(
+            sep_string.to_owned(),
+            &mut local_completions,
+            flags,
+            self.ctx,
+            None,
+        )
+        .failed()
+        {
             flogf!(complete, "Error while expanding string '%s'", sep_string);
         }
 

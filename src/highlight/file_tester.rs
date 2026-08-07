@@ -22,7 +22,7 @@ use fish_widestring::{
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
 use std::collections::{HashMap, hash_map};
-#[cfg(any(target_os = "macos", target_os = "ios"))]
+#[cfg(apple)]
 use std::os::fd::AsRawFd as _;
 use std::os::fd::BorrowedFd;
 

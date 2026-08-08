@@ -214,6 +214,7 @@ define_readline_cmds! {
     ("delete-char", DeleteChar),
     ("delete-or-exit", DeleteOrExit),
     ("down-line", DownLine),
+    ("down-or-search", DownOrSearch),
     ("downcase-selection", DowncaseSelection),
     ("downcase-word", DowncaseWord),
     ("end-of-buffer", EndOfBuffer),

@@ -34,7 +34,7 @@ use nix::{
         signal::{SaFlags, SigAction, SigHandler, SigSet, Signal, kill, killpg},
         wait::{WaitPidFlag, WaitStatus, waitpid},
     },
-    unistd::getpgrp,
+    unistd::{Pid as NullablePid, getpgrp},
 };
 use std::{
     cell::{Cell, Ref, RefCell, RefMut},
@@ -308,15 +308,15 @@ impl Pid {
     }
 
     #[inline(always)]
-    pub fn as_nix_pid(&self) -> nix::unistd::Pid {
-        nix::unistd::Pid::from_raw(self.as_pid_t())
+    pub fn as_nullable_pid(&self) -> NullablePid {
+        NullablePid::from_raw(self.as_pid_t())
     }
 
     #[inline(always)]
     // The nix Pid type does not guarantee non-zero values.
     // It is safe to use this on the result of nix's getpid, since getpid does not fail, and the ID
     // of the calling process is never 0.
-    pub fn from_nix_pid_unchecked(pid: nix::unistd::Pid) -> Self {
+    pub fn from_nullable_pid_unchecked(pid: NullablePid) -> Self {
         Self::new(pid.as_raw())
     }
 }
@@ -875,14 +875,14 @@ impl Job {
     /// Return true on success, false on failure.
     pub fn signal(&self, signal: Signal) -> bool {
         if let Some(pgid) = self.group().pgid() {
-            if let Err(err) = killpg(pgid.as_nix_pid(), signal) {
+            if let Err(err) = killpg(pgid.as_nullable_pid(), signal) {
                 perror_nix(&format!("killpg({pgid}, {})", signal.as_str()), err);
                 return false;
             }
         } else {
             // This job lives in fish's pgroup and we need to signal procs individually.
             for p in self.external_procs() {
-                if !p.is_completed() && kill(p.pid().unwrap().as_nix_pid(), signal).is_err() {
+                if !p.is_completed() && kill(p.pid().unwrap().as_nullable_pid(), signal).is_err() {
                     return false;
                 }
             }
@@ -1123,7 +1123,7 @@ pub fn hup_jobs(jobs: &[Rc<Job>]) {
     let mut kill_list = Vec::new();
     for j in jobs {
         let Some(pgid) = j.pgid() else { continue };
-        if pgid.as_nix_pid() != fish_pgrp && !j.is_completed() {
+        if pgid.as_nullable_pid() != fish_pgrp && !j.is_completed() {
             j.signal(Signal::SIGHUP);
             if j.is_stopped() {
                 j.signal(Signal::SIGCONT);
@@ -1169,7 +1169,7 @@ fn reap_disowned_pids() {
     let mut disowned_pids = DISOWNED_PIDS.lock().unwrap();
     // Remove the pid/pgid if it has exited or an error occurs (presumably ECHILD because the child does not exist).
     disowned_pids.retain(
-        |pid| match waitpid(pid.as_nix_pid(), Some(WaitPidFlag::WNOHANG)) {
+        |pid| match waitpid(pid.as_nullable_pid(), Some(WaitPidFlag::WNOHANG)) {
             Ok(wait_status) => match wait_status {
                 WaitStatus::Exited(_, _) | WaitStatus::Signaled(_, _, _) => {
                     flogf!(proc_reap_external, "Reaped disowned PID or PGID %d", pid);

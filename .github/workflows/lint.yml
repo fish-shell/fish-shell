@@ -21,6 +21,12 @@ jobs:
       run: PATH="target/debug:$PATH" cargo xtask format --all --check
     - name: check rustfmt
       run: find build.rs crates src -type f -name '*.rs' | xargs rustfmt --check
+    - name: check import conventions
+      run: |
+         if git grep -En 'unistd::Pid|unistd::.*\bPid,' 'src/**.rs' 'crates/**.rs'; then
+          echo "Make sure to import 'nix::unistd::Pid' as 'NullablePid'"
+          exit 1
+        fi
 
   shellcheck:
     runs-on: ubuntu-latest

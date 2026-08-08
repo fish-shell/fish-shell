@@ -164,7 +164,7 @@ fn parse_cmd_opts(
                     }
                     e = EventDescription::CallerExit { caller_id };
                 } else if opt == 'p' && woptarg == "%self" {
-                    let pid = Pid::from_nix_pid_unchecked(getpid());
+                    let pid = Pid::from_nullable_pid_unchecked(getpid());
                     e = EventDescription::ProcessExit { pid: Some(pid) };
                 } else {
                     let pid = parse_pid_may_be_zero(streams, cmd, woptarg)?;

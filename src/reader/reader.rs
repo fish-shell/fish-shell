@@ -137,7 +137,7 @@ use nix::{
         stat::Mode,
         termios::{self, SetArg, Termios, tcgetattr, tcsetattr},
     },
-    unistd::{getpgrp, getpid, setpgid},
+    unistd::{Pid as NullablePid, getpgrp, getpid, setpgid},
 };
 use std::{
     borrow::Cow,
@@ -4961,7 +4961,7 @@ fn acquire_tty_or_exit(shell_pgid: libc::pid_t) {
             }
 
             // Try stopping us.
-            if let Err(err) = killpg(nix::unistd::Pid::from_raw(shell_pgid), Signal::SIGTTIN) {
+            if let Err(err) = killpg(NullablePid::from_raw(shell_pgid), Signal::SIGTTIN) {
                 perror_nix("killpg(shell_pgid, SIGTTIN)", err);
                 exit_without_destructors(1);
             }

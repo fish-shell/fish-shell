@@ -431,7 +431,7 @@ impl TtyHandoff {
         // It should never be fish's pgroup.
         let fish_pgrp = getpgrp();
         assert_ne!(
-            pgid.as_nix_pid(),
+            pgid.as_nullable_pid(),
             fish_pgrp,
             "Job should not have fish's pgroup"
         );

@@ -593,7 +593,7 @@ fn throwing_main() -> i32 {
 
     event::fire(
         parser,
-        Event::process_exit(Pid::from_nix_pid_unchecked(getpid()), exit_status),
+        Event::process_exit(Pid::from_nullable_pid_unchecked(getpid()), exit_status),
     );
 
     // Trigger any exit handlers.

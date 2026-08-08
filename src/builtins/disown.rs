@@ -21,7 +21,7 @@ fn disown_job(cmd: &wstr, streams: &mut IoStreams, j: &Job) {
     let pgid = j.pgid();
     if j.is_stopped() {
         if let Some(pgid) = pgid {
-            let _ = killpg(pgid.as_nix_pid(), Some(Signal::SIGCONT));
+            let _ = killpg(pgid.as_nullable_pid(), Some(Signal::SIGCONT));
         }
         err_fmt!(
             "job %d ('%s') was stopped and has been signalled to continue.",

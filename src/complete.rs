@@ -614,6 +614,68 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         }
     }
 
+    /// Collect directories that will be created by `mkdir` in earlier parts of && chains
+    /// on the same command line. This allows `cd` completions to suggest directories that
+    /// don't exist yet but will be created by a preceding `mkdir`.
+    fn collect_mkdir_dirs(&self, cmdline: &wstr, cursor_pos: usize) -> Vec<WString> {
+        use crate::ast::{self, JobConjunction, Node, Token};
+        use crate::parse_constants::ParseTokenType;
+
+        let ast_flags = crate::parse_constants::ParseTreeFlags {
+            continue_after_error: true,
+            include_comments: false,
+            accept_incomplete_tokens: true,
+            leave_unterminated: true,
+            show_extra_semis: true,
+            ..Default::default()
+        };
+        let ast: ast::Ast<ast::JobList> = ast::parse(cmdline, ast_flags, None);
+        let mut dirs = Vec::new();
+
+        // Walk JobConjunction nodes to find mkdir commands before the cursor.
+        let walk_conjunction = |jc: &JobConjunction, dirs: &mut Vec<WString>| {
+            // Check if the first job is mkdir and is before the cursor.
+            if let Some(range) = jc.job.try_source_range() {
+                if range.start() < cursor_pos {
+                    if let Some(args) = crate::parse_util::extract_mkdir_args_unescaped(&jc.job, cmdline) {
+                        dirs.extend(args);
+                    }
+                }
+            }
+
+            // For each continuation, track mkdir args based on && vs ||.
+            for cont in &jc.continuations {
+                let is_andand = cont.conjunction.token_type() == ParseTokenType::AndAnd;
+
+                if let Some(conj_range) = cont.conjunction.try_source_range() {
+                    if conj_range.start() < cursor_pos {
+                        if is_andand {
+                            // Check if the continuation's job is mkdir.
+                            if let Some(range) = cont.job.try_source_range() {
+                                if range.start() < cursor_pos {
+                                    if let Some(args) = crate::parse_util::extract_mkdir_args_unescaped(&cont.job, cmdline) {
+                                        dirs.extend(args);
+                                    }
+                                }
+                            }
+                        } else {
+                            // || resets: preceding command failed.
+                            dirs.clear();
+                        }
+                    }
+                }
+            }
+        };
+
+        // Walk the AST's JobList.
+        let top = ast.top();
+        for jc in top.iter() {
+            walk_conjunction(jc, &mut dirs);
+        }
+
+        dirs
+    }
+
     fn perform_for_commandline(&mut self, cmdline: WString) {
         // Limit recursion, in case a user-defined completion has cycles, or the completion for "x"
         // wraps "A=B x" (#3474, #7344).  No need to do that when there is no parser: this happens only
@@ -840,6 +902,34 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 handle_as_special_cd,
                 cur_tok.is_unterminated_brace,
             );
+
+            // If this is a cd command, add completions for directories that will be created
+            // by mkdir in earlier parts of && chains on the same command line.
+            if handle_as_special_cd && !is_autosuggest {
+                let mkdir_dirs = self.collect_mkdir_dirs(&cmdline, cursor_pos);
+                for dir in &mkdir_dirs {
+                    // Only suggest dirs that match the current argument prefix.
+                    if current_argument.is_empty()
+                        || string_prefixes_string(current_argument, dir)
+                    {
+                        // Check if this completion is already present (either with or without
+                        // trailing slash).
+                        let mut dir_with_slash = dir.clone();
+                        dir_with_slash.push('/');
+                        let already_present = self.completions.as_list().iter().any(|c| {
+                            c.completion == *dir || c.completion == dir_with_slash
+                        });
+                        if !already_present {
+                            let _ = self.completions.add(Completion::new(
+                                dir_with_slash,
+                                WString::new(),
+                                StringFuzzyMatch::exact_match(),
+                                CompleteFlags::REPLACES_TOKEN | CompleteFlags::NO_SPACE,
+                            ));
+                        }
+                    }
+                }
+            }
 
             // Lastly mark any completions that appear to already be present in arguments.
             self.mark_completions_duplicating_arguments(&cmdline, current_token, tokens);

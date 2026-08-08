@@ -67,6 +67,7 @@ Helper functions
 
 Some helper functions, often to give you information for use in your prompt:
 
+- :doc:`fish_jj_prompt <cmds/fish_jj_prompt>` to print information about the current Jujutsu repository.
 - :doc:`fish_git_prompt <cmds/fish_git_prompt>` and :doc:`fish_hg_prompt <cmds/fish_hg_prompt>` to print information about the current git or mercurial repository.
 - :doc:`fish_vcs_prompt <cmds/fish_vcs_prompt>` to print information for either.
 - :doc:`fish_svn_prompt <cmds/fish_svn_prompt>` to print information about the current svn repository.

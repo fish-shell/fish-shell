@@ -27,6 +27,8 @@ To accept the autosuggestion (replacing the command line contents), press :kbd:`
 
 Autosuggestions are a powerful way to quickly summon frequently entered commands, by typing the first few characters. They are also an efficient technique for navigating through directory hierarchies.
 
+To provide immediate feedback on the result of a completion, fish includes a **Tab Completion Preview** feature. The "guaranteed" portion of an autosuggestion (the longest common prefix shared by all possible completions at that point) is visually underlined. This tells you exactly what part of the suggestion will be inserted if you press :kbd:`tab`.
+
 If you don't like autosuggestions, you can disable them by setting ``$fish_autosuggestion_enabled`` to 0::
 
   set -g fish_autosuggestion_enabled 0

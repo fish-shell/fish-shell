@@ -264,11 +264,10 @@ impl DirIter {
         let dent = unsafe { libc::readdir(self.dir()).as_ref() };
         let Some(dent) = dent else {
             // readdir distinguishes between EOF and error via errno.
-            let err = Errno::last_raw();
-            if err == no_errno as _ {
+            let err = Errno::last();
+            if err == no_errno {
                 return None;
             }
-            let err = Errno::from_raw(err);
             return Some(Err(io::Error::from(err)));
         };
 

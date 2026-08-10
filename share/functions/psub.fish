@@ -12,6 +12,7 @@ function psub --description "Read from stdin into a file and output the filename
     set -l dirname
     set -l filename
     set -l funcname
+    set -l writer_pid
 
     if not status is-command-substitution
         {
@@ -33,6 +34,7 @@ function psub --description "Read from stdin into a file and output the filename
         # because $filename may be opened before the fork. Use tee to ensure it is opened
         # after the fork.
         command tee $filename >/dev/null &
+        set writer_pid $last_pid
     else if test -z "$_flag_suffix"
         set filename (__fish_mktemp_relative .psub)
         or return 1
@@ -61,7 +63,10 @@ function psub --description "Read from stdin into a file and output the filename
     end
 
     # Make sure we erase file when caller exits
-    function $funcname --on-job-exit caller --inherit-variable filename --inherit-variable dirname --inherit-variable funcname
+    function $funcname --on-job-exit caller --inherit-variable filename --inherit-variable dirname --inherit-variable funcname --inherit-variable writer_pid
+        if set -q writer_pid[1]; and jobs --query $writer_pid
+            command kill $writer_pid 2>/dev/null
+        end
         command rm $filename
         if test -n "$dirname"
             command rmdir $dirname

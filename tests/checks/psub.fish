@@ -25,6 +25,17 @@ cat (echo baz | psub)
 #CHECK: bar
 #CHECK: baz
 
+# A fifo that is never opened for reading should not leave its writer running.
+: (echo unused | psub --fifo)
+set -l fifo_writer (jobs --pid)
+if test -n "$fifo_writer"
+    command kill $fifo_writer
+    wait $fifo_writer 2>/dev/null
+end
+test -z "$fifo_writer"
+echo $status
+#CHECK: 0
+
 set -l filename (echo foo | psub)
 if test -e $filename
     echo 'psub file was not deleted'

@@ -64,7 +64,9 @@ function psub --description "Read from stdin into a file and output the filename
 
     # Make sure we erase file when caller exits
     function $funcname --on-job-exit caller --inherit-variable filename --inherit-variable dirname --inherit-variable funcname --inherit-variable writer_pid
-        if set -q writer_pid[1]; and jobs --query $writer_pid
+        if set -q writer_pid[1]
+            # This event can run before the writer reaches the parent's job table, so checking
+            # `jobs --query` here would race with job registration.
             command kill $writer_pid 2>/dev/null
         end
         command rm $filename

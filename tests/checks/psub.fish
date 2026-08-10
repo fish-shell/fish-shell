@@ -27,7 +27,14 @@ cat (echo baz | psub)
 
 # A fifo that is never opened for reading should not leave its writer running.
 : (echo unused | psub --fifo)
-set -l fifo_writer (jobs --pid)
+set -l fifo_writer
+# Signal delivery and job reaping can be asynchronous on Windows.
+for attempt in (seq 100)
+    set fifo_writer (jobs --pid)
+    test -z "$fifo_writer"
+    and break
+    sleep 0.01
+end
 if test -n "$fifo_writer"
     command kill $fifo_writer
     wait $fifo_writer 2>/dev/null

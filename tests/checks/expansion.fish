@@ -260,6 +260,29 @@ echo $outer[$inner[2]]
 echo $outer[$inner[2..1]]
 #CHECK: out2 out1
 
+# Adjacent expansions in a slice combine just like they do in a regular argument.
+set -l letters a b c d e f g h i j k l m n o p q r s t u v w x y z
+set -l tens 1 2
+set -l ones 3 4
+echo $tens$ones
+#CHECK: 13 23 14 24
+echo $letters[$tens$ones]
+#CHECK: m w n x
+echo $letters[$tens[1]$ones]
+#CHECK: m n
+set -l empty ''
+echo $letters[$tens$empty]
+#CHECK: a b
+set -l sign -
+echo $letters[$sign$ones]
+#CHECK: x w
+
+# Whitespace still separates indices, and range endpoints remain separate expressions.
+echo $letters[$tens $ones]
+#CHECK: a c b c a d b d
+echo $letters[$tens..$ones]
+#CHECK: a b c b c a b c d b c d
+
 # Percent self
 echo %selfNOT NOT%self \%self "%self" '%self'
 echo %self | string match -qr '^\\d+$'

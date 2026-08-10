@@ -33,7 +33,7 @@ use fish_wcstringutil::{join_strings, trim};
 use fish_widestring::{
     ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP, BRACE_SPACE,
     HOME_DIRECTORY, INTERNAL_SEPARATOR, PROCESS_EXPAND_SELF, VARIABLE_EXPAND,
-    VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_SINGLE, osstr2wcstring,
+    VARIABLE_EXPAND_EMPTY, VARIABLE_EXPAND_JOIN, VARIABLE_EXPAND_SINGLE, osstr2wcstring,
 };
 use nix::unistd::{User, getpid};
 
@@ -393,6 +393,32 @@ fn parse_slice(
     idx: &mut Vec<i64>,
     array_size: usize,
 ) -> Result<usize, (usize, ParseSliceError)> {
+    // Adjacent variable expansions use VARIABLE_EXPAND_JOIN to terminate the preceding variable
+    // name without separating the resulting values. Remove those markers before parsing the
+    // numbers, while retaining a map back to offsets in the unnormalised input.
+    if input.contains(VARIABLE_EXPAND_JOIN) {
+        let mut normalized = WString::with_capacity(input.len());
+        let mut source_offsets = Vec::with_capacity(input.len());
+        for (source_offset, c) in input.chars().enumerate() {
+            if c != VARIABLE_EXPAND_JOIN {
+                normalized.push(c);
+                source_offsets.push(source_offset);
+            }
+        }
+
+        return match parse_slice(&normalized, idx, array_size) {
+            Ok(offset) => Ok(if offset == 0 {
+                0
+            } else {
+                source_offsets[offset - 1] + 1
+            }),
+            Err((bad_pos, error)) => Err((
+                source_offsets.get(bad_pos).copied().unwrap_or(input.len()),
+                error,
+            )),
+        };
+    }
+
     let size = i64::try_from(array_size).unwrap();
     let mut pos = 1; // skip past the opening square bracket
 
@@ -505,6 +531,43 @@ fn parse_slice(
     }
 
     Ok(pos)
+}
+
+/// Return whether `input` ends with an unquoted variable expansion, optionally including a slice.
+fn ends_with_variable_expansion(input: &wstr) -> bool {
+    let mut name_end = input.len();
+    if name_end == 0 {
+        return false;
+    }
+
+    if input.char_at(name_end - 1) == ']' {
+        let mut depth = 1;
+        let mut pos = name_end - 1;
+        while pos > 0 {
+            pos -= 1;
+            match input.char_at(pos) {
+                ']' => depth += 1,
+                '[' => {
+                    depth -= 1;
+                    if depth == 0 {
+                        name_end = pos;
+                        break;
+                    }
+                }
+                _ => {}
+            }
+        }
+        if depth != 0 {
+            return false;
+        }
+    }
+
+    let mut name_start = name_end;
+    while name_start > 0 && valid_var_name_char(input.char_at(name_start - 1)) {
+        name_start -= 1;
+    }
+
+    name_start < name_end && name_start > 0 && input.char_at(name_start - 1) == VARIABLE_EXPAND
 }
 
 /// Expand all environment variables in the string *ptr.
@@ -727,6 +790,7 @@ fn expand_variables(
         return expand_variables(res, out, varexp_char_idx, vars, errors);
     } else {
         // Normal cartesian-product expansion.
+        let joins_previous_variable = ends_with_variable_expansion(&instr[..varexp_char_idx]);
         for item in var_item_list {
             if varexp_char_idx == 0 && var_name_and_slice_stop == instr.len() {
                 if !out.add(item) {
@@ -736,7 +800,11 @@ fn expand_variables(
                 let mut new_in = instr[..varexp_char_idx].to_owned();
                 if !new_in.is_empty() {
                     if new_in.as_char_slice().last() != Some(&VARIABLE_EXPAND) {
-                        new_in.push(INTERNAL_SEPARATOR);
+                        if joins_previous_variable {
+                            new_in.push(VARIABLE_EXPAND_JOIN);
+                        } else {
+                            new_in.push(INTERNAL_SEPARATOR);
+                        }
                     } else if item.is_empty() {
                         new_in.push(VARIABLE_EXPAND_EMPTY);
                     }
@@ -1145,11 +1213,10 @@ fn expand_percent_self(input: &mut WString) {
     }
 }
 
-/// Remove any internal separators. Also optionally convert wildcard characters to regular
-/// equivalents. This is done to support skip_wildcards.
+/// Remove any internal expansion separators. Also optionally convert wildcard characters to
+/// regular equivalents. This is done to support skip_wildcards.
 fn remove_internal_separator(s: &mut WString, conv: bool) {
-    // Remove all instances of INTERNAL_SEPARATOR.
-    s.retain(|c| c != INTERNAL_SEPARATOR);
+    s.retain(|c| ![INTERNAL_SEPARATOR, VARIABLE_EXPAND_JOIN].contains(&c));
 
     // If conv is true, replace all instances of ANY_STRING with '*',
     // ANY_STRING_RECURSIVE with '*'.

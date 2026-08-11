@@ -14961,6 +14961,9 @@ msgstr ""
 msgid "Delete a domain snapshot"
 msgstr ""
 
+msgid "Delete a group"
+msgstr ""
+
 msgid "Delete a key group from a SOPS file"
 msgstr ""
 

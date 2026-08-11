@@ -2402,6 +2402,9 @@ msgstr ""
 msgid "Creates a function wrapping a command"
 msgstr ""
 
+msgid "Description of abbreviation, shown in completions"
+msgstr ""
+
 msgid "Description of completion"
 msgstr ""
 
@@ -7713,6 +7716,12 @@ msgid "Apply changes from a git patch file or unified patch file"
 msgstr ""
 
 msgid "Apply changes from an arc bundlej"
+msgstr ""
+
+msgid "Apply changes in a chroot directory"
+msgstr ""
+
+msgid "Apply changes in a prefix directory"
 msgstr ""
 
 msgid "Apply changes in the PREFIX_DIR"
@@ -14958,6 +14967,9 @@ msgid "Delete a domain"
 msgstr ""
 
 msgid "Delete a domain snapshot"
+msgstr ""
+
+msgid "Delete a group"
 msgstr ""
 
 msgid "Delete a key group from a SOPS file"
@@ -28197,6 +28209,9 @@ msgid "Force the push to the repository"
 msgstr ""
 
 msgid "Force the rebase"
+msgstr ""
+
+msgid "Force the removal"
 msgstr ""
 
 msgid "Force the solver to find a solution (even an aggressive one)"

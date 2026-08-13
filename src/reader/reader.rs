@@ -56,8 +56,8 @@ use crate::{
     input::{
         BackgroundColorQuery, CharEvent, CharInputStyle, CursorPositionQuery,
         CursorPositionQueryReason, ImplicitEvent, InputData, InputEventQueue,
-        InputEventQueuer as _, LONG_READ_TIMEOUT, QueryResponse, QueryResultEvent, ReadlineCmd,
-        RecurrentQuery, TerminalQuery, stop_query,
+        InputEventQueuer as _, LONG_READ_TIMEOUT, MouseWheelDirection, QueryResponse,
+        QueryResultEvent, ReadlineCmd, RecurrentQuery, TerminalQuery, stop_query,
     },
     io::IoChain,
     key::ViewportPosition,
@@ -104,8 +104,9 @@ use crate::{
         variable_assignment_equals_pos,
     },
     tty_handoff::{
-        SCROLL_CONTENT_UP_TERMINFO_CODE, TtyHandoff, XTGETTCAP_QUERY_OS_NAME,
+        SCROLL_CONTENT_UP_TERMINFO_CODE, TtyHandoff, TtyReaderModeRequest, XTGETTCAP_QUERY_OS_NAME,
         deactivate_tty_protocols, get_tty_protocols_active, initialize_tty_protocols,
+        push_tty_reader_mode_request, set_tty_reader_mode_request,
     },
     wildcard::wildcard_has,
     wutil::{fstat, perror_nix, wstat},
@@ -641,6 +642,12 @@ struct LayoutData {
     mode_prompt_buff: WString,
     right_prompt_buff: WString,
 }
+
+fn layout_change_follows_commandline_cursor(previous: &LayoutData, next: &LayoutData) -> bool {
+    previous.text != next.text || previous.position != next.position
+}
+
+const COMMANDLINE_VIEWPORT_SCROLL_ROWS: isize = 3;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum EditableLineTag {
@@ -1629,7 +1636,7 @@ impl ReaderData {
         true
     }
 
-    pub fn mouse_left_click(&mut self, click_position: ViewportPosition) {
+    pub fn mouse_left_click(&mut self, click_position: ViewportPosition) -> bool {
         flog!(
             reader,
             "Received left mouse click at",
@@ -1637,14 +1644,19 @@ impl ReaderData {
         );
         match self.screen.offset_in_cmdline_given_cursor(click_position) {
             CharOffset::Cmd(new_pos) | CharOffset::Pointer(new_pos) => {
-                let (elt, _el) = self.active_edit_line();
-                self.update_buff_pos(elt, Some(new_pos));
+                // An overflowing commandline withholds the pager. If its search field had focus,
+                // move that focus back to the commandline before handling subsequent input.
+                self.pager.set_search_field_shown(false);
+                self.screen.follow_commandline_cursor();
+                self.update_buff_pos(EditableLineTag::Commandline, Some(new_pos));
+                true
             }
             CharOffset::Pager(idx) if self.pager.selected_completion_idx != Some(idx) => {
                 self.pager.selected_completion_idx = Some(idx);
                 self.pager_selection_changed();
+                false
             }
-            CharOffset::Pager(_) | CharOffset::None => {}
+            CharOffset::Pager(_) | CharOffset::None => false,
         }
     }
 
@@ -1816,7 +1828,11 @@ impl<'a> Reader<'a> {
     /// Generate a new layout data from the current state of the world, and paint with it.
     /// If `mcolors` has a value, then apply it; otherwise extend existing colors.
     fn layout_and_repaint(&mut self, reason: &wstr) {
-        self.rendered_layout = self.make_layout_data();
+        let next_layout = self.make_layout_data();
+        if layout_change_follows_commandline_cursor(&self.rendered_layout, &next_layout) {
+            self.screen.follow_commandline_cursor();
+        }
+        self.rendered_layout = next_layout;
         self.paint_layout(reason, false);
     }
 
@@ -1908,8 +1924,14 @@ impl<'a> Reader<'a> {
             ],
         );
 
-        // Compute the indentation.
-        let indents = compute_indents(&full_line);
+        // Computing indentation parses the whole commandline. When no autosuggestion is present,
+        // reuse that result for the explicit layout instead of parsing identical text twice.
+        let explicit_indents = compute_indents(cmd_line.text());
+        let indents = if matches!(&full_line, Cow::Borrowed(_)) {
+            explicit_indents.clone()
+        } else {
+            compute_indents(&full_line)
+        };
 
         let screen = &mut self.data.screen;
         let pager = &mut self.data.pager;
@@ -1924,6 +1946,7 @@ impl<'a> Reader<'a> {
             autosuggested_range,
             colors,
             indents,
+            explicit_indents,
             data.position,
             data.pager_search_field_position,
             self.parser.vars(),
@@ -1932,6 +1955,23 @@ impl<'a> Reader<'a> {
             is_final_rendering,
         );
         screen.autoscroll(curr_termsize.height());
+        let viewport = screen.commandline_viewport_status();
+        if viewport.scrollable {
+            // The pager is withheld while the commandline has its own viewport. Do not leave input
+            // focused on a search field the user cannot see.
+            pager.set_search_field_shown(false);
+        }
+        let screen_usable = !is_dumb() && curr_termsize.width() >= 4 && curr_termsize.height() > 0;
+        set_tty_reader_mode_request(
+            TtyReaderModeRequest {
+                mouse_tracking: screen_usable
+                    && !is_final_rendering
+                    && self.conf.inputfd == STDIN_FILENO
+                    && viewport.scrollable,
+                cursor_hidden: screen_usable && !is_final_rendering && viewport.cursor_hidden,
+            },
+            reader_save_screen_state,
+        );
     }
 }
 
@@ -2568,6 +2608,7 @@ impl<'a> Reader<'a> {
         old_modes: Option<Termios>,
         nchars: Option<NonZeroUsize>,
     ) -> Option<WString> {
+        let _reader_mode = push_tty_reader_mode_request(reader_save_screen_state);
         let mut tty = TtyHandoff::new(reader_save_screen_state);
 
         self.rls = Some(ReadlineLoopState::new());
@@ -2628,16 +2669,21 @@ impl<'a> Reader<'a> {
             self.exec_prompt(true, true);
         }
 
-        // Redraw the command line. This is what ensures the autosuggestion is hidden, etc. after the
-        // user presses enter.
-        if self.is_repaint_needed(None) || self.screen.scrolled || self.conf.inputfd != STDIN_FILENO
-        {
-            self.layout_and_repaint_before_execution();
-        }
+        // Capture whether execution needs a final repaint before highlighting updates the normal
+        // rendered-layout cache below.
+        let repaint_before_execution = self.is_repaint_needed(None)
+            || self.screen.scrolled
+            || self.conf.inputfd != STDIN_FILENO;
 
         // Finish syntax highlighting (but do not wait forever).
         if self.rls().finished {
             self.finish_highlighting_before_exec();
+        }
+
+        // This must be the final paint before emitting the command. In particular, a completed
+        // highlight must not switch an overflowing commandline back to its interactive viewport.
+        if repaint_before_execution {
+            self.layout_and_repaint_before_execution();
         }
 
         // Emit a newline so that the output is on the line after the command.
@@ -2900,7 +2946,22 @@ impl<'a> Reader<'a> {
                     }
                     MouseLeft(position) => {
                         flog!(reader, "Mouse left click", position);
-                        self.mouse_left_click(position);
+                        if self.mouse_left_click(position) {
+                            self.layout_and_repaint(L!("mouse left click"));
+                        }
+                    }
+                    MouseWheel {
+                        direction,
+                        position,
+                    } => {
+                        flog!(reader, "Mouse wheel", format!("{direction:?}"), position);
+                        let delta = match direction {
+                            MouseWheelDirection::Up => -COMMANDLINE_VIEWPORT_SCROLL_ROWS,
+                            MouseWheelDirection::Down => COMMANDLINE_VIEWPORT_SCROLL_ROWS,
+                        };
+                        if self.screen.scroll_commandline_viewport(delta) {
+                            self.paint_layout(L!("mouse wheel"), false);
+                        }
                     }
                     NewColorTheme => {
                         self.query(RecurrentQuery {
@@ -7220,11 +7281,39 @@ impl<'a> Reader<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{combine_command_and_autosuggestion, completion_apply_to_command_line};
+    use super::{
+        COMMANDLINE_VIEWPORT_SCROLL_ROWS, LayoutData, combine_command_and_autosuggestion,
+        completion_apply_to_command_line, layout_change_follows_commandline_cursor,
+    };
     use crate::complete::CompleteFlags;
+    use crate::highlight::HighlightSpec;
     use crate::operation_context::{OperationContext, no_cancel};
     use crate::prelude::*;
     use crate::tests::prelude::*;
+
+    #[test]
+    fn test_layout_changes_that_follow_commandline_cursor() {
+        assert_eq!(COMMANDLINE_VIEWPORT_SCROLL_ROWS, 3);
+        let previous = LayoutData {
+            text: L!("echo one").to_owned(),
+            position: 8,
+            autosuggestion: L!("echo one two").to_owned(),
+            left_prompt_buff: L!("> ").to_owned(),
+            ..Default::default()
+        };
+
+        let mut next = previous.clone();
+        next.colors = vec![HighlightSpec::default(); next.text.len()];
+        next.autosuggestion = L!("echo one three").to_owned();
+        next.left_prompt_buff = L!("fish> ").to_owned();
+        assert!(!layout_change_follows_commandline_cursor(&previous, &next));
+
+        next.position = 0;
+        assert!(layout_change_follows_commandline_cursor(&previous, &next));
+        next.position = previous.position;
+        next.text.push('!');
+        assert!(layout_change_follows_commandline_cursor(&previous, &next));
+    }
 
     #[test]
     fn test_autosuggestion_combining() {

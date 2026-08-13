@@ -3,6 +3,7 @@ fish ?.?.? (released ???)
 
 Interactive improvements
 ------------------------
+- Commands that are taller than the terminal can now be browsed with the mouse wheel. The viewport follows keyboard cursor movement only when the cursor crosses an edge, and its status line reminds users what :kbd:`enter` does. Fish captures the wheel only while the command-line viewport is scrollable and returns it to the terminal when the command fits again (:issue:`11029`).
 - On some terminals like kitty, keys like :kbd:`shift-space` and :kbd:`space` can now be mapped independently (:issue:`12898`).
 - Fix slow tab completion in directories that contain slow-to-resolve symlinks (e.g. links targeting a network mount) (:issue:`12905`).
 

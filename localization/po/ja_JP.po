@@ -559,6 +559,9 @@ msgstr "空のディレクトリ '%s' は存在しません"
 msgid "End a block of commands"
 msgstr "コマンドブロックを終了"
 
+msgid "Enter executes or continues"
+msgstr ""
+
 #, c-format
 msgid "Error encountered while sourcing file '%s':"
 msgstr "ファイル '%s' の読み込み中にエラーが発生しました:"

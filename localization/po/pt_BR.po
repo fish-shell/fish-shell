@@ -561,6 +561,9 @@ msgstr ""
 msgid "End a block of commands"
 msgstr "Finaliza um bloco de comandos"
 
+msgid "Enter executes or continues"
+msgstr ""
+
 #, c-format
 msgid "Error encountered while sourcing file '%s':"
 msgstr "Erro encontrado ao interpretar arquivo “%s”:"

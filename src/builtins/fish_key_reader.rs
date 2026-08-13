@@ -32,7 +32,7 @@ use crate::{
     },
     threads,
     topic_monitor::topic_monitor_init,
-    tty_handoff::TtyHandoff,
+    tty_handoff::{TtyHandoff, push_tty_reader_mode_request},
 };
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
 use fish_widestring::osstr2wcstring;
@@ -91,6 +91,9 @@ fn process_input(
     let mut recent_chars = vec![];
     streams.err.appendln("Press a key:\n");
 
+    // A fish_key_reader invoked from a binding is a nested reader. It must not inherit an outer
+    // commandline viewport's mouse capture or hidden cursor request.
+    let _reader_mode = push_tty_reader_mode_request(|| {});
     let mut handoff = TtyHandoff::new(|| {});
     handoff.enable_tty_protocols();
 

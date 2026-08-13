@@ -11,13 +11,16 @@ use crate::proc::JobGroupRef;
 use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
     self, ApplicationKeypadModeDisable, ApplicationKeypadModeEnable, DecrstBracketedPaste,
-    DecrstColorThemeReporting, DecrstFocusReporting, DecsetBracketedPaste,
-    DecsetColorThemeReporting, DecsetFocusReporting, KittyKeyboardProgressiveEnhancementsDisable,
-    KittyKeyboardProgressiveEnhancementsEnable, ModifyOtherKeysDisable, ModifyOtherKeysEnable,
+    DecrstColorThemeReporting, DecrstFocusReporting, DecrstMouseButtonTracking,
+    DecrstMouseSgrEncoding, DecrstShowCursor, DecsetBracketedPaste, DecsetColorThemeReporting,
+    DecsetFocusReporting, DecsetMouseButtonTracking, DecsetMouseSgrEncoding, DecsetShowCursor,
+    KittyKeyboardProgressiveEnhancementsDisable, KittyKeyboardProgressiveEnhancementsEnable,
+    ModifyOtherKeysDisable, ModifyOtherKeysEnable, XtrestoreMouseTrackingModes,
+    XtsaveMouseTrackingModes,
 };
 use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror_nix, wcstoi};
-use fish_common::{STDIN_FD, write_loop};
+use fish_common::{STDIN_FD, STDOUT_FD, write_loop};
 use fish_util::perror;
 use libc::{STDIN_FILENO, WNOHANG};
 use nix::errno::Errno;
@@ -258,8 +261,137 @@ pub fn initialize_tty_protocols(vars: &dyn Environment) {
 // A marker of the current state of the tty protocols.
 static TTY_PROTOCOLS_ACTIVE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
+/// Dynamic terminal modes requested by the active reader. These are kept separate from
+/// `TTY_PROTOCOLS_ACTIVE`: a reader may update its request while terminal protocols are suspended
+/// for a child process, prompt command, or nested reader.
+static MOUSE_TRACKING_REQUESTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static MOUSE_TRACKING_APPLIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static CURSOR_HIDDEN_REQUESTED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+static CURSOR_HIDDEN_APPLIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
 // A marker that the tty has been closed (SIGHUP, etc) and so we should not try to write to it.
 static TTY_INVALID: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
+
+/// Dynamic terminal modes required by the active reader viewport.
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
+pub struct TtyReaderModeRequest {
+    pub mouse_tracking: bool,
+    pub cursor_hidden: bool,
+}
+
+fn tty_reader_mode_request() -> TtyReaderModeRequest {
+    TtyReaderModeRequest {
+        mouse_tracking: MOUSE_TRACKING_REQUESTED.load(),
+        cursor_hidden: CURSOR_HIDDEN_REQUESTED.load(),
+    }
+}
+
+fn tty_reader_mode_applied() -> TtyReaderModeRequest {
+    TtyReaderModeRequest {
+        mouse_tracking: MOUSE_TRACKING_APPLIED.load(),
+        cursor_hidden: CURSOR_HIDDEN_APPLIED.load(),
+    }
+}
+
+fn store_tty_reader_mode_applied(applied: TtyReaderModeRequest) {
+    MOUSE_TRACKING_APPLIED.store(applied.mouse_tracking);
+    CURSOR_HIDDEN_APPLIED.store(applied.cursor_hidden);
+}
+
+/// Append commands which transition dynamic reader modes, returning whether anything changed.
+fn append_tty_reader_mode_commands(
+    out: &mut Outputter,
+    applied: &mut TtyReaderModeRequest,
+    desired: TtyReaderModeRequest,
+) -> bool {
+    if *applied == desired {
+        return false;
+    }
+
+    // Restore user-facing state before relinquishing the terminal.
+    if applied.cursor_hidden && !desired.cursor_hidden {
+        out.write_command(DecsetShowCursor);
+        applied.cursor_hidden = false;
+    }
+    if applied.mouse_tracking && !desired.mouse_tracking {
+        out.write_command(DecrstMouseButtonTracking);
+        out.write_command(DecrstMouseSgrEncoding);
+        out.write_command(XtrestoreMouseTrackingModes);
+        applied.mouse_tracking = false;
+    }
+
+    // Apply mouse capture before hiding the cursor when entering reader viewport mode.
+    if !applied.mouse_tracking && desired.mouse_tracking {
+        out.write_command(XtsaveMouseTrackingModes);
+        out.write_command(DecsetMouseSgrEncoding);
+        out.write_command(DecsetMouseButtonTracking);
+        applied.mouse_tracking = true;
+    }
+    if !applied.cursor_hidden && desired.cursor_hidden {
+        out.write_command(DecrstShowCursor);
+        applied.cursor_hidden = true;
+    }
+    true
+}
+
+/// Synchronize the applied reader modes with the current request and protocol-active state.
+/// Returns whether any terminal commands were written.
+fn sync_tty_reader_modes() -> bool {
+    assert_is_main_thread();
+
+    let protocols_active = TTY_PROTOCOLS_ACTIVE.load();
+    let desired = TtyReaderModeRequest {
+        mouse_tracking: protocols_active && MOUSE_TRACKING_REQUESTED.load(),
+        cursor_hidden: protocols_active && CURSOR_HIDDEN_REQUESTED.load(),
+    };
+
+    // Normal synchronization stops once the tty is invalid. The disabling path may still perform
+    // one best-effort cleanup if it confirms that stdout remains a usable tty.
+    if TTY_INVALID.load() {
+        store_tty_reader_mode_applied(TtyReaderModeRequest::default());
+        return false;
+    }
+
+    let mut applied = tty_reader_mode_applied();
+    let mut out = Outputter::new_buffering();
+    if !append_tty_reader_mode_commands(&mut out, &mut applied, desired) {
+        return false;
+    }
+    store_tty_reader_mode_applied(applied);
+    let _ = write_loop(&libc::STDOUT_FILENO, out.contents());
+    true
+}
+
+/// Update dynamic reader terminal modes. Requests are remembered while protocols are suspended and
+/// applied when the enclosing [`TtyHandoff`] enables them again.
+pub fn set_tty_reader_mode_request(request: TtyReaderModeRequest, on_write: fn()) {
+    assert_is_main_thread();
+    MOUSE_TRACKING_REQUESTED.store(request.mouse_tracking);
+    CURSOR_HIDDEN_REQUESTED.store(request.cursor_hidden);
+    if sync_tty_reader_modes() {
+        (on_write)();
+    }
+}
+
+/// A scoped reader-mode request. Nested readers start with no dynamic modes and restore the outer
+/// reader's current request on drop.
+pub struct TtyReaderModeRequestGuard {
+    previous: TtyReaderModeRequest,
+    on_write: fn(),
+}
+
+pub fn push_tty_reader_mode_request(on_write: fn()) -> TtyReaderModeRequestGuard {
+    assert_is_main_thread();
+    let previous = tty_reader_mode_request();
+    set_tty_reader_mode_request(TtyReaderModeRequest::default(), on_write);
+    TtyReaderModeRequestGuard { previous, on_write }
+}
+
+impl Drop for TtyReaderModeRequestGuard {
+    fn drop(&mut self) {
+        set_tty_reader_mode_request(self.previous, self.on_write);
+    }
+}
 
 // Enable or disable TTY protocols by writing the appropriate commands to the tty.
 // Note this does NOT intialize the TTY protocols if not already initialized.
@@ -275,20 +407,38 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) {
     if TTY_PROTOCOLS_ACTIVE.load() == enable {
         return;
     }
-    if enable {
-        TTY_PROTOCOLS_ACTIVE.store(true);
-    }
+    // Update logical state before checking TTY_INVALID. In particular, a handoff that happens
+    // after SIGHUP must not leave our active marker stuck at true merely because writes are unsafe.
+    TTY_PROTOCOLS_ACTIVE.store(enable);
 
-    // Did we get SIGHUP?
-    if TTY_INVALID.load() {
+    // Enabling after SIGHUP is never useful. When disabling, however, a parent may have sent HUP
+    // while the PTY is still usable. In that case perform one final best-effort cleanup before the
+    // reader redirects genuinely unusable descriptors.
+    if TTY_INVALID.load() && (enable || tcgetattr(STDOUT_FD).is_err()) {
+        store_tty_reader_mode_applied(TtyReaderModeRequest::default());
         return;
     }
 
-    // Write the commands to the tty, ignoring errors.
+    // Dynamic reader modes must not leak to child processes. Restore them before disabling the
+    // baseline protocols, and reapply the latest request after enabling the baseline protocols.
+    let mut did_write = false;
+    if !enable {
+        // Transition directly instead of using sync_tty_reader_modes(), which deliberately avoids
+        // writes after SIGHUP. We are on the main thread and just confirmed stdout is still a TTY.
+        let mut applied = tty_reader_mode_applied();
+        let mut out = Outputter::new_buffering();
+        if append_tty_reader_mode_commands(&mut out, &mut applied, TtyReaderModeRequest::default())
+        {
+            store_tty_reader_mode_applied(applied);
+            let _ = write_loop(&libc::STDOUT_FILENO, out.contents());
+            did_write = true;
+        }
+    }
     let commands = protocols.get_commands(enable);
     let _ = write_loop(&libc::STDOUT_FILENO, commands);
-    if !enable {
-        TTY_PROTOCOLS_ACTIVE.store(false);
+    did_write |= !commands.is_empty();
+    if enable {
+        did_write |= sync_tty_reader_modes();
     }
 
     // Flog any terminal protocol changes of interest.
@@ -299,7 +449,9 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) {
         ProtocolKind::WorkAroundWezTerm => flog!(reader, mode, "wezterm; no modifyOtherKeys"),
         ProtocolKind::None => (),
     }
-    (on_write)();
+    if did_write {
+        (on_write)();
+    }
 }
 
 // Helper to check if TTY protocols are active.
@@ -312,29 +464,21 @@ pub fn deactivate_tty_protocols() {
     if !cfg!(test) {
         assert_is_main_thread();
     }
-    // Safety: TTY_PROTOCOLS is never modified after initialization.
-    let protocols = unsafe { TTY_PROTOCOLS.load(Ordering::Acquire).as_ref() };
-    let Some(protocols) = protocols else {
-        // No protocols set, nothing to do.
-        return;
-    };
     if !TTY_PROTOCOLS_ACTIVE.load() {
+        // Even if baseline protocols are already inactive, discard any stale logical applied state
+        // after an invalid tty.
+        if TTY_INVALID.load() {
+            MOUSE_TRACKING_APPLIED.store(false);
+            CURSOR_HIDDEN_APPLIED.store(false);
+        }
         return;
     }
-
-    // Did we get SIGHUP?
-    if TTY_INVALID.load() {
-        return;
-    }
-
-    let commands = protocols.get_commands(false);
-    // Safety: just writing data to stdout.
-    let _ = write_loop(&libc::STDOUT_FILENO, commands);
-    TTY_PROTOCOLS_ACTIVE.store(false);
+    set_tty_protocols_active(|| {}, false);
 }
 
 // Called from a signal handler to mark the tty as invalid (e.g. SIGHUP).
-// This suppresses any further attempts to write protocols to the tty,
+// This suppresses normal protocol writes; disabling may still perform one best-effort cleanup if
+// the main thread confirms that stdout remains a usable tty.
 pub fn signal_safe_mark_tty_invalid() {
     TTY_INVALID.store(true);
 }
@@ -610,4 +754,74 @@ fn get_tmux_version(xtversion: &wstr) -> Option<(u32, u32)> {
     }
     let mut version = xtversion.next()?.split('.');
     Some((wcstoi(version.next()?).ok()?, wcstoi(version.next()?).ok()?))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn transition(
+        mut applied: TtyReaderModeRequest,
+        desired: TtyReaderModeRequest,
+    ) -> (TtyReaderModeRequest, Vec<u8>, bool) {
+        let mut out = Outputter::new_buffering();
+        let changed = append_tty_reader_mode_commands(&mut out, &mut applied, desired);
+        (applied, out.contents().to_vec(), changed)
+    }
+
+    #[test]
+    fn tty_reader_modes_enable_and_disable_in_safe_order() {
+        let both = TtyReaderModeRequest {
+            mouse_tracking: true,
+            cursor_hidden: true,
+        };
+        let (applied, commands, changed) = transition(TtyReaderModeRequest::default(), both);
+        assert!(changed);
+        assert_eq!(applied, both);
+        assert_eq!(
+            commands,
+            b"\x1b[?9;1000;1001;1002;1003;1005;1006;1015;1016s\x1b[?1006h\x1b[?1000h\x1b[?25l"
+        );
+
+        let (applied, commands, changed) = transition(both, TtyReaderModeRequest::default());
+        assert!(changed);
+        assert_eq!(applied, TtyReaderModeRequest::default());
+        assert_eq!(
+            commands,
+            b"\x1b[?25h\x1b[?1000l\x1b[?1006l\x1b[?1016;1015;1006;1005;1003;1002;1001;1000;9r"
+        );
+    }
+
+    #[test]
+    fn tty_reader_modes_do_not_emit_for_unchanged_state() {
+        let request = TtyReaderModeRequest {
+            mouse_tracking: true,
+            cursor_hidden: false,
+        };
+        let (applied, commands, changed) = transition(request, request);
+        assert!(!changed);
+        assert_eq!(applied, request);
+        assert!(commands.is_empty());
+    }
+
+    #[test]
+    fn tty_reader_modes_transition_independently() {
+        let mouse = TtyReaderModeRequest {
+            mouse_tracking: true,
+            cursor_hidden: false,
+        };
+        let both = TtyReaderModeRequest {
+            mouse_tracking: true,
+            cursor_hidden: true,
+        };
+        let (applied, commands, changed) = transition(mouse, both);
+        assert!(changed);
+        assert_eq!(applied, both);
+        assert_eq!(commands, b"\x1b[?25l");
+
+        let (applied, commands, changed) = transition(both, mouse);
+        assert!(changed);
+        assert_eq!(applied, mouse);
+        assert_eq!(commands, b"\x1b[?25h");
+    }
 }

@@ -1,8 +1,9 @@
 use super::{
     binding::match_key_event_to_key,
     input::{
-        CharEvent, ImplicitEvent, InputEventQueuer, InputEventTrigger, KeyEvent, QueryResponse,
-        QueryResultEvent, is_event_blocked_when_querying, next_input_event, stop_query,
+        CharEvent, ImplicitEvent, InputEventQueuer, InputEventTrigger, KeyEvent,
+        MouseWheelDirection, QueryResponse, QueryResultEvent, is_event_blocked_when_querying,
+        next_input_event, stop_query,
     },
 };
 use crate::{
@@ -344,11 +345,25 @@ trait InputEventQueuerExt: InputEventQueuer {
                 };
                 let position = ViewportPosition { x, y };
                 let (modifiers, _caps_lock) = parse_mask((button >> 2) & 0x07);
-                let code = button & 0x43;
-                if code != 0 || c != b'M' || modifiers.is_some() {
+                // Ignore modifiers, but preserve motion and extended-button bits so they cannot be
+                // mistaken for an ordinary left click or wheel report.
+                let code = button & !0x1c;
+                if c != b'M' || modifiers.is_some() {
                     return None;
                 }
-                return Some(CharEvent::Implicit(ImplicitEvent::MouseLeft(position)));
+                let event = match code {
+                    0 => ImplicitEvent::MouseLeft(position),
+                    64 => ImplicitEvent::MouseWheel {
+                        direction: MouseWheelDirection::Up,
+                        position,
+                    },
+                    65 => ImplicitEvent::MouseWheel {
+                        direction: MouseWheelDirection::Down,
+                        position,
+                    },
+                    _ => return None,
+                };
+                return Some(CharEvent::Implicit(event));
             }
             b't' => {
                 flog!(reader, "mouse event");
@@ -857,10 +872,11 @@ mod tests {
     use super::parse_hex;
     use crate::{
         input::{
-            CharEvent, KeyEvent, MockInputEventQueuer, QueryResponse,
+            CharEvent, ImplicitEvent, KeyEvent, MockInputEventQueuer, MouseWheelDirection,
+            QueryResponse,
             decode::{InputEventQueuerExt as _, query_response},
         },
-        key::{self, Key, Modifiers, alt},
+        key::{self, Key, Modifiers, ViewportPosition, alt},
     };
 
     #[test]
@@ -891,6 +907,12 @@ mod tests {
         let text = Default::default();
         let kitty_a = KeyEvent::new_with(Modifiers::default(), true, 'a', None, None, text);
         let kitty_alt_a = KeyEvent::new_with(Modifiers::ALT, true, 'a', None, None, text);
+        let wheel = |direction, x, y| {
+            CharEvent::Implicit(ImplicitEvent::MouseWheel {
+                direction,
+                position: ViewportPosition { x, y },
+            })
+        };
         validate!(b"A", &[e(Key::from_single_char('A'), "A")]);
         validate!(b"\x1b", &[legacy_escape()]);
         validate!(b"\x1bA", &[e(alt('A'), "\x1bA")]);
@@ -917,5 +939,13 @@ mod tests {
                 )),
             ]
         );
+        validate!(b"\x1b[<64;2;3M", &[wheel(MouseWheelDirection::Up, 1, 2)]);
+        validate!(b"\x1b[<65;4;5M", &[wheel(MouseWheelDirection::Down, 3, 4)]);
+        validate!(b"\x1b[M`!!", &[wheel(MouseWheelDirection::Up, 0, 0)]);
+        validate!(b"\x1b[Ma!!", &[wheel(MouseWheelDirection::Down, 0, 0)]);
+        validate!(b"\x1b[<64;2;3m", &[]);
+        validate!(b"\x1b[<68;2;3M", &[]);
+        validate!(b"\x1b[<32;2;3M", &[]);
+        validate!(b"\x1b[<128;2;3M", &[]);
     }
 }

@@ -689,6 +689,9 @@ msgstr "Le dossier vide « %s » n’existe pas"
 msgid "End a block of commands"
 msgstr "Termine un bloc de commandes"
 
+msgid "Enter executes or continues"
+msgstr ""
+
 #, c-format
 msgid "Error encountered while sourcing file '%s':"
 msgstr "Erreur lors de l’inclusion du fichier « %s »"

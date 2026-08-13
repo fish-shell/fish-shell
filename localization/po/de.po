@@ -560,6 +560,9 @@ msgstr "Leerer Ordnerpfad '%s' existiert nicht"
 msgid "End a block of commands"
 msgstr "Befehlsblock beenden"
 
+msgid "Enter executes or continues"
+msgstr ""
+
 #, c-format
 msgid "Error encountered while sourcing file '%s':"
 msgstr "Fehler beim Einladen von '%s':"

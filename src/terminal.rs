@@ -119,6 +119,13 @@ pub(crate) enum TerminalCommand<'a> {
     ScrollContentUp { lines: usize },
 
     DecsetShowCursor,
+    DecrstShowCursor,
+    XtsaveMouseTrackingModes,
+    XtrestoreMouseTrackingModes,
+    DecsetMouseButtonTracking,
+    DecrstMouseButtonTracking,
+    DecsetMouseSgrEncoding,
+    DecrstMouseSgrEncoding,
     DecsetFocusReporting,
     DecrstFocusReporting,
     DecsetBracketedPaste,
@@ -324,6 +331,17 @@ impl Outputter {
             QueryBackgroundColor => write(self, b"\x1b]11;?\x1b\\"),
             ScrollContentUp { lines } => scroll_content_up(self, lines),
             DecsetShowCursor => write(self, b"\x1b[?25h"),
+            DecrstShowCursor => write(self, b"\x1b[?25l"),
+            XtsaveMouseTrackingModes => {
+                write(self, b"\x1b[?9;1000;1001;1002;1003;1005;1006;1015;1016s")
+            }
+            XtrestoreMouseTrackingModes => {
+                write(self, b"\x1b[?1016;1015;1006;1005;1003;1002;1001;1000;9r")
+            }
+            DecsetMouseButtonTracking => write(self, b"\x1b[?1000h"),
+            DecrstMouseButtonTracking => write(self, b"\x1b[?1000l"),
+            DecsetMouseSgrEncoding => write(self, b"\x1b[?1006h"),
+            DecrstMouseSgrEncoding => write(self, b"\x1b[?1006l"),
             DecsetFocusReporting => write(self, b"\x1b[?1004h"),
             DecrstFocusReporting => write(self, b"\x1b[?1004l"),
             DecsetBracketedPaste => write(self, b"\x1b[?2004h"),

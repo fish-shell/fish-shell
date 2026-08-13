@@ -554,6 +554,9 @@ msgstr "空目錄「%s」不存在"
 msgid "End a block of commands"
 msgstr "結束一個程式碼區塊"
 
+msgid "Enter executes or continues"
+msgstr ""
+
 #, c-format
 msgid "Error encountered while sourcing file '%s':"
 msgstr "載入檔案「%s」時遇到錯誤："

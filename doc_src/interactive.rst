@@ -666,6 +666,10 @@ The fish commandline editor can be used to work on commands that are several lin
 
 The fish commandline editor works exactly the same in single line mode and in multiline mode. To move between lines use the left and right arrow keys and other such keyboard shortcuts.
 
+When a command is taller than the terminal, fish shows a viewport over it and a ``rows X to Y of N`` status line. The status line also reminds you that :kbd:`enter` executes a complete command or continues an incomplete one. The mouse wheel scrolls this viewport three visual rows at a time without moving the command-line cursor. Editing the command, moving the cursor with the keyboard, or clicking visible command text returns to cursor-following mode; the viewport then moves only when the cursor would leave its visible rows.
+
+Fish only captures the mouse while this command-line viewport is scrollable. Once the command fits in the terminal again, the wheel controls the terminal's scrollback as usual. To access terminal scrollback while a long command still overflows, use the terminal's mouse-protocol bypass if it has one (for example, :kbd:`shift`-wheel in kitty).
+
 .. _history-search:
 
 Searchable command history

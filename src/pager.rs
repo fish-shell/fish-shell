@@ -1180,7 +1180,7 @@ fn print_max_impl(
     max.checked_sub(remaining).unwrap()
 }
 
-fn print_max(
+pub(crate) fn print_max(
     offset_in_cmdline: CharOffset,
     chars: impl IntoIterator<Item = char>,
     color: HighlightSpec,

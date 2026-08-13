@@ -205,6 +205,22 @@ Optional Commands
    * - ``\e[?25h``
      - cvvis
      - Enable cursor visibility (DECTCEM).
+   * - ``\e[?25l``
+     - civis
+     - Disable cursor visibility (DECTCEM).
+       Fish uses this while the editing cursor is outside the visible part of an overflowing command line.
+   * - ``\e[?9;1000;1001;1002;1003;1005;1006;1015;1016s``, ``\e[?1016;1015;1006;1005;1003;1002;1001;1000;9r``
+     - n/a
+     - Save and restore the mutually exclusive mouse protocol and coordinate encoding modes (XTSAVE / XTRESTORE).
+       Fish uses these to preserve the terminal's previous mouse-tracking state while temporarily handling the wheel for an overflowing command line.
+   * - ``\e[?1000h``, ``\e[?1000l``
+     - n/a
+     - Enable and disable normal mouse tracking.
+       Wheel events are reported as button presses; fish does not enable motion tracking.
+   * - ``\e[?1006h``, ``\e[?1006l``
+     - n/a
+     - Enable and disable SGR extended mouse-coordinate reporting.
+       With this enabled, a wheel press is reported as ``\e[< Ps ; Ps ; Ps M``.
    * - ``\e[?1004h``
      - n/a
      - Enable focus reporting.

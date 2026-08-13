@@ -14,7 +14,7 @@ use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
 use crate::key::ViewportPosition;
-use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
+use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager, print_max};
 use crate::prelude::*;
 use crate::terminal::SgrTerminalCommand::EnterDimMode;
 use crate::terminal::TerminalCommand::{
@@ -48,6 +48,13 @@ pub enum CharOffset {
     Pager(usize),
 }
 
+fn next_char_offset(offset: CharOffset) -> CharOffset {
+    match offset {
+        CharOffset::Cmd(offset) => CharOffset::Cmd(offset + 1),
+        offset => offset,
+    }
+}
+
 #[derive(Clone, Default)]
 pub struct HighlightedChar {
     highlight: HighlightSpec,
@@ -63,6 +70,9 @@ pub struct Line {
     pub text: Vec<HighlightedChar>,
     pub is_soft_wrapped: bool,
     pub indentation: usize,
+    /// Commandline offset represented by an otherwise empty visual row. This is used for viewport
+    /// rows whose preceding logical row was not materialized.
+    empty_offset_in_cmdline: CharOffset,
 }
 
 impl Line {
@@ -73,6 +83,7 @@ impl Line {
     /// Clear the line's contents.
     fn clear(&mut self) {
         self.text.clear();
+        self.empty_offset_in_cmdline = CharOffset::None;
     }
 
     /// Append a single character `txt` to the line with color `c`.
@@ -139,16 +150,344 @@ impl Line {
 }
 
 /// Where the cursor is in (x, y) coordinates.
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct Cursor {
     x: usize,
     y: usize,
+}
+
+/// The state shared by visual commandline measurement and materialization.
+///
+/// `line_count` is deliberately separate from `cursor.y`: writing into the last terminal column
+/// advances the virtual cursor to an as-yet-unmaterialized phantom line.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+struct VisualLayoutState {
+    cursor: Cursor,
+    line_count: usize,
+}
+
+trait VisualLayoutSink {
+    fn create_line(&mut self, idx: usize);
+    fn clear_line(&mut self, idx: usize);
+    fn set_soft_wrapped(&mut self, idx: usize, value: bool);
+    fn set_indentation(&mut self, idx: usize, indentation: usize);
+    fn set_empty_offset(&mut self, idx: usize, offset_in_cmdline: CharOffset);
+    fn append(
+        &mut self,
+        idx: usize,
+        character: char,
+        highlight: HighlightSpec,
+        offset_in_cmdline: CharOffset,
+    );
+}
+
+struct ScreenDataSink<'a> {
+    data: &'a mut ScreenData,
+}
+
+impl VisualLayoutSink for ScreenDataSink<'_> {
+    fn create_line(&mut self, idx: usize) {
+        self.data.create_line(idx);
+    }
+
+    fn clear_line(&mut self, idx: usize) {
+        self.data.line_mut(idx).clear();
+    }
+
+    fn set_soft_wrapped(&mut self, idx: usize, value: bool) {
+        self.data.line_mut(idx).is_soft_wrapped = value;
+    }
+
+    fn set_indentation(&mut self, idx: usize, indentation: usize) {
+        self.data.line_mut(idx).indentation = indentation;
+    }
+
+    fn set_empty_offset(&mut self, idx: usize, offset_in_cmdline: CharOffset) {
+        if idx < self.data.line_count() {
+            self.data.line_mut(idx).empty_offset_in_cmdline = offset_in_cmdline;
+        }
+    }
+
+    fn append(
+        &mut self,
+        idx: usize,
+        character: char,
+        highlight: HighlightSpec,
+        offset_in_cmdline: CharOffset,
+    ) {
+        self.data
+            .line_mut(idx)
+            .append(character, highlight, offset_in_cmdline);
+    }
+}
+
+struct VisualLayoutBuilder<S> {
+    state: VisualLayoutState,
+    screen_width: Option<usize>,
+    max_y: usize,
+    sink: S,
+}
+
+impl<S: VisualLayoutSink> VisualLayoutBuilder<S> {
+    fn new(state: VisualLayoutState, screen_width: Option<usize>, max_y: usize, sink: S) -> Self {
+        Self {
+            state,
+            screen_width,
+            max_y,
+            sink,
+        }
+    }
+
+    fn create_line(&mut self, idx: usize) {
+        self.sink.create_line(idx);
+        self.state.line_count = self.state.line_count.max(idx + 1);
+    }
+
+    /// Append a character using the one visual-layout state machine shared by all sinks.
+    #[allow(clippy::too_many_arguments)]
+    fn append_char(
+        &mut self,
+        offset_in_cmdline: CharOffset,
+        character: char,
+        highlight: HighlightSpec,
+        indent: usize,
+        prompt_width: usize,
+        character_width: usize,
+    ) -> bool {
+        let mut line_no = self.state.cursor.y;
+
+        if character == '\n' {
+            // Current line is definitely hard wrapped.
+            if self.state.cursor.y + 1 > self.max_y {
+                return false;
+            }
+            self.create_line(self.state.cursor.y + 1);
+            self.sink.set_soft_wrapped(self.state.cursor.y, false);
+            self.state.cursor.y += 1;
+            line_no = self.state.cursor.y;
+            self.state.cursor.x = 0;
+            self.sink
+                .set_empty_offset(line_no, next_char_offset(offset_in_cmdline));
+            let indentation = prompt_width + indent * INDENT_STEP;
+            self.sink.set_indentation(line_no, indentation);
+            for _ in 0..indentation {
+                if !self.append_char(
+                    offset_in_cmdline,
+                    ' ',
+                    HighlightSpec::default(),
+                    indent,
+                    prompt_width,
+                    1,
+                ) {
+                    return false;
+                }
+            }
+        } else if character == '\r' {
+            if line_no > self.max_y {
+                return false;
+            }
+            self.create_line(line_no);
+            self.sink.clear_line(line_no);
+            self.sink
+                .set_empty_offset(line_no, next_char_offset(offset_in_cmdline));
+            self.state.cursor.x = 0;
+        } else {
+            if line_no > self.max_y {
+                return false;
+            }
+            self.create_line(line_no);
+
+            // Check if we are at the end of the line. If so, continue on the next line.
+            if self
+                .screen_width
+                .is_none_or(|width| self.state.cursor.x + character_width > width)
+            {
+                if self.state.cursor.y + 1 > self.max_y {
+                    return false;
+                }
+                self.sink.set_soft_wrapped(self.state.cursor.y, true);
+
+                line_no = self.state.line_count;
+                self.create_line(line_no);
+                self.state.cursor.y += 1;
+                self.state.cursor.x = 0;
+            }
+
+            self.sink
+                .append(line_no, character, highlight, offset_in_cmdline);
+            self.state.cursor.x += character_width;
+
+            // Maybe wrap the cursor to the next line, even if the line itself did not wrap. This
+            // avoids wonkiness in the last column.
+            if self
+                .screen_width
+                .is_none_or(|width| self.state.cursor.x >= width)
+            {
+                self.sink.set_soft_wrapped(line_no, true);
+                self.state.cursor.x = 0;
+                self.state.cursor.y += 1;
+                self.sink
+                    .set_empty_offset(self.state.cursor.y, next_char_offset(offset_in_cmdline));
+            }
+        }
+        true
+    }
+}
+
+#[derive(Default)]
+struct MeasuringVisualLayoutSink;
+
+impl VisualLayoutSink for MeasuringVisualLayoutSink {
+    fn create_line(&mut self, _idx: usize) {}
+    fn clear_line(&mut self, _idx: usize) {}
+    fn set_soft_wrapped(&mut self, _idx: usize, _value: bool) {}
+    fn set_indentation(&mut self, _idx: usize, _indentation: usize) {}
+    fn set_empty_offset(&mut self, _idx: usize, _offset_in_cmdline: CharOffset) {}
+    fn append(
+        &mut self,
+        _idx: usize,
+        _character: char,
+        _highlight: HighlightSpec,
+        _offset_in_cmdline: CharOffset,
+    ) {
+    }
+}
+
+struct WindowedScreenDataSink<'a> {
+    data: &'a mut ScreenData,
+    top: usize,
+    bottom: usize,
+}
+
+impl WindowedScreenDataSink<'_> {
+    fn physical_line(&self, logical_line: usize) -> Option<usize> {
+        (self.top..self.bottom)
+            .contains(&logical_line)
+            .then(|| logical_line - self.top)
+    }
+}
+
+impl VisualLayoutSink for WindowedScreenDataSink<'_> {
+    fn create_line(&mut self, idx: usize) {
+        if let Some(idx) = self.physical_line(idx) {
+            self.data.create_line(idx);
+        }
+    }
+
+    fn clear_line(&mut self, idx: usize) {
+        if let Some(idx) = self.physical_line(idx) {
+            self.data.line_mut(idx).clear();
+        }
+    }
+
+    fn set_soft_wrapped(&mut self, idx: usize, value: bool) {
+        if let Some(idx) = self.physical_line(idx) {
+            self.data.line_mut(idx).is_soft_wrapped = value;
+        }
+    }
+
+    fn set_indentation(&mut self, idx: usize, indentation: usize) {
+        if let Some(idx) = self.physical_line(idx) {
+            self.data.line_mut(idx).indentation = indentation;
+        }
+    }
+
+    fn set_empty_offset(&mut self, idx: usize, offset_in_cmdline: CharOffset) {
+        if let Some(idx) = self.physical_line(idx) {
+            self.data.line_mut(idx).empty_offset_in_cmdline = offset_in_cmdline;
+        }
+    }
+
+    fn append(
+        &mut self,
+        idx: usize,
+        character: char,
+        highlight: HighlightSpec,
+        offset_in_cmdline: CharOffset,
+    ) {
+        if let Some(idx) = self.physical_line(idx) {
+            self.data
+                .line_mut(idx)
+                .append(character, highlight, offset_in_cmdline);
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn append_explicit_commandline<S: VisualLayoutSink>(
+    builder: &mut VisualLayoutBuilder<S>,
+    prompt_offset: CharOffset,
+    prompt_space: usize,
+    commandline_indent: usize,
+    explicit_before_suggestion: &wstr,
+    explicit_after_suggestion: &wstr,
+    displayed_suggestion_len: usize,
+    colors: &[HighlightSpec],
+    explicit_indent: &[i32],
+    cursor_pos: usize,
+) -> Option<Cursor> {
+    for _ in 0..prompt_space {
+        if !builder.append_char(prompt_offset, ' ', HighlightSpec::new(), 0, prompt_space, 1) {
+            return None;
+        }
+    }
+
+    let commandline_len = explicit_before_suggestion.len() + explicit_after_suggestion.len();
+    assert!(cursor_pos <= commandline_len);
+    assert_eq!(explicit_indent.len(), commandline_len);
+    let mut commandline_offset = 0;
+    let mut cursor = None;
+
+    for (idx, character) in explicit_before_suggestion.chars().enumerate() {
+        if commandline_offset == cursor_pos {
+            cursor = Some(builder.state.cursor);
+        }
+        if !builder.append_char(
+            CharOffset::Cmd(commandline_offset),
+            character,
+            colors[idx],
+            usize::try_from(explicit_indent[commandline_offset]).unwrap(),
+            commandline_indent,
+            wcwidth_rendered_min_0(character),
+        ) {
+            return cursor;
+        }
+        commandline_offset += 1;
+    }
+
+    let effective_after_start = explicit_before_suggestion.len() + displayed_suggestion_len;
+    for (idx, character) in explicit_after_suggestion.chars().enumerate() {
+        if commandline_offset == cursor_pos {
+            cursor = Some(builder.state.cursor);
+        }
+        let effective_idx = effective_after_start + idx;
+        if !builder.append_char(
+            CharOffset::Cmd(commandline_offset),
+            character,
+            colors[effective_idx],
+            usize::try_from(explicit_indent[commandline_offset]).unwrap(),
+            commandline_indent,
+            wcwidth_rendered_min_0(character),
+        ) {
+            return cursor;
+        }
+        commandline_offset += 1;
+    }
+
+    if commandline_offset == cursor_pos {
+        cursor = Some(builder.state.cursor);
+    }
+    cursor
 }
 
 /// A class representing screen contents.
 #[derive(Clone, Default)]
 pub struct ScreenData {
     line_datas: Vec<Line>,
+
+    /// Logical visual row represented by physical row zero. This lets incremental rendering
+    /// distinguish a stable viewport from a different slice with coincidentally similar text.
+    logical_line_offset: usize,
 
     /// The width of the screen once we have rendered.
     screen_width: Option<usize>,
@@ -169,6 +508,7 @@ impl ScreenData {
 
     pub fn clear_lines(&mut self) {
         self.line_datas.clear();
+        self.logical_line_offset = 0;
     }
 
     pub fn resize(&mut self, size: usize) {
@@ -209,6 +549,174 @@ impl ScreenData {
     }
 }
 
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+enum CommandlineViewportMode {
+    #[default]
+    FollowCursor,
+    Manual,
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+struct CommandlineViewportWindow {
+    top: usize,
+    bottom: usize,
+    min_top: usize,
+    max_top: usize,
+    total_line_count: usize,
+    show_indicator: bool,
+    cursor_hidden: bool,
+}
+
+impl CommandlineViewportWindow {
+    fn scrollable(self) -> bool {
+        self.min_top < self.max_top
+    }
+
+    fn indicator_range(self) -> Option<(usize, usize, usize)> {
+        self.show_indicator.then(|| {
+            (
+                self.top - self.min_top + 1,
+                self.bottom - self.min_top,
+                self.total_line_count - self.min_top,
+            )
+        })
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+struct CommandlineViewportGeometry {
+    screen_width: usize,
+    prompt_lines: usize,
+    prompt_width: usize,
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+struct CommandlineViewport {
+    mode: CommandlineViewportMode,
+    top: usize,
+    geometry: Option<CommandlineViewportGeometry>,
+    window: CommandlineViewportWindow,
+}
+
+impl CommandlineViewport {
+    #[allow(clippy::too_many_arguments)]
+    fn reconcile(
+        &mut self,
+        screen_width: usize,
+        screen_height: usize,
+        prompt_lines: usize,
+        prompt_width: usize,
+        total_line_count: usize,
+        cursor_y: usize,
+        is_final_rendering: bool,
+    ) -> CommandlineViewportWindow {
+        assert!(screen_height > 0);
+        assert!(total_line_count >= prompt_lines);
+
+        let previous_window = self.window;
+        let geometry = CommandlineViewportGeometry {
+            screen_width,
+            prompt_lines,
+            prompt_width,
+        };
+        let geometry_changed = self.geometry.is_some_and(|previous| previous != geometry);
+        if geometry_changed {
+            self.mode = CommandlineViewportMode::FollowCursor;
+        }
+        self.geometry = Some(geometry);
+
+        if is_final_rendering {
+            self.mode = CommandlineViewportMode::FollowCursor;
+            self.top = 0;
+            self.window = CommandlineViewportWindow {
+                bottom: total_line_count,
+                total_line_count,
+                ..Default::default()
+            };
+            return self.window;
+        }
+
+        // First determine whether the commandline itself adds a scrollable range. A prompt that is
+        // taller than the terminal is cropped as before, but does not by itself capture the wheel.
+        let base_min_top = prompt_lines.saturating_sub(screen_height);
+        let base_max_top = total_line_count.saturating_sub(screen_height);
+        let scrollable = base_min_top < base_max_top;
+        if !scrollable {
+            self.mode = CommandlineViewportMode::FollowCursor;
+        }
+        let show_indicator = scrollable && screen_height >= 2;
+        let visible_rows = screen_height - usize::from(show_indicator);
+        let min_top = prompt_lines.saturating_sub(visible_rows);
+        let max_top = total_line_count.saturating_sub(visible_rows);
+
+        self.top = match self.mode {
+            CommandlineViewportMode::FollowCursor => {
+                let recenter = geometry_changed || !previous_window.scrollable();
+                let top = if recenter {
+                    cursor_y.saturating_sub(visible_rows - 1)
+                } else if cursor_y < self.top {
+                    cursor_y
+                } else if cursor_y >= self.top.saturating_add(visible_rows) {
+                    cursor_y.saturating_add(1).saturating_sub(visible_rows)
+                } else {
+                    self.top
+                };
+                top.clamp(min_top, max_top)
+            }
+            CommandlineViewportMode::Manual => self.top.clamp(min_top, max_top),
+        };
+        let bottom = (self.top + visible_rows).min(total_line_count);
+        self.window = CommandlineViewportWindow {
+            top: self.top,
+            bottom,
+            min_top,
+            max_top,
+            total_line_count,
+            show_indicator,
+            cursor_hidden: cursor_y < self.top || cursor_y >= bottom,
+        };
+        self.window
+    }
+
+    fn follow_cursor(&mut self) {
+        self.mode = CommandlineViewportMode::FollowCursor;
+    }
+
+    fn scroll(&mut self, delta: isize) -> bool {
+        if !self.window.scrollable() {
+            return false;
+        }
+        // Do not skip rows in very short terminals. The normal three-row wheel step still applies
+        // whenever at least three commandline rows are visible.
+        let step = delta
+            .unsigned_abs()
+            .min((self.window.bottom - self.window.top).max(1));
+        let next = if delta < 0 {
+            self.top.saturating_sub(step)
+        } else {
+            self.top.saturating_add(step)
+        }
+        .clamp(self.window.min_top, self.window.max_top);
+        if next == self.top {
+            return false;
+        }
+        self.top = next;
+        self.mode = CommandlineViewportMode::Manual;
+        true
+    }
+
+    fn reset(&mut self) {
+        *self = Self::default();
+    }
+}
+
+/// State the reader needs to synchronize transient terminal modes after a repaint.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub struct CommandlineViewportStatus {
+    pub scrollable: bool,
+    pub cursor_hidden: bool,
+}
+
 /// The class representing the current and desired screen contents.
 pub struct Screen {
     /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
@@ -221,6 +729,8 @@ pub struct Screen {
 
     /// Vertical offset of the screen contents within the terminal window.
     viewport_y: Option<usize>,
+    /// Independent viewport over the visual rows of an overflowing commandline.
+    commandline_viewport: CommandlineViewport,
     /// The internal representation of the desired screen contents.
     desired: ScreenData,
     /// The internal representation of the actual screen contents.
@@ -254,6 +764,7 @@ impl Default for Screen {
             scrolled: Default::default(),
             outp: Outputter::stdoutput(),
             viewport_y: Default::default(),
+            commandline_viewport: Default::default(),
             desired: Default::default(),
             actual: Default::default(),
             actual_left_prompt: Default::default(),
@@ -289,6 +800,7 @@ impl Screen {
         autosuggested_range: Range<usize>,
         mut colors: Vec<HighlightSpec>,
         mut indent: Vec<i32>,
+        explicit_indent: Vec<i32>,
         cursor_pos: usize,
         pager_search_field_position: Option<usize>,
         vars: &dyn Environment,
@@ -385,6 +897,148 @@ impl Screen {
         } else {
             layout.left_prompt_space
         };
+
+        // Measure the explicit commandline without retaining its visual rows. Autosuggestions must
+        // never make the commandline viewport scrollable; if the explicit text overflows, the
+        // autosuggestion and completion pager are hidden until it fits again.
+        let initial_layout_state = VisualLayoutState {
+            cursor: Cursor {
+                x: 0,
+                y: layout.left_prompt_lines - 1,
+            },
+            line_count: layout.left_prompt_lines,
+        };
+        let mut measuring_builder = VisualLayoutBuilder::new(
+            initial_layout_state,
+            Some(screen_width),
+            usize::MAX,
+            MeasuringVisualLayoutSink,
+        );
+        let explicit_cursor = append_explicit_commandline(
+            &mut measuring_builder,
+            prompt_offset,
+            layout.left_prompt_space,
+            commandline_indent,
+            explicit_before_suggestion,
+            explicit_after_suggestion,
+            layout.autosuggestion.len(),
+            &colors,
+            &explicit_indent,
+            cursor_pos,
+        )
+        .expect("unbounded commandline measurement must reach its cursor");
+        // Include an empty phantom row when the command cursor sits immediately after a character
+        // in the terminal's final column.
+        let explicit_line_count = measuring_builder
+            .state
+            .line_count
+            .max(explicit_cursor.y + 1);
+        let commandline_window = self.commandline_viewport.reconcile(
+            screen_width,
+            screen_height,
+            layout.left_prompt_lines,
+            layout.left_prompt_space,
+            explicit_line_count,
+            explicit_cursor.y,
+            is_final_rendering,
+        );
+        flogf!(
+            screen,
+            "Commandline viewport: lines=%u cursor-y=%u top=%u bottom=%u scrollable=%s",
+            explicit_line_count,
+            explicit_cursor.y,
+            commandline_window.top,
+            commandline_window.bottom,
+            if commandline_window.scrollable() {
+                "true"
+            } else {
+                "false"
+            },
+        );
+
+        if commandline_window.scrollable() {
+            self.autosuggestion_is_truncated = !autosuggestion.is_empty();
+            self.desired.screen_width = Some(screen_width);
+            self.desired.clear_lines();
+            self.desired.logical_line_offset = commandline_window.top;
+            self.desired
+                .resize(commandline_window.bottom - commandline_window.top);
+
+            let mut window_builder = VisualLayoutBuilder::new(
+                initial_layout_state,
+                Some(screen_width),
+                commandline_window.bottom - 1,
+                WindowedScreenDataSink {
+                    data: &mut self.desired,
+                    top: commandline_window.top,
+                    bottom: commandline_window.bottom,
+                },
+            );
+            let materialized_cursor = append_explicit_commandline(
+                &mut window_builder,
+                prompt_offset,
+                layout.left_prompt_space,
+                commandline_indent,
+                explicit_before_suggestion,
+                explicit_after_suggestion,
+                layout.autosuggestion.len(),
+                &colors,
+                &explicit_indent,
+                cursor_pos,
+            );
+            debug_assert!(materialized_cursor.is_none_or(|cursor| cursor == explicit_cursor));
+
+            self.desired.visible_prompt_lines = layout
+                .left_prompt_lines
+                .saturating_sub(commandline_window.top)
+                .min(commandline_window.bottom - commandline_window.top);
+            self.desired.cursor = if commandline_window.cursor_hidden {
+                Cursor::default()
+            } else {
+                Cursor {
+                    x: explicit_cursor.x,
+                    y: explicit_cursor.y - commandline_window.top,
+                }
+            };
+
+            if let Some((start, stop, total)) = commandline_window.indicator_range() {
+                // The status is UI, not a continuation of the final commandline row. Preserve the
+                // commandline's logical soft-wrap only in the layout model, not across this boundary.
+                if let Some(line) = self.desired.line_datas.last_mut() {
+                    line.is_soft_wrapped = false;
+                }
+                let mut progress = wgettext_fmt!("rows %u to %u of %u", start, stop, total);
+                progress.push_str(". ");
+                progress.push_utfstr(wgettext!("Enter executes or continues"));
+                let spec = HighlightSpec::with_both(HighlightRole::PagerProgress);
+                let line = self.desired.add_line();
+                print_max(
+                    CharOffset::None,
+                    progress.chars(),
+                    spec,
+                    screen_width,
+                    /*has_more=*/ true,
+                    line,
+                );
+            }
+
+            // Keep the pager's cache coherent while withholding it from the overflowing view.
+            pager.set_term_size(&Termsize::new(curr_termsize.width_u16(), NonZeroU16::MIN));
+            pager.update_rendering(page_rendering);
+
+            // Rows from different logical windows must never be treated as a shared-prefix update.
+            self.scrolled = true;
+            let visible_right_prompt = if self.desired.visible_prompt_lines == 0 {
+                L!("")
+            } else {
+                &layout.right_prompt
+            };
+            self.with_buffered_output(|zelf| {
+                zelf.update(vars, &layout.left_prompt, visible_right_prompt);
+            });
+            self.save_status();
+            return;
+        }
 
         // Reconstruct the command line.
         let effective_commandline = explicit_before_suggestion.to_owned()
@@ -500,6 +1154,7 @@ impl Screen {
                 } = scrolled_cursor;
                 if scroll_amount != 0 && !is_final_rendering {
                     self.desired.line_datas = self.desired.line_datas.split_off(scroll_amount);
+                    self.desired.logical_line_offset = scroll_amount;
                     cursor.y -= scroll_amount;
                 }
                 cursor
@@ -585,6 +1240,22 @@ impl Screen {
         self.viewport_y = viewport_y;
     }
 
+    pub fn follow_commandline_cursor(&mut self) {
+        self.commandline_viewport.follow_cursor();
+    }
+
+    /// Scroll the independent commandline viewport by a signed number of visual rows.
+    pub fn scroll_commandline_viewport(&mut self, delta: isize) -> bool {
+        self.commandline_viewport.scroll(delta)
+    }
+
+    pub fn commandline_viewport_status(&self) -> CommandlineViewportStatus {
+        CommandlineViewportStatus {
+            scrollable: self.commandline_viewport.window.scrollable(),
+            cursor_hidden: self.commandline_viewport.window.cursor_hidden,
+        }
+    }
+
     pub fn autoscroll(&mut self, screen_height: usize) {
         let Some(viewport_y) = self.viewport_y else {
             return;
@@ -644,19 +1315,49 @@ impl Screen {
             .min(self.actual.line_count() - 1);
         let line = self.actual.line(y);
         let x = viewport_position.x.max(line.indentation);
-        let offset = line
-            .text
-            .get(x)
-            .or(line.text.last())
-            .or(if y > 0 {
-                self.actual.line(y - 1).text.last()
-            } else {
-                None
-            })
-            .map_or(CharOffset::Pointer(0), |char| char.offset_in_cmdline);
-        match offset {
-            CharOffset::Cmd(value) if x >= line.len() => CharOffset::Cmd(value + 1),
-            CharOffset::Pager(_) if x >= line.len() => CharOffset::None,
+        if line.text.is_empty() {
+            return match line.empty_offset_in_cmdline {
+                CharOffset::None if y > 0 => self
+                    .actual
+                    .line(y - 1)
+                    .text
+                    .last()
+                    .map_or(CharOffset::Pointer(0), |char| {
+                        next_char_offset(char.offset_in_cmdline)
+                    }),
+                CharOffset::None => CharOffset::Pointer(0),
+                offset => offset,
+            };
+        }
+        let mut column = 0;
+        for (char_index, highlighted_char) in line.text.iter().enumerate() {
+            let width = wcwidth_rendered_min_0(highlighted_char.character);
+            if width == 0 {
+                continue;
+            }
+            let next_column = column + width;
+            if x < next_column {
+                // A click in the right half of a wide character belongs to the following cursor
+                // boundary. Skip combining characters, which do not have an independent cell.
+                if x - column >= width.div_ceil(2) {
+                    if let Some(next) = line.text[char_index + 1..]
+                        .iter()
+                        .find(|char| wcwidth_rendered_min_0(char.character) > 0)
+                    {
+                        return next.offset_in_cmdline;
+                    }
+                    return line.text.last().map_or(CharOffset::Pointer(0), |char| {
+                        next_char_offset(char.offset_in_cmdline)
+                    });
+                }
+                return highlighted_char.offset_in_cmdline;
+            }
+            column = next_column;
+        }
+        match line.text.last().map_or(CharOffset::Pointer(0), |char| {
+            next_char_offset(char.offset_in_cmdline)
+        }) {
+            CharOffset::Pager(_) => CharOffset::None,
             offset => offset,
         }
     }
@@ -666,6 +1367,7 @@ impl Screen {
     /// If clear_to_eos is set,
     /// The screen width must be provided for the PROMPT_SP hack.
     pub fn reset_abandoning_line(&mut self, screen_width: Option<usize>) {
+        self.commandline_viewport.reset();
         self.actual.cursor.y = 0;
         self.actual.clear_lines();
         self.actual_left_prompt = None;
@@ -736,6 +1438,7 @@ impl Screen {
     pub fn cursor_is_wrapped_to_own_line(&self) -> bool {
         // Don't consider dumb terminals to have wrapping for the purposes of this function.
         self.actual.cursor.x == 0
+            && self.actual.cursor.y > 0
             && self.actual.cursor.y + 1 != self.actual.visible_prompt_lines
             && self.actual.cursor.y + 1 == self.actual.line_count()
             && self.actual.line(self.actual.cursor.y - 1).is_soft_wrapped
@@ -749,82 +1452,37 @@ impl Screen {
         &mut self,
         offset_in_cmdline: CharOffset,
         max_y: usize,
-        b: char,
-        c: HighlightSpec,
+        character: char,
+        highlight: HighlightSpec,
         indent: usize,
         prompt_width: usize,
-        bwidth: usize,
+        character_width: usize,
     ) -> bool {
-        let mut line_no = self.desired.cursor.y;
-
-        if b == '\n' {
-            // Current line is definitely hard wrapped.
-            // Create the next line.
-            if self.desired.cursor.y + 1 > max_y {
-                return false;
-            }
-            self.desired.create_line(self.desired.cursor.y + 1);
-            self.desired.line_mut(self.desired.cursor.y).is_soft_wrapped = false;
-            self.desired.cursor.y += 1;
-            let line_no = self.desired.cursor.y;
-            self.desired.cursor.x = 0;
-            let indentation = prompt_width + indent * INDENT_STEP;
-            let line = self.desired.line_mut(line_no);
-            line.indentation = indentation;
-            for _ in 0..indentation {
-                if !self.desired_append_char(
-                    offset_in_cmdline,
-                    max_y,
-                    ' ',
-                    HighlightSpec::default(),
-                    indent,
-                    prompt_width,
-                    1,
-                ) {
-                    return false;
-                }
-            }
-        } else if b == '\r' {
-            let current = self.desired.line_mut(line_no);
-            current.clear();
-            self.desired.cursor.x = 0;
-        } else {
-            let screen_width = self.desired.screen_width;
-            let cw = bwidth;
-
-            if line_no > max_y {
-                return false;
-            }
-            self.desired.create_line(line_no);
-
-            // Check if we are at the end of the line. If so, continue on the next line.
-            if screen_width.is_none_or(|sw| (self.desired.cursor.x + cw) > sw) {
-                if self.desired.cursor.y + 1 > max_y {
-                    return false;
-                }
-                // Current line is soft wrapped (assuming we support it).
-                self.desired.line_mut(self.desired.cursor.y).is_soft_wrapped = true;
-
-                line_no = self.desired.line_count();
-                self.desired.add_line();
-                self.desired.cursor.y += 1;
-                self.desired.cursor.x = 0;
-            }
-
-            self.desired
-                .line_mut(line_no)
-                .append(b, c, offset_in_cmdline);
-            self.desired.cursor.x += cw;
-
-            // Maybe wrap the cursor to the next line, even if the line itself did not wrap. This
-            // avoids wonkiness in the last column.
-            if screen_width.is_none_or(|sw| self.desired.cursor.x >= sw) {
-                self.desired.line_mut(line_no).is_soft_wrapped = true;
-                self.desired.cursor.x = 0;
-                self.desired.cursor.y += 1;
-            }
-        }
-        true
+        let state = VisualLayoutState {
+            cursor: self.desired.cursor,
+            line_count: self.desired.line_count(),
+        };
+        let screen_width = self.desired.screen_width;
+        let mut builder = VisualLayoutBuilder::new(
+            state,
+            screen_width,
+            max_y,
+            ScreenDataSink {
+                data: &mut self.desired,
+            },
+        );
+        let result = builder.append_char(
+            offset_in_cmdline,
+            character,
+            highlight,
+            indent,
+            prompt_width,
+            character_width,
+        );
+        let state = builder.state;
+        self.desired.cursor = state.cursor;
+        debug_assert_eq!(self.desired.line_count(), state.line_count);
+        result
     }
 
     /// Stat stdout and stderr and compare result to previous result in reader_save_status. Repaint
@@ -1150,11 +1808,12 @@ impl Screen {
 
             let previously_prompt_line = self.actual.visible_prompt_lines > i + 1;
 
-            let shared_prefix = if self.scrolled || previously_prompt_line {
-                0
-            } else {
-                line_shared_prefix(o_line(self, i), s_line(self, i))
-            };
+            let shared_prefix = screen_data_line_shared_prefix(
+                &self.actual,
+                &self.desired,
+                i,
+                previously_prompt_line,
+            );
             let mut skip_prefix = shared_prefix;
             if shared_prefix < o_line(self, i).indentation || previously_prompt_line {
                 if !has_cleared_screen
@@ -1816,6 +2475,19 @@ fn line_shared_prefix(a: &Line, b: &Line) -> usize {
     idx
 }
 
+fn screen_data_line_shared_prefix(
+    actual: &ScreenData,
+    desired: &ScreenData,
+    line: usize,
+    previously_prompt_line: bool,
+) -> usize {
+    if actual.logical_line_offset != desired.logical_line_offset || previously_prompt_line {
+        0
+    } else {
+        line_shared_prefix(desired.line(line), actual.line(line))
+    }
+}
+
 pub(crate) static IS_DUMB: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 pub(crate) static ONLY_GRAYSCALE: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
@@ -2074,14 +2746,559 @@ pub fn wcswidth_rendered(s: &wstr) -> usize {
 #[cfg(test)]
 mod tests {
     use crate::highlight::HighlightSpec;
+    use crate::key::ViewportPosition;
     use crate::parse_util::compute_indents;
     use crate::prelude::*;
     use crate::screen::{
-        LayoutCache, PromptCacheEntry, PromptLayout, ScreenLayout, compute_layout,
+        CharOffset, CommandlineViewport, CommandlineViewportMode, Cursor, LayoutCache,
+        PromptCacheEntry, PromptLayout, ScreenData, ScreenDataSink, ScreenLayout,
+        VisualLayoutBuilder, VisualLayoutSink, VisualLayoutState, WindowedScreenDataSink,
+        append_explicit_commandline, compute_layout, screen_data_line_shared_prefix,
     };
     use crate::tests::prelude::*;
     use fish_wcstringutil::join_strings;
     use fish_widestring::ELLIPSIS_CHAR;
+
+    #[derive(Default)]
+    struct MeasuringSink;
+
+    impl VisualLayoutSink for MeasuringSink {
+        fn create_line(&mut self, _idx: usize) {}
+        fn clear_line(&mut self, _idx: usize) {}
+        fn set_soft_wrapped(&mut self, _idx: usize, _value: bool) {}
+        fn set_indentation(&mut self, _idx: usize, _indentation: usize) {}
+        fn set_empty_offset(&mut self, _idx: usize, _offset_in_cmdline: CharOffset) {}
+        fn append(
+            &mut self,
+            _idx: usize,
+            _character: char,
+            _highlight: HighlightSpec,
+            _offset_in_cmdline: CharOffset,
+        ) {
+        }
+    }
+
+    fn append_layout_chars<S: VisualLayoutSink>(
+        builder: &mut VisualLayoutBuilder<S>,
+        chars: &[(char, usize, usize)],
+    ) {
+        for (idx, &(character, width, indent)) in chars.iter().enumerate() {
+            assert!(builder.append_char(
+                CharOffset::Cmd(idx),
+                character,
+                HighlightSpec::default(),
+                indent,
+                1,
+                width,
+            ));
+        }
+    }
+
+    fn line_text(data: &ScreenData, idx: usize) -> String {
+        data.line(idx).text.iter().map(|c| c.character).collect()
+    }
+
+    #[test]
+    fn test_visual_layout_builder_wraps_and_phantom_line() {
+        let mut data = ScreenData {
+            screen_width: Some(4),
+            ..Default::default()
+        };
+        data.resize(1);
+        let state = VisualLayoutState {
+            cursor: Cursor::default(),
+            line_count: data.line_count(),
+        };
+        let mut builder = VisualLayoutBuilder::new(
+            state,
+            data.screen_width,
+            usize::MAX,
+            ScreenDataSink { data: &mut data },
+        );
+
+        append_layout_chars(
+            &mut builder,
+            &[('a', 1, 0), ('\u{301}', 0, 0), ('界', 2, 0), ('b', 1, 0)],
+        );
+        assert_eq!(
+            builder.state,
+            VisualLayoutState {
+                cursor: Cursor { x: 0, y: 1 },
+                line_count: 1,
+            }
+        );
+        assert_eq!(line_text(builder.sink.data, 0), "a\u{301}界b");
+        assert!(builder.sink.data.line(0).is_soft_wrapped);
+        // The terminal cursor occupies a phantom row after an exact-width commandline even though
+        // that row has not been materialized yet.
+        assert_eq!(builder.state.line_count.max(builder.state.cursor.y + 1), 2);
+
+        append_layout_chars(&mut builder, &[('\r', 0, 0)]);
+        assert_eq!(builder.state.cursor, Cursor { x: 0, y: 1 });
+        assert_eq!(builder.state.line_count, 2);
+        assert_eq!(line_text(builder.sink.data, 1), "");
+
+        append_layout_chars(&mut builder, &[('c', 1, 0)]);
+        assert_eq!(builder.state.cursor, Cursor { x: 1, y: 1 });
+        assert_eq!(builder.state.line_count, 2);
+        assert_eq!(line_text(builder.sink.data, 1), "c");
+    }
+
+    #[test]
+    fn test_visual_layout_builder_newline_indent_wide_and_carriage_return() {
+        let mut data = ScreenData {
+            screen_width: Some(6),
+            ..Default::default()
+        };
+        data.resize(1);
+        let state = VisualLayoutState {
+            cursor: Cursor::default(),
+            line_count: data.line_count(),
+        };
+        let mut builder = VisualLayoutBuilder::new(
+            state,
+            data.screen_width,
+            usize::MAX,
+            ScreenDataSink { data: &mut data },
+        );
+
+        append_layout_chars(
+            &mut builder,
+            &[
+                ('a', 1, 0),
+                ('b', 1, 0),
+                ('\r', 0, 0),
+                ('z', 1, 0),
+                ('\n', 0, 1),
+                ('界', 2, 0),
+            ],
+        );
+
+        assert_eq!(line_text(builder.sink.data, 0), "z");
+        assert!(!builder.sink.data.line(0).is_soft_wrapped);
+        assert_eq!(line_text(builder.sink.data, 1), "     ");
+        assert_eq!(builder.sink.data.line(1).indentation, 5);
+        assert!(builder.sink.data.line(1).is_soft_wrapped);
+        assert_eq!(line_text(builder.sink.data, 2), "界");
+        assert_eq!(builder.state.cursor, Cursor { x: 2, y: 2 });
+    }
+
+    #[test]
+    fn test_visual_layout_measurement_matches_materialization_and_is_bounded() {
+        let chars = [
+            ('a', 1, 0),
+            ('界', 2, 0),
+            ('\u{301}', 0, 0),
+            ('b', 1, 0),
+            ('\n', 0, 1),
+            ('c', 1, 0),
+            ('\r', 0, 0),
+            ('d', 1, 0),
+        ];
+        let state = VisualLayoutState {
+            cursor: Cursor::default(),
+            line_count: 1,
+        };
+        let mut measured = VisualLayoutBuilder::new(state, Some(5), usize::MAX, MeasuringSink);
+        append_layout_chars(&mut measured, &chars);
+
+        let mut data = ScreenData {
+            screen_width: Some(5),
+            ..Default::default()
+        };
+        data.resize(1);
+        let mut materialized = VisualLayoutBuilder::new(
+            state,
+            data.screen_width,
+            usize::MAX,
+            ScreenDataSink { data: &mut data },
+        );
+        append_layout_chars(&mut materialized, &chars);
+        assert_eq!(measured.state, materialized.state);
+
+        let mut large = VisualLayoutBuilder::new(state, Some(10), usize::MAX, MeasuringSink);
+        for idx in 0..100_000 {
+            assert!(large.append_char(
+                CharOffset::Cmd(idx),
+                'x',
+                HighlightSpec::default(),
+                0,
+                0,
+                1,
+            ));
+        }
+        assert_eq!(large.state.cursor, Cursor { x: 0, y: 10_000 });
+        assert_eq!(large.state.line_count, 10_000);
+    }
+
+    #[test]
+    fn test_commandline_viewport_follow_manual_and_range() {
+        let mut viewport = CommandlineViewport::default();
+        let window = viewport.reconcile(30, 6, 1, 2, 20, 19, false);
+        assert!(window.scrollable());
+        assert_eq!((window.top, window.bottom), (15, 20));
+        assert_eq!(window.indicator_range(), Some((16, 20, 20)));
+        assert!(!window.cursor_hidden);
+
+        assert!(viewport.scroll(-3));
+        let window = viewport.reconcile(30, 6, 1, 2, 20, 19, false);
+        assert_eq!(viewport.mode, CommandlineViewportMode::Manual);
+        assert_eq!((window.top, window.bottom), (12, 17));
+        assert_eq!(window.indicator_range(), Some((13, 17, 20)));
+        assert!(window.cursor_hidden);
+
+        assert!(viewport.scroll(3));
+        assert!(!viewport.scroll(3));
+        let window = viewport.reconcile(30, 6, 1, 2, 20, 19, false);
+        assert_eq!((window.top, window.bottom), (15, 20));
+        assert!(!window.cursor_hidden);
+    }
+
+    #[test]
+    fn test_commandline_viewport_follows_cursor_only_across_edges() {
+        let mut viewport = CommandlineViewport::default();
+        let window = viewport.reconcile(30, 6, 1, 2, 20, 19, false);
+        assert_eq!((window.top, window.bottom), (15, 20));
+
+        for cursor_y in [18, 15] {
+            let window = viewport.reconcile(30, 6, 1, 2, 20, cursor_y, false);
+            assert_eq!((window.top, window.bottom), (15, 20));
+        }
+
+        let window = viewport.reconcile(30, 6, 1, 2, 20, 14, false);
+        assert_eq!((window.top, window.bottom), (14, 19));
+        let window = viewport.reconcile(30, 6, 1, 2, 20, 18, false);
+        assert_eq!((window.top, window.bottom), (14, 19));
+        let window = viewport.reconcile(30, 6, 1, 2, 20, 19, false);
+        assert_eq!((window.top, window.bottom), (15, 20));
+
+        assert!(viewport.scroll(-3));
+        viewport.follow_cursor();
+        let window = viewport.reconcile(30, 6, 1, 2, 20, 14, false);
+        assert_eq!((window.top, window.bottom), (12, 17));
+        let window = viewport.reconcile(30, 6, 1, 2, 20, 19, false);
+        assert_eq!((window.top, window.bottom), (15, 20));
+    }
+
+    #[test]
+    fn test_screen_data_shared_prefix_requires_same_logical_window() {
+        let mut actual = ScreenData::default();
+        actual.resize(1);
+        actual
+            .line_mut(0)
+            .append_str(L!("abcdef"), HighlightSpec::default(), CharOffset::Cmd(0));
+        actual.logical_line_offset = 10;
+        let mut desired = actual.clone();
+
+        assert_eq!(
+            screen_data_line_shared_prefix(&actual, &desired, 0, false),
+            6
+        );
+        assert_eq!(
+            screen_data_line_shared_prefix(&actual, &desired, 0, true),
+            0
+        );
+        desired.logical_line_offset = 11;
+        assert_eq!(
+            screen_data_line_shared_prefix(&actual, &desired, 0, false),
+            0
+        );
+    }
+
+    #[test]
+    fn test_windowed_materialization_stops_after_visible_rows() {
+        let commandline = L!("a\nb\nc\nd\ne");
+        let mut data = ScreenData {
+            screen_width: Some(10),
+            ..Default::default()
+        };
+        data.resize(2);
+        let mut builder = VisualLayoutBuilder::new(
+            VisualLayoutState {
+                cursor: Cursor::default(),
+                line_count: 1,
+            },
+            data.screen_width,
+            2,
+            WindowedScreenDataSink {
+                data: &mut data,
+                top: 1,
+                bottom: 3,
+            },
+        );
+        let cursor = append_explicit_commandline(
+            &mut builder,
+            CharOffset::Pointer(0),
+            0,
+            0,
+            commandline,
+            L!(""),
+            0,
+            &[HighlightSpec::default(); 9],
+            &[0; 9],
+            commandline.len(),
+        );
+        assert_eq!(cursor, None);
+        assert_eq!(builder.state.line_count, 3);
+        assert_eq!(line_text(builder.sink.data, 0), "b");
+        assert_eq!(line_text(builder.sink.data, 1), "c");
+    }
+
+    #[test]
+    fn test_commandline_viewport_resize_and_geometry_follow_rules() {
+        let mut viewport = CommandlineViewport::default();
+        viewport.reconcile(30, 6, 1, 2, 20, 19, false);
+        assert!(viewport.scroll(-6));
+
+        // Height-only changes preserve Manual mode and clamp the current top if necessary.
+        let window = viewport.reconcile(30, 15, 1, 2, 20, 19, false);
+        assert_eq!(viewport.mode, CommandlineViewportMode::Manual);
+        assert_eq!(window.top, 6);
+        let window = viewport.reconcile(30, 4, 1, 2, 20, 19, false);
+        assert_eq!(viewport.mode, CommandlineViewportMode::Manual);
+        assert_eq!(window.top, 6);
+
+        // Once the whole commandline fits, a later overflow starts by following the cursor again.
+        let window = viewport.reconcile(30, 30, 1, 2, 20, 19, false);
+        assert_eq!(viewport.mode, CommandlineViewportMode::FollowCursor);
+        assert_eq!(window.top, 0);
+        let window = viewport.reconcile(30, 4, 1, 2, 20, 19, false);
+        assert_eq!(viewport.mode, CommandlineViewportMode::FollowCursor);
+        assert_eq!(window.top, 17);
+        assert!(!window.cursor_hidden);
+
+        assert!(viewport.scroll(-6));
+
+        // Width or prompt geometry changes invalidate visual row coordinates and resume Follow.
+        let window = viewport.reconcile(31, 4, 1, 2, 20, 19, false);
+        assert_eq!(viewport.mode, CommandlineViewportMode::FollowCursor);
+        assert_eq!(window.top, 17);
+        assert!(!window.cursor_hidden);
+
+        assert!(viewport.scroll(-3));
+        let window = viewport.reconcile(31, 4, 2, 3, 20, 19, false);
+        assert_eq!(viewport.mode, CommandlineViewportMode::FollowCursor);
+        assert_eq!(window.top, 17);
+    }
+
+    #[test]
+    fn test_commandline_viewport_nonoverflow_final_and_one_line_terminal() {
+        let mut viewport = CommandlineViewport::default();
+        let window = viewport.reconcile(30, 6, 1, 2, 4, 3, false);
+        assert!(!window.scrollable());
+        assert!(!window.show_indicator);
+        assert_eq!((window.top, window.bottom), (0, 4));
+        assert!(!viewport.scroll(-3));
+
+        let window = viewport.reconcile(30, 1, 1, 2, 4, 3, false);
+        assert!(window.scrollable());
+        assert!(!window.show_indicator);
+        assert_eq!((window.top, window.bottom), (3, 4));
+        assert!(viewport.scroll(-3));
+        let window = viewport.reconcile(30, 1, 1, 2, 4, 3, false);
+        assert_eq!((window.top, window.bottom), (2, 3));
+        assert!(viewport.scroll(-3));
+        let window = viewport.reconcile(30, 1, 1, 2, 4, 3, false);
+        assert_eq!((window.top, window.bottom), (1, 2));
+        assert!(viewport.scroll(-3));
+        let window = viewport.reconcile(30, 1, 1, 2, 4, 3, false);
+        assert_eq!((window.top, window.bottom), (0, 1));
+        assert!(!viewport.scroll(-3));
+
+        let window = viewport.reconcile(30, 1, 1, 2, 4, 3, true);
+        assert!(!window.scrollable());
+        assert!(!window.show_indicator);
+        assert_eq!((window.top, window.bottom), (0, 4));
+        assert!(!window.cursor_hidden);
+
+        viewport.reset();
+        assert_eq!(viewport, CommandlineViewport::default());
+    }
+
+    #[test]
+    #[serial]
+    fn test_commandline_viewport_materialization_and_click_offsets() {
+        test_init();
+        let commandline = L!("a\nb\nc\nd");
+        let colors = vec![HighlightSpec::default(); commandline.len()];
+        let indent = vec![0; commandline.len()];
+        let mut data = ScreenData {
+            screen_width: Some(10),
+            ..Default::default()
+        };
+        data.resize(2);
+        let mut builder = VisualLayoutBuilder::new(
+            VisualLayoutState {
+                cursor: Cursor::default(),
+                line_count: 1,
+            },
+            data.screen_width,
+            usize::MAX,
+            WindowedScreenDataSink {
+                data: &mut data,
+                top: 2,
+                bottom: 4,
+            },
+        );
+        let cursor = append_explicit_commandline(
+            &mut builder,
+            CharOffset::Pointer(0),
+            0,
+            0,
+            commandline,
+            L!(""),
+            0,
+            &colors,
+            &indent,
+            commandline.len(),
+        )
+        .unwrap();
+        assert_eq!(cursor, Cursor { x: 1, y: 3 });
+        assert_eq!(line_text(builder.sink.data, 0), "c");
+        assert_eq!(line_text(builder.sink.data, 1), "d");
+        builder.sink.data.add_line().append_str(
+            L!("rows 3 to 4 of 4"),
+            HighlightSpec::with_both(crate::highlight::HighlightRole::PagerProgress),
+            CharOffset::None,
+        );
+
+        let mut screen = crate::screen::Screen {
+            viewport_y: Some(0),
+            actual: builder.sink.data.clone(),
+            ..Default::default()
+        };
+        screen.actual.visible_prompt_lines = 0;
+        assert!(matches!(
+            screen.offset_in_cmdline_given_cursor(ViewportPosition { x: 0, y: 0 }),
+            CharOffset::Cmd(4)
+        ));
+        assert!(matches!(
+            screen.offset_in_cmdline_given_cursor(ViewportPosition { x: 2, y: 0 }),
+            CharOffset::Cmd(5)
+        ));
+        assert!(matches!(
+            screen.offset_in_cmdline_given_cursor(ViewportPosition { x: 0, y: 2 }),
+            CharOffset::None
+        ));
+
+        let mut phantom = ScreenData {
+            screen_width: Some(4),
+            ..Default::default()
+        };
+        phantom.resize(1);
+        let mut phantom_builder = VisualLayoutBuilder::new(
+            VisualLayoutState {
+                cursor: Cursor::default(),
+                line_count: 1,
+            },
+            phantom.screen_width,
+            usize::MAX,
+            WindowedScreenDataSink {
+                data: &mut phantom,
+                top: 2,
+                bottom: 3,
+            },
+        );
+        append_explicit_commandline(
+            &mut phantom_builder,
+            CharOffset::Pointer(0),
+            0,
+            0,
+            L!("abcdefgh"),
+            L!(""),
+            0,
+            &[HighlightSpec::default(); 8],
+            &[0; 8],
+            8,
+        );
+        let mut phantom_screen = crate::screen::Screen {
+            viewport_y: Some(0),
+            actual: phantom,
+            ..Default::default()
+        };
+        assert!(matches!(
+            phantom_screen.offset_in_cmdline_given_cursor(ViewportPosition { x: 0, y: 0 }),
+            CharOffset::Cmd(8)
+        ));
+
+        let mut empty = ScreenData {
+            screen_width: Some(4),
+            ..Default::default()
+        };
+        empty.resize(1);
+        let mut empty_builder = VisualLayoutBuilder::new(
+            VisualLayoutState {
+                cursor: Cursor::default(),
+                line_count: 1,
+            },
+            empty.screen_width,
+            usize::MAX,
+            WindowedScreenDataSink {
+                data: &mut empty,
+                top: 1,
+                bottom: 2,
+            },
+        );
+        append_explicit_commandline(
+            &mut empty_builder,
+            CharOffset::Pointer(0),
+            0,
+            0,
+            L!("a\n\nb"),
+            L!(""),
+            0,
+            &[HighlightSpec::default(); 4],
+            &[0; 4],
+            4,
+        );
+        let mut empty_screen = crate::screen::Screen {
+            viewport_y: Some(0),
+            actual: empty,
+            ..Default::default()
+        };
+        assert!(matches!(
+            empty_screen.offset_in_cmdline_given_cursor(ViewportPosition { x: 0, y: 0 }),
+            CharOffset::Cmd(2)
+        ));
+
+        let mut wide = ScreenData::default();
+        wide.resize(1);
+        for (idx, char) in L!("界界x").chars().enumerate() {
+            wide.line_mut(0)
+                .append(char, HighlightSpec::default(), CharOffset::Cmd(idx));
+        }
+        let mut wide_screen = crate::screen::Screen {
+            viewport_y: Some(0),
+            actual: wide,
+            ..Default::default()
+        };
+        assert!(matches!(
+            wide_screen.offset_in_cmdline_given_cursor(ViewportPosition { x: 3, y: 0 }),
+            CharOffset::Cmd(2)
+        ));
+
+        let mut combining = ScreenData::default();
+        combining.resize(1);
+        for (idx, char) in L!("a\u{301}b").chars().enumerate() {
+            combining
+                .line_mut(0)
+                .append(char, HighlightSpec::default(), CharOffset::Cmd(idx));
+        }
+        let mut combining_screen = crate::screen::Screen {
+            viewport_y: Some(0),
+            actual: combining,
+            ..Default::default()
+        };
+        assert!(matches!(
+            combining_screen.offset_in_cmdline_given_cursor(ViewportPosition { x: 1, y: 0 }),
+            CharOffset::Cmd(2)
+        ));
+
+        screen.actual.line_datas.truncate(1);
+        screen.actual.cursor = Cursor::default();
+        screen.actual.visible_prompt_lines = 0;
+        assert!(!screen.cursor_is_wrapped_to_own_line());
+    }
 
     #[test]
     #[serial]

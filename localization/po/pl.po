@@ -556,6 +556,9 @@ msgstr ""
 msgid "End a block of commands"
 msgstr "Zakończ zestaw komend"
 
+msgid "Enter executes or continues"
+msgstr ""
+
 #, c-format
 msgid "Error encountered while sourcing file '%s':"
 msgstr ""

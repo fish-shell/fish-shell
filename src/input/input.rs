@@ -45,6 +45,12 @@ pub struct KeyInputEvent {
     pub seq: WString,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum MouseWheelDirection {
+    Up,
+    Down,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum ImplicitEvent {
     /// end-of-file was reached.
@@ -58,6 +64,11 @@ pub enum ImplicitEvent {
     FocusOut,
     /// Mouse left click.
     MouseLeft(ViewportPosition),
+    /// Mouse wheel movement captured for an overflowing commandline viewport.
+    MouseWheel {
+        direction: MouseWheelDirection,
+        position: ViewportPosition,
+    },
     /// Terminal color theme change (light/dark mode).
     NewColorTheme,
     /// Window height changed.

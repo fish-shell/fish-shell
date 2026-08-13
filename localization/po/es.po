@@ -560,6 +560,9 @@ msgstr "El directorio vacío '%s' no existe"
 msgid "End a block of commands"
 msgstr "Finalizar un bloque de comandos"
 
+msgid "Enter executes or continues"
+msgstr ""
+
 #, c-format
 msgid "Error encountered while sourcing file '%s':"
 msgstr "Error encontrado al importar el archivo '%s':"

@@ -28,7 +28,6 @@ isolated-tmux capture-pane -p
 isolated-tmux send-keys C-k C-u C-l 'commandline -i "\'$(seq $LINES)" scroll_here' Enter
 tmux-sleep
 isolated-tmux capture-pane -p
-# CHECK: 2
 # CHECK: 3
 # CHECK: 4
 # CHECK: 5
@@ -38,6 +37,7 @@ isolated-tmux capture-pane -p
 # CHECK: 9
 # CHECK: 10
 # CHECK: scroll_here
+# CHECK: rows 3 to 11 of 11. Enter executes or continues
 
 isolated-tmux send-keys C-c
 tmux-sleep

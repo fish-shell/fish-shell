@@ -37,14 +37,14 @@ end
 #
 
 # Inherit user/host completions from ssh
-complete -c scp -d Remote -n "__fish_no_scp_remote_specified; and not string match -e -- : (commandline -ct)" -a "(complete -C'ssh ' | string replace -r '\t.*' ':')"
+complete -c scp -d Remote -n "__fish_no_scp_remote_specified; and not string match -rq -- '^[^/]*:' (commandline -ct)" -a "(complete -C'ssh ' | string replace -r '\t.*' ':')"
 
 # Local path
 complete -c scp -d "Local Path" -n "not string match @ -- (commandline -ct)"
 
 # Remote path
 # Get the list of remote files from the scp target.
-complete -c scp -d "Remote Path" -f -n "commandline -ct | string match -e ':'" -a '
+complete -c scp -d "Remote Path" -f -n "commandline -ct | string match -rq -- '^[^/]*:'" -a '
     (__scp_remote_target):(
         if not set -q __fish_scp_sftp
             if set -l tmp (__fish_mktemp_relative fish-scp)

@@ -10,13 +10,26 @@ function __scp2ssh_port_number
     and echo $port[2]
 end
 
+function __scp_looks_remote
+    # scp treats a token as a remote target only when a colon appears before
+    # any slash (matching OpenSSH). A local path whose colon follows a slash,
+    # e.g. ./dir/file-1:106, is not remote.
+    set -l token $argv
+    set -q token[1]; or set token (commandline -ct)
+    string match -rq -- '^[^/]*:' -- $token
+end
+
 function __scp_remote_target
-    set -l target (commandline -ct | string match -r -- '(.*):')
+    set -l token $argv
+    set -q token[1]; or set token (commandline -ct)
+    set -l target (string match -r -- '^([^:]*):' -- $token)
     and echo $target[2]
 end
 
 function __scp_remote_path_prefix
-    set -l path_prefix (commandline -ct | string match -r -- ':(.*)')
+    set -l token $argv
+    set -q token[1]; or set token (commandline -ct)
+    set -l path_prefix (string match -r -- '^[^:]*:(.*)' -- $token)
     and echo $path_prefix[2]
 end
 
@@ -37,14 +50,14 @@ end
 #
 
 # Inherit user/host completions from ssh
-complete -c scp -d Remote -n "__fish_no_scp_remote_specified; and not string match -e -- : (commandline -ct)" -a "(complete -C'ssh ' | string replace -r '\t.*' ':')"
+complete -c scp -d Remote -n "__fish_no_scp_remote_specified; and not __scp_looks_remote" -a "(complete -C'ssh ' | string replace -r '\t.*' ':')"
 
 # Local path
 complete -c scp -d "Local Path" -n "not string match @ -- (commandline -ct)"
 
 # Remote path
 # Get the list of remote files from the scp target.
-complete -c scp -d "Remote Path" -f -n "commandline -ct | string match -e ':'" -a '
+complete -c scp -d "Remote Path" -f -n __scp_looks_remote -a '
     (__scp_remote_target):(
         if not set -q __fish_scp_sftp
             if set -l tmp (__fish_mktemp_relative fish-scp)

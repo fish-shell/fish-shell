@@ -193,21 +193,19 @@ pub fn child_setup_process(
 /// FORK_LAPS times, with a very slight delay between each lap. If fork fails even then, the process
 /// will exit with an error message.
 pub fn execute_fork() -> pid_t {
-    let mut err = Errno::from_raw(0);
-    for i in 0..FORK_LAPS {
+    let mut i = 0;
+    let err = loop {
         let pid = unsafe { libc::fork() };
         if pid >= 0 {
             return pid;
         }
-        err = Errno::last();
-        if err != Errno::EAGAIN {
-            break;
+        let err = Errno::last();
+        if err != Errno::EAGAIN || (i == FORK_LAPS - 1) {
+            break err;
         }
-        // Don't sleep on the final lap
-        if i != FORK_LAPS - 1 {
-            std::thread::sleep(FORK_SLEEP_TIME);
-        }
-    }
+        std::thread::sleep(FORK_SLEEP_TIME);
+        i += 1;
+    };
 
     match err {
         Errno::EAGAIN => {

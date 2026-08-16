@@ -15,7 +15,8 @@ function fish_clipboard_copy
     if type -q pbcopy
         printf '%s' $cmdline | pbcopy
     else if set -q WAYLAND_DISPLAY; and type -q wl-copy
-        printf '%s' $cmdline | wl-copy &
+        # wl-copy starts a daemon and might hold the terminal open, see #12941.
+        printf '%s' $cmdline | wl-copy 2>/dev/null &
         disown
     else if set -q DISPLAY; and type -q xsel
         printf '%s' $cmdline | xsel --clipboard

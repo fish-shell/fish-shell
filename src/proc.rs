@@ -929,8 +929,6 @@ impl Job {
     }
 }
 
-pub type JobRef = Rc<Job>;
-
 /// Whether this shell is attached to a tty.
 pub fn is_interactive_session() -> bool {
     IS_INTERACTIVE_SESSION.load()
@@ -959,9 +957,6 @@ pub fn mark_no_exec() {
     IS_NO_EXEC.store(true);
 }
 static IS_NO_EXEC: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
-
-// List of jobs.
-pub type JobList = Vec<JobRef>;
 
 /// The current job control mode.
 ///
@@ -1001,7 +996,7 @@ pub fn job_reap(parser: &mut Parser, interactive: bool, block_io: Option<&IoChai
 
 /// Return the list of background jobs which we should warn the user about, if the user attempts to
 /// exit. An empty result (common) means no such jobs.
-pub fn jobs_requiring_warning_on_exit(parser: &Parser) -> JobList {
+pub fn jobs_requiring_warning_on_exit(parser: &Parser) -> Vec<Rc<Job>> {
     let mut result = vec![];
     for job in parser.jobs() {
         if !job.is_foreground() && job.is_constructed() && !job.is_completed() {
@@ -1013,7 +1008,7 @@ pub fn jobs_requiring_warning_on_exit(parser: &Parser) -> JobList {
 
 /// Print the exit warning for the given jobs, which should have been obtained via
 /// jobs_requiring_warning_on_exit().
-pub fn print_exit_warning_for_jobs(jobs: &JobList) {
+pub fn print_exit_warning_for_jobs(jobs: &[Rc<Job>]) {
     printf!("%s\n", wgettext!("There are still jobs active:"));
     printf!("\n   PID  %s\n", wgettext!("Command"));
     for j in jobs {
@@ -1128,7 +1123,7 @@ pub fn proc_wait_any(parser: &mut Parser) {
 }
 
 /// Send SIGHUP to the list `jobs`, excepting those which are in fish's pgroup.
-pub fn hup_jobs(jobs: &JobList) {
+pub fn hup_jobs(jobs: &[Rc<Job>]) {
     let fish_pgrp = getpgrp();
     let mut kill_list = Vec::new();
     for j in jobs {
@@ -1500,7 +1495,7 @@ fn summary_command(j: &Job, p: Option<&Process>) -> WString {
 // Summarize a list of jobs, by emitting calls to fish_job_summary.
 // Note the given list must NOT be the parser's own job list, since the call to fish_job_summary
 // could modify it.
-fn summarize_jobs(parser: &mut Parser, jobs: &[JobRef]) -> bool {
+fn summarize_jobs(parser: &mut Parser, jobs: &[Rc<Job>]) -> bool {
     if jobs.is_empty() {
         return false;
     }
@@ -1527,7 +1522,7 @@ fn summarize_jobs(parser: &mut Parser, jobs: &[JobRef]) -> bool {
 
 /// Remove all disowned jobs whose job chain is fully constructed (that is, do not erase disowned
 /// jobs that still have an in-flight parent job). Note we never print statuses for such jobs.
-fn remove_disowned_jobs(jobs: &mut JobList) {
+fn remove_disowned_jobs(jobs: &mut Vec<Rc<Job>>) {
     jobs.retain(|j| !j.flags().disown_requested || !j.is_constructed());
 }
 

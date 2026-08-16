@@ -190,7 +190,7 @@ pub fn jobs(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
 
     if print_last {
         // Ignore unconstructed jobs, i.e. ourself.
-        for j in &parser.jobs()[..] {
+        for j in parser.jobs() {
             if j.is_visible() {
                 builtin_jobs_print(j, mode, !streams.out_is_redirected, streams);
                 return Ok(SUCCESS);
@@ -239,7 +239,7 @@ pub fn jobs(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
             }
         }
     } else {
-        for j in &parser.jobs()[..] {
+        for j in parser.jobs() {
             // Ignore unconstructed jobs, i.e. ourself.
             if j.is_visible() {
                 builtin_jobs_print(j, mode, !found && !streams.out_is_redirected, streams);

@@ -56,7 +56,7 @@ pub fn disown(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         // Foreground jobs can be disowned.
         // Even jobs that aren't under job control can be disowned!
         let mut job = None;
-        for j in &parser.jobs()[..] {
+        for j in parser.jobs() {
             if j.is_constructed() && !j.is_completed() {
                 job = Some(j.clone());
                 break;

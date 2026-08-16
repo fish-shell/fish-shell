@@ -42,7 +42,7 @@ use crate::{
     path::{path_as_implicit_cd, path_try_get_path},
     prelude::*,
     proc::{
-        ConcreteAssignment, Job, JobControl, JobProperties, JobRef, Process, ProcessType,
+        ConcreteAssignment, Job, JobControl, JobProperties, Process, ProcessType,
         get_job_control_mode, job_reap, no_exec,
     },
     reader::fish_is_unwinding_for_exit,
@@ -2016,7 +2016,7 @@ fn job_node_wants_timing(job_node: &ast::JobPipeline) -> bool {
     false
 }
 
-fn remove_job(parser: &mut Parser, job: &JobRef) -> bool {
+fn remove_job(parser: &mut Parser, job: &Rc<Job>) -> bool {
     let jobs = parser.jobs_mut();
     let num_jobs = jobs.len();
     for i in 0..num_jobs {

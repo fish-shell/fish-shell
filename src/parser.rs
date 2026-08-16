@@ -23,7 +23,7 @@ use crate::{
     parse_execution::{EndExecutionReason, ExecutionContext},
     parse_tree::{NodeRef, ParsedSourceRef, SourceLineCache, parse_source},
     prelude::*,
-    proc::{InternalJobId, JobGroupRef, JobList, JobRef, Pid, ProcStatus, job_reap},
+    proc::{InternalJobId, Job, JobGroupRef, Pid, ProcStatus, job_reap},
     signal::{RawSignal, signal_check_cancel, signal_clear_cancel},
     wait_handle::WaitHandleStore,
     wutil::perror_nix,
@@ -397,7 +397,7 @@ pub struct Parser {
     current_node: ScopedRefCell<Option<NodeRef<ast::JobPipeline>>>,
 
     /// The jobs associated with this parser.
-    job_list: JobList,
+    job_list: Vec<Rc<Job>>,
 
     /// Our store of recorded wait-handles. These are jobs that finished in the background,
     /// and have been reaped, but may still be wait'ed on.
@@ -488,7 +488,7 @@ impl Parser {
     }
 
     /// Adds a job to the beginning of the job list.
-    pub fn job_add(&mut self, job: JobRef) {
+    pub fn job_add(&mut self, job: Rc<Job>) {
         assert!(!job.processes().is_empty());
         self.jobs_mut().insert(0, job);
     }
@@ -882,10 +882,11 @@ impl Parser {
     }
 
     /// Get the list of jobs.
-    pub fn jobs(&self) -> &JobList {
+    pub fn jobs(&self) -> &[Rc<Job>] {
         &self.job_list
     }
-    pub fn jobs_mut(&mut self) -> &mut JobList {
+
+    pub fn jobs_mut(&mut self) -> &mut Vec<Rc<Job>> {
         &mut self.job_list
     }
 
@@ -1075,7 +1076,7 @@ impl Parser {
     }
 
     /// Return the job with the specified job ID. If id is 0 or less, return the last job used.
-    pub fn job_with_id(&self, job_id: MaybeJobId) -> Option<JobRef> {
+    pub fn job_with_id(&self, job_id: MaybeJobId) -> Option<Rc<Job>> {
         for job in self.jobs() {
             if job_id.is_none() || job_id == job.job_id() {
                 return Some(job.clone());
@@ -1085,13 +1086,13 @@ impl Parser {
     }
 
     /// Returns the job with the given pid.
-    pub fn job_get_from_pid(&self, pid: Pid) -> Option<JobRef> {
+    pub fn job_get_from_pid(&self, pid: Pid) -> Option<Rc<Job>> {
         self.job_get_with_index_from_pid(pid).map(|t| t.1)
     }
 
     /// Returns the job and job index with the given pid.
     /// This assumes that all external jobs have a pid.
-    pub fn job_get_with_index_from_pid(&self, pid: Pid) -> Option<(usize, JobRef)> {
+    pub fn job_get_with_index_from_pid(&self, pid: Pid) -> Option<(usize, Rc<Job>)> {
         for (i, job) in self.jobs().iter().enumerate() {
             for p in job.external_procs() {
                 if p.pid().unwrap() == pid {

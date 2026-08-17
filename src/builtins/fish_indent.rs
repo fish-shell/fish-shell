@@ -18,7 +18,7 @@ use crate::{
     print_help::print_help,
     threads,
     tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer},
-    topic_monitor::topic_monitor_init,
+    topic_monitor,
     wutil::fish_iswalnum,
 };
 use assert_matches::assert_matches;
@@ -923,7 +923,7 @@ fn throwing_main() -> i32 {
     use crate::io::{FdOutputStream, IoChain, OutputStream::Fd};
     use libc::{STDERR_FILENO, STDOUT_FILENO};
 
-    topic_monitor_init();
+    topic_monitor::init();
     threads::init();
 
     let mut out = Fd(FdOutputStream::new(STDOUT_FILENO));

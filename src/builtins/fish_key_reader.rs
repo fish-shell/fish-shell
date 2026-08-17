@@ -30,8 +30,7 @@ use crate::{
         check_exit_loop_maybe_warning, reader_init, set_shell_modes,
         signal_safe_reader_set_exit_signal, terminal_init,
     },
-    threads,
-    topic_monitor::topic_monitor_init,
+    threads, topic_monitor,
     tty_handoff::TtyHandoff,
 };
 use fish_wgetopt::{ArgType, WGetopter, WOption, wopt};
@@ -292,7 +291,7 @@ fn throwing_main() -> i32 {
     use libc::{STDERR_FILENO, STDOUT_FILENO};
 
     set_interactive_session(true);
-    topic_monitor_init();
+    topic_monitor::init();
     threads::init();
     #[cfg(feature = "localize-messages")]
     crate::localization::initialize_localization();

@@ -27,7 +27,6 @@ use fish_util::perror;
 use fish_widestring::WString;
 use nix::errno::Errno;
 use nix::unistd;
-use std::cell::Cell;
 #[cfg(target_os = "linux")]
 use std::mem::MaybeUninit;
 use std::os::fd::AsRawFd as _;
@@ -45,35 +44,19 @@ pub enum Topic {
     InternalExit = 2,  // Corresponds to an internal process exit.
 }
 
-// XXX: Is it correct to use the default or should the default be invalid_generation?
-#[derive(Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord)]
-pub struct GenerationsList {
-    pub sighupintterm: Cell<u64>,
-    pub sigchld: Cell<u64>,
-    pub internal_exit: Cell<u64>,
-}
-
-/// Simple value type containing the values for a topic.
-/// This should be kept in sync with Topic.
-impl GenerationsList {
-    /// Update `self` gen counts to match those of `other`.
-    pub fn update(&self, other: &Self) {
-        self.sighupintterm.set(other.sighupintterm.get());
-        self.sigchld.set(other.sigchld.get());
-        self.internal_exit.set(other.internal_exit.get());
-    }
-}
-
 pub type Generation = u64;
+
+#[derive(Copy, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord)]
+pub struct GenerationsList {
+    pub sighupintterm: Generation,
+    pub sigchld: Generation,
+    pub internal_exit: Generation,
+}
 
 impl FloggableDebug for Topic {}
 
 /// A generation value which indicates the topic is not of interest.
 pub const INVALID_GENERATION: Generation = u64::MAX;
-
-pub fn all_topics() -> [Topic; 3] {
-    [Topic::SigHupIntTerm, Topic::SigChld, Topic::InternalExit]
-}
 
 impl GenerationsList {
     pub fn new() -> Self {
@@ -83,9 +66,9 @@ impl GenerationsList {
     /// Generation list containing invalid generations only.
     pub fn invalid() -> GenerationsList {
         GenerationsList {
-            sighupintterm: INVALID_GENERATION.into(),
-            sigchld: INVALID_GENERATION.into(),
-            internal_exit: INVALID_GENERATION.into(),
+            sighupintterm: INVALID_GENERATION,
+            sigchld: INVALID_GENERATION,
+            internal_exit: INVALID_GENERATION,
         }
     }
 
@@ -106,53 +89,26 @@ impl GenerationsList {
     }
 
     /// Sets the generation for `topic` to `value`.
-    pub fn set(&self, topic: Topic, value: Generation) {
+    pub fn set(&mut self, topic: Topic, value: Generation) {
         match topic {
-            Topic::SigHupIntTerm => self.sighupintterm.set(value),
-            Topic::SigChld => self.sigchld.set(value),
-            Topic::InternalExit => self.internal_exit.set(value),
+            Topic::SigHupIntTerm => self.sighupintterm = value,
+            Topic::SigChld => self.sigchld = value,
+            Topic::InternalExit => self.internal_exit = value,
         }
     }
 
     /// Return the value for a topic.
     pub fn get(&self, topic: Topic) -> Generation {
         match topic {
-            Topic::SigHupIntTerm => self.sighupintterm.get(),
-            Topic::SigChld => self.sigchld.get(),
-            Topic::InternalExit => self.internal_exit.get(),
+            Topic::SigHupIntTerm => self.sighupintterm,
+            Topic::SigChld => self.sigchld,
+            Topic::InternalExit => self.internal_exit,
         }
     }
 
     /// Return ourselves as an array.
     pub fn as_array(&self) -> [Generation; 3] {
-        [
-            self.sighupintterm.get(),
-            self.sigchld.get(),
-            self.internal_exit.get(),
-        ]
-    }
-
-    /// Set the value of `topic` to the smaller of our value and the value in `other`.
-    pub fn set_min_from(&mut self, topic: Topic, other: &Self) {
-        if self.get(topic) > other.get(topic) {
-            self.set(topic, other.get(topic));
-        }
-    }
-
-    /// Return whether a topic is valid.
-    pub fn is_valid(&self, topic: Topic) -> bool {
-        self.get(topic) != INVALID_GENERATION
-    }
-
-    /// Return whether any topic is valid.
-    pub fn any_valid(&self) -> bool {
-        let mut valid = false;
-        for r#gen in self.as_array() {
-            if r#gen != INVALID_GENERATION {
-                valid = true;
-            }
-        }
-        valid
+        [self.sighupintterm, self.sigchld, self.internal_exit]
     }
 }
 
@@ -295,7 +251,7 @@ impl Default for BinarySemaphore {
 ///   thread will wait on the data_notifier_ queue.
 type TopicBitmask = u8;
 
-fn topic_to_bit(t: Topic) -> TopicBitmask {
+const fn topic_to_bit(t: Topic) -> TopicBitmask {
     1 << (t as u8)
 }
 
@@ -412,7 +368,7 @@ impl TopicMonitor {
         while !cas_success {
             changed_topic_bits = self.status_.load(relaxed);
             if changed_topic_bits == 0 || changed_topic_bits == STATUS_NEEDS_WAKEUP {
-                return data.current.clone();
+                return data.current;
             }
             cas_success = self
                 .status_
@@ -426,21 +382,39 @@ impl TopicMonitor {
         );
 
         // Update the current generation with our topics and return it.
-        for topic in all_topics() {
-            if changed_topic_bits & topic_to_bit(topic) != 0 {
-                data.current.set(topic, data.current.get(topic) + 1);
-                flog!(
-                    topic_monitor,
-                    "Updating topic",
-                    topic,
-                    "to",
-                    data.current.get(topic)
-                );
-            }
+        if changed_topic_bits & topic_to_bit(Topic::SigHupIntTerm) != 0 {
+            data.current.sighupintterm += 1;
+            flog!(
+                topic_monitor,
+                "Updating topic",
+                Topic::SigHupIntTerm,
+                "to",
+                data.current.sighupintterm
+            );
+        }
+        if changed_topic_bits & topic_to_bit(Topic::SigChld) != 0 {
+            data.current.sigchld += 1;
+            flog!(
+                topic_monitor,
+                "Updating topic",
+                Topic::SigChld,
+                "to",
+                data.current.sigchld
+            );
+        }
+        if changed_topic_bits & topic_to_bit(Topic::InternalExit) != 0 {
+            data.current.internal_exit += 1;
+            flog!(
+                topic_monitor,
+                "Updating topic",
+                Topic::InternalExit,
+                "to",
+                data.current.internal_exit
+            );
         }
         // Report our change.
         self.data_notifier_.notify_all();
-        data.current.clone()
+        data.current
     }
 
     /// Return the current generation list, opportunistically applying any pending updates.
@@ -524,8 +498,8 @@ impl TopicMonitor {
     /// Wait for some entry in the list of generations to change.
     /// Return the new gens.
     fn await_gens(&self, input_gens: &GenerationsList) -> GenerationsList {
-        let mut gens = input_gens.clone();
-        while &gens == input_gens {
+        let mut gens = *input_gens;
+        while gens == *input_gens {
             let become_reader = self.try_update_gens_maybe_becoming_reader(&mut gens);
             if become_reader {
                 // Now we are the reader. Read from the pipe, and then update with any changes.
@@ -541,7 +515,7 @@ impl TopicMonitor {
                 // We are finished waiting. We must stop being the reader, and post on the condition
                 // variable to wake up any other threads waiting for us to finish reading.
                 let mut data = self.data_.lock().unwrap();
-                gens = data.current.clone();
+                gens = data.current;
                 // flog!(topic_monitor, "TID", thread_id(), "local", input_gens.describe(),
                 //      "read() complete, current is", gens.describe());
                 assert!(data.has_reader, "We should be the reader");
@@ -557,8 +531,11 @@ impl TopicMonitor {
     /// If `wait` is set, then wait if there are no changes; otherwise return immediately.
     /// Return true if some topic changed, false if none did.
     /// On a true return, this updates the generation list `gens`.
-    pub fn check(&self, gens: &GenerationsList, wait: bool) -> bool {
-        if !gens.any_valid() {
+    pub fn check(&self, gens: &mut GenerationsList, wait: bool) -> bool {
+        if gens.sighupintterm == INVALID_GENERATION
+            && gens.sigchld == INVALID_GENERATION
+            && gens.internal_exit == INVALID_GENERATION
+        {
             return false;
         }
 
@@ -566,18 +543,9 @@ impl TopicMonitor {
         let mut changed = false;
         loop {
             // Load the topic list and see if anything has changed.
-            for topic in all_topics() {
-                if gens.is_valid(topic) {
-                    assert!(
-                        gens.get(topic) <= current.get(topic),
-                        "Incoming gen count exceeded published count"
-                    );
-                    if gens.get(topic) < current.get(topic) {
-                        gens.set(topic, current.get(topic));
-                        changed = true;
-                    }
-                }
-            }
+            changed |= bump_gen(&mut gens.sighupintterm, current.sighupintterm);
+            changed |= bump_gen(&mut gens.sigchld, current.sigchld);
+            changed |= bump_gen(&mut gens.internal_exit, current.internal_exit);
 
             // If we're not waiting, or something changed, then we're done.
             if !wait || changed {
@@ -591,11 +559,29 @@ impl TopicMonitor {
     }
 }
 
-pub fn topic_monitor_init() {
+/// If `mine` is a valid generation older than `theirs`, update it to `theirs`.
+/// Return whether `mine` was updated.
+fn bump_gen(mine: &mut Generation, theirs: Generation) -> bool {
+    if *mine == INVALID_GENERATION {
+        return false;
+    }
+    assert!(
+        *mine <= theirs,
+        "Incoming gen count exceeded published count"
+    );
+    if *mine < theirs {
+        *mine = theirs;
+        true
+    } else {
+        false
+    }
+}
+
+pub fn init() {
     TopicMonitor::initialize();
 }
 
-pub fn topic_monitor_principal() -> &'static TopicMonitor {
+pub fn principal() -> &'static TopicMonitor {
     unsafe {
         assert!(
             !PRINCIPAL.is_null(),
@@ -620,25 +606,25 @@ mod tests {
     fn test_topic_monitor() {
         test_init();
         let monitor = TopicMonitor::default();
-        let gens = GenerationsList::new();
+        let mut gens = GenerationsList::new();
         let t = Topic::SigChld;
-        gens.sigchld.set(0);
+        gens.sigchld = 0;
         assert_eq!(monitor.generation_for_topic(t), 0);
-        let changed = monitor.check(&gens, false /* wait */);
+        let changed = monitor.check(&mut gens, false /* wait */);
         assert!(!changed);
-        assert_eq!(gens.sigchld.get(), 0);
+        assert_eq!(gens.sigchld, 0);
 
         monitor.post(t);
-        let changed = monitor.check(&gens, true /* wait */);
+        let changed = monitor.check(&mut gens, true /* wait */);
         assert!(changed);
         assert_eq!(gens.get(t), 1);
         assert_eq!(monitor.generation_for_topic(t), 1);
 
         monitor.post(t);
         assert_eq!(monitor.generation_for_topic(t), 2);
-        let changed = monitor.check(&gens, true /* wait */);
+        let changed = monitor.check(&mut gens, true /* wait */);
         assert!(changed);
-        assert_eq!(gens.sigchld.get(), 2);
+        assert_eq!(gens.sigchld, 2);
     }
 
     #[test]
@@ -660,14 +646,15 @@ mod tests {
         let completed = Arc::new(AtomicU32::new(0));
         let mut threads = vec![];
 
-        for gens in gens_list {
+        for mut gens in gens_list {
             let monitor = Arc::downgrade(&monitor);
             let post_count = Arc::downgrade(&post_count);
             let completed = Arc::downgrade(&completed);
             threads.push(std::thread::spawn(move || {
                 for _ in 0..1 << 11 {
-                    let before = gens.clone();
-                    let _changed = monitor.upgrade().unwrap().check(&gens, true /* wait */);
+                    let before = gens;
+                    let _changed =
+                        monitor.upgrade().unwrap().check(&mut gens, true /* wait */);
                     assert!(before.get(t1) < gens.get(t1));
                     assert!(gens.get(t1) <= post_count.upgrade().unwrap().load(Ordering::Relaxed));
                     assert_eq!(gens.get(t2), 0);

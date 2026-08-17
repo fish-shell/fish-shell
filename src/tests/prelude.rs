@@ -5,7 +5,6 @@ use crate::locale::set_libc_locales;
 use crate::parser::{CancelBehavior, Parser};
 use crate::prelude::*;
 use crate::signal::signal_reset_handlers;
-use crate::topic_monitor::topic_monitor_init;
 use crate::wutil::wgetcwd;
 use crate::{env::EnvStack, proc::proc_init};
 use std::collections::HashMap;
@@ -27,7 +26,7 @@ pub fn test_init() {
         unsafe {
             set_libc_locales(/*log_ok=*/ false)
         };
-        topic_monitor_init();
+        crate::topic_monitor::init();
         crate::threads::init();
         proc_init();
         env_init(None, false);

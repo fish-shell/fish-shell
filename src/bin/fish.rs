@@ -371,7 +371,7 @@ fn throwing_main() -> i32 {
     let mut res = Err(STATUS_CMD_ERROR);
 
     signal_unblock_all();
-    topic_monitor::topic_monitor_init();
+    topic_monitor::init();
     threads::init();
 
     // Safety: single-threaded.

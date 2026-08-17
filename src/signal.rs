@@ -2,7 +2,7 @@ use crate::event::{enqueue_signal, is_signal_observed};
 use crate::prelude::*;
 use crate::reader::{signal_safe_reader_handle_sigint, signal_safe_reader_set_exit_signal};
 use crate::termsize::signal_safe_termsize_invalidate_tty;
-use crate::topic_monitor::{Generation, GenerationsList, Topic, topic_monitor_principal};
+use crate::topic_monitor::{self, Generation, GenerationsList, Topic};
 use crate::tty_handoff::signal_safe_mark_tty_invalid;
 use crate::wutil::fish_wcstoi;
 use fish_common::{ScopeGuard, exit_without_destructors};
@@ -95,7 +95,7 @@ extern "C" fn fish_signal_handler(
                     signal_safe_mark_tty_invalid();
                 }
             }
-            topic_monitor_principal().post(Topic::SigHupIntTerm);
+            topic_monitor::principal().post(Topic::SigHupIntTerm);
         }
         libc::SIGINT => {
             // Cancel unless the signal was trapped.
@@ -103,11 +103,11 @@ extern "C" fn fish_signal_handler(
                 CANCELLATION_SIGNAL.store(libc::SIGINT, Ordering::Relaxed);
             }
             signal_safe_reader_handle_sigint();
-            topic_monitor_principal().post(Topic::SigHupIntTerm);
+            topic_monitor::principal().post(Topic::SigHupIntTerm);
         }
         libc::SIGCHLD => {
             // A child process stopped or exited.
-            topic_monitor_principal().post(Topic::SigChld);
+            topic_monitor::principal().post(Topic::SigChld);
         }
         libc::SIGALRM => {
             // We have a sigalarm handler that does nothing. This is used in the signal torture
@@ -311,7 +311,7 @@ impl SigChecker {
     /// Check if a sigint has been delivered since the last call to check(), or since the detector
     /// was created.
     pub fn check(&mut self) -> bool {
-        let tm = topic_monitor_principal();
+        let tm = topic_monitor::principal();
         let r#gen = tm.generation_for_topic(self.topic);
         let changed = self.r#gen != r#gen;
         self.r#gen = r#gen;
@@ -320,10 +320,10 @@ impl SigChecker {
 
     /// Wait until a sigint is delivered.
     pub fn wait(&self) {
-        let tm = topic_monitor_principal();
-        let gens = GenerationsList::invalid();
+        let tm = topic_monitor::principal();
+        let mut gens = GenerationsList::invalid();
         gens.set(self.topic, self.r#gen);
-        tm.check(&gens, true /* wait */);
+        tm.check(&mut gens, true /* wait */);
     }
 }
 

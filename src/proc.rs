@@ -22,7 +22,6 @@ use crate::{
     wait_handle::{WaitHandle, WaitHandleRef, WaitHandleStore},
     wutil::{perror_nix, wbasename},
 };
-use cfg_if::cfg_if;
 use fish_common::{Timepoint, escape, timef};
 use fish_widestring::ToWString;
 use libc::{
@@ -134,16 +133,12 @@ impl ProcStatus {
 
     /// Encode a return value `ret` and signal `sig` into a status value like waitpid() does.
     const fn w_exitcode(ret: i32, sig: i32) -> i32 {
-        cfg_if! {
-            if #[cfg(waitstatus_signal_ret)] {
-                // It's encoded signal and then status
-                // The return status is in the lower byte.
-                (sig << 8) | ret
-            } else {
-                // The status is encoded in the upper byte.
-                // This should be W_EXITCODE(ret, sig) but that's not available everywhere.
-                (ret << 8) | sig
-            }
+        // This is W_EXITCODE(ret, sig), which libc does not expose on every target.
+        // Either signal and then status, or status and then signal.
+        if WEXITSTATUS(0x007f) == 0x007f {
+            (sig << 8) | ret
+        } else {
+            (ret << 8) | sig
         }
     }
 

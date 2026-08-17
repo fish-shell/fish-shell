@@ -100,9 +100,6 @@ fn detect_cfgs(target: &mut Target) {
         ("using_cmake", &|_| {
             option_env!("FISH_CMAKE_BINARY_DIR").is_some()
         }),
-        ("waitstatus_signal_ret", &|target| {
-            target.r#if("WEXITSTATUS(0x007f) == 0x7f", &["sys/wait.h"])
-        }),
     ] {
         rsconf::declare_cfg(name, handler(target));
     }

@@ -179,7 +179,7 @@ pub fn path_get_path(cmd: &wstr, vars: &dyn Environment) -> Option<WString> {
 /// Finds the path of an executable named `cmd`, by looking in $PATH taken from `vars`.
 /// On success, err will be 0 and the path is returned.
 /// On failure, we return the "best path" with err set appropriately.
-/// For example, if we find a non-executable file, we will return its path and EACCESS.
+/// For example, if we find a file of a non-executable type, we will return its path and ENOEXEC.
 /// If no candidate path is found, path will be empty and err will be set to ENOENT.
 /// Possible err values are taken from access().
 pub struct GetPathResult {
@@ -259,7 +259,12 @@ fn path_get_path_core<S: AsRef<wstr>>(cmd: &wstr, pathsv: &[S]) -> GetPathResult
         if md.is_file() {
             Ok(())
         } else {
-            Err(Errno::EACCES)
+            // execve uses ENOEXEC to mean invalid magic, architecture, or shebang.
+            // execve uses EACCES to mean non-executable file type or lacking execute permissions.
+            // Returning EACCES is a bad choice here because we want to distinguish between
+            //  lacking-permissions (caught in `access`) and not-executable-file-type (caught here).
+            // ENOEXEC is the closest errno besides EACCES. Ideally, we use a better return type than sometimes-ambiguous POSIX errnos.
+            Err(Errno::ENOEXEC)
         }
     };
 

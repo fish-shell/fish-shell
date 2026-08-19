@@ -1454,18 +1454,6 @@ msgstr "未知の色です '%s'"
 msgid "Unknown command"
 msgstr "不明なコマンド"
 
-#, c-format
-msgid "Unknown command. '%s' exists but is not an executable file."
-msgstr "不明なコマンドです。 '%s' は存在しますが、実行可能ファイルではありません"
-
-#, c-format
-msgid "Unknown command. A component of '%s' is not a directory."
-msgstr "不明なコマンドです。 '%s' の構成要素にディレクトリでないものが含まれています"
-
-#, c-format
-msgid "Unknown command. A component of '%s' is not a directory. Check your $PATH."
-msgstr "不明なコマンドです。 '%s' の構成要素にディレクトリでないものが含まれています。 $PATH を確認してください"
-
 msgid "Unknown command:"
 msgstr "不明なコマンド:"
 

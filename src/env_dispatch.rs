@@ -9,7 +9,7 @@ use crate::locale::{invalidate_numeric_locale, set_libc_locales};
 use crate::prelude::*;
 use crate::reader::{
     reader_change_cursor_end_mode, reader_change_cursor_selection_mode, reader_change_history,
-    reader_current_data, reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled,
+    reader_schedule_prompt_repaint, reader_set_autosuggestion_enabled,
     reader_set_transient_prompt,
 };
 use crate::screen::{IS_DUMB, ONLY_GRAYSCALE, screen_set_midnight_commander_hack};
@@ -158,15 +158,15 @@ pub fn env_dispatch_var_change(milieu: VarChangeMilieu, key: &wstr, vars: &EnvSt
         dispatch_table.dispatch(key, vars, suppress_repaint);
     }
 
-    if !suppress_repaint {
-        if let Some(data) = reader_current_data() {
-            if string_prefixes_string(L!("fish_color_"), key) || {
-                // TODO Don't re-exec prompt when only pager color changed.
-                string_prefixes_string(L!("fish_pager_color_"), key)
-            } {
-                data.schedule_prompt_repaint();
-            }
-        }
+    if !suppress_repaint
+        && (string_prefixes_string(L!("fish_color_"), key) || {
+            // TODO Don't re-exec prompt when only pager color changed.
+            string_prefixes_string(L!("fish_pager_color_"), key)
+        })
+    {
+        // reader_schedule_prompt_repaint is a no-op when no reader is active,
+        // so it subsumes the previous "is there a current reader?" check.
+        reader_schedule_prompt_repaint();
     }
 }
 

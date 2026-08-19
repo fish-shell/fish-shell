@@ -344,7 +344,15 @@ pub fn terminal_init(vars: &dyn Environment, inputfd: RawFd) -> TerminalInitResu
 }
 
 /// The stack of current interactive reading contexts.
-fn reader_data_stack() -> &'static mut Vec<Pin<Box<ReaderData>>> {
+///
+/// # Safety
+/// The returned `&'static mut Vec` borrows global, main-thread-only state.
+/// The caller must not let two such borrows be live at the same time (for
+/// example by calling this twice and holding both), as that would create
+/// aliasing `&mut` and is undefined behavior. Every call site uses the
+/// returned reference for a single statement and drops it before any
+/// re-entrant use.
+unsafe fn reader_data_stack() -> &'static mut Vec<Pin<Box<ReaderData>>> {
     struct ReaderDataStack(UnsafeCell<Vec<Pin<Box<ReaderData>>>>);
     // Safety: only used on main thread.
     unsafe impl Sync for ReaderDataStack {}
@@ -352,23 +360,37 @@ fn reader_data_stack() -> &'static mut Vec<Pin<Box<ReaderData>>> {
     static READER_DATA_STACK: ReaderDataStack = ReaderDataStack(UnsafeCell::new(vec![]));
 
     assert_is_main_thread();
+    // Safety: see this function's safety contract; main-thread-only and not
+    // aliased by the caller.
     unsafe { &mut *READER_DATA_STACK.0.get() }
 }
 
 pub fn reader_in_interactive_read() -> bool {
-    reader_data_stack()
+    // Safety: the borrow is used for this single expression only and is dropped
+    // before any re-entrant call could observe it.
+    unsafe { reader_data_stack() }
         .iter()
         .rev()
         .any(|reader| reader.conf.exit_on_interrupt)
 }
 
 /// Access the top level reader data.
-pub fn current_data() -> Option<&'static mut ReaderData> {
-    reader_data_stack()
+///
+/// # Safety
+/// The returned `&'static mut ReaderData` borrows global, main-thread-only
+/// state. The caller must not use it to create two simultaneous `&mut
+/// ReaderData` references to the same data (for example by calling this twice
+/// and holding both), as that is undefined behavior.
+unsafe fn current_data() -> Option<&'static mut ReaderData> {
+    // Safety: the borrow is used for this single expression only.
+    unsafe { reader_data_stack() }
         .last_mut()
-        .map(|data| unsafe { Pin::get_unchecked_mut(Pin::as_mut(data)) })
+        .map(|data| unsafe {
+            // Safety: `data` is the pinned top of the reader stack; we do not move it,
+            // and the reference is used per this function's safety contract.
+            Pin::get_unchecked_mut(Pin::as_mut(data))
+        })
 }
-pub use current_data as reader_current_data;
 use fish_widestring::word_char::{WordCharClass, is_blank};
 
 /// Add a new reader to the reader stack.
@@ -405,9 +427,9 @@ pub fn reader_push<'a>(
     };
     let hist = History::new(history_id);
     hist.resolve_pending();
-    let data = ReaderData::new(input_data, hist, conf, reader_data_stack().is_empty());
-    reader_data_stack().push(data);
-    let data = current_data().unwrap();
+    let data = ReaderData::new(input_data, hist, conf, unsafe { reader_data_stack() }.is_empty());
+    unsafe { reader_data_stack() }.push(data);
+    let data = unsafe { current_data() }.unwrap();
     data.command_line_changed(EditableLineTag::Commandline, AutosuggestionUpdate::Remove);
     // TODO Handle other things in src/env_dispatch.rs
     handle_fish_cursor_selection_mode_change(parser.vars());
@@ -418,8 +440,9 @@ pub fn reader_push<'a>(
 /// Return to previous reader environment.
 pub fn reader_pop() {
     assert_is_main_thread();
-    reader_data_stack().pop().unwrap();
-    if let Some(new_reader) = current_data() {
+    // Safety: the borrow is used for this single statement only.
+    unsafe { reader_data_stack() }.pop().unwrap();
+    if let Some(new_reader) = unsafe { current_data() } {
         new_reader
             .screen
             .reset_abandoning_line(Some(termsize_last().width()));
@@ -437,12 +460,13 @@ pub fn fake_scoped_reader<'a>(parser: &'a mut Parser) -> impl DerefMut<Target = 
     };
     let hist = History::new(HistoryId::Memory(MemoryHistoryId::PrivateMode));
     let input_data = InputData::new(inputfd, None);
-    let data = ReaderData::new(input_data, hist, conf, reader_data_stack().is_empty());
-    reader_data_stack().push(data);
-    let data = current_data().unwrap();
+    let data = ReaderData::new(input_data, hist, conf, unsafe { reader_data_stack() }.is_empty());
+    unsafe { reader_data_stack() }.push(data);
+    let data = unsafe { current_data() }.unwrap();
     let reader = Reader { data, parser };
     ScopeGuard::new(reader, |_reader| {
-        reader_data_stack().pop().unwrap();
+        // Safety: the borrow is used for this single statement only.
+        unsafe { reader_data_stack() }.pop().unwrap();
     })
 }
 
@@ -907,7 +931,8 @@ fn read_i(parser: &mut Parser) {
     }
 
     // If we are the last reader, then kill remaining jobs before exiting.
-    if reader_data_stack().is_empty() {
+    // Safety: the borrow is used for this single statement only.
+    if unsafe { reader_data_stack() }.is_empty() {
         // Send the exit event and then commit to not executing any more fish script.
         EXIT_STATE.store(ExitState::RunningHandlers as u8, Ordering::Relaxed);
         event::fire_generic(reader.parser, L!("fish_exit").to_owned(), vec![]);
@@ -1065,7 +1090,7 @@ pub fn restore_term_mode() {
 /// Change the history file for the current command reading context.
 pub fn reader_change_history(history_id: HistoryId) {
     // We don't need to _change_ if we're not initialized yet.
-    let Some(data) = current_data() else {
+    let Some(data) = (unsafe { current_data() }) else {
         return;
     };
 
@@ -1076,7 +1101,7 @@ pub fn reader_change_history(history_id: HistoryId) {
 
 pub fn reader_change_cursor_selection_mode(selection_mode: CursorSelectionMode) {
     // We don't need to _change_ if we're not initialized yet.
-    if let Some(data) = current_data() {
+    if let Some(data) = unsafe { current_data() } {
         if data.cursor_selection_mode == selection_mode {
             return;
         }
@@ -1090,7 +1115,7 @@ pub fn reader_change_cursor_selection_mode(selection_mode: CursorSelectionMode) 
 
 pub fn reader_change_cursor_end_mode(end_mode: CursorEndMode) {
     // We don't need to _change_ if we're not initialized yet.
-    if let Some(data) = current_data() {
+    if let Some(data) = unsafe { current_data() } {
         if data.cursor_end_mode == end_mode {
             return;
         }
@@ -1111,7 +1136,7 @@ fn check_bool_var(vars: &dyn Environment, name: &wstr, default: bool) -> bool {
 /// Enable or disable autosuggestions based on the associated variable.
 pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
     // We don't need to _change_ if we're not initialized yet.
-    if let Some(data) = current_data() {
+    if let Some(data) = unsafe { current_data() } {
         let enable = check_bool_var(vars, L!("fish_autosuggestion_enabled"), true);
         if data.conf.autosuggest_ok != enable {
             data.conf.autosuggest_ok = enable;
@@ -1123,7 +1148,7 @@ pub fn reader_set_autosuggestion_enabled(vars: &dyn Environment) {
 /// Enable or disable transient prompt based on the associated variable.
 pub fn reader_set_transient_prompt(vars: &dyn Environment) {
     // We don't need to _change_ if we're not initialized yet.
-    if let Some(data) = current_data() {
+    if let Some(data) = unsafe { current_data() } {
         data.conf.transient_prompt = check_bool_var(vars, L!("fish_transient_prompt"), false);
     }
 }
@@ -1132,7 +1157,7 @@ pub fn reader_set_transient_prompt(vars: &dyn Environment) {
 /// This may be called in response to e.g. a color variable change.
 pub fn reader_schedule_prompt_repaint() {
     assert_is_main_thread();
-    let Some(data) = current_data() else {
+    let Some(data) = (unsafe { current_data() }) else {
         return;
     };
     data.schedule_prompt_repaint();
@@ -1144,7 +1169,7 @@ pub fn reader_update_termsize(parser: &mut Parser) {
     if new.height() == last.height() {
         return;
     }
-    let Some(data) = current_data() else {
+    let Some(data) = (unsafe { current_data() }) else {
         return;
     };
     let mut data = Reader { parser, data };
@@ -1155,7 +1180,7 @@ pub fn reader_execute_readline_cmd(parser: &mut Parser, ch: CharEvent) {
     if parser.scope().readonly_commandline {
         return;
     }
-    let Some(data) = current_data() else {
+    let Some(data) = (unsafe { current_data() }) else {
         return;
     };
     let mut data = Reader { parser, data };
@@ -1183,7 +1208,7 @@ pub fn reader_execute_readline_cmd(parser: &mut Parser, ch: CharEvent) {
 }
 
 pub fn reader_jump(direction: JumpDirection, precision: JumpPrecision, target: char) -> bool {
-    let Some(data) = current_data() else {
+    let Some(data) = (unsafe { current_data() }) else {
         return false;
     };
     data.save_screen_state();
@@ -1195,7 +1220,7 @@ pub fn reader_showing_suggestion(parser: &mut Parser) -> bool {
     if !is_interactive_session() {
         return false;
     }
-    if let Some(data) = current_data() {
+    if let Some(data) = unsafe { current_data() } {
         let reader = Reader { parser, data };
         let suggestion = &reader.autosuggestion.text;
         let is_single_space = suggestion.ends_with(L!(" "))
@@ -1232,7 +1257,7 @@ pub fn reader_readline(
     old_modes: Option<Termios>,
     nchars: Option<NonZeroUsize>,
 ) -> Option<WString> {
-    let data = current_data().unwrap();
+    let data = unsafe { current_data() }.unwrap();
     let mut reader = Reader { parser, data };
     reader.readline(old_modes, nchars)
 }
@@ -1240,7 +1265,7 @@ pub fn reader_readline(
 /// Get the command line state. This may be fetched on a background thread.
 pub fn commandline_get_state(sync: bool) -> CommandlineState {
     if sync {
-        current_data().map(|data| data.update_commandline_state());
+        unsafe { current_data() }.map(|data| data.update_commandline_state());
     }
     commandline_state_snapshot().clone()
 }
@@ -1258,7 +1283,7 @@ pub fn commandline_set_buffer(parser: &Parser, text: Option<WString>, cursor_pos
         }
         state.cursor_pos = cmp::min(cursor_pos.unwrap_or(usize::MAX), state.text.len());
     }
-    current_data().map(|data| data.apply_commandline_state_changes());
+    unsafe { current_data() }.map(|data| data.apply_commandline_state_changes());
 }
 
 pub fn commandline_set_search_field(parser: &Parser, text: WString, cursor_pos: Option<usize>) {
@@ -1271,7 +1296,7 @@ pub fn commandline_set_search_field(parser: &Parser, text: WString, cursor_pos: 
         let new_pos = cmp::min(cursor_pos.unwrap_or(usize::MAX), text.len());
         state.search_field = Some((text, new_pos));
     }
-    current_data().map(|data| data.apply_commandline_state_changes());
+    unsafe { current_data() }.map(|data| data.apply_commandline_state_changes());
 }
 
 /// Return the current interactive reads loop count. Useful for determining how many commands have
@@ -1659,7 +1684,7 @@ impl ReaderData {
 }
 
 pub fn reader_save_screen_state() {
-    current_data().map(|data| data.save_screen_state());
+    unsafe { current_data() }.map(|data| data.save_screen_state());
 }
 
 /// Given a command line and an autosuggestion, return the string that gets shown to the user.
@@ -6516,7 +6541,8 @@ impl<'a> Reader<'a> {
             return false;
         }
         // Are we the top-level reader?
-        if reader_data_stack().len() > 1 {
+        // Safety: the borrow is used for this single statement only.
+        if unsafe { reader_data_stack() }.len() > 1 {
             return false;
         }
         // Do we have background jobs?
@@ -7225,6 +7251,38 @@ mod tests {
     use crate::operation_context::{OperationContext, no_cancel};
     use crate::prelude::*;
     use crate::tests::prelude::*;
+
+    /// Regression test for the soundness fix in issue #12924.
+    ///
+    /// `current_data()` (and `reader_data_stack()`) are `unsafe fn` and **private** to
+    /// this module: safe code cannot reach the live `&'static mut ReaderData` at all, so
+    /// it cannot obtain two `&mut ReaderData` to the same allocation (the reported
+    /// footgun). This test exercises the remaining, documented `unsafe` contract from
+    /// within the module: while a `Reader` (here from `fake_scoped_reader`) holds the
+    /// stack top, calling `current_data()` twice returns references to the *same*
+    /// allocation — which is exactly why the API is `unsafe` (using both simultaneously
+    /// would alias). The test only asserts pointer identity; it never uses both
+    /// references at once, so it is itself sound to run under Miri/Tree Borrows.
+    ///
+    /// Under Miri, a future regression that re-`pub`-lishes `current_data` and lets a
+    /// caller actually use two simultaneous `&mut` would be flagged. (CI runs ASAN, which
+    /// does not detect `&mut` aliasing, so this is a Miri target, not a CI gate.)
+    #[test]
+    #[serial]
+    fn test_reader_data_current_data_unsafe_contract() {
+        use crate::env::EnvStack;
+        use crate::parser::{CancelBehavior, Parser};
+        use super::ReaderData;
+        test_init();
+        let parser = &mut Parser::new(EnvStack::new(), CancelBehavior::Clear);
+        let _reader = super::fake_scoped_reader(parser);
+        // `fake_scoped_reader` pushed a reader and the returned `Reader` holds the top.
+        // Safety: we do not use the two references simultaneously; we only compare their
+        // addresses to demonstrate the contract, then drop them before doing anything else.
+        let a = unsafe { super::current_data() }.unwrap() as *mut ReaderData;
+        let b = unsafe { super::current_data() }.unwrap() as *mut ReaderData;
+        assert_eq!(a, b, "current_data() must resolve to the same (top) ReaderData");
+    }
 
     #[test]
     fn test_autosuggestion_combining() {

@@ -264,8 +264,11 @@ fn locate_cmdsub(
     }
 
     while pos < input.len() {
-        let c = input[pos];
-        if !escaped {
+        if escaped {
+            escaped = false;
+            is_token_begin = false;
+        } else {
+            let c = input[pos];
             if ['\'', '"'].contains(&c) {
                 match process_opening_quote(
                     input,
@@ -328,9 +331,6 @@ fn locate_cmdsub(
                 }
             }
             is_token_begin = is_token_delimiter(c, input.get(pos + 1).copied());
-        } else {
-            escaped = false;
-            is_token_begin = false;
         }
         pos += 1;
     }

@@ -5150,6 +5150,9 @@ msgstr ""
 msgid "Action to execute"
 msgstr ""
 
+msgid "Action to take"
+msgstr ""
+
 msgid "Action to take when there are whitespace errors"
 msgstr ""
 
@@ -5631,6 +5634,9 @@ msgid "Add and set up an interface"
 msgstr ""
 
 msgid "Add application definitions from the XML configuration file"
+msgstr ""
+
+msgid "Add attestation cross-signature  (default=off)"
 msgstr ""
 
 msgid "Add backing chain information to block stats"
@@ -9947,6 +9953,9 @@ msgstr ""
 msgid "Capture in immediate mode"
 msgstr ""
 
+msgid "Card Authentication (PIN never checked)"
+msgstr ""
+
 msgid "Cargo features to enable"
 msgstr ""
 
@@ -11840,6 +11849,12 @@ msgstr ""
 msgid "Commons-attributes compiler for tests"
 msgstr ""
 
+msgid "Communication with the YubiKey is done over an encrypted channel"
+msgstr ""
+
+msgid "Communication with the YubiKey is done over an encrypted channel. DEPRECATED! Please use the '--enc' flag instead"
+msgstr ""
+
 msgid "Compact channels (globally)"
 msgstr ""
 
@@ -12180,6 +12195,9 @@ msgid "Compress DWARF2 debug info by eliminating duplicated information about ea
 msgstr ""
 
 msgid "Compress GRUB files"
+msgstr ""
+
+msgid "Compress a large certificate using GZIP before import"
 msgstr ""
 
 msgid "Compress all data"
@@ -15891,6 +15909,9 @@ msgid "Differences between two archives"
 msgstr ""
 
 msgid "Digests and compresses static files"
+msgstr ""
+
+msgid "Digital Signature (PIN always checked)"
 msgstr ""
 
 msgid "Dir names to be searched recursively up from the requiring module"
@@ -26834,6 +26855,12 @@ msgstr ""
 msgid "Filename to check when running during `commit-msg`"
 msgstr ""
 
+msgid "Filename to use as input, - for stdin"
+msgstr ""
+
+msgid "Filename to use as output, - for stdout"
+msgstr ""
+
 msgid "Filenames to run hooks on"
 msgstr ""
 
@@ -28436,6 +28463,9 @@ msgstr ""
 msgid "Format of backing volume if taking a snapshot"
 msgstr ""
 
+msgid "Format of data for write/read object"
+msgstr ""
+
 msgid "Format of debugging information [format]"
 msgstr ""
 
@@ -28446,6 +28476,9 @@ msgid "Format of the destination file"
 msgstr ""
 
 msgid "Format of the file results"
+msgstr ""
+
+msgid "Format of the key being read/written  (default='PEM')"
 msgstr ""
 
 msgid "Format of the list command output"
@@ -30548,6 +30581,9 @@ msgstr ""
 msgid "Hash object as if it were at the given path"
 msgstr ""
 
+msgid "Hash to use for signatures"
+msgstr ""
+
 msgid "Have nc give more verbose output"
 msgstr ""
 
@@ -31059,6 +31095,9 @@ msgid "Icon for the module"
 msgstr ""
 
 msgid "Icon name for user"
+msgstr ""
+
+msgid "Id of object for write/read object"
 msgstr ""
 
 msgid "Id of the virtual UDB on <host>"
@@ -33708,6 +33747,9 @@ msgid "Kerberos server mode"
 msgstr ""
 
 msgid "Kernel section"
+msgstr ""
+
+msgid "Key Management"
 msgstr ""
 
 msgid "Key description"
@@ -38009,6 +38051,9 @@ msgstr ""
 msgid "Managed save of a domain state"
 msgstr ""
 
+msgid "Management key to use, if no value is specified key will be asked for"
+msgstr ""
+
 msgid "Manages plugins: install, uninstall, update, etc."
 msgstr ""
 
@@ -39464,10 +39509,19 @@ msgstr ""
 msgid "Never write output to terminal"
 msgstr ""
 
+msgid "New management key algorithm to use for action set-mgm-key"
+msgstr ""
+
+msgid "New management key to use for action set-mgm-key, if omitted key will be asked for"
+msgstr ""
+
 msgid "New metadata to set"
 msgstr ""
 
 msgid "New name for identifier"
+msgstr ""
+
+msgid "New pin/puk code for changing, if omitted pin/puk will be asked for"
 msgstr ""
 
 msgid "New section"
@@ -39924,6 +39978,12 @@ msgid "Number of probe packets sent out simultaneously"
 msgstr ""
 
 msgid "Number of proof entries to cache"
+msgstr ""
+
+msgid "Number of retries before the pin code is blocked"
+msgstr ""
+
+msgid "Number of retries before the puk code is blocked"
 msgstr ""
 
 msgid "Number of retries when transient error occurs"
@@ -40794,6 +40854,9 @@ msgid "Only update this repository"
 msgstr ""
 
 msgid "Only updates the lock file hash to suppress warning about the lock file being out of date"
+msgstr ""
+
+msgid "Only use a matching reader  (default='Yubikey')"
 msgstr ""
 
 msgid "Only use a single connection. Simulates typical file transfer"
@@ -42377,6 +42440,9 @@ msgstr ""
 msgid "PIN mode with generated PIN"
 msgstr ""
 
+msgid "PIV Authentication"
+msgstr ""
+
 msgid "PKZIP recursion"
 msgstr ""
 
@@ -42780,6 +42846,9 @@ msgid "Passthru to tmux -S"
 msgstr ""
 
 msgid "Passthru to tmux -f"
+msgstr ""
+
+msgid "Password for decryption of private key file, if omitted password will be asked for"
 msgstr ""
 
 msgid "Password for the certificate"
@@ -43590,6 +43659,9 @@ msgid "Pin a status"
 msgstr ""
 
 msgid "Pin all memory before starting RDMA live migration"
+msgstr ""
+
+msgid "Pin/puk code for verification, if omitted pin/puk will be asked for"
 msgstr ""
 
 msgid "Ping as soon as reply is received"
@@ -45302,6 +45374,9 @@ msgstr ""
 msgid "Print help text and exit"
 msgstr ""
 
+msgid "Print help, including hidden options, and exit"
+msgstr ""
+
 msgid "Print help, including hidden subcommands"
 msgstr ""
 
@@ -45609,6 +45684,9 @@ msgid "Print more details"
 msgstr ""
 
 msgid "Print more information"
+msgstr ""
+
+msgid "Print more information  (default=0)"
 msgstr ""
 
 msgid "Print mtu"
@@ -48725,6 +48803,9 @@ msgstr ""
 msgid "Read rids of data to ignore from file"
 msgstr ""
 
+msgid "Read sensitive values from stdin  (default=off)"
+msgstr ""
+
 msgid "Read shell function definitions from stdin, reporting matching ones on stdout"
 msgstr ""
 
@@ -51647,6 +51728,9 @@ msgstr ""
 msgid "Reset the space's isolation segment to the org default"
 msgstr ""
 
+msgid "Reset the whole device over all applications"
+msgstr ""
+
 msgid "Reset time smoothing"
 msgstr ""
 
@@ -52077,6 +52161,9 @@ msgid "Resumes the most recent merge list that aborted due to an error"
 msgstr ""
 
 msgid "Resync package contents from source"
+msgstr ""
+
+msgid "Retired Key Management"
 msgstr ""
 
 msgid "Retrieve ANA Log"
@@ -55466,6 +55553,9 @@ msgstr ""
 msgid "Separator char for hashlists and outfile"
 msgstr ""
 
+msgid "Serial number of the self-signed certificate"
+msgstr ""
+
 msgid "Serial number to use for the FLAC stream"
 msgstr ""
 
@@ -56786,6 +56876,9 @@ msgstr ""
 msgid "Set permissions of logfiles to MODE"
 msgstr ""
 
+msgid "Set pin policy for action generate or import-key. Only available on YubiKey 4 or newer"
+msgstr ""
+
 msgid "Set playlist"
 msgstr ""
 
@@ -57882,6 +57975,9 @@ msgid "Set total number of attempts per host"
 msgstr ""
 
 msgid "Set total number of bytes to be transferred"
+msgstr ""
+
+msgid "Set touch policy for action generate, import-key or set-mgm-key. Only available on YubiKey 4 or newer"
 msgstr ""
 
 msgid "Set transformation matrix"
@@ -61629,6 +61725,9 @@ msgid "Sign commits using GPG"
 msgstr ""
 
 msgid "Sign commits with gpg"
+msgstr ""
+
+msgid "Sign data  (default=off)"
 msgstr ""
 
 msgid "Sign of samples"
@@ -67595,6 +67694,9 @@ msgstr ""
 msgid "The store period in seconds for the daemon command"
 msgstr ""
 
+msgid "The subject to use for certificate request"
+msgstr ""
+
 msgid "The system load average to try to maintain"
 msgstr ""
 
@@ -67785,6 +67887,9 @@ msgid "Tile image when filling a graphic primitive [filename]"
 msgstr ""
 
 msgid "Tile offset [geometry]"
+msgstr ""
+
+msgid "Time (in days) until the self-signed certificate expires"
 msgstr ""
 
 msgid "Time (milliseconds) to wait for a reply for each packet sent"
@@ -73380,6 +73485,15 @@ msgid "Webserver address for command line searches"
 msgstr ""
 
 msgid "Weight for XEN_CREDIT"
+msgstr ""
+
+msgid "What algorithm to use"
+msgstr ""
+
+msgid "What key slot to operate on"
+msgstr ""
+
+msgid "What slot to move an existing key to"
 msgstr ""
 
 msgid "What to backup"

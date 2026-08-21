@@ -16,8 +16,8 @@ use fish_wcstringutil::{
 };
 use fish_widestring::{
     ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, BRACE_BEGIN, BRACE_END, BRACE_SEP, HOME_DIRECTORY,
-    INTERNAL_SEPARATOR, L, PROCESS_EXPAND_SELF, VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE, WExt as _,
-    WString, wstr,
+    INTERNAL_SEPARATOR, L, PROCESS_EXPAND_SELF, SLICE_BEGIN, SLICE_END, VARIABLE_EXPAND,
+    VARIABLE_EXPAND_SINGLE, WExt as _, WString, wstr,
 };
 use libc::PATH_MAX;
 use nix::unistd::AccessFlags;
@@ -242,16 +242,14 @@ fn is_potential_path(
     }
 
     let require_dir = flags.require_dir;
-    let mut clean_potential_path_fragment = WString::new();
-    let mut has_magic = false;
 
-    let mut path_with_magic = potential_path_fragment.to_owned();
+    let mut path_fragment = potential_path_fragment.to_owned();
     if flags.expand_tilde {
-        expand_tilde(&mut path_with_magic, ctx.vars());
+        expand_tilde(&mut path_fragment, ctx.vars());
     }
 
-    for c in path_with_magic.chars() {
-        match c {
+    for c in path_fragment.as_char_slice_mut() {
+        match *c {
             PROCESS_EXPAND_SELF
             | VARIABLE_EXPAND
             | VARIABLE_EXPAND_SINGLE
@@ -261,14 +259,21 @@ fn is_potential_path(
             | ANY_CHAR
             | ANY_STRING
             | ANY_STRING_RECURSIVE => {
-                has_magic = true;
+                // It has magic, we don't know what the real fragment is
+                return false;
             }
-            INTERNAL_SEPARATOR => (),
-            _ => clean_potential_path_fragment.push(c),
+            SLICE_BEGIN => {
+                *c = '[';
+            }
+            SLICE_END => {
+                *c = ']';
+            }
+            _ => {}
         }
     }
+    path_fragment.retain(|c| c != INTERNAL_SEPARATOR);
 
-    if has_magic || clean_potential_path_fragment.is_empty() {
+    if path_fragment.is_empty() {
         return false;
     }
 
@@ -284,7 +289,7 @@ fn is_potential_path(
         if ctx.check_cancel() {
             return false;
         }
-        let mut abs_path = path_apply_working_directory(&clean_potential_path_fragment, wd);
+        let mut abs_path = path_apply_working_directory(&path_fragment, wd);
         let must_be_full_dir = abs_path.chars().next_back() == Some('/');
         if flags.for_cd {
             abs_path = normalize_path(&abs_path, /*allow_leading_double_slashes=*/ true);

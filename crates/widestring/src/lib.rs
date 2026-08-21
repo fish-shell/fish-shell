@@ -97,9 +97,13 @@ pub const INTERNAL_SEPARATOR: char = char_offset(EXPAND_RESERVED_BASE, 8);
 /// Character representing an empty variable expansion. Only used transitively while expanding
 /// variables.
 pub const VARIABLE_EXPAND_EMPTY: char = char_offset(EXPAND_RESERVED_BASE, 9);
+/// Character representing the start of a slice.
+pub const SLICE_BEGIN: char = char_offset(EXPAND_RESERVED_BASE, 10);
+/// Character representing the end of a slice.
+pub const SLICE_END: char = char_offset(EXPAND_RESERVED_BASE, 11);
 
 const _: () = assert!(
-    EXPAND_RESERVED_END as u32 > VARIABLE_EXPAND_EMPTY as u32,
+    EXPAND_RESERVED_END as u32 > SLICE_END as u32,
     "Characters used in expansions must stay within private use area"
 );
 

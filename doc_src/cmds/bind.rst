@@ -181,6 +181,9 @@ The following special input functions are available:
 ``begin-selection``
     start selecting text
 
+``begin-selection-if-none``
+    start selecting text, but only if there is no selection already; an existing selection (and its anchor) is left untouched. Combine with a movement function to extend a selection on each keystroke, e.g. ``bind shift-right begin-selection-if-none forward-single-char``
+
 ``cancel``
     close the pager if it is open, or undo the most recent completion if one was just inserted
 
@@ -213,6 +216,9 @@ The following special input functions are available:
 
 ``delete-or-exit``
     delete one character to the right of the cursor, or exit the shell if the commandline is empty
+
+``delete-selection``
+    delete the current selection without adding it to the killring; does nothing if there is no selection
 
 ``down-line``
     move down one line

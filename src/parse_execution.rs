@@ -57,7 +57,7 @@ use fish_common::{ScopeGuard, escape, help_section, truncate_at_nul};
 use fish_widestring::WExt as _;
 use libc::{EXIT_SUCCESS, STDERR_FILENO, STDOUT_FILENO, c_int};
 use nix::errno::Errno;
-use std::{io::ErrorKind, rc::Rc, sync::Arc};
+use std::{rc::Rc, sync::Arc};
 
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
 /// errors, or other expansion errors. It also tracks when evaluation was skipped due to signal
@@ -264,47 +264,67 @@ impl ExecutionContext {
         ctx: &mut OperationContext<'_>,
         cmd: &wstr,
         statement: &ast::DecoratedStatement,
-        err: std::io::Error,
+        errno: Errno,
     ) -> EndExecutionReason {
-        // We couldn't find the specified command. This is a non-fatal error. We want to set the exit
-        // status to 127, which is the standard number used by other shells like bash and zsh.
+        // We couldn't find the specified command or it wasn't executable. This is a non-fatal error.
+        // Set the exit status to 126 or 127, which are the standard numbers used by other shells like bash and zsh.
 
-        if err.kind() != ErrorKind::NotFound {
-            // TODO: We currently handle all errors here the same,
-            // but this mainly applies to EACCES. We could also feasibly get:
-            // ELOOP
-            // ENAMETOOLONG
-            if matches!(Errno::try_from(err), Ok(Errno::ENOTDIR)) {
-                // If the original command did not include a "/", assume we found it via $PATH.
-                let src = self.node_source(&statement.command);
-                if !src.contains('/') {
-                    return report_error!(
-                        self,
-                        ctx,
-                        STATUS_NOT_EXECUTABLE,
-                        &statement.command,
-                        "Unknown command. A component of '%s' is not a directory. Check your $PATH.",
-                        cmd
-                    );
-                } else {
-                    return report_error!(
-                        self,
-                        ctx,
-                        STATUS_NOT_EXECUTABLE,
-                        &statement.command,
-                        "Unknown command. A component of '%s' is not a directory.",
-                        cmd
-                    );
+        if errno != Errno::ENOENT {
+            // STATUS_NOT_EXECUTABLE (126)
+            let error_msg = match errno {
+                Errno::ENOTDIR => {
+                    // If the original command did not include a "/", assume we found it via $PATH.
+                    let src = self.node_source(&statement.command);
+                    if !src.contains('/') {
+                        localize!(
+                            "command-not-found-enotdir-on-PATH" = "Unknown command. A component of '{ $cmd }' is not a directory. Check your $PATH.",
+                            cmd = cmd
+                        )
+                    } else {
+                        localize!(
+                            "command-not-found-enotdir" =
+                                "Unknown command. A component of '{ $cmd }' is not a directory.",
+                            cmd = cmd
+                        )
+                    }
                 }
-            }
+                Errno::EACCES => localize!(
+                    "command-not-found-eacces" = "Unknown command. Missing execute permissions for '{ $cmd }' or one of its parent directories.",
+                    cmd = cmd
+                ),
+                Errno::ELOOP => localize!(
+                    "command-not-found-eloop" =
+                        "Unknown command. '{ $cmd }': Too many levels of symbolic links.",
+                    cmd = cmd
+                ),
+                Errno::ENAMETOOLONG => localize!(
+                    "command-not-found-enametoolong" =
+                        "Unknown command. '{ $cmd }': File name too long.",
+                    cmd = cmd
+                ),
+                // real ENOEXECs caught elsewhere; only the synthetic ENOEXEC from path_get_path_core will reach here
+                Errno::ENOEXEC => localize!(
+                    "command-not-found-enoexec" = "Unknown command. '{ $cmd }' exists, but files of this type cannot be executed.",
+                    cmd = cmd
+                ),
+                Errno::UnknownErrno => localize!(
+                    "command-not-found-unknown-errno" = "Unknown command. '{ $cmd }' exists but cannot be executed. Error: unknown.",
+                    cmd = cmd
+                ),
+                // EIO, ENOMEM, EOVERFLOW, ESTALE, EPERM, etc are rare but possible I think
+                _ => localize!(
+                    "command-not-found-catchall" = "Unknown command. '{ $cmd }' exists but cannot be executed. Error: { $errno }.",
+                    cmd = cmd,
+                    errno = format!("{:?}", errno) // POSIX error code name (e.g. 'ENOMEM')
+                ),
+            };
 
-            return report_error!(
+            return report_error_formatted!(
                 self,
                 ctx,
                 STATUS_NOT_EXECUTABLE,
                 &statement.command,
-                "Unknown command. '%s' exists but is not an executable file.",
-                cmd
+                WString::from_str(&error_msg)
             );
         }
 
@@ -782,7 +802,7 @@ impl ExecutionContext {
                             &external_cmd.path
                         },
                         statement,
-                        std::io::Error::from(external_cmd.err.unwrap()),
+                        external_cmd.err.unwrap(),
                     );
                 }
             }

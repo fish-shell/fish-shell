@@ -1584,18 +1584,6 @@ msgstr "Couleur  « %s » inconnue"
 msgid "Unknown command"
 msgstr ""
 
-#, c-format
-msgid "Unknown command. '%s' exists but is not an executable file."
-msgstr ""
-
-#, c-format
-msgid "Unknown command. A component of '%s' is not a directory."
-msgstr ""
-
-#, c-format
-msgid "Unknown command. A component of '%s' is not a directory. Check your $PATH."
-msgstr ""
-
 msgid "Unknown command:"
 msgstr ""
 

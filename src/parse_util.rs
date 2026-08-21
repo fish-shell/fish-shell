@@ -34,6 +34,36 @@ use std::{
     ops::{self, Range},
 };
 
+/// Extracts unescaped arguments from a `mkdir` command in a job pipeline.
+/// Returns None if the command is not `mkdir`.
+pub fn extract_mkdir_args_unescaped(
+    pipeline: &ast::JobPipeline,
+    cmdline: &wstr,
+) -> Option<Vec<WString>> {
+    let stmt = pipeline.statement.as_decorated_statement()?;
+    let cmd = stmt.command.try_source(cmdline)?;
+    if cmd != "mkdir" {
+        return None;
+    }
+    let mut args = Vec::new();
+    for v in &stmt.args_or_redirs {
+        if v.is_argument() {
+            let arg = v.argument().try_source(cmdline)?;
+            // Skip options (e.g. -p, -v) and the -- separator.
+            if arg.starts_with('-') || arg == "--" {
+                continue;
+            }
+            if let Some(expanded) = unescape_string(
+                arg,
+                UnescapeStringStyle::Script(UnescapeFlags::SPECIAL),
+            ) {
+                args.push(expanded);
+            }
+        }
+    }
+    Some(args)
+}
+
 /// Handles slices: the square brackets in an expression like $foo[5..4]
 /// Return the length of the slice starting at `in`, or 0 if there is no slice, or None on error.
 /// This never accepts incomplete slices.

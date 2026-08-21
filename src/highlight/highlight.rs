@@ -3,7 +3,8 @@ use crate::{
     abbrs::{self, with_abbrs},
     ast::{
         self, Argument, BlockStatement, BlockStatementHeader, BraceStatement, DecoratedStatement,
-        Keyword, Kind, Node, NodeVisitor, Redirection, Token, VariableAssignment,
+        JobConjunction, JobPipeline, Keyword, Kind, Node, NodeVisitor, Redirection, Token,
+        VariableAssignment,
     },
     builtins::builtin_exists,
     common::{valid_var_name, valid_var_name_char},
@@ -18,12 +19,16 @@ use crate::{
         ParseKeyword, ParseTokenType, ParseTreeFlags, SourceRange, StatementDecoration,
     },
     parse_util::{get_process_first_token_offset, locate_cmdsubst_range, slice_length},
-    path::{path_as_implicit_cd, path_get_cdpath, path_get_path, paths_are_same_file},
+    path::{
+        path_apply_working_directory, path_as_implicit_cd, path_get_cdpath, path_get_path,
+        paths_are_same_file,
+    },
     terminal::Outputter,
     text_face::{ResettableStyle, SpecifiedTextFace, TextFace, UnderlineStyle, parse_text_face},
     threads::assert_is_background_thread,
     tokenizer::{PipeOrRedir, variable_assignment_equals_pos},
 };
+use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_color::Color;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_wcstringutil::string_prefixes_string;
@@ -718,6 +723,9 @@ struct Highlighter<'src, 'wd, 'ctx> {
     // A stack of variables that the current commandline probably defines.  We mark redirections
     // as valid if they use one of these variables, to avoid marking valid targets as error.
     pending_variables: Vec<&'src wstr>,
+    // Directories that will exist due to `mkdir` in earlier parts of a `&&` chain.
+    // When visiting a cd argument, if it matches one of these, treat it as a valid path.
+    mkdir_created_dirs: Vec<WString>,
     done: bool,
 }
 
@@ -738,6 +746,7 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
             file_tester,
             color_array: vec![],
             pending_variables: vec![],
+            mkdir_created_dirs: vec![],
             done: false,
         }
     }
@@ -898,6 +907,66 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
     fn visit_children(&mut self, node: &dyn Node) {
         node.accept(self);
     }
+
+    /// If the given pipeline is a simple `mkdir` command (no decoration or `command mkdir`),
+    /// return the list of directory arguments it would create, resolved to absolute paths.
+    /// Returns None if the command is not `mkdir`.
+    fn extract_mkdir_args(&self, pipeline: &JobPipeline) -> Option<Vec<WString>> {
+        crate::parse_util::extract_mkdir_args_unescaped(pipeline, self.buff).map(|args| {
+            args.into_iter()
+                .map(|arg| path_apply_working_directory(&arg, self.working_directory))
+                .collect()
+        })
+    }
+
+    /// Visit a JobConjunction node, tracking directories created by mkdir in && chains.
+    /// For `mkdir foo && cd foo`, the `foo` after `cd` should not be highlighted as error
+    /// because `mkdir` guarantees it will exist by execution time.
+    fn visit_job_conjunction(&mut self, node: &JobConjunction) {
+        // Visit the decorator (e.g. `and` or `or` keyword before the job).
+        if let Some(decorator) = &node.decorator {
+            self.visit(decorator);
+        }
+
+        // Visit the first job (no tracking needed yet).
+        self.visit(&node.job);
+
+        // After visiting the first job, check if it was mkdir and extract its arguments.
+        let mut prev_mkdir_args = self.extract_mkdir_args(&node.job);
+
+        // Visit each continuation (the && or || chains).
+        for i in 0..node.continuations.len() {
+            let cont = &node.continuations[i];
+            let is_andand = cont.conjunction.token_type() == ParseTokenType::AndAnd;
+
+            if is_andand {
+                // For &&, the preceding job succeeded, so mkdir-created dirs will exist.
+                if let Some(args) = &prev_mkdir_args {
+                    self.mkdir_created_dirs.extend(args.iter().cloned());
+                }
+            } else {
+                // For ||, the preceding command failed (or we can't guarantee success),
+                // so clear the tracking set.
+                self.mkdir_created_dirs.clear();
+            }
+
+            // Visit the conjunction token (the && or ||).
+            self.visit(&cont.conjunction);
+            // Visit any newlines.
+            self.visit(&cont.newlines);
+            // Visit the job pipeline.
+            self.visit(&cont.job);
+
+            // After visiting this job, extract mkdir args for the next continuation.
+            prev_mkdir_args = self.extract_mkdir_args(&cont.job);
+        }
+
+        // Visit the trailing semicolon/newline.
+        if let Some(semi_nl) = &node.semi_nl {
+            self.visit(semi_nl);
+        }
+    }
+
     // AST visitor implementations.
     fn visit_keyword(&mut self, node: &dyn Keyword) {
         let mut role = HighlightRole::Normal;
@@ -961,7 +1030,39 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
             if is_cd_option(&token) {
                 Ok(IsFile(false))
             } else {
-                self.file_tester.test_cd_path(&token, is_prefix)
+                let result = self.file_tester.test_cd_path(&token, is_prefix);
+                // If the cd path doesn't exist on the real filesystem, check if it matches
+                // a directory that will be created by mkdir in the same && chain.
+                if result.is_err() && !self.mkdir_created_dirs.is_empty() {
+                    if let Some(expanded) = unescape_string(
+                        &token,
+                        UnescapeStringStyle::Script(UnescapeFlags::SPECIAL),
+                    ) {
+                        let resolved =
+                            path_apply_working_directory(&expanded, self.working_directory);
+                            
+                        let mut resolved_slash = resolved.clone();
+                        if !resolved_slash.ends_with('/') {
+                            resolved_slash.push('/');
+                        }
+                        
+                        if self.mkdir_created_dirs.iter().any(|d| {
+                            let mut d_slash = d.clone();
+                            if !d_slash.ends_with('/') {
+                                d_slash.push('/');
+                            }
+                            d_slash == resolved_slash
+                        }) {
+                            Ok(IsFile(true))
+                        } else {
+                            result
+                        }
+                    } else {
+                        result
+                    }
+                } else {
+                    result
+                }
             }
         } else {
             let is_path = self.file_tester.test_path(&token, is_prefix);
@@ -1194,6 +1295,7 @@ impl<'src, 'wd, 'ctx, 'a> NodeVisitor<'a> for Highlighter<'src, 'wd, 'ctx> {
             Kind::DecoratedStatement(node) => self.visit_decorated_statement(node),
             Kind::BlockStatement(node) => self.visit_block_statement(node),
             Kind::BraceStatement(node) => self.visit_brace_statement(node),
+            Kind::JobConjunction(node) => self.visit_job_conjunction(node),
             // Default implementation is to just visit children.
             _ => self.visit_children(node),
         }
@@ -1858,6 +1960,56 @@ mod tests {
             validate!(
                 (">", fg(HighlightRole::Error)),
                 ("echo", fg(HighlightRole::Error)),
+            );
+
+            // Tests for mkdir tracking in && chains.
+            // mkdir foo && cd foo: foo should NOT be highlighted as error since mkdir creates it.
+            validate!(
+                ("mkdir", fg(HighlightRole::Command)),
+                ("mkdir_target", fg(HighlightRole::Param)),
+                ("&&", fg(HighlightRole::Operat)),
+                ("cd", fg(HighlightRole::Builtin)),
+                ("mkdir_target", param_valid_path),
+            );
+
+            // mkdir -p foo/bar && cd foo/bar: nested paths should work.
+            validate!(
+                ("mkdir", fg(HighlightRole::Command)),
+                ("-p", fg(HighlightRole::Option)),
+                ("nested/target", fg(HighlightRole::Param)),
+                ("&&", fg(HighlightRole::Operat)),
+                ("cd", fg(HighlightRole::Builtin)),
+                ("nested/target", param_valid_path),
+            );
+
+            // mkdir foo || cd foo: || means mkdir failed, so foo should be error.
+            validate!(
+                ("mkdir", fg(HighlightRole::Command)),
+                ("or_target", fg(HighlightRole::Param)),
+                ("||", fg(HighlightRole::Operat)),
+                ("cd", fg(HighlightRole::Builtin)),
+                ("or_target", fg(HighlightRole::Error)),
+            );
+
+            // echo hello && cd foo: echo doesn't create dirs, so foo should be error.
+            validate!(
+                ("echo", fg(HighlightRole::Builtin)),
+                ("hello", fg(HighlightRole::Param)),
+                ("&&", fg(HighlightRole::Operat)),
+                ("cd", fg(HighlightRole::Builtin)),
+                ("nonexistent_dir", fg(HighlightRole::Error)),
+            );
+
+            // mkdir foo && mkdir bar && cd bar: chained mkdirs.
+            validate!(
+                ("mkdir", fg(HighlightRole::Command)),
+                ("first_dir", fg(HighlightRole::Param)),
+                ("&&", fg(HighlightRole::Operat)),
+                ("mkdir", fg(HighlightRole::Command)),
+                ("second_dir", fg(HighlightRole::Param)),
+                ("&&", fg(HighlightRole::Operat)),
+                ("cd", fg(HighlightRole::Builtin)),
+                ("second_dir", param_valid_path),
             );
         });
     }

@@ -5,7 +5,7 @@ function fish_jj_prompt
         return 1
     end
     set -l info "$(
-        jj log 2>/dev/null --no-graph --ignore-working-copy --color=always --revisions @ \
+        jj log </dev/null 2>/dev/null --no-graph --ignore-working-copy --color=always --revisions @ \
             --template '
                 separate(" ",
                     if(conflict, label("conflict", "×")),

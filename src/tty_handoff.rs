@@ -8,13 +8,13 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
 use crate::prelude::*;
 use crate::proc::JobGroupRef;
-use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
     self, ApplicationKeypadModeDisable, ApplicationKeypadModeEnable, DecrstBracketedPaste,
     DecrstColorThemeReporting, DecrstFocusReporting, DecsetBracketedPaste,
     DecsetColorThemeReporting, DecsetFocusReporting, KittyKeyboardProgressiveEnhancementsDisable,
     KittyKeyboardProgressiveEnhancementsEnable, ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
+use crate::terminal::{Outputter, is_konsole};
 use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror_nix, wcstoi};
 use fish_common::{STDIN_FD, write_loop};
@@ -66,8 +66,8 @@ pub enum TtyQuirks {
     None,
     // Running Midnight Commander which can't parse CSI yet.
     PreCsiMidnightCommander,
-    // Running in iTerm2 before 3.5.12, which causes issues when using the kitty keyboard protocol.
-    PreKittyIterm2,
+    // Running in a terminal where the kitty keyboard protocol might cause problems.
+    BuggyKittyKeyboardProtocol,
     // Whether we are running under tmux.
     Tmux((u32, u32)),
     // Whether we are running under WezTerm.
@@ -82,8 +82,10 @@ impl TtyQuirks {
             && vars.get(L!("__mc_kitty_keyboard")).is_none()
         {
             PreCsiMidnightCommander
-        } else if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12)) {
-            PreKittyIterm2
+        } else if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12))
+            || is_konsole(xtversion)
+        {
+            BuggyKittyKeyboardProtocol
         } else if let Some(version) = get_tmux_version(xtversion) {
             Tmux(version)
         } else if xtversion.starts_with(L!("WezTerm ")) {
@@ -151,11 +153,11 @@ fn serialize_commands<'a>(cmds: impl Iterator<Item = TerminalCommand<'a>>) -> Bo
 impl TtyQuirks {
     // Determine which keyboard protocol.
     fn get_supported_protocol(&self) -> ProtocolKind {
-        use TtyQuirks::{PreCsiMidnightCommander, PreKittyIterm2, Wezterm};
+        use TtyQuirks::{BuggyKittyKeyboardProtocol, PreCsiMidnightCommander, Wezterm};
         if *self == PreCsiMidnightCommander {
             return ProtocolKind::None;
         }
-        if *self == PreKittyIterm2 {
+        if *self == BuggyKittyKeyboardProtocol {
             return ProtocolKind::Other;
         }
         match KITTY_KEYBOARD_SUPPORTED.get() {

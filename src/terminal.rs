@@ -184,10 +184,14 @@ fn osc_0_or_1_terminal_title(out: &mut Outputter, is_1: bool, title: &[WString])
     true
 }
 
+pub(crate) fn is_konsole(xtversion: &wstr) -> bool {
+    xtversion.starts_with("Konsole ")
+        && !fish_feature_flags::feature_test(FeatureFlag::OmitTermWorkarounds)
+}
+
 fn want_to_mark_prompt() -> bool {
-    static IN_KONSOLE: LazyLock<bool> =
-        LazyLock::new(|| XTVERSION.get().unwrap().starts_with("Konsole "));
-    if *IN_KONSOLE && !fish_feature_flags::feature_test(FeatureFlag::OmitTermWorkarounds) {
+    static IN_KONSOLE: LazyLock<bool> = LazyLock::new(|| is_konsole(XTVERSION.get().unwrap()));
+    if *IN_KONSOLE {
         return false;
     }
     fish_feature_flags::feature_test(FeatureFlag::MarkPrompt)

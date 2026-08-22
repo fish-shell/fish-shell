@@ -5,6 +5,8 @@ Interactive improvements
 ------------------------
 - On some terminals like kitty, keys like :kbd:`shift-space` and :kbd:`space` can now be mapped independently (:issue:`12898`).
 - Fix slow tab completion in directories that contain slow-to-resolve symlinks (e.g. links targeting a network mount) (:issue:`12905`).
+- To mitigate issues in Konsole v26.07.80's initial implementation of the kitty keyboard protocol, fish no longer requests that protocol on Konsole.
+  The ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be enabled to enable the kitty keyboard protocol on Konsole again (:issue:`12948`).
 
 Scripting improvements
 ----------------------

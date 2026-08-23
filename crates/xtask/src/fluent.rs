@@ -228,18 +228,10 @@ fn format(mut files: Vec<PathBuf>) -> Result<()> {
 }
 
 fn rename(args: RenameArgs) -> Result<()> {
-    let old_id;
-    let new_id;
-    match args.id.split_once('=') {
-        Some((old, new)) => {
-            old_id = old.into();
-            new_id = Some(new.into());
-        }
-        None => {
-            old_id = args.id;
-            new_id = None;
-        }
-    }
+    let (old_id, new_id) = match args.id.split_once('=') {
+        Some((old, new)) => (old.into(), Some(new.into())),
+        None => (args.id, None),
+    };
     let mut variable_update = HashMap::new();
     for arg in args.vars {
         match arg.split_once('=') {

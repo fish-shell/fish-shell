@@ -940,12 +940,14 @@ pub fn read_unquoted_escape(
             'c' => {
                 let sequence_char = u32::from(input.char_at(in_pos));
                 in_pos += 1;
-                if sequence_char >= u32::from('a') && sequence_char <= u32::from('a') + 32 {
-                    result_char_or_none =
-                        Some(char::from_u32(sequence_char - u32::from('a') + 1).unwrap());
-                } else if sequence_char >= u32::from('A') && sequence_char <= u32::from('A') + 32 {
-                    result_char_or_none =
-                        Some(char::from_u32(sequence_char - u32::from('A') + 1).unwrap());
+                // Range covers:
+                //   @ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_
+                //   `abcdefghijklmnopqrstuvwxyz{|}~
+                // `\c<0x7f>` (lowercase version of `\c_`) is not supported since
+                // `0x7f` a control character to begin with.
+                if (u32::from('@')..0x7f).contains(&sequence_char) {
+                    let ctrl = char::from_u32(sequence_char % 32).unwrap();
+                    result_char_or_none = Some(ctrl);
                 } else {
                     errored = true;
                 }
@@ -1546,5 +1548,34 @@ mod tests {
         assert_eq!(truncate_at_nul(L!("abc\0def")), L!("abc"));
         assert_eq!(truncate_at_nul(L!("abc")), L!("abc"));
         assert_eq!(truncate_at_nul(L!("\0abc")), L!(""));
+    }
+
+    mod read_unquoted_escape {
+        use super::*;
+
+        fn test_good(escaped: &wstr, expected: &wstr) {
+            let mut unesc = WString::new();
+            let r = read_unquoted_escape(escaped, &mut unesc, false, false);
+            assert_eq!(r, Some(escaped.len()));
+            assert_eq!(unesc, expected, "{escaped} -> {:?}", unesc);
+        }
+
+        fn test_bad(escaped: &wstr) {
+            let mut unesc = WString::new();
+            let r = read_unquoted_escape(escaped, &mut unesc, false, false);
+            assert_eq!(r, None, "{escaped} -> {:?}", unesc);
+        }
+
+        #[test]
+        fn control() {
+            test_bad(L!("\\c?"));
+            test_good(L!("\\c@"), L!("\x00"));
+            test_good(L!("\\cA"), L!("\x01"));
+            test_good(L!("\\c_"), L!("\x1f"));
+            test_good(L!("\\c`"), L!("\x00"));
+            test_good(L!("\\ca"), L!("\x01"));
+            test_bad(L!("\\c\x7f"));
+            test_bad(L!("\\c\u{0080}"));
+        }
     }
 }

@@ -1428,7 +1428,7 @@ msgid "Unable to read input file: %s"
 msgstr "无法读取输入文件：%s"
 
 #, c-format
-msgid "Unexpected '%s' found, expecting '%s'"
+msgid "Unexpected '%c' found, expecting '%c'"
 msgstr ""
 
 msgid "Unexpected ')' for unopened parenthesis"

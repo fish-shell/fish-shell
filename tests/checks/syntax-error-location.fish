@@ -138,3 +138,28 @@ $fish -c 'echo (echo *nosuchname*)'
 # CHECKERR: fish: Unmatched wildcard
 # CHECKERR: echo (echo *nosuchname*)
 # CHECKERR: ^~~~~~~~~~~~~~~~~~^
+
+$fish -c 'foo )'
+# CHECKERR: fish: Unexpected ')' for unopened parenthesis
+# CHECKERR: foo )
+# CHECKERR:     ^
+
+$fish -c 'foo (})'
+# CHECKERR: fish: Unexpected '}' found, expecting ')'
+# CHECKERR: foo (})
+# CHECKERR:      ^
+
+$fish -c 'foo {)}'
+# CHECKERR: fish: Unexpected ')' found, expecting '}'
+# CHECKERR: foo {)}
+# CHECKERR:      ^
+
+$fish -c 'foo $var[)]'
+# CHECKERR: fish: Unexpected ')' found, expecting ']'
+# CHECKERR: foo $var[)]
+# CHECKERR:          ^
+
+$fish -c 'foo $var[}]'
+# CHECKERR: fish: Unexpected '}' found, expecting ']'
+# CHECKERR: foo $var[}]
+# CHECKERR:          ^

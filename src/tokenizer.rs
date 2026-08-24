@@ -145,7 +145,7 @@ pub const TOK_CONTINUE_AFTER_ERROR: TokFlags = TokFlags(8);
 pub const TOK_ARGUMENT_LIST: TokFlags = TokFlags(16);
 
 localizable_consts!(
-    UNEXPECTED_CLOSING_CHAR "Unexpected '%s' found, expecting '%s'"
+    UNEXPECTED_CLOSING_CHAR "Unexpected '%c' found, expecting '%c'"
 );
 
 impl From<TokenizerError> for WString {

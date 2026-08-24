@@ -1402,7 +1402,7 @@ msgid "Unable to read input file: %s"
 msgstr "無法讀取輸入檔案：%s"
 
 #, c-format
-msgid "Unexpected '%s' found, expecting '%s'"
+msgid "Unexpected '%c' found, expecting '%c'"
 msgstr ""
 
 msgid "Unexpected ')' for unopened parenthesis"

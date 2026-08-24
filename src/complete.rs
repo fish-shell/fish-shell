@@ -1468,7 +1468,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             // We want last_option_requires_param to default to false but distinguish between when
             // a previous completion has set it to false and when it has its default value.
             let mut last_option_requires_param = None;
-            let mut use_common = true;
+
+            // Whether this token has been claimed as the argument to a specific switch.
+            let mut token_claimed = false;
+
             if use_switches {
                 if s.char_at(0) == '-' {
                     // Check if we are entering a combined option and argument (like --color=auto or
@@ -1496,7 +1499,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                             }
                             if let Some(arg_offset) = arg_offset {
                                 if o.result_mode.requires_param {
-                                    use_common = false;
+                                    token_claimed = true;
                                 }
                                 if o.result_mode.no_files {
                                     use_files = false;
@@ -1529,7 +1532,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                         {
                             old_style_match = false;
                             if o.result_mode.requires_param {
-                                use_common = false;
+                                token_claimed = true;
                             }
                             if o.result_mode.no_files {
                                 use_files = false;
@@ -1565,7 +1568,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                             }
                             if r#match && self.conditions_test(&o.conditions) {
                                 if o.result_mode.requires_param {
-                                    use_common = false;
+                                    token_claimed = true;
                                 }
                                 if o.result_mode.no_files {
                                     use_files = false;
@@ -1580,10 +1583,11 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 }
             }
 
-            if !use_common {
+            if token_claimed {
                 continue;
             }
 
+            // Try completing both options and positional arguments.
             // Set a default value for last_option_requires_param only if one hasn't been set
             let last_option_requires_param = last_option_requires_param.unwrap_or(false);
 

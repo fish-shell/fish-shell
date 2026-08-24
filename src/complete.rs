@@ -1383,6 +1383,43 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         );
     }
 
+    /// Return the available completion entry options for a given command.
+    /// The command is given both as the CmdString (i.e. including path) and the name.
+    fn complete_entry_options_for_command(
+        cmd_string: &CmdString,
+        cmd_name: &wstr,
+    ) -> Vec<Vec<CompleteEntryOpt>> {
+        COMPLETION_MAP
+            .lock()
+            .unwrap()
+            .iter()
+            .filter_map(|(key, completion)| {
+                let r#match = if key.is_path {
+                    &cmd_string.path
+                } else {
+                    cmd_name
+                };
+                let has_match = wildcard_match(r#match, &key.name, false)
+                    || (
+                        // On cygwin, if we didn't have a completion for "foo.exe",
+                        // check if there is one for "foo"
+                        !key.is_path
+                            && strip_executable_suffix(r#match)
+                                .is_some_and(|stripped| wildcard_match(stripped, &key.name, false))
+                    );
+                if has_match {
+                    // Copy all of their options into our list. Oof, this is a lot of copying.
+                    let mut options = completion.get_options().to_vec();
+                    // We have to copy them in reverse order to preserve legacy behavior (#9221).
+                    options.reverse();
+                    Some(options)
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
     /// complete_param: Given a command, find completions for the argument `s` of command `cmd_orig`
     /// with previous option `popt`. If file completions should be disabled, then mark
     /// `out_do_file` as `false`.
@@ -1431,35 +1468,8 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         }
 
         // Make a list of lists of all options that we care about.
-        let all_options: Vec<Vec<CompleteEntryOpt>> = COMPLETION_MAP
-            .lock()
-            .unwrap()
-            .iter()
-            .filter_map(|(key, completion)| {
-                let r#match = if key.is_path {
-                    &cmd_string.path
-                } else {
-                    cmd_name
-                };
-                let has_match = wildcard_match(r#match, &key.name, false)
-                    || (
-                        // On cygwin, if we didn't have a completion for "foo.exe",
-                        // check if there is one for "foo"
-                        !key.is_path
-                            && strip_executable_suffix(r#match)
-                                .is_some_and(|stripped| wildcard_match(stripped, &key.name, false))
-                    );
-                if has_match {
-                    // Copy all of their options into our list. Oof, this is a lot of copying.
-                    let mut options = completion.get_options().to_vec();
-                    // We have to copy them in reverse order to preserve legacy behavior (#9221).
-                    options.reverse();
-                    Some(options)
-                } else {
-                    None
-                }
-            })
-            .collect();
+        let all_options: Vec<Vec<CompleteEntryOpt>> =
+            Self::complete_entry_options_for_command(&cmd_string, cmd_name);
 
         // Now release the lock and test each option that we captured above. We have to do this outside
         // the lock because callouts (like the condition) may add or remove completions. See issue #2.

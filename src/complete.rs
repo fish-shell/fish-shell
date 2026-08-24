@@ -487,7 +487,7 @@ struct CompleteEntryOpt {
     /// Description of the completion.
     desc: LocalizableString,
     /// Conditions under which to use the option, expanded and evaluated at completion time.
-    conditions: Vec<WString>,
+    conditions: Box<[WString]>,
     /// Type of the option: `ArgsOnly`, `Short`, `SingleLong`, or `DoubleLong`.
     typ: CompleteOptionType,
     /// Determines how completions should be performed on the argument after the switch.
@@ -2457,7 +2457,7 @@ pub fn complete_add(
         // The external source is a completion script in `share`,
         // from which `cargo xtask gettext update` extracts descriptions.
         desc: LocalizableString::from_external_source(desc),
-        conditions: condition,
+        conditions: condition.into_boxed_slice(),
         flags,
     };
     c.add_option(opt);

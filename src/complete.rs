@@ -547,11 +547,11 @@ impl CompletionEntry {
 
 /// Set of all completion entries. Keyed by the command name, and whether it is a path.
 #[derive(Clone, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
-struct CompletionEntryIndex {
+struct CompletionEntryKey {
     name: WString,
     is_path: bool,
 }
-type CompletionEntryMap = BTreeMap<CompletionEntryIndex, CompletionEntry>;
+type CompletionEntryMap = BTreeMap<CompletionEntryKey, CompletionEntry>;
 static COMPLETION_MAP: Mutex<CompletionEntryMap> = Mutex::new(BTreeMap::new());
 static COMPLETION_TOMBSTONES: Mutex<BTreeSet<WString>> = Mutex::new(BTreeSet::new());
 
@@ -1435,19 +1435,19 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             .lock()
             .unwrap()
             .iter()
-            .filter_map(|(idx, completion)| {
-                let r#match = if idx.is_path {
+            .filter_map(|(key, completion)| {
+                let r#match = if key.is_path {
                     &cmd_string.path
                 } else {
                     cmd_name
                 };
-                let has_match = wildcard_match(r#match, &idx.name, false)
+                let has_match = wildcard_match(r#match, &key.name, false)
                     || (
                         // On cygwin, if we didn't have a completion for "foo.exe",
                         // check if there is one for "foo"
-                        !idx.is_path
+                        !key.is_path
                             && strip_executable_suffix(r#match)
-                                .is_some_and(|stripped| wildcard_match(stripped, &idx.name, false))
+                                .is_some_and(|stripped| wildcard_match(stripped, &key.name, false))
                     );
                 if has_match {
                     // Copy all of their options into our list. Oof, this is a lot of copying.
@@ -2442,7 +2442,7 @@ pub fn complete_add(
     // Lock the lock that allows us to edit the completion entry list.
     let mut completion_map = COMPLETION_MAP.lock().expect("mutex poisoned");
     let c = completion_map
-        .entry(CompletionEntryIndex {
+        .entry(CompletionEntryKey {
             name: cmd,
             is_path: cmd_is_path,
         })
@@ -2466,14 +2466,14 @@ pub fn complete_add(
 /// Remove a previously defined completion.
 pub fn complete_remove(cmd: WString, cmd_is_path: bool, option: &wstr, typ: CompleteOptionType) {
     let mut completion_map = COMPLETION_MAP.lock().expect("mutex poisoned");
-    let idx = CompletionEntryIndex {
+    let key = CompletionEntryKey {
         name: cmd,
         is_path: cmd_is_path,
     };
-    if let Some(c) = completion_map.get_mut(&idx) {
+    if let Some(c) = completion_map.get_mut(&key) {
         let delete_it = c.remove_option(option, typ);
         if delete_it {
-            completion_map.remove(&idx);
+            completion_map.remove(&key);
         }
     }
 }
@@ -2481,14 +2481,14 @@ pub fn complete_remove(cmd: WString, cmd_is_path: bool, option: &wstr, typ: Comp
 /// Removes all completions for a given command.
 pub fn complete_remove_all(cmd: WString, cmd_is_path: bool, explicit: bool) {
     let mut completion_map = COMPLETION_MAP.lock().expect("mutex poisoned");
-    let idx = CompletionEntryIndex {
+    let key = CompletionEntryKey {
         name: cmd,
         is_path: cmd_is_path,
     };
-    let removed = completion_map.remove(&idx).is_some();
-    WRAPPER_MAP.lock().unwrap().remove(&idx.name);
-    if explicit && !removed && !idx.is_path {
-        COMPLETION_TOMBSTONES.lock().unwrap().insert(idx.name);
+    let removed = completion_map.remove(&key).is_some();
+    WRAPPER_MAP.lock().unwrap().remove(&key.name);
+    if explicit && !removed && !key.is_path {
+        COMPLETION_TOMBSTONES.lock().unwrap().insert(key.name);
     }
 }
 
@@ -2535,7 +2535,7 @@ fn append_switch_long(out: &mut WString, opt: &wstr) {
     sprintf!(=> out, " --%s", opt);
 }
 
-fn completion2string(index: &CompletionEntryIndex, o: &CompleteEntryOpt) -> WString {
+fn completion2string(key: &CompletionEntryKey, o: &CompleteEntryOpt) -> WString {
     let mut out = WString::from(L!("complete"));
 
     if o.flags.dont_sort {
@@ -2552,11 +2552,11 @@ fn completion2string(index: &CompletionEntryIndex, o: &CompleteEntryOpt) -> WStr
         append_switch_long(&mut out, L!("require-parameter"));
     }
 
-    if index.is_path {
-        append_switch_short_arg(&mut out, 'p', &index.name);
+    if key.is_path {
+        append_switch_short_arg(&mut out, 'p', &key.name);
     } else {
         out.push(' ');
-        out.push_utfstr(&escape(&index.name));
+        out.push_utfstr(&escape(&key.name));
     }
 
     match o.typ {

@@ -1,5 +1,6 @@
 # Kakoune editor - https://kakoune.org/
 complete -c kak -o c -x -a '(command kak -l)' -d 'connect to given session'
+complete -c kak -o C -x -a '(command kak -l)' -d 'connect to or create given session'
 complete -c kak -o e -x -d 'execute argument on client initialisation'
 complete -c kak -o E -x -d 'execute argument on server initialisation'
 complete -c kak -o n -d 'do not source kakrc files on startup'

@@ -1408,7 +1408,7 @@ msgstr "No se puede leer el archivo de entrada: %s"
 
 #, c-format
 msgid "Unexpected '%c' found, expecting '%c'"
-msgstr ""
+msgstr "Se encontró ‘%c’, pero se esperaba ‘%c’"
 
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr "‘)’ inesperado sin un paréntesis de apertura"

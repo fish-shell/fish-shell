@@ -1407,7 +1407,7 @@ msgstr "入力ファイルを読み取れません: %s"
 
 #, c-format
 msgid "Unexpected '%c' found, expecting '%c'"
-msgstr ""
+msgstr "予期しない '%c' が見つかりました。 '%c' が必要です"
 
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr "開かれていない括弧に対応する予期しない ')' があります"

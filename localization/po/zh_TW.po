@@ -1403,7 +1403,7 @@ msgstr "無法讀取輸入檔案：%s"
 
 #, c-format
 msgid "Unexpected '%c' found, expecting '%c'"
-msgstr ""
+msgstr "找到了非預期的「%c」，預期「%c」"
 
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr "非預期的不對稱「)」"

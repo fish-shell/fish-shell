@@ -1429,7 +1429,7 @@ msgstr "无法读取输入文件：%s"
 
 #, c-format
 msgid "Unexpected '%c' found, expecting '%c'"
-msgstr ""
++msgstr "意外找到 '%c'，期待 '%c'"
 
 msgid "Unexpected ')' for unopened parenthesis"
 msgstr "未闭合的括号前出现意外的 ')'"

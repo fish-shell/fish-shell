@@ -543,7 +543,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
                 '\\' if !ignore_backslashes => {
                     // Backslashes (escapes) are complicated and may result in errors, or
                     // appending INTERNAL_SEPARATORs, so we have to handle them specially.
-                    if let Some(escape_chars) = read_unquoted_escape(
+                    if let Some(escape_chars) = unescape_one(
                         &input[input_position..],
                         &mut result,
                         allow_incomplete,
@@ -827,7 +827,7 @@ fn unescape_string_var(input: &wstr) -> Option<WString> {
 
 /// Given a string starting with a backslash, read the escape as if it is unquoted, appending
 /// to result. Return the number of characters consumed, or none on error.
-pub fn read_unquoted_escape(
+pub fn unescape_one(
     input: &wstr,
     result: &mut WString,
     allow_incomplete: bool,
@@ -1550,19 +1550,19 @@ mod tests {
         assert_eq!(truncate_at_nul(L!("\0abc")), L!(""));
     }
 
-    mod read_unquoted_escape {
+    mod unescape_one {
         use super::*;
 
         fn test_good(escaped: &wstr, expected: &wstr) {
             let mut unesc = WString::new();
-            let r = read_unquoted_escape(escaped, &mut unesc, false, false);
+            let r = unescape_one(escaped, &mut unesc, false, false);
             assert_eq!(r, Some(escaped.len()));
             assert_eq!(unesc, expected, "{escaped} -> {:?}", unesc);
         }
 
         fn test_bad(escaped: &wstr) {
             let mut unesc = WString::new();
-            let r = read_unquoted_escape(escaped, &mut unesc, false, false);
+            let r = unescape_one(escaped, &mut unesc, false, false);
             assert_eq!(r, None, "{escaped} -> {:?}", unesc);
         }
 

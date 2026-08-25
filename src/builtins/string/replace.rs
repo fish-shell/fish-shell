@@ -154,13 +154,13 @@ enum StringReplacer<'args, 'opts> {
 
 impl<'args, 'opts> StringReplacer<'args, 'opts> {
     fn interpret_escape(arg: &'args wstr) -> Option<WString> {
-        use fish_common::read_unquoted_escape;
+        use fish_common::unescape_one;
 
         let mut result: WString = WString::with_capacity(arg.len());
         let mut cursor = arg;
         while !cursor.is_empty() {
             if cursor.char_at(0) == '\\' {
-                let escape_len = read_unquoted_escape(cursor, &mut result, true, false)?;
+                let escape_len = unescape_one(cursor, &mut result, true, false)?;
                 cursor = cursor.slice_from(escape_len);
             } else {
                 result.push(cursor.char_at(0));

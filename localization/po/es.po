@@ -75381,6 +75381,9 @@ msgstr ""
 msgid "connect to given session"
 msgstr ""
 
+msgid "connect to or create given session"
+msgstr ""
+
 msgid "connect to the system bus"
 msgstr ""
 

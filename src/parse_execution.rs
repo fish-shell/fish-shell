@@ -317,7 +317,7 @@ impl ExecutionContext {
                 ctx,
                 &args,
                 &mut event_args,
-                WildcardNoMatchBehavior::Fail,
+                WildcardNoMatchBehavior::Literal,
             );
             if arg_result != EndExecutionReason::Ok {
                 return arg_result;
@@ -809,7 +809,7 @@ impl ExecutionContext {
             let glob_behavior = if [L!("set"), L!("count"), L!("path")].contains(&&cmd[..]) {
                 WildcardNoMatchBehavior::Allow
             } else {
-                WildcardNoMatchBehavior::Fail
+                WildcardNoMatchBehavior::Literal
             };
             // Form the list of arguments. The command is the first argument, followed by any arguments
             // from expanding the command, followed by the argument nodes themselves. E.g. if the
@@ -1379,10 +1379,15 @@ impl ExecutionContext {
             // Expand this string.
             let mut errors = ParseErrorList::new();
             let mut arg_expanded = CompletionList::new();
+            let flags = if glob_behavior == WildcardNoMatchBehavior::Literal {
+                ExpandFlags::PRESERVE_WILDCARDS_ON_NO_MATCH
+            } else {
+                ExpandFlags::default()
+            };
             let expand_ret = expand_string(
                 self.node_source_owned(arg_node),
                 &mut arg_expanded,
-                ExpandFlags::default(),
+                flags,
                 ctx,
                 Some(&mut errors),
             );
@@ -1927,6 +1932,8 @@ enum WildcardNoMatchBehavior {
     Fail,
     /// nullglob
     Allow,
+    /// Preserve unmatched wildcards as literal text.
+    Literal,
 }
 type AstArgsList<'a> = Vec<&'a ast::Argument>;
 

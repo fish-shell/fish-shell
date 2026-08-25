@@ -17,13 +17,11 @@ echo $status
 # CHECKERR: echo "$abc["
 # CHECKERR:            ^
 
-# Failed wildcards
+# Unmatched wildcards in ordinary arguments are preserved literally.
 echo *gibberishgibberishgibberish*
 echo $status
-# CHECK: 124
-# CHECKERR: {{.*}} No matches for wildcard '*gibberishgibberishgibberish*'. {{.*}}
-# CHECKERR: echo *gibberishgibberishgibberish*
-# CHECKERR:      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+# CHECK: *gibberishgibberishgibberish*
+# CHECK: 0
 
 $fish -c 'exit -5'
 # CHECKERR: warning: builtin exit returned invalid exit code -5

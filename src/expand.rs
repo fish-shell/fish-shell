@@ -60,6 +60,8 @@ bitflags! {
         const PRESERVE_HOME_TILDES = 1 << 7;
         /// Allow fuzzy matching.
         const FUZZY_MATCH = 1 << 8;
+        /// Preserve a wildcard as literal text if pathname expansion finds no matches.
+        const PRESERVE_WILDCARDS_ON_NO_MATCH = 1 << 9;
         /// Allows matching a leading dot even if the wildcard does not contain one.
         /// By default, wildcards only match a leading dot literally; this is why e.g. '*' does not
         /// match hidden files.
@@ -1170,6 +1172,20 @@ fn remove_internal_separator(s: &mut WString, conv: bool) {
     }
 }
 
+/// Convert internal wildcard characters back to their literal equivalents.
+fn wildcard_to_literal(s: &wstr) -> WString {
+    let mut result = WString::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            ANY_CHAR => result.push('?'),
+            ANY_STRING => result.push('*'),
+            ANY_STRING_RECURSIVE => result.push_utfstr(L!("**")),
+            _ => result.push(c),
+        }
+    }
+    result
+}
+
 /// A type that knows how to perform expansions.
 struct Expander<'a, 'b, 'c> {
     /// Operation context for this expansion.
@@ -1451,9 +1467,19 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             }
 
             let mut expanded = expanded_recv.take();
+            let no_matches = expanded.is_empty();
             expanded.sort_by(|a, b| wcsfilecmp_glob(&a.completion, &b.completion));
             if !out.extend(expanded) {
                 result = ExpandResult::new(ExpandResultCode::Overflow);
+            } else if no_matches
+                && self
+                    .flags
+                    .contains(ExpandFlags::PRESERVE_WILDCARDS_ON_NO_MATCH)
+            {
+                if !out.add(wildcard_to_literal(&path_to_expand)) {
+                    return append_overflow_error(self.errors, None);
+                }
+                result = ExpandResult::ok();
             }
         } else {
             // Can't fully justify this check. I think it's that SKIP_WILDCARDS is used when completing

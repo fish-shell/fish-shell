@@ -111,7 +111,7 @@ fish doesn't have ``${my_variable:-fallback}`` for providing default values to u
 Wildcards (globs)
 -----------------
 
-fish only supports the ``*`` and ``**`` glob (and the deprecated ``?`` glob) as syntax. If a glob doesn't match it fails the command (like with bash's ``failglob``) unless the command is ``for``, ``set`` or ``count`` or the glob is used with an environment override (``VAR=* command``), in which case it expands to nothing (like with bash's ``nullglob`` option).
+fish only supports the ``*`` and ``**`` glob (and the deprecated ``?`` glob) as syntax. Like bash by default, an unmatched glob in an ordinary command argument remains literal. For ``for``, ``set``, ``count`` and ``path``, and in an environment override (``VAR=* command``), an unmatched glob expands to nothing (like with bash's ``nullglob`` option).
 
 Globbing doesn't happen on expanded variables, so::
 
@@ -119,8 +119,6 @@ Globbing doesn't happen on expanded variables, so::
   echo $foo
 
 will not match any files.
-
-There are no options to control globbing so it always behaves like that.
 
 The ``**`` glob will match in subdirectories as well. In other shells this often needs to be turned on with an option, like ``setopt globstar`` in bash.
 
@@ -469,4 +467,3 @@ Other facilities
 Bash has ``set -x`` or ``set -o xtrace`` to print all commands that are being executed. In fish, this would be enabled by setting :envvar:`fish_trace`.
 
 Or, if your intention is to *profile* how long each line of a script takes, you can use ``fish --profile`` - see the :doc:`page for the fish command <cmds/fish>`.
-

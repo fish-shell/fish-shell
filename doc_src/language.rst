@@ -630,11 +630,11 @@ Examples:
 
 - ``~/.*`` matches all hidden files (also known as "dotfiles") and directories in your home directory.
 
-For most commands, if any wildcard fails to expand, the command is not executed, :ref:`$status <variables-status>` is set to nonzero, and a warning is printed. This behavior is like what bash does with ``shopt -s failglob``. There are exceptions, namely :doc:`set <cmds/set>` and :doc:`path <cmds/path>`, overriding variables in :ref:`overrides <variables-override>`, :doc:`count <cmds/count>` and :doc:`for <cmds/for>`. Their globs will instead expand to zero arguments (so the command won't see them at all), like with ``shopt -s nullglob`` in bash.
+For ordinary command arguments, a wildcard that has no matches is passed to the command unchanged, like bash's default behavior. :doc:`set <cmds/set>` and :doc:`path <cmds/path>`, overriding variables in :ref:`overrides <variables-override>`, :doc:`count <cmds/count>` and :doc:`for <cmds/for>` are exceptions. Their globs instead expand to zero arguments (so the command won't see them at all), like with ``shopt -s nullglob`` in bash.
 
 Examples::
 
-    # List the .foo files, or warns if there aren't any.
+    # List the .foo files, or pass "*.foo" to ls if there aren't any.
     ls *.foo
 
     # List the .foo files, if any.
@@ -643,7 +643,7 @@ Examples::
         ls $foos
     end
 
-Unlike bash (by default), fish will not pass on the literal glob character if no match was found, so for a command like ``apt install`` that does the matching itself, you need to add quotes::
+Quote or escape wildcards when they should always be interpreted by the command, even if a local file happens to match::
 
     apt install "ncurses-*"
 
@@ -1786,7 +1786,7 @@ If fish encounters a problem while executing a command, the status variable may 
 
 - 123 means that the command was not executed because the command name contained invalid characters.
 
-- 124 means that the command was not executed because none of the wildcards in the command produced any matches.
+- 124 means that the command was not executed because a wildcard in a context requiring a match produced no matches.
 
 - 125 means that while an executable with the specified name was located, the operating system could not actually execute the command.
 

@@ -58,7 +58,7 @@ tt {
 .color_scheme_choice_container:hover,
 .data_table > tr:hover,
 .prompt_choices_list > .ng-scope:hover {
-    background-color: #DDE;
+    background-color: #fff2;
 }
 
 #tab_parent {

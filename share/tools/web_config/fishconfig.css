@@ -669,6 +669,7 @@ button.delete_button:hover {
     }
 
     .tab:hover,
+    .data_table > tr:hover,
     #tab_contents .master_element:hover,
     .color_scheme_choice_container:hover,
     .prompt_choices_list > .ng-scope:hover {

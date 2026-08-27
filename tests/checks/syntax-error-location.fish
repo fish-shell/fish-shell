@@ -163,3 +163,8 @@ $fish -c 'foo $var[}]'
 # CHECKERR: fish: Unexpected '}' found, expecting ']'
 # CHECKERR: foo $var[}]
 # CHECKERR: {{^         }}^
+
+$fish -c 'echo foo"bar$(echo)$(echo)bur'
+# CHECKERR: fish: Unexpected end of string, quotes are not balanced
+# CHECKERR: echo foo"bar$(echo)$(echo)bur
+# CHECKERR: {{^        }}^

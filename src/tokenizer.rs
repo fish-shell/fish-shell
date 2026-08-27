@@ -648,15 +648,21 @@ impl<'c> Tokenizer<'c> {
         let mut brace_offsets = vec![];
         let mut slice_offsets = vec![];
         let mut expecting = vec![];
-        let mut quoted_cmdsubs = vec![];
+        let mut quoted_cmdsubs: Vec<QuotedSubst> = vec![];
         let buff_start = self.token_cursor;
         let mut is_token_begin = true;
 
+        struct QuotedSubst {
+            quote_location: usize,
+            subst_depth: usize, // aka index in paren_offsets
+        }
+
         fn process_opening_quote(
             zelf: &mut Tokenizer,
-            quoted_cmdsubs: &mut Vec<usize>,
+            quoted_cmdsubs: &mut Vec<QuotedSubst>,
             paren_offsets: &[usize],
             quote: char,
+            quote_location: usize,
         ) -> Result<(), usize> {
             zelf.on_quote_toggle
                 .as_mut()
@@ -665,7 +671,10 @@ impl<'c> Tokenizer<'c> {
                 let mut one_past_end = end + 1;
                 if zelf.start.char_at(end) == '$' {
                     one_past_end = end;
-                    quoted_cmdsubs.push(paren_offsets.len());
+                    quoted_cmdsubs.push(QuotedSubst {
+                        quote_location,
+                        subst_depth: paren_offsets.len(),
+                    });
                 }
                 zelf.token_cursor = end;
                 zelf.on_quote_toggle.as_mut().map(|cb| (cb)(one_past_end));
@@ -740,18 +749,24 @@ impl<'c> Tokenizer<'c> {
                     Some(_) => unreachable!(),
                 }
                 // Check if the ) completed a quoted command substitution.
-                if quoted_cmdsubs.last() == Some(&paren_offsets.len()) {
-                    quoted_cmdsubs.pop();
+                if quoted_cmdsubs.last().map(|cmd| cmd.subst_depth) == Some(paren_offsets.len()) {
+                    let quote_location = quoted_cmdsubs.pop().unwrap().quote_location;
                     // The "$(" part of a quoted command substitution closes double quotes. To keep
                     // quotes balanced, act as if there was an invisible double quote after the ")".
-                    if let Err(error_loc) =
-                        process_opening_quote(self, &mut quoted_cmdsubs, &paren_offsets, '"')
+                    if process_opening_quote(
+                        self,
+                        &mut quoted_cmdsubs,
+                        &paren_offsets,
+                        '"',
+                        quote_location,
+                    )
+                    .is_err()
                     {
                         if !self.accept_unfinished {
                             return self.call_error(
                                 TokenizerError::UnterminatedQuote,
                                 buff_start,
-                                error_loc,
+                                quote_location,
                                 None,
                                 0,
                             );
@@ -812,9 +827,13 @@ impl<'c> Tokenizer<'c> {
                 }
                 expecting.pop();
             } else if c == '\'' || c == '"' {
-                if let Err(error_loc) =
-                    process_opening_quote(self, &mut quoted_cmdsubs, &paren_offsets, c)
-                {
+                if let Err(error_loc) = process_opening_quote(
+                    self,
+                    &mut quoted_cmdsubs,
+                    &paren_offsets,
+                    c,
+                    self.token_cursor,
+                ) {
                     if !self.accept_unfinished {
                         return self.call_error(
                             TokenizerError::UnterminatedQuote,

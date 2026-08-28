@@ -11688,6 +11688,9 @@ msgstr ""
 msgid "Comma separated list of disks to be migrated"
 msgstr ""
 
+msgid "Comma separated list of resolvers"
+msgstr ""
+
 msgid "Comma separated list to custom config file(s)"
 msgstr ""
 
@@ -16062,6 +16065,9 @@ msgstr ""
 msgid "Directory to write logs to"
 msgstr ""
 
+msgid "Directory to write output (-dL only)"
+msgstr ""
+
 msgid "Directory to write scripts"
 msgstr ""
 
@@ -16395,6 +16401,9 @@ msgstr ""
 msgid "Disable automatic tag following"
 msgstr ""
 
+msgid "Disable automatic update check"
+msgstr ""
+
 msgid "Disable autorefresh of the repository"
 msgstr ""
 
@@ -16468,6 +16477,9 @@ msgid "Disable check for unique upload"
 msgstr ""
 
 msgid "Disable color"
+msgstr ""
+
+msgid "Disable color in output"
 msgstr ""
 
 msgid "Disable color in output messages"
@@ -17563,6 +17575,9 @@ msgid "Display account status"
 msgstr ""
 
 msgid "Display actions without running"
+msgstr ""
+
+msgid "Display active subdomains only"
 msgstr ""
 
 msgid "Display all MIB variables"
@@ -21292,6 +21307,9 @@ msgid "Domain type"
 msgstr ""
 
 msgid "Domain vcpu counts"
+msgstr ""
+
+msgid "Domains to find subdomains for"
 msgstr ""
 
 msgid "Don"
@@ -25572,6 +25590,9 @@ msgstr "Växla primärt och sekundärt urval"
 msgid "Exclude GLOB matches"
 msgstr ""
 
+msgid "Exclude IPs from the list of domains"
+msgstr ""
+
 msgid "Exclude Linux pseudo filesystems"
 msgstr ""
 
@@ -26664,6 +26685,12 @@ msgstr ""
 msgid "File as input"
 msgstr "Fil som indata"
 
+msgid "File containing list of domains"
+msgstr ""
+
+msgid "File containing list of resolvers"
+msgstr ""
+
 msgid "File describing cross compilation environment"
 msgstr ""
 
@@ -26806,6 +26833,9 @@ msgid "File to write backup data to"
 msgstr ""
 
 msgid "File to write output file dependencies"
+msgstr ""
+
+msgid "File to write output to"
 msgstr ""
 
 msgid "File uses specified units of space"
@@ -27400,6 +27430,9 @@ msgid "Fixup a commit"
 msgstr ""
 
 msgid "Fixup commit to be used with rebase --autosquash"
+msgstr ""
+
+msgid "Flag config file"
 msgstr ""
 
 msgid "Flag explicitly informs tmux that UTF-8 is supported"
@@ -30558,6 +30591,9 @@ msgstr ""
 msgid "HTTP proxy URL"
 msgstr ""
 
+msgid "HTTP proxy to use"
+msgstr ""
+
 msgid "HTTP request size limit"
 msgstr ""
 
@@ -32124,6 +32160,9 @@ msgstr ""
 msgid "Include all sources (including path and git)"
 msgstr ""
 
+msgid "Include all sources in the output (-json only)"
+msgstr ""
+
 msgid "Include archives"
 msgstr ""
 
@@ -32239,6 +32278,9 @@ msgid "Include high-level source"
 msgstr ""
 
 msgid "Include hooks"
+msgstr ""
+
+msgid "Include host IP in output (-active only)"
 msgstr ""
 
 msgid "Include index for symbols from archive members"
@@ -34365,6 +34407,9 @@ msgstr ""
 msgid "Limit the number of results (default: 10, max: 100)"
 msgstr ""
 
+msgid "Limit the number of results per source"
+msgstr ""
+
 msgid "Limit the number of results shown. Default is 50"
 msgstr ""
 
@@ -34687,6 +34732,9 @@ msgid "List all available rbenv commands"
 msgstr ""
 
 msgid "List all available services"
+msgstr ""
+
+msgid "List all available sources"
 msgstr ""
 
 msgid "List all available tags"
@@ -38415,6 +38463,9 @@ msgstr ""
 msgid "Max objects per response"
 msgstr ""
 
+msgid "Max response body size to read (bytes)"
+msgstr ""
+
 msgid "Max scroll window"
 msgstr "Maximalt rullningsfönster"
 
@@ -38431,6 +38482,12 @@ msgid "Maximize window"
 msgstr ""
 
 msgid "Maximum AGE for index in cache before refresh"
+msgstr ""
+
+msgid "Maximum HTTP requests per second (global)"
+msgstr ""
+
+msgid "Maximum HTTP requests per second for providers (key=value)"
 msgstr ""
 
 msgid "Maximum age (in seconds) for assets"
@@ -38770,6 +38827,9 @@ msgid "Minimum-stability allowed (unless a version is specified)"
 msgstr ""
 
 msgid "Minor number of array device"
+msgstr ""
+
+msgid "Minutes to wait for enumeration results"
 msgstr ""
 
 msgid "Mirror an exploit to current directory"
@@ -39892,6 +39952,9 @@ msgid "Number of components to strip from paths"
 msgstr ""
 
 msgid "Number of compression threads for multithread compression"
+msgstr ""
+
+msgid "Number of concurrent goroutines for resolving (-active only)"
 msgstr ""
 
 msgid "Number of concurrent jobs (no argument means no limit)"
@@ -47877,6 +47940,9 @@ msgstr ""
 msgid "Provided shared libraries, separated by whitespace"
 msgstr ""
 
+msgid "Provider config file"
+msgstr ""
+
 msgid "Provides a detailed information about the database schema"
 msgstr ""
 
@@ -51396,6 +51462,9 @@ msgstr ""
 msgid "Report size in bytes"
 msgstr ""
 
+msgid "Report source statistics"
+msgstr ""
+
 msgid "Report specific warnings as errors"
 msgstr ""
 
@@ -54802,6 +54871,9 @@ msgid "Seconds to wait before quitting stalled connection"
 msgstr ""
 
 msgid "Seconds to wait before reconnecting"
+msgstr ""
+
+msgid "Seconds to wait before timing out"
 msgstr ""
 
 msgid "Seconds to wait between updates"
@@ -60258,6 +60330,9 @@ msgstr ""
 msgid "Show only properties by this name"
 msgstr ""
 
+msgid "Show only subdomains"
+msgstr ""
+
 msgid "Show only the names of files that contain matches"
 msgstr ""
 
@@ -62616,6 +62691,9 @@ msgstr ""
 msgid "Source-only mode"
 msgstr ""
 
+msgid "Sources to exclude from enumeration"
+msgstr ""
+
 msgid "Space or comma separated list of features to activate"
 msgstr ""
 
@@ -62641,6 +62719,9 @@ msgid "Specific path to potfile"
 msgstr ""
 
 msgid "Specific path to restore file"
+msgstr ""
+
+msgid "Specific sources to use for discovery"
 msgstr ""
 
 msgid "Specifics of npm's package.json handling"
@@ -65932,6 +66013,12 @@ msgid "Stylize errors and messages using color and context"
 msgstr ""
 
 msgid "Subdirectory of the new target"
+msgstr ""
+
+msgid "Subdomains to filter"
+msgstr ""
+
+msgid "Subdomains to match"
 msgstr ""
 
 msgid "Subdriver of disk device"
@@ -69807,6 +69894,9 @@ msgstr ""
 msgid "Update subarray"
 msgstr ""
 
+msgid "Update subfinder to latest version"
+msgstr ""
+
 msgid "Update superblock properties"
 msgstr ""
 
@@ -70866,6 +70956,9 @@ msgstr ""
 msgid "Use all local caches"
 msgstr ""
 
+msgid "Use all sources for enumeration (slow)"
+msgstr ""
+
 msgid "Use all tags, not just annotated"
 msgstr ""
 
@@ -71617,6 +71710,9 @@ msgid "Use only a given repository"
 msgstr ""
 
 msgid "Use only paramiko, no openssh"
+msgstr ""
+
+msgid "Use only sources that can handle subdomains recursively"
 msgstr ""
 
 msgid "Use only specified device size (ignore rest of device) DANGEROUS!"
@@ -74269,6 +74365,9 @@ msgid "Write out the current configuration"
 msgstr ""
 
 msgid "Write output back to the same file instead of stdout"
+msgstr ""
+
+msgid "Write output in JSONL format"
 msgstr ""
 
 msgid "Write output to <file> instead of stdout"

@@ -4445,7 +4445,13 @@ impl<'a> Reader<'a> {
         }
 
         let cmdsubst_range = get_cmdsubst_extent(&buffer, pos);
-        for token in Tokenizer::new(&buffer[cmdsubst_range.clone()], TokFlags::ACCEPT_UNFINISHED) {
+        for token in Tokenizer::new(
+            &buffer[cmdsubst_range.clone()],
+            TokFlags {
+                accept_unfinished: true,
+                ..Default::default()
+            },
+        ) {
             if token.type_ != TokenType::String {
                 continue;
             }
@@ -4460,9 +4466,16 @@ impl<'a> Reader<'a> {
 
 /// Returns true if the last token is a comment.
 fn text_ends_in_comment(text: &wstr) -> bool {
-    Tokenizer::new(text, TokFlags::ACCEPT_UNFINISHED | TokFlags::SHOW_COMMENTS)
-        .last()
-        .is_some_and(|token| token.type_ == TokenType::Comment)
+    Tokenizer::new(
+        text,
+        TokFlags {
+            accept_unfinished: true,
+            show_comments: true,
+            ..Default::default()
+        },
+    )
+    .last()
+    .is_some_and(|token| token.type_ == TokenType::Comment)
 }
 
 impl<'a> Reader<'a> {

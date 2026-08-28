@@ -7,7 +7,6 @@ use crate::parse_constants::SOURCE_OFFSET_INVALID;
 use crate::parser_keywords::parser_keywords_is_subcommand;
 use crate::prelude::*;
 use crate::redirection::RedirectionMode;
-use bitflags::bitflags;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use libc::{STDIN_FILENO, STDOUT_FILENO};
 use nix::fcntl::OFlag;
@@ -106,28 +105,19 @@ pub struct PipeOrRedir {
     pub consumed: usize,
 }
 
-bitflags! {
-    /// Set of flags controlling expansions.
-    #[derive(Clone, Copy)]
-    pub struct TokFlags : u8 {
-        /// Flag telling the tokenizer to accept incomplete parameters, i.e. parameters with mismatching
-        /// parenthesis, etc. This is useful for tab-completion.
-        const ACCEPT_UNFINISHED = 1 << 0;
-
-        /// Flag telling the tokenizer not to remove comments. Useful for syntax highlighting.
-        const SHOW_COMMENTS = 1 << 1;
-
-        /// Ordinarily, the tokenizer ignores newlines following a newline, or a semicolon. This flag tells
-        /// the tokenizer to return each of them as a separate END.
-        const SHOW_BLANK_LINES = 1 << 2;
-
-        /// Make an effort to continue after an error.
-        const CONTINUE_AFTER_ERROR = 1 << 3;
-
-        /// Consumers want to treat all tokens as arguments, so disable special handling at
-        /// command-position.
-        const ARGUMENT_LIST = 1 << 4;
-    }
+#[derive(Clone, Copy, Default)]
+pub struct TokFlags {
+    /// Accept incomplete parameters, i.e. parameters with mismatching parenthesis, etc. This is
+    /// useful for tab-completion.
+    pub accept_unfinished: bool,
+    /// Do not remove comments. Useful for syntax highlighting.
+    pub show_comments: bool,
+    /// Return each newline following a newline or semicolon as a separate END.
+    pub show_blank_lines: bool,
+    /// Make an effort to continue after an error.
+    pub continue_after_error: bool,
+    /// Treat all tokens as arguments, disabling special handling at command-position.
+    pub argument_list: bool,
 }
 
 localizable_consts!(
@@ -271,9 +261,9 @@ impl<'c> Tokenizer<'c> {
     /// should not be freed by the caller until after the tokenizer is destroyed.
     ///
     /// \param start The string to tokenize
-    /// \param flags Flags to the tokenizer. Setting TokFlags::ACCEPT_UNFINISHED will cause the tokenizer
+    /// \param flags Flags to the tokenizer. Setting `TokFlags::accept_unfinished` will cause the tokenizer
     /// to accept incomplete tokens, such as a subshell without a closing parenthesis, as a valid
-    /// token. Setting TokFlags::SHOW_COMMENTS will return comments as tokens
+    /// token. Setting `TokFlags::show_comments` will return comments as tokens
     pub fn new(start: &'c wstr, flags: TokFlags) -> Self {
         Self::new_impl(start, flags, None)
     }
@@ -293,16 +283,14 @@ impl<'c> Tokenizer<'c> {
             token_cursor: 0,
             start,
             has_next: true,
-            brace_statement_parser: (!flags.contains(TokFlags::ARGUMENT_LIST)).then_some(
-                BraceStatementParser {
-                    at_command_position: true,
-                    unclosed_brace_statements: 0,
-                },
-            ),
-            accept_unfinished: flags.contains(TokFlags::ACCEPT_UNFINISHED),
-            show_comments: flags.contains(TokFlags::SHOW_COMMENTS),
-            show_blank_lines: flags.contains(TokFlags::SHOW_BLANK_LINES),
-            continue_after_error: flags.contains(TokFlags::CONTINUE_AFTER_ERROR),
+            brace_statement_parser: (!flags.argument_list).then_some(BraceStatementParser {
+                at_command_position: true,
+                unclosed_brace_statements: 0,
+            }),
+            accept_unfinished: flags.accept_unfinished,
+            show_comments: flags.show_comments,
+            show_blank_lines: flags.show_blank_lines,
+            continue_after_error: flags.continue_after_error,
             continue_line_after_comment: false,
             on_quote_toggle,
         }
@@ -906,7 +894,7 @@ pub fn is_token_delimiter(c: char, next: Option<char>) -> bool {
 
 /// Return the first token from the string, skipping variable assignments like A=B.
 pub fn tok_command(str: &wstr) -> WString {
-    let mut t = Tokenizer::new(str, TokFlags::empty());
+    let mut t = Tokenizer::new(str, TokFlags::default());
     while let Some(token) = t.next() {
         if token.type_ != TokenType::String {
             return WString::new();
@@ -1166,7 +1154,7 @@ mod tests {
     fn test_tokenizer() {
         {
             let s = L!("alpha beta");
-            let mut t = Tokenizer::new(s, TokFlags::empty());
+            let mut t = Tokenizer::new(s, TokFlags::default());
 
             let token = t.next(); // alpha
             assert!(token.is_some());
@@ -1188,7 +1176,7 @@ mod tests {
 
         {
             let s = L!("{ echo");
-            let mut t = Tokenizer::new(s, TokFlags::empty());
+            let mut t = Tokenizer::new(s, TokFlags::default());
 
             let token = t.next(); // {
             assert!(token.is_some());
@@ -1210,21 +1198,21 @@ mod tests {
 
         {
             let s = L!("{echo, foo}");
-            let mut t = Tokenizer::new(s, TokFlags::empty());
+            let mut t = Tokenizer::new(s, TokFlags::default());
             let token = t.next().unwrap();
             assert_eq!(token.type_, TokenType::LeftBrace);
             assert_eq!(token.length, 1);
         }
         {
             let s = L!("{ echo; foo}");
-            let mut t = Tokenizer::new(s, TokFlags::empty());
+            let mut t = Tokenizer::new(s, TokFlags::default());
             let token = t.next().unwrap();
             assert_eq!(token.type_, TokenType::LeftBrace);
         }
 
         {
             let s = L!("{ | { name } '");
-            let mut t = Tokenizer::new(s, TokFlags::empty());
+            let mut t = Tokenizer::new(s, TokFlags::default());
             let mut next_type = || t.next().unwrap().type_;
             assert_eq!(next_type(), TokenType::LeftBrace);
             assert_eq!(next_type(), TokenType::Pipe);
@@ -1260,7 +1248,7 @@ mod tests {
         ];
 
         {
-            let t = Tokenizer::new(s, TokFlags::empty());
+            let t = Tokenizer::new(s, TokFlags::default());
             let mut actual_types = vec![];
             for token in t {
                 // Print for `cargo test -- --no-capture` and make it easier to debug when the test fails
@@ -1278,7 +1266,7 @@ mod tests {
         // Test some errors.
 
         {
-            let mut t = Tokenizer::new(L!("abc\\"), TokFlags::empty());
+            let mut t = Tokenizer::new(L!("abc\\"), TokFlags::default());
             let token = t.next().unwrap();
             assert_eq!(token.type_, TokenType::Error);
             assert_eq!(token.error, TokenizerError::UnterminatedEscape);
@@ -1287,7 +1275,7 @@ mod tests {
         }
 
         {
-            let mut t = Tokenizer::new(L!("abc )defg(hij"), TokFlags::empty());
+            let mut t = Tokenizer::new(L!("abc )defg(hij"), TokFlags::default());
             let _token = t.next().unwrap();
             let token = t.next().unwrap();
             assert_eq!(token.type_, TokenType::Error);
@@ -1297,7 +1285,7 @@ mod tests {
         }
 
         {
-            let mut t = Tokenizer::new(L!("abc defg(hij (klm)"), TokFlags::empty());
+            let mut t = Tokenizer::new(L!("abc defg(hij (klm)"), TokFlags::default());
             let _token = t.next().unwrap();
             let token = t.next().unwrap();
             assert_eq!(token.type_, TokenType::Error);
@@ -1306,7 +1294,7 @@ mod tests {
         }
 
         {
-            let mut t = Tokenizer::new(L!("abc defg[hij (klm)"), TokFlags::empty());
+            let mut t = Tokenizer::new(L!("abc defg[hij (klm)"), TokFlags::default());
             let _token = t.next().unwrap();
             let token = t.next().unwrap();
             assert_eq!(token.type_, TokenType::Error);
@@ -1329,7 +1317,7 @@ mod tests {
             ];
 
             for (i, e) in input.into_iter().zip(err) {
-                let mut t = Tokenizer::new(i, TokFlags::empty());
+                let mut t = Tokenizer::new(i, TokFlags::default());
                 let _token = t.next().unwrap();
                 let token = t.next().unwrap();
                 assert_eq!(token.type_, TokenType::Error);

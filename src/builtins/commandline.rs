@@ -215,7 +215,13 @@ fn write_part(
     if range_is_single_token {
         add_token(buff);
     } else {
-        let mut tok = Tokenizer::new(buff, TokFlags::ACCEPT_UNFINISHED);
+        let mut tok = Tokenizer::new(
+            buff,
+            TokFlags {
+                accept_unfinished: true,
+                ..Default::default()
+            },
+        );
         let mut in_redirection = false;
         while let Some(token) = tok.next() {
             if cut_at_cursor && token.end() >= pos {

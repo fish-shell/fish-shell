@@ -521,7 +521,11 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
 
         let mut tokenizer = Tokenizer::new(
             gap_text,
-            TokFlags::SHOW_COMMENTS | TokFlags::SHOW_BLANK_LINES,
+            TokFlags {
+                show_comments: true,
+                show_blank_lines: true,
+                ..Default::default()
+            },
         );
         while let Some(tok) = tokenizer.next() {
             let tok_text = tokenizer.text_of(&tok);

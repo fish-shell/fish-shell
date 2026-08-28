@@ -405,7 +405,11 @@ fn get_job_or_process_extent(
     let mut result = cmdsub_range.clone();
     for token in Tokenizer::new(
         &buff[cmdsub_range.clone()],
-        TokFlags::ACCEPT_UNFINISHED | TokFlags::SHOW_COMMENTS,
+        TokFlags {
+            accept_unfinished: true,
+            show_comments: true,
+            ..Default::default()
+        },
     ) {
         let tok_begin = token.offset();
         if finished {
@@ -461,7 +465,13 @@ pub fn get_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>, Range<
     assert!(cmdsubst_begin <= buff.len());
     assert!(cmdsubst_range.end <= buff.len());
 
-    for token in Tokenizer::new(&buff[cmdsubst_range], TokFlags::ACCEPT_UNFINISHED) {
+    for token in Tokenizer::new(
+        &buff[cmdsubst_range],
+        TokFlags {
+            accept_unfinished: true,
+            ..Default::default()
+        },
+    ) {
         let tok_begin = token.offset();
         let mut tok_end = tok_begin;
 
@@ -918,10 +928,14 @@ impl<'a> IndentVisitor<'a> {
                 }
                 quoted = !quoted;
             };
-            for _token in
-                Tokenizer::with_quote_events(part, TokFlags::ACCEPT_UNFINISHED, &mut callback)
-            {
-            }
+            for _token in Tokenizer::with_quote_events(
+                part,
+                TokFlags {
+                    accept_unfinished: true,
+                    ..Default::default()
+                },
+                &mut callback,
+            ) {}
         }
         if !quoted {
             self.indents[done..range.end].fill(self.indent);

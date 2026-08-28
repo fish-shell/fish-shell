@@ -222,7 +222,13 @@ impl ReaderHistorySearch {
             let offset = find(text, needle).unwrap();
             self.add_if_new(SearchMatch::new(text.to_owned(), offset));
         } else if matches!(self.mode, SearchMode::Token | SearchMode::LastToken) {
-            let mut tok = Tokenizer::new(text, TokFlags::ACCEPT_UNFINISHED);
+            let mut tok = Tokenizer::new(
+                text,
+                TokFlags {
+                    accept_unfinished: true,
+                    ..Default::default()
+                },
+            );
 
             let mut local_tokens = vec![];
             while let Some(token) = tok.next() {

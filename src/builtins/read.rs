@@ -652,8 +652,14 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         }
 
         if let Some(token_mode) = opts.token_mode {
-            let mut tok =
-                Tokenizer::new(&buff, TokFlags::ACCEPT_UNFINISHED | TokFlags::ARGUMENT_LIST);
+            let mut tok = Tokenizer::new(
+                &buff,
+                TokFlags {
+                    accept_unfinished: true,
+                    argument_list: true,
+                    ..Default::default()
+                },
+            );
             let token_text = |tokenizer: &mut Tokenizer<'_>, token: &Tok| -> WString {
                 let mut text = Cow::Borrowed(tokenizer.text_of(token));
                 match token_mode {

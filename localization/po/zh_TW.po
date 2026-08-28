@@ -9985,6 +9985,9 @@ msgstr ""
 msgid "Case-insensitive match"
 msgstr ""
 
+msgid "Case-sensitive search"
+msgstr ""
+
 msgid "Cause CVS to be really quiet."
 msgstr ""
 
@@ -11009,6 +11012,9 @@ msgid "Checks obsoleted"
 msgstr ""
 
 msgid "Checks provides"
+msgstr ""
+
+msgid "Checks results in Nmap's XML output"
 msgstr ""
 
 msgid "Checks status of the latest build"
@@ -16474,6 +16480,9 @@ msgstr ""
 msgid "Disable colors"
 msgstr ""
 
+msgid "Disable colour highlighting in search results"
+msgstr ""
+
 msgid "Disable command editing and history support"
 msgstr ""
 
@@ -18379,6 +18388,9 @@ msgstr ""
 msgid "Display more information"
 msgstr ""
 
+msgid "Display more information in output"
+msgstr ""
+
 msgid "Display native libc paths file or validate one"
 msgstr ""
 
@@ -18584,6 +18596,9 @@ msgid "Display tag listing in columns"
 msgstr ""
 
 msgid "Display technologies"
+msgstr ""
+
+msgid "Display the EDB-ID value rather than local path"
 msgstr ""
 
 msgid "Display the ELF file header"
@@ -25519,10 +25534,16 @@ msgstr ""
 msgid "Everything (same as -x, but all record types)"
 msgstr ""
 
+msgid "Exact match on exploit title"
+msgstr ""
+
 msgid "Exact search with a filter expression"
 msgstr ""
 
 msgid "Exactly like -include, except that any output produced by scanning file is thrown away"
+msgstr ""
+
+msgid "Examine (aka opens) the exploit using $PAGER"
 msgstr ""
 
 msgid "Examine device for md use"
@@ -26183,6 +26204,9 @@ msgid "Explicitly set compression level (aka --zl)"
 msgstr ""
 
 msgid "Explicitly set the mime-type"
+msgstr ""
+
+msgid "Exploit titles are allowed to overflow their columns"
 msgstr ""
 
 msgid "Export <keys> to stdout"
@@ -38734,6 +38758,9 @@ msgstr ""
 msgid "Minor number of array device"
 msgstr ""
 
+msgid "Mirror an exploit to current directory"
+msgstr ""
+
 msgid "Mirror-list file"
 msgstr ""
 
@@ -43376,6 +43403,9 @@ msgid "Perform a simple check to determine whether a route currently exists or n
 msgstr ""
 
 msgid "Perform a simulation"
+msgstr ""
+
+msgid "Perform a strict search"
 msgstr ""
 
 msgid "Perform a syntax check on the playbook"
@@ -50734,6 +50764,9 @@ msgstr ""
 msgid "Remove users from a team"
 msgstr ""
 
+msgid "Remove values from results"
+msgstr ""
+
 msgid "Remove var from the inherited environment before passing it on to the command"
 msgstr ""
 
@@ -54316,6 +54349,9 @@ msgstr ""
 msgid "Search CSV data with regexes"
 msgstr ""
 
+msgid "Search Exploit-DB"
+msgstr ""
+
 msgid "Search after end of screen"
 msgstr ""
 
@@ -54541,6 +54577,9 @@ msgstr ""
 msgid "Search into the package list"
 msgstr ""
 
+msgid "Search just the exploit title"
+msgstr ""
+
 msgid "Search locally-installed packages for regexp"
 msgstr ""
 
@@ -54698,6 +54737,9 @@ msgid "Search trackers with legal content only"
 msgstr ""
 
 msgid "Search via regex"
+msgstr ""
+
+msgid "Search with CVE value"
 msgstr ""
 
 msgid "Search with intermediate results"
@@ -58648,6 +58690,9 @@ msgstr ""
 msgid "Show StackDriver logs"
 msgstr ""
 
+msgid "Show URL to Exploit-DB instead of local path"
+msgstr ""
+
 msgid "Show [h]elp"
 msgstr ""
 
@@ -60502,6 +60547,9 @@ msgstr ""
 msgid "Show result"
 msgstr ""
 
+msgid "Show result in json format"
+msgstr ""
+
 msgid "Show return on investments"
 msgstr ""
 
@@ -60893,6 +60941,9 @@ msgid "Show the full path for the given Python executable"
 msgstr ""
 
 msgid "Show the full path for the given Ruby executable"
+msgstr ""
+
+msgid "Show the full path to an exploit"
 msgstr ""
 
 msgid "Show the full pre- and post-image blob object names on the \"index\" line"
@@ -69599,6 +69650,9 @@ msgid "Update destination files in-place"
 msgstr ""
 
 msgid "Update device from an XML file"
+msgstr ""
+
+msgid "Update exploit packages"
 msgstr ""
 
 msgid "Update file timestamp on changes"

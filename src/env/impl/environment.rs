@@ -954,9 +954,11 @@ impl EnvStackImpl {
         }
 
         // Construct and set the new variable.
-        let mut varflags = EnvVarFlags::empty();
-        varflags.set(EnvVarFlags::EXPORT, exports);
-        varflags.set(EnvVarFlags::PATHVAR, pathvar);
+        let varflags = EnvVarFlags {
+            exported: exports,
+            pathvar,
+            ..Default::default()
+        };
         let new_var = EnvVar::new_vec(val, varflags);
 
         locked_uvars.set(key, new_var);

@@ -1274,9 +1274,12 @@ fn process_completions_into_infos(lst: &[Completion]) -> Vec<PagerComp> {
         // Append the single completion string. We may later merge these into multiple.
         comp_info.comp.push(escape_string(
             &comp.completion,
-            EscapeStringStyle::Script(
-                EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED | EscapeFlags::SYMBOLIC,
-            ),
+            EscapeStringStyle::Script(EscapeFlags {
+                no_printables: true,
+                no_quoted: true,
+                symbolic: true,
+                ..Default::default()
+            }),
         ));
         // HACK We want to render a full shell command, with syntax highlighting.  Above we
         // escape nonprintables, which might make the rendered command longer than the original

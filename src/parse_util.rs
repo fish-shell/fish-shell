@@ -1334,7 +1334,10 @@ pub fn detect_errors_in_argument(
         |begin: usize, end: usize, out_errors: &mut Option<&mut ParseErrorList>| -> bool {
             let Some(unesc) = unescape_string(
                 &arg_src[begin..end],
-                UnescapeStringStyle::Script(UnescapeFlags::SPECIAL),
+                UnescapeStringStyle::Script(UnescapeFlags {
+                    special: true,
+                    ..Default::default()
+                }),
             ) else {
                 if out_errors.is_some() {
                     let src = arg_src.as_char_slice();

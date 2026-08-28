@@ -203,7 +203,10 @@ fn write_part(
             TokenOutputMode::Unescaped => {
                 let unescaped = unescape_string(
                     token_text,
-                    UnescapeStringStyle::Script(UnescapeFlags::INCOMPLETE),
+                    UnescapeStringStyle::Script(UnescapeFlags {
+                        incomplete: true,
+                        ..Default::default()
+                    }),
                 )
                 .unwrap();
                 args.push(Completion::from_completion(unescaped));

@@ -1167,8 +1167,14 @@ pub fn wildcard_has(s: impl AsRef<wstr>) -> bool {
     if !s.contains('*') && (!qmark_is_wild || !s.contains('?')) {
         return false;
     }
-    let unescaped =
-        unescape_string(s, UnescapeStringStyle::Script(UnescapeFlags::SPECIAL)).unwrap_or_default();
+    let unescaped = unescape_string(
+        s,
+        UnescapeStringStyle::Script(UnescapeFlags {
+            special: true,
+            ..Default::default()
+        }),
+    )
+    .unwrap_or_default();
     wildcard_has_internal(unescaped)
 }
 
@@ -1185,7 +1191,14 @@ mod tests {
 
         let wc = L!("foo*bar");
         assert!(wildcard_has(wc) && !wildcard_has_internal(wc));
-        let wc = unescape_string(wc, UnescapeStringStyle::Script(UnescapeFlags::SPECIAL)).unwrap();
+        let wc = unescape_string(
+            wc,
+            UnescapeStringStyle::Script(UnescapeFlags {
+                special: true,
+                ..Default::default()
+            }),
+        )
+        .unwrap();
         assert!(!wildcard_has(&wc) && wildcard_has_internal(&wc));
 
         with_overridden_feature(FeatureFlag::QuestionMarkNoGlob, false, || {

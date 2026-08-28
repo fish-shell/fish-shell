@@ -1934,7 +1934,7 @@ mod tests {
     #[test]
     fn test_parse_text_face_for_highlight_fully_specified() {
         let assert_all_set = |values: Vec<WString>| {
-            let var = EnvVar::new_vec(values.clone(), EnvVarFlags::empty());
+            let var = EnvVar::new_vec(values.clone(), EnvVarFlags::default());
             let face = parse_text_face_for_highlight(&var);
             assert!(
                 face.is_some_and(|face| face.all_set()),

@@ -2,10 +2,7 @@ use super::prelude::*;
 use crate::{
     builtins::Error,
     common::valid_var_name,
-    env::{
-        EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment, INHERITED_VARS,
-        handle_env_return,
-    },
+    env::{EnvMode, EnvStackSetResult, EnvVar, Environment, INHERITED_VARS, handle_env_return},
     err_fmt, err_str,
     event::{self, Event},
     expand::{expand_escape_string, expand_escape_variable},
@@ -649,7 +646,7 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
     ));
     // HACK: PWD can be set, depending on how you ask.
     // For our purposes it's read-only.
-    if EnvVar::flags_for(var_name).contains(EnvVarFlags::READ_ONLY) {
+    if EnvVar::flags_for(var_name).read_only {
         streams
             .out
             .appendln(" ".chars().chain(wgettext!("(read-only)").chars()));
@@ -670,7 +667,11 @@ fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &d
         let value = &vals[i];
         let escaped_val = escape_string(
             value,
-            EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
+            EscapeStringStyle::Script(EscapeFlags {
+                no_printables: true,
+                no_quoted: true,
+                ..Default::default()
+            }),
         );
         streams
             .out
@@ -701,7 +702,11 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
             if let Some(inherited) = INHERITED_VARS.get().unwrap().get(&name) {
                 let escaped_val = escape_string(
                     inherited,
-                    EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
+                    EscapeStringStyle::Script(EscapeFlags {
+                        no_printables: true,
+                        no_quoted: true,
+                        ..Default::default()
+                    }),
                 );
                 streams
                     .out
@@ -736,7 +741,11 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
             if let Some(inherited) = INHERITED_VARS.get().unwrap().get(arg) {
                 let escaped_val = escape_string(
                     inherited,
-                    EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
+                    EscapeStringStyle::Script(EscapeFlags {
+                        no_printables: true,
+                        no_quoted: true,
+                        ..Default::default()
+                    }),
                 );
                 streams
                     .out

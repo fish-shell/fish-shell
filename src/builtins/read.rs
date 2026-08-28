@@ -4,7 +4,7 @@ use super::prelude::*;
 use crate::{
     builtins::Error,
     common::valid_var_name,
-    env::{EnvMode, EnvVar, EnvVarFlags, Environment as _, READ_BYTE_LIMIT},
+    env::{EnvMode, EnvVar, Environment as _, READ_BYTE_LIMIT},
     err_fmt, err_str,
     history::{HistoryId, MemoryHistoryId},
     input::{DecodeState, InvalidPolicy, decode_utf8},
@@ -531,7 +531,7 @@ fn validate_read_args(
             varname_error(cmd, arg).full_trailer(parser).finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
-        if EnvVar::flags_for(arg).contains(EnvVarFlags::READ_ONLY) {
+        if EnvVar::flags_for(arg).read_only {
             err_fmt!("%s: cannot overwrite read-only variable", arg)
                 .cmd(cmd)
                 .full_trailer(parser)

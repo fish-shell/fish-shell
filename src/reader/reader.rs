@@ -5078,7 +5078,11 @@ pub fn reader_write_title(
                 title_function_call.push(' ');
                 title_function_call.push_utfstr(&escape_string(
                     cmd,
-                    EscapeStringStyle::Script(EscapeFlags::NO_QUOTED | EscapeFlags::NO_TILDE),
+                    EscapeStringStyle::Script(EscapeFlags {
+                        no_quoted: true,
+                        no_tilde: true,
+                        ..Default::default()
+                    }),
                 ));
             }
             title_command = Some(&title_function_call);
@@ -5360,7 +5364,10 @@ fn get_autosuggestion_performer(
                 history.clone(),
                 search_string.to_owned(),
                 search_type,
-                SearchFlags::IGNORE_CASE,
+                SearchFlags {
+                    ignore_case: true,
+                    ..Default::default()
+                },
                 0,
             );
 
@@ -6625,14 +6632,13 @@ fn try_expand_wildcard(
         if r#match.flags.contains(CompleteFlags::DONT_ESCAPE) {
             joined.push_utfstr(&r#match.completion);
         } else {
-            let tildeflag = if r#match.flags.contains(CompleteFlags::DONT_ESCAPE_TILDES) {
-                EscapeFlags::NO_TILDE
-            } else {
-                EscapeFlags::default()
-            };
             joined.push_utfstr(&escape_string(
                 &r#match.completion,
-                EscapeStringStyle::Script(EscapeFlags::NO_QUOTED | tildeflag),
+                EscapeStringStyle::Script(EscapeFlags {
+                    no_quoted: true,
+                    no_tilde: r#match.flags.contains(CompleteFlags::DONT_ESCAPE_TILDES),
+                    ..Default::default()
+                }),
             ));
         }
         joined.push(' ');
@@ -6767,12 +6773,12 @@ pub fn completion_apply_to_command_line(
         };
     }
 
-    let mut escape_flags = EscapeFlags::empty();
+    let mut escape_flags = EscapeFlags::default();
     if append_only || !is_unique || trailer.is_none() {
-        escape_flags.insert(EscapeFlags::NO_QUOTED);
+        escape_flags.no_quoted = true;
     }
     if no_tilde {
-        escape_flags.insert(EscapeFlags::NO_TILDE);
+        escape_flags.no_tilde = true;
     }
 
     let mut maybe_add_slash = |trailer: &mut char, token: &wstr| {
@@ -6850,7 +6856,7 @@ pub fn completion_apply_to_command_line(
         }
 
         if have_token {
-            escape_flags.insert(EscapeFlags::NO_QUOTED);
+            escape_flags.no_quoted = true;
         }
 
         escape_string_with_quote(val_str, quote, escape_flags)

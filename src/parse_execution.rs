@@ -12,10 +12,7 @@ use crate::{
     },
     common::{get_program_name, valid_var_name},
     complete::CompletionList,
-    env::{
-        EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment as _, Statuses,
-        handle_env_return,
-    },
+    env::{EnvMode, EnvStackSetResult, EnvVar, Environment as _, Statuses, handle_env_return},
     err_fmt,
     event::{self, Event},
     exec::exec_job,
@@ -929,7 +926,7 @@ impl ExecutionContext {
             return ret;
         }
         let var = ctx.parser().vars().get(&for_var_name);
-        if EnvVar::flags_for(&for_var_name).contains(EnvVarFlags::READ_ONLY) {
+        if EnvVar::flags_for(&for_var_name).read_only {
             return report_error!(
                 self,
                 ctx,

@@ -1072,7 +1072,13 @@ pub fn expand_cmdsubst(
     }
 
     for sub_item in sub_res {
-        let sub_item2 = escape_string(&sub_item, EscapeStringStyle::Script(EscapeFlags::COMMA));
+        let sub_item2 = escape_string(
+            &sub_item,
+            EscapeStringStyle::Script(EscapeFlags {
+                comma: true,
+                ..Default::default()
+            }),
+        );
         for tail_item in &*tail_expand {
             let mut whole_item = WString::new();
             whole_item.reserve(
@@ -1342,7 +1348,11 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         // strings from the commandline.
         let mut next = unescape_string(
             &input,
-            UnescapeStringStyle::Script(UnescapeFlags::SPECIAL | UnescapeFlags::INCOMPLETE),
+            UnescapeStringStyle::Script(UnescapeFlags {
+                special: true,
+                incomplete: true,
+                ..Default::default()
+            }),
         )
         .unwrap_or_default();
 

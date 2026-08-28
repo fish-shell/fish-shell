@@ -133,7 +133,15 @@ pub(super) mod electric_values {
     ];
     assert_sorted_by_name!(ELECTRIC_VARIABLES);
 
-    const GET_PWD: Getter = |env| EnvVar::new(env.perproc_data.pwd.clone(), EnvVarFlags::EXPORT);
+    const GET_PWD: Getter = |env| {
+        EnvVar::new(
+            env.perproc_data.pwd.clone(),
+            EnvVarFlags {
+                exported: true,
+                ..EnvVarFlags::default()
+            },
+        )
+    };
     const GET_FISH_KILL_SIGNAL: Getter = |env| {
         let js = &env.perproc_data.statuses;
         let signal = js.kill_signal.map_or(0, |ks| ks.code());

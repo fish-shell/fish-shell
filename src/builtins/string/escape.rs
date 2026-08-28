@@ -39,7 +39,10 @@ impl StringSubCommand<'_> for Escape {
         // Ignore them for other styles for now.
         let style = match self.style {
             EscapeStringStyle::Script(..) if self.no_quoted => {
-                EscapeStringStyle::Script(EscapeFlags::NO_QUOTED)
+                EscapeStringStyle::Script(EscapeFlags {
+                    no_quoted: true,
+                    ..Default::default()
+                })
             }
             x => x,
         };

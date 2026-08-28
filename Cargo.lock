@@ -397,7 +397,6 @@ dependencies = [
 name = "fish-common"
 version = "0.0.0"
 dependencies = [
- "bitflags",
  "fish-build-helper",
  "fish-feature-flags",
  "fish-widestring",

@@ -803,7 +803,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 prev = unescape_string(previous_argument, UnescapeStringStyle::default());
                 cur = unescape_string(
                     current_argument,
-                    UnescapeStringStyle::Script(UnescapeFlags::INCOMPLETE),
+                    UnescapeStringStyle::Script(UnescapeFlags {
+                        incomplete: true,
+                        ..Default::default()
+                    }),
                 );
             }
             if let (Some(prev), Some(cur)) = (prev, cur) {
@@ -2096,7 +2099,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // unescaped version.
         let Some(unescaped_argument) = unescape_string(
             argument,
-            UnescapeStringStyle::Script(UnescapeFlags::INCOMPLETE),
+            UnescapeStringStyle::Script(UnescapeFlags {
+                incomplete: true,
+                ..Default::default()
+            }),
         ) else {
             return;
         };

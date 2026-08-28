@@ -706,7 +706,7 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
                     }
                 } else {
                     use nix::sys::statfs::statfs;
-                    let Ok(buf) = statfs(path) else {
+                    let Ok(buf) = statfs(narrow.as_c_str()) else {
                         return DirRemoteness::Unknown;
                     };
                     // statfs::f_flags types differ.

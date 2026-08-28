@@ -705,10 +705,11 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
                         DirRemoteness::Remote
                     }
                 } else {
-                    use nix::sys::statfs::statfs;
-                    let Ok(buf) = statfs(narrow.as_c_str()) else {
+                    let mut buf = std::mem::MaybeUninit::uninit();
+                    if unsafe { libc::statfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
                         return DirRemoteness::Unknown;
-                    };
+                    }
+                    let buf = unsafe { buf.assume_init() };
                     // statfs::f_flags types differ.
                     #[allow(clippy::useless_conversion)]
                     let flags = buf.f_flags as u64;

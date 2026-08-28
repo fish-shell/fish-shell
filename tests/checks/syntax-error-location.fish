@@ -1,48 +1,47 @@
 #RUN: fish=%fish %fish %s
 
 # A $status used as a command should not impact the location of other errors.
-echo 'echo foo | exec grep # this exec is not allowed!
+$fish -c 'echo foo | exec grep # this exec is not allowed!
 
 $status
 
- # The error might be found here!' | $fish 2>| string replace -r '(.*)' '<$1>'
+ # The error might be found here!'
 
-# CHECK: <fish: The 'exec' command can not be used in a pipeline>
-# CHECK: <echo foo | exec grep # this exec is not allowed!>
-# CHECK: <           ^~~~~~~~^>
+# CHECKERR: fish: The 'exec' command can not be used in a pipeline
+# CHECKERR: {{^}}echo foo | exec grep # this exec is not allowed!
+# CHECKERR: {{^}}           ^~~~~~~~^
 
-echo 'true | time false' | $fish 2>| string replace -r '(.*)' '<$1>'
-# CHECK: <fish: The 'time' command may only be at the beginning of a pipeline>
-# CHECK: <true | time false>
-# CHECK: <       ^~~~~~~~~^>
+$fish -c 'true | time false'
+# CHECKERR: fish: The 'time' command may only be at the beginning of a pipeline
+# CHECKERR: {{^}}true | time false
+# CHECKERR: {{^}}       ^~~~~~~~~^
 
 
-echo '
+$fish -c '
 
 FOO=BAR (true one)
 (true two)
 
 # more things
-' | $fish 2>| string replace -r '(.*)' '<$1>'
+'
+# CHECKERR: fish: command substitutions not allowed in command position. Try var=(your-cmd) $var ...
+# CHECKERR: {{^}}FOO=BAR (true one)
+# CHECKERR: {{^}}        ^~~~~~~~~^
 
-# CHECK: <fish: command substitutions not allowed in command position. Try var=(your-cmd) $var ...>
-# CHECK: <FOO=BAR (true one)>
-# CHECK: <        ^~~~~~~~~^>
+$fish -c 'echo "unfinished "(subshell'
+# CHECKERR: fish: Unexpected end of string, expecting ')'
+# CHECKERR: {{^}}echo "unfinished "(subshell
+# CHECKERR: {{^}}                  ^
 
-$fish -c 'echo "unfinished "(subshell' 2>| string replace -r '.*' '<$0>'
-# CHECK: <fish: Unexpected end of string, expecting ')'>
-# CHECK: <echo "unfinished "(subshell>
-# CHECK: <                  ^>
+$fish -c 'echo "unfinished "$(subshell'
+# CHECKERR: fish: Unexpected end of string, expecting ')'
+# CHECKERR: {{^}}echo "unfinished "$(subshell
+# CHECKERR: {{^}}                   ^
 
-$fish -c 'echo "unfinished "$(subshell' 2>| string replace -r '.*' '<$0>'
-# CHECK: <fish: Unexpected end of string, expecting ')'>
-# CHECK: <echo "unfinished "$(subshell>
-# CHECK: <                   ^>
-
-$fish -c 'echo "ok $(echo still ok)syntax error: \x"' 2>| string replace -r '.*' '<$0>'
-# CHECK: <fish: Invalid token '"ok $(echo still ok)syntax error: \x"'>
-# CHECK: <echo "ok $(echo still ok)syntax error: \x">
-# CHECK: <                         ^~~~~~~~~~~~~~~~^>
+$fish -c 'echo "ok $(echo still ok)syntax error: \x"'
+# CHECKERR: fish: Invalid token '"ok $(echo still ok)syntax error: \x"'
+# CHECKERR: {{^}}echo "ok $(echo still ok)syntax error: \x"
+# CHECKERR: {{^}}                         ^~~~~~~~~~~~~~~~^
 
 echo "function this_should_be_an_error" >$TMPDIR/this_should_be_an_error.fish
 $fish -c "set -g fish_function_path $(string escape $TMPDIR); this_should_be_an_error" 2>| string replace -r "^ {$(string length "$TMPDIR")}" "      " >&2

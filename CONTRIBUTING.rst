@@ -523,7 +523,7 @@ where the first key-value pair is the message's Fluent ID and the English versio
 The remaining key-value pairs specify Fluent variables and their values.
 These must match the variables used in the message definition.
 
-For changing message IDs or associated variable names accross all FTL files, the
+For changing message IDs or associated variable names across all FTL files, the
 
 ::
 

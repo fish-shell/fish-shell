@@ -1022,7 +1022,7 @@ impl CheckParse for AndorJob {
 define_list_node!(AndorJobList, AndorJob);
 
 /// A freestanding_argument_list is equivalent to a normal argument list, except it may contain
-/// TOK_END (newlines, and even semicolons, for historical reasons).
+/// `TokenType::End` (newlines, and even semicolons, for historical reasons).
 /// In practice the tok_ends are ignored by fish code so we do not bother to store them.
 #[derive(Default, Debug, Node!, Acceptor!)]
 pub struct FreestandingArgumentList {

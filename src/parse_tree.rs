@@ -26,7 +26,7 @@ pub struct ParseToken {
     pub has_dash_prefix: bool,
     /// Hackish: whether the source looks like '-h' or '--help'
     pub is_help_argument: bool,
-    /// Hackish: if TOK_END, whether the source is a newline.
+    /// Hackish: if `TokenType::End`, whether the source is a newline.
     pub is_newline: bool,
     // Hackish: whether this token is a string like FOO=bar
     pub may_be_variable_assignment: bool,

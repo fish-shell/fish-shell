@@ -11,7 +11,7 @@ use bitflags::bitflags;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use libc::{STDIN_FILENO, STDOUT_FILENO};
 use nix::fcntl::OFlag;
-use std::ops::{BitAnd, BitAndAssign, BitOrAssign, Not, Range};
+use std::ops::Range;
 use std::os::fd::RawFd;
 
 /// Token types. XXX Why this isn't ParseTokenType, I'm not really sure.
@@ -629,7 +629,7 @@ impl<'c> Tokenizer<'c> {
 impl<'c> Tokenizer<'c> {
     /// Read the next token as a string.
     fn read_string(&mut self) -> Tok {
-        let mut mode = TOK_MODE_REGULAR_TEXT;
+        let mut mode = TokModes::empty();
         let mut paren_offsets = vec![];
         let mut brace_offsets = vec![];
         let mut slice_offsets = vec![];
@@ -676,8 +676,8 @@ impl<'c> Tokenizer<'c> {
             let c = self.start.char_at(self.token_cursor);
 
             // Make sure this character isn't being escaped before anything else
-            if mode & TOK_MODE_CHAR_ESCAPE {
-                mode &= !TOK_MODE_CHAR_ESCAPE;
+            if mode.contains(TokModes::CHAR_ESCAPE) {
+                mode.remove(TokModes::CHAR_ESCAPE);
                 // and do nothing more
             } else if myal(c) {
                 // Early exit optimization in case the character is just a letter,
@@ -686,23 +686,23 @@ impl<'c> Tokenizer<'c> {
             // Now proceed with the evaluation of the token, first checking to see if the token
             // has been explicitly ignored (escaped).
             else if c == '\\' {
-                mode |= TOK_MODE_CHAR_ESCAPE;
+                mode |= TokModes::CHAR_ESCAPE;
             } else if c == '#' && is_token_begin {
                 self.token_cursor = comment_end(self.start, self.token_cursor) - 1;
             } else if c == '(' {
                 paren_offsets.push(self.token_cursor);
                 expecting.push(')');
-                mode |= TOK_MODE_SUBSHELL;
+                mode |= TokModes::SUBSHELL;
             } else if c == '{' {
                 brace_offsets.push(self.token_cursor);
                 expecting.push('}');
-                mode |= TOK_MODE_CURLY_BRACES;
+                mode |= TokModes::CURLY_BRACES;
             } else if c == ')' {
                 match expecting.pop() {
                     Some(')') => {
                         paren_offsets.pop();
                         if paren_offsets.is_empty() {
-                            mode &= !TOK_MODE_SUBSHELL;
+                            mode.remove(TokModes::SUBSHELL);
                         }
                     }
                     Some('}') => {
@@ -765,7 +765,7 @@ impl<'c> Tokenizer<'c> {
                     Some('}') => {
                         brace_offsets.pop();
                         if brace_offsets.is_empty() {
-                            mode &= !TOK_MODE_CURLY_BRACES;
+                            mode.remove(TokModes::CURLY_BRACES);
                         }
                     }
                     Some(')') => {
@@ -796,7 +796,7 @@ impl<'c> Tokenizer<'c> {
                 if self.token_cursor != buff_start {
                     slice_offsets.push(self.token_cursor);
                     expecting.push(']');
-                    mode |= TOK_MODE_ARRAY_SLICE;
+                    mode |= TokModes::ARRAY_SLICE;
                 } else {
                     // This is actually allowed so the test operator `[` can be used as the head of a
                     // command
@@ -809,7 +809,7 @@ impl<'c> Tokenizer<'c> {
             else if c == ']' && expecting.last() == Some(&']') {
                 slice_offsets.pop();
                 if slice_offsets.is_empty() {
-                    mode &= !TOK_MODE_ARRAY_SLICE;
+                    mode.remove(TokModes::ARRAY_SLICE);
                 }
                 expecting.pop();
             } else if c == '\'' || c == '"' {
@@ -831,7 +831,7 @@ impl<'c> Tokenizer<'c> {
                     }
                     break;
                 }
-            } else if mode == TOK_MODE_REGULAR_TEXT
+            } else if mode.is_empty()
                 && !tok_is_string_character(
                     c,
                     self.start
@@ -852,12 +852,12 @@ impl<'c> Tokenizer<'c> {
             self.token_cursor += 1;
         }
 
-        if !self.accept_unfinished && mode != TOK_MODE_REGULAR_TEXT {
+        if !self.accept_unfinished && !mode.is_empty() {
             // These are all "unterminated", so the only char we can mark as an error
             // is the opener (the closing char could be anywhere!)
             //
-            // (except for TOK_MODE_CHAR_ESCAPE, which is one long by definition)
-            if mode & TOK_MODE_CHAR_ESCAPE {
+            // (except forTokModes::CHAR_ESCAPE, which is one long by definition)
+            if mode.contains(TokModes::CHAR_ESCAPE) {
                 return self.call_error(
                     TokenizerError::UnterminatedEscape,
                     buff_start,
@@ -865,7 +865,7 @@ impl<'c> Tokenizer<'c> {
                     None,
                     1,
                 );
-            } else if mode & TOK_MODE_ARRAY_SLICE {
+            } else if mode.contains(TokModes::ARRAY_SLICE) {
                 let offset_of_open_slice = *slice_offsets.last().expect("slice_offsets is empty");
                 return self.call_error(
                     TokenizerError::UnterminatedSlice,
@@ -874,7 +874,7 @@ impl<'c> Tokenizer<'c> {
                     None,
                     1,
                 );
-            } else if mode & TOK_MODE_SUBSHELL {
+            } else if mode.contains(TokModes::SUBSHELL) {
                 let offset_of_open_paren = *paren_offsets.last().expect("paren_offsets is empty");
 
                 return self.call_error(
@@ -884,7 +884,7 @@ impl<'c> Tokenizer<'c> {
                     None,
                     1,
                 );
-            } else if mode & TOK_MODE_CURLY_BRACES {
+            } else if mode.contains(TokModes::CURLY_BRACES) {
                 let offset_of_open_brace = *brace_offsets.last().expect("brace_offsets is empty");
 
                 return self.call_error(
@@ -902,7 +902,7 @@ impl<'c> Tokenizer<'c> {
         let mut result = Tok::new(TokenType::String);
         result.set_offset(buff_start);
         result.set_length(self.token_cursor - buff_start);
-        result.is_unterminated_brace = mode & TOK_MODE_CURLY_BRACES;
+        result.is_unterminated_brace = mode.contains(TokModes::CURLY_BRACES);
         result
     }
 }
@@ -958,35 +958,13 @@ fn myal(c: char) -> bool {
     c.is_ascii_alphabetic()
 }
 
+bitflags! {
 #[derive(Clone, Copy, PartialEq, Eq)]
-struct TokModes(u8);
-
-const TOK_MODE_REGULAR_TEXT: TokModes = TokModes(0); // regular text
-const TOK_MODE_SUBSHELL: TokModes = TokModes(1 << 0); // inside of subshell parentheses
-const TOK_MODE_ARRAY_SLICE: TokModes = TokModes(1 << 1); // inside of array brackets
-const TOK_MODE_CURLY_BRACES: TokModes = TokModes(1 << 2);
-const TOK_MODE_CHAR_ESCAPE: TokModes = TokModes(1 << 3);
-
-impl BitAnd for TokModes {
-    type Output = bool;
-    fn bitand(self, rhs: Self) -> Self::Output {
-        (self.0 & rhs.0) != 0
-    }
-}
-impl BitAndAssign for TokModes {
-    fn bitand_assign(&mut self, rhs: Self) {
-        self.0 &= rhs.0;
-    }
-}
-impl BitOrAssign for TokModes {
-    fn bitor_assign(&mut self, rhs: Self) {
-        self.0 |= rhs.0;
-    }
-}
-impl Not for TokModes {
-    type Output = TokModes;
-    fn not(self) -> Self::Output {
-        TokModes(!self.0)
+    struct TokModes: u8 {
+        const SUBSHELL = 1 << 0; // inside of subshell parentheses
+        const ARRAY_SLICE = 1 << 1; // inside of array brackets
+        const CURLY_BRACES = 1 << 2;
+        const CHAR_ESCAPE = 1 << 3;
     }
 }
 

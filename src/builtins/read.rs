@@ -15,7 +15,7 @@ use crate::{
         ReaderConfig, commandline_set_buffer, reader_pop, reader_push, reader_readline,
         set_shell_modes_temporarily,
     },
-    tokenizer::{TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, Tok, Tokenizer},
+    tokenizer::{Tok, TokFlags, Tokenizer},
     wutil::{self, perror_nix},
 };
 use fish_common::{UnescapeStringStyle, escape, read_blocked, unescape_string};
@@ -652,7 +652,8 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         }
 
         if let Some(token_mode) = opts.token_mode {
-            let mut tok = Tokenizer::new(&buff, TOK_ACCEPT_UNFINISHED | TOK_ARGUMENT_LIST);
+            let mut tok =
+                Tokenizer::new(&buff, TokFlags::ACCEPT_UNFINISHED | TokFlags::ARGUMENT_LIST);
             let token_text = |tokenizer: &mut Tokenizer<'_>, token: &Tok| -> WString {
                 let mut text = Cow::Borrowed(tokenizer.text_of(token));
                 match token_mode {

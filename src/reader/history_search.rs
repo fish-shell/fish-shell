@@ -3,7 +3,7 @@
 use crate::history::{self, History, HistorySearch, SearchDirection, SearchFlags, SearchType};
 use crate::parse_constants::SourceRange;
 use crate::prelude::*;
-use crate::tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer};
+use crate::tokenizer::{TokFlags, TokenType, Tokenizer};
 use fish_wcstringutil::ifind;
 use std::collections::HashSet;
 use std::ops::Range;
@@ -222,7 +222,7 @@ impl ReaderHistorySearch {
             let offset = find(text, needle).unwrap();
             self.add_if_new(SearchMatch::new(text.to_owned(), offset));
         } else if matches!(self.mode, SearchMode::Token | SearchMode::LastToken) {
-            let mut tok = Tokenizer::new(text, TOK_ACCEPT_UNFINISHED);
+            let mut tok = Tokenizer::new(text, TokFlags::ACCEPT_UNFINISHED);
 
             let mut local_tokens = vec![];
             while let Some(token) = tok.next() {

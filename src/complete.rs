@@ -2016,7 +2016,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             // Separate the wrap target into any variable assignments VAR=... and the command itself.
             let mut wrapped_command = None;
             let mut wrapped_command_offset_in_wt = None;
-            let tokenizer = Tokenizer::new(&wt, TokFlags(0));
+            let tokenizer = Tokenizer::new(&wt, TokFlags::empty());
             for tok in tokenizer {
                 let mut tok_src = tok.get_source(&wt).to_owned();
                 if variable_assignment_equals_pos(&tok_src).is_some() {

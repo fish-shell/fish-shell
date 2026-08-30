@@ -17,7 +17,7 @@ use crate::{
     prelude::*,
     print_help::print_help,
     threads,
-    tokenizer::{TOK_SHOW_BLANK_LINES, TOK_SHOW_COMMENTS, TokenType, Tokenizer},
+    tokenizer::{TokFlags, TokenType, Tokenizer},
     topic_monitor,
     wutil::fish_iswalnum,
 };
@@ -519,7 +519,10 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         // always emit one.
         let mut needs_nl = false;
 
-        let mut tokenizer = Tokenizer::new(gap_text, TOK_SHOW_COMMENTS | TOK_SHOW_BLANK_LINES);
+        let mut tokenizer = Tokenizer::new(
+            gap_text,
+            TokFlags::SHOW_COMMENTS | TokFlags::SHOW_BLANK_LINES,
+        );
         while let Some(tok) = tokenizer.next() {
             let tok_text = tokenizer.text_of(&tok);
 

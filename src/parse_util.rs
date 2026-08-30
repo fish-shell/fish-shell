@@ -17,10 +17,7 @@ use crate::{
         StatementDecoration, UNKNOWN_BUILTIN_ERR_MSG, parse_error_offset_source_start,
     },
     prelude::*,
-    tokenizer::{
-        TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, Tok, TokenType, Tokenizer, comment_end,
-        is_token_delimiter, quote_end,
-    },
+    tokenizer::{Tok, TokFlags, TokenType, Tokenizer, comment_end, is_token_delimiter, quote_end},
 };
 use fish_common::{UnescapeFlags, UnescapeStringStyle, help_section, unescape_string};
 use fish_feature_flags::{FeatureFlag, feature_test};
@@ -408,7 +405,7 @@ fn get_job_or_process_extent(
     let mut result = cmdsub_range.clone();
     for token in Tokenizer::new(
         &buff[cmdsub_range.clone()],
-        TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS,
+        TokFlags::ACCEPT_UNFINISHED | TokFlags::SHOW_COMMENTS,
     ) {
         let tok_begin = token.offset();
         if finished {
@@ -464,7 +461,7 @@ pub fn get_token_extent(buff: &wstr, cursor_pos: usize) -> (Range<usize>, Range<
     assert!(cmdsubst_begin <= buff.len());
     assert!(cmdsubst_range.end <= buff.len());
 
-    for token in Tokenizer::new(&buff[cmdsubst_range], TOK_ACCEPT_UNFINISHED) {
+    for token in Tokenizer::new(&buff[cmdsubst_range], TokFlags::ACCEPT_UNFINISHED) {
         let tok_begin = token.offset();
         let mut tok_end = tok_begin;
 
@@ -921,7 +918,9 @@ impl<'a> IndentVisitor<'a> {
                 }
                 quoted = !quoted;
             };
-            for _token in Tokenizer::with_quote_events(part, TOK_ACCEPT_UNFINISHED, &mut callback) {
+            for _token in
+                Tokenizer::with_quote_events(part, TokFlags::ACCEPT_UNFINISHED, &mut callback)
+            {
             }
         }
         if !quoted {

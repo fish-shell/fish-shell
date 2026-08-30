@@ -100,8 +100,7 @@ use crate::{
     text_face::{TextFace, parse_text_face},
     threads::{assert_is_background_thread, assert_is_main_thread},
     tokenizer::{
-        TOK_ACCEPT_UNFINISHED, TOK_SHOW_COMMENTS, TokenType, Tokenizer, quote_end, tok_command,
-        variable_assignment_equals_pos,
+        TokFlags, TokenType, Tokenizer, quote_end, tok_command, variable_assignment_equals_pos,
     },
     tty_handoff::{
         SCROLL_CONTENT_UP_TERMINFO_CODE, TtyHandoff, XTGETTCAP_QUERY_OS_NAME,
@@ -4446,7 +4445,7 @@ impl<'a> Reader<'a> {
         }
 
         let cmdsubst_range = get_cmdsubst_extent(&buffer, pos);
-        for token in Tokenizer::new(&buffer[cmdsubst_range.clone()], TOK_ACCEPT_UNFINISHED) {
+        for token in Tokenizer::new(&buffer[cmdsubst_range.clone()], TokFlags::ACCEPT_UNFINISHED) {
             if token.type_ != TokenType::String {
                 continue;
             }
@@ -4461,7 +4460,7 @@ impl<'a> Reader<'a> {
 
 /// Returns true if the last token is a comment.
 fn text_ends_in_comment(text: &wstr) -> bool {
-    Tokenizer::new(text, TOK_ACCEPT_UNFINISHED | TOK_SHOW_COMMENTS)
+    Tokenizer::new(text, TokFlags::ACCEPT_UNFINISHED | TokFlags::SHOW_COMMENTS)
         .last()
         .is_some_and(|token| token.type_ == TokenType::Comment)
 }

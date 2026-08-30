@@ -18,10 +18,7 @@ use crate::{
     },
     parse_tree::ParseToken,
     prelude::*,
-    tokenizer::{
-        TOK_ACCEPT_UNFINISHED, TOK_ARGUMENT_LIST, TOK_CONTINUE_AFTER_ERROR, TOK_SHOW_COMMENTS,
-        TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos,
-    },
+    tokenizer::{TokFlags, TokenType, Tokenizer, TokenizerError, variable_assignment_equals_pos},
 };
 use fish_common::{UnescapeStringStyle, unescape_string};
 use macro_rules_attribute::derive;
@@ -1549,7 +1546,7 @@ impl<'a> TokenStream<'a> {
     fn new(src: &'a wstr, flags: ParseTreeFlags, freestanding_arguments: bool) -> Self {
         let mut flags = TokFlags::from(flags);
         if freestanding_arguments {
-            flags |= TOK_ARGUMENT_LIST;
+            flags |= TokFlags::ARGUMENT_LIST;
         }
         Self {
             lookahead: [ParseToken::new(ParseTokenType::Invalid); Self::MAX_LOOKAHEAD],
@@ -2748,17 +2745,17 @@ enum ParserStatus {
 /// Return tokenizer flags corresponding to parse tree flags.
 impl From<ParseTreeFlags> for TokFlags {
     fn from(flags: ParseTreeFlags) -> Self {
-        let mut tok_flags = TokFlags(0);
+        let mut tok_flags = TokFlags::empty();
         // Note we do not need to respect parse_flag_show_blank_lines, no clients are interested
         // in them.
         if flags.include_comments {
-            tok_flags |= TOK_SHOW_COMMENTS;
+            tok_flags |= TokFlags::SHOW_COMMENTS;
         }
         if flags.accept_incomplete_tokens {
-            tok_flags |= TOK_ACCEPT_UNFINISHED;
+            tok_flags |= TokFlags::ACCEPT_UNFINISHED;
         }
         if flags.continue_after_error {
-            tok_flags |= TOK_CONTINUE_AFTER_ERROR;
+            tok_flags |= TokFlags::CONTINUE_AFTER_ERROR;
         }
         tok_flags
     }

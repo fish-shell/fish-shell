@@ -20,7 +20,7 @@ use crate::{
         commandline_set_search_field, reader_execute_readline_cmd, reader_jump,
         reader_showing_suggestion,
     },
-    tokenizer::{TOK_ACCEPT_UNFINISHED, TokenType, Tokenizer},
+    tokenizer::{TokFlags, TokenType, Tokenizer},
 };
 use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::join_strings;
@@ -215,7 +215,7 @@ fn write_part(
     if range_is_single_token {
         add_token(buff);
     } else {
-        let mut tok = Tokenizer::new(buff, TOK_ACCEPT_UNFINISHED);
+        let mut tok = Tokenizer::new(buff, TokFlags::ACCEPT_UNFINISHED);
         let mut in_redirection = false;
         while let Some(token) = tok.next() {
             if cut_at_cursor && token.end() >= pos {

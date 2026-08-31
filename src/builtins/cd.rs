@@ -44,7 +44,7 @@ fn try_chdir(parser: &mut Parser, dir: &wstr, deref_symlink: bool) -> Result<(),
 
     parser.set_var_and_fire(
         L!("PWD"),
-        ParserEnvSetMode::new(EnvMode::EXPORT | EnvMode::GLOBAL),
+        ParserEnvSetMode::new(EnvMode::GLOBAL_EXPORTED),
         vec![new_pwd],
     );
     Ok(())

@@ -466,7 +466,7 @@ fn init_locale(vars: &EnvStack) {
 
     for var_name in LOCALE_VARIABLES {
         let var = vars
-            .getf_unless_empty(var_name, EnvMode::EXPORT)
+            .getf_unless_empty(var_name, EnvMode::EXPORTED)
             .map(|v| v.as_string());
         if let Some(value) = var {
             flog!(env_locale, "locale var", var_name, "=", value);

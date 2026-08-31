@@ -647,7 +647,7 @@ impl ExecutionContext {
             }
             let set_result = ctx.parser().set_var_and_fire(
                 variable_name,
-                ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
+                ParserEnvSetMode::new(EnvMode::LOCAL_EXPORTED),
                 vals,
             );
             // TODO Do we really want to create `IoStreams` here?
@@ -960,7 +960,7 @@ impl ExecutionContext {
 
             let retval = ctx.parser().set_var(
                 &for_var_name,
-                ParserEnvSetMode::user(EnvMode::empty()),
+                ParserEnvSetMode::user(EnvMode::default()),
                 vec![val],
             );
             assert_eq!(

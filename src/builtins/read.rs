@@ -58,7 +58,7 @@ struct Options {
 impl Options {
     fn new() -> Self {
         Options {
-            place: ParserEnvSetMode::user(EnvMode::empty()),
+            place: ParserEnvSetMode::user(EnvMode::default()),
             ..Default::default()
         }
     }
@@ -117,10 +117,10 @@ fn parse_cmd_opts(
                 opts.delimiter = Some(w.woptarg.unwrap().to_owned());
             }
             'f' => {
-                opts.place.mode |= EnvMode::FUNCTION;
+                opts.place.mode.function = true;
             }
             'g' => {
-                opts.place.mode |= EnvMode::GLOBAL;
+                opts.place.mode.global = true;
             }
             'h' => {
                 opts.print_help = true;
@@ -129,7 +129,7 @@ fn parse_cmd_opts(
                 opts.one_line = true;
             }
             'l' => {
-                opts.place.mode |= EnvMode::LOCAL;
+                opts.place.mode.local = true;
             }
             'n' => {
                 opts.nchars = match fish_wcstoi(w.woptarg.unwrap()) {
@@ -190,13 +190,13 @@ fn parse_cmd_opts(
                 opts.token_mode = Some(new_mode);
             }
             'U' => {
-                opts.place.mode |= EnvMode::UNIVERSAL;
+                opts.place.mode.universal = true;
             }
             'u' => {
-                opts.place.mode |= EnvMode::UNEXPORT;
+                opts.place.mode.unexport = true;
             }
             'x' => {
-                opts.place.mode |= EnvMode::EXPORT;
+                opts.place.mode.export = true;
             }
             'z' => {
                 opts.split_null = true;
@@ -467,7 +467,7 @@ fn validate_read_args(
         opts.prompt = Some(DEFAULT_READ_PROMPT.to_owned());
     }
 
-    if opts.place.mode.contains(EnvMode::UNEXPORT) && opts.place.mode.contains(EnvMode::EXPORT) {
+    if opts.place.mode.unexport && opts.place.mode.export {
         err_str!(Error::EXPORT_UNEXPORT)
             .cmd(cmd)
             .full_trailer(parser)
@@ -475,11 +475,10 @@ fn validate_read_args(
         return Err(STATUS_INVALID_ARGS);
     }
 
-    if opts
-        .place
-        .mode
-        .intersection(EnvMode::ANY_SCOPE)
-        .iter()
+    let mode = opts.place.mode;
+    if [mode.local, mode.function, mode.global, mode.universal]
+        .into_iter()
+        .filter(|selected| *selected)
         .count()
         > 1
     {

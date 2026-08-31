@@ -115,13 +115,15 @@ fn maybe_issue_path_warning(
     vars: &EnvStack,
 ) {
     let warning_var_name = L!("_FISH_WARNED_").to_owned() + which_dir;
-    let global_exported_mode = EnvMode::GLOBAL | EnvMode::EXPORT;
-    if vars.getf(&warning_var_name, global_exported_mode).is_some() {
+    if vars
+        .getf(&warning_var_name, EnvMode::GLOBAL_EXPORTED)
+        .is_some()
+    {
         return;
     }
     vars.set_one(
         &warning_var_name,
-        EnvSetMode::new_at_early_startup(global_exported_mode),
+        EnvSetMode::new_at_early_startup(EnvMode::GLOBAL_EXPORTED),
         L!("1").to_owned(),
     );
 
@@ -592,11 +594,11 @@ fn make_base_directory(xdg_var: &wstr, non_xdg_homepath: &wstr) -> BaseDirectory
 
     let mut path = WString::new();
     let used_xdg;
-    if let Some(xdg_dir) = vars.getf_unless_empty(xdg_var, EnvMode::GLOBAL | EnvMode::EXPORT) {
+    if let Some(xdg_dir) = vars.getf_unless_empty(xdg_var, EnvMode::GLOBAL_EXPORTED) {
         path = xdg_dir.as_string() + L!("/fish");
         used_xdg = true;
     } else {
-        if let Some(home) = vars.getf_unless_empty(L!("HOME"), EnvMode::GLOBAL | EnvMode::EXPORT) {
+        if let Some(home) = vars.getf_unless_empty(L!("HOME"), EnvMode::GLOBAL_EXPORTED) {
             path = home.as_string() + non_xdg_homepath;
         }
         used_xdg = false;

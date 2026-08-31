@@ -1686,7 +1686,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         let varlen = s.len() - start_offset;
         let mut res = false;
 
-        for env_name in self.ctx.vars().get_names(EnvMode::empty()) {
+        for env_name in self.ctx.vars().get_names(EnvMode::default()) {
             let anchor_start = !self.flags.fuzzy_match;
             let Some(r#match) = string_fuzzy_match_string(var, &env_name, anchor_start) else {
                 continue;
@@ -1926,7 +1926,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             };
             let set_result = self.ctx.parser().set_var(
                 variable_name,
-                ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
+                ParserEnvSetMode::new(EnvMode::LOCAL_EXPORTED),
                 vals,
             );
             if set_result != EnvStackSetResult::Ok {
@@ -3287,7 +3287,7 @@ mod tests {
         // Fake out the home directory
         parser.set_one(
             L!("HOME"),
-            ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
+            ParserEnvSetMode::new(EnvMode::LOCAL_EXPORTED),
             L!("test/test-home").to_owned(),
         );
         std::fs::create_dir_all("test/test-home/test_autosuggest_suggest_special/").unwrap();
@@ -3397,10 +3397,9 @@ mod tests {
         perform_one_completion_cd_test!("cd ~absolutelynosuchus", "er/");
         perform_one_completion_cd_test!("cd ~absolutelynosuchuser/", "path1/");
 
-        parser.vars().remove(
-            L!("HOME"),
-            EnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT, false),
-        );
+        parser
+            .vars()
+            .remove(L!("HOME"), EnvSetMode::new(EnvMode::LOCAL_EXPORTED, false));
         parser.popd(pushed_dirs);
     }
 

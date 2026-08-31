@@ -1,6 +1,5 @@
 use crate::env::r#impl::is_read_only;
 use crate::signal::RawSignal;
-use bitflags::bitflags;
 use fish_wcstringutil::join_strings;
 use fish_widestring::{L, WString, wstr};
 use libc::c_int;
@@ -11,41 +10,72 @@ use std::sync::Arc;
 pub const PATH_ARRAY_SEP: char = ':';
 pub const NONPATH_ARRAY_SEP: char = ' ';
 
-bitflags! {
-    /// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
-    /// The default is empty.
-    #[repr(C)]
-    #[derive(Copy, Clone, Default, PartialEq, Eq)]
-    pub struct EnvMode: u16 {
-        /// Flag for local (to the current block) variable.
-        const LOCAL = 1 << 0;
-        const FUNCTION = 1 << 1;
-        /// Flag for global variable.
-        const GLOBAL = 1 << 2;
-        /// Flag for universal variable.
-        const UNIVERSAL = 1 << 3;
-        /// Flag for exported (to commands) variable.
-        const EXPORT = 1 << 4;
-        /// Flag for unexported variable.
-        const UNEXPORT = 1 << 5;
-        /// Flag to mark a variable as a path variable.
-        const PATHVAR = 1 << 6;
-        /// Flag to unmark a variable as a path variable.
-        const UNPATHVAR = 1 << 7;
-    }
+/// Options passed to environment get and set operations.
+#[derive(Copy, Clone, Default, PartialEq, Eq)]
+pub struct EnvMode {
+    /// Flag for local (to the current block) variable.
+    pub local: bool,
+    pub function: bool,
+    /// Flag for global variable.
+    pub global: bool,
+    /// Flag for universal variable.
+    pub universal: bool,
+    /// Flag for exported (to commands) variable.
+    pub export: bool,
+    /// Flag for unexported variable.
+    pub unexport: bool,
+    /// Flag to mark a variable as a path variable.
+    pub pathvar: bool,
+    /// Flag to unmark a variable as a path variable.
+    pub unpathvar: bool,
 }
 
 impl EnvMode {
-    pub const ANY_SCOPE: EnvMode = EnvMode::LOCAL
-        .union(EnvMode::FUNCTION)
-        .union(EnvMode::GLOBAL)
-        .union(EnvMode::UNIVERSAL);
-}
+    const DEFAULT: Self = Self {
+        local: false,
+        function: false,
+        global: false,
+        universal: false,
+        export: false,
+        unexport: false,
+        pathvar: false,
+        unpathvar: false,
+    };
 
-impl From<EnvMode> for u16 {
-    fn from(val: EnvMode) -> Self {
-        val.bits()
-    }
+    pub const EXPORTED: Self = Self {
+        export: true,
+        ..Self::DEFAULT
+    };
+
+    pub const UNEXPORT: Self = Self {
+        unexport: true,
+        ..Self::DEFAULT
+    };
+
+    pub const LOCAL: Self = Self {
+        local: true,
+        ..Self::DEFAULT
+    };
+
+    pub const LOCAL_EXPORTED: Self = Self {
+        export: true,
+        ..Self::LOCAL
+    };
+
+    pub const GLOBAL: Self = Self {
+        global: true,
+        ..Self::DEFAULT
+    };
+
+    pub const GLOBAL_EXPORTED: Self = Self {
+        export: true,
+        ..Self::GLOBAL
+    };
+
+    pub const UNIVERSAL: Self = Self {
+        universal: true,
+        ..Self::DEFAULT
+    };
 }
 
 #[derive(Copy, Clone, Default)]
@@ -271,7 +301,7 @@ mod tests {
 
         vars.set_one(
             L!("TZ"),
-            EnvSetMode::new(EnvMode::EXPORT, false),
+            EnvSetMode::new(EnvMode::EXPORTED, false),
             timezone.to_owned(),
         );
 

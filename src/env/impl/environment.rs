@@ -119,23 +119,23 @@ impl From<EnvSetMode> for Query {
 impl Query {
     /// Creates a `Query` from env mode flags.
     fn new(mode: EnvMode, user: bool) -> Self {
-        let has_scope = mode.intersects(EnvMode::ANY_SCOPE);
-        let has_export_unexport = mode.intersects(EnvMode::EXPORT | EnvMode::UNEXPORT);
+        let has_scope = mode.local || mode.function || mode.global || mode.universal;
+        let has_export_unexport = mode.export || mode.unexport;
         Query {
             has_scope,
-            local: !has_scope || mode.contains(EnvMode::LOCAL),
-            function: !has_scope || mode.contains(EnvMode::FUNCTION),
-            global: !has_scope || mode.contains(EnvMode::GLOBAL),
-            universal: !has_scope || mode.contains(EnvMode::UNIVERSAL),
+            local: !has_scope || mode.local,
+            function: !has_scope || mode.function,
+            global: !has_scope || mode.global,
+            universal: !has_scope || mode.universal,
 
             has_export_unexport,
-            exports: !has_export_unexport || mode.contains(EnvMode::EXPORT),
-            unexports: !has_export_unexport || mode.contains(EnvMode::UNEXPORT),
+            exports: !has_export_unexport || mode.export,
+            unexports: !has_export_unexport || mode.unexport,
 
             // note we don't use pathvar for searches, so these don't default to true if unspecified.
-            has_pathvar_unpathvar: mode.intersects(EnvMode::PATHVAR | EnvMode::UNPATHVAR),
-            pathvar: mode.contains(EnvMode::PATHVAR),
-            unpathvar: mode.contains(EnvMode::UNPATHVAR),
+            has_pathvar_unpathvar: mode.pathvar || mode.unpathvar,
+            pathvar: mode.pathvar,
+            unpathvar: mode.unpathvar,
 
             user,
         }

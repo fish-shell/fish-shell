@@ -63,22 +63,16 @@ impl Default for Options {
 
 impl Options {
     fn env_mode(&self) -> EnvMode {
-        let mut scope = EnvMode::empty();
-        for (is_mode, mode) in [
-            (self.local, EnvMode::LOCAL),
-            (self.function, EnvMode::FUNCTION),
-            (self.global, EnvMode::GLOBAL),
-            (self.exportv, EnvMode::EXPORT),
-            (self.unexport, EnvMode::UNEXPORT),
-            (self.universal, EnvMode::UNIVERSAL),
-            (self.pathvar, EnvMode::PATHVAR),
-            (self.unpathvar, EnvMode::UNPATHVAR),
-        ] {
-            if is_mode {
-                scope |= mode;
-            }
+        EnvMode {
+            local: self.local,
+            function: self.function,
+            global: self.global,
+            universal: self.universal,
+            export: self.exportv,
+            unexport: self.unexport,
+            pathvar: self.pathvar,
+            unpathvar: self.unpathvar,
         }
-        scope
     }
 
     fn parse(
@@ -613,10 +607,10 @@ fn query(
 }
 
 fn show_scope(var_name: &wstr, scope: EnvMode, streams: &mut IoStreams, vars: &dyn Environment) {
-    let scope_name = match scope {
-        EnvMode::LOCAL => L!("local"),
-        EnvMode::GLOBAL => L!("global"),
-        EnvMode::UNIVERSAL => L!("universal"),
+    let scope_name = match (scope.local, scope.global, scope.universal) {
+        (true, false, false) => L!("local"),
+        (false, true, false) => L!("global"),
+        (false, false, true) => L!("universal"),
         _ => panic!("invalid scope"),
     };
     let Some(var) = vars.getf(var_name, scope) else {
@@ -688,7 +682,7 @@ fn show(cmd: &wstr, parser: &Parser, streams: &mut IoStreams, args: &[&wstr]) ->
     let vars = parser.vars();
     if args.is_empty() {
         // show all vars
-        let mut names = vars.get_names(EnvMode::empty());
+        let mut names = vars.get_names(EnvMode::default());
         names.sort();
         for name in names {
             if name == "history" {
@@ -817,44 +811,34 @@ fn erase(
         Ok(())
     };
     // `set -e` is allowed to be called with multiple scopes.
-    let mode = opts.env_mode();
-    let any_scope = EnvMode::ANY_SCOPE;
-    let scopes = mode.intersection(any_scope);
-    if scopes.is_empty() {
-        erase_with_mode(mode)?;
-    } else {
-        // Historical behavior is to go from inner to outer, which may be relevant for scopes that
-        // collide with the function scope (i.e. local and global).
-        assert!(is_subsequence(
-            scopes.iter(),
-            [
-                EnvMode::LOCAL,
-                EnvMode::FUNCTION,
-                EnvMode::GLOBAL,
-                EnvMode::UNIVERSAL
-            ]
-            .into_iter()
-        ));
-        for scope in scopes.iter() {
-            let other_scopes = any_scope - scope;
-            erase_with_mode(mode - other_scopes)?;
+    let scopes: [for<'a> fn(&'a mut EnvMode) -> &'a mut bool; 4] = [
+        |mode| &mut mode.local,
+        |mode| &mut mode.function,
+        |mode| &mut mode.global,
+        |mode| &mut mode.universal,
+    ];
+    // Historical behavior is to go from inner to outer, which may be relevant for scopes that
+    // collide with the function scope (i.e. local and global).
+    let mut erased = false;
+    let mut mode = opts.env_mode();
+    for scope in scopes {
+        if *scope(&mut mode) {
+            let mut mode = EnvMode {
+                local: false,
+                function: false,
+                global: false,
+                universal: false,
+                ..mode
+            };
+            *scope(&mut mode) = true;
+            erase_with_mode(mode)?;
+            erased = true;
         }
     }
+    if !erased {
+        erase_with_mode(mode)?;
+    }
     ret
-}
-
-fn is_subsequence<T: Eq>(
-    mut lhs: impl Iterator<Item = T>,
-    mut rhs: impl Iterator<Item = T>,
-) -> bool {
-    lhs.all(|l| {
-        for r in rhs.by_ref() {
-            if r == l {
-                return true;
-            }
-        }
-        false
-    })
 }
 
 /// Return a list of new values for the variable `varname`, respecting the `opts`.

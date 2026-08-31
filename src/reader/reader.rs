@@ -5991,7 +5991,7 @@ impl<'a> Reader<'a> {
 
 /// Expand an abbreviation replacer, which may mean running its function.
 /// Return the replacement, or none to skip it. This may run fish script!
-fn expand_replacer(
+pub(crate) fn expand_replacer(
     range: SourceRange,
     token: &wstr,
     repl: &abbrs::Replacer,

@@ -1156,6 +1156,9 @@ msgstr "'%s' へのリダイレクトが要求されましたが、有効なフ�
 msgid "Requires at least two arguments"
 msgstr "少なくとも 2 つの引数が必要です"
 
+msgid "Requires exactly one argument"
+msgstr ""
+
 msgid "Requires exactly two arguments"
 msgstr "ちょうど 2 つの引数が必要です"
 
@@ -2624,6 +2627,9 @@ msgstr "現在の選択範囲の終了位置を取得"
 msgid "Get current selection starting position"
 msgstr "現在の選択範囲の開始位置を取得"
 
+msgid "Get expanded abbreviation text"
+msgstr ""
+
 msgid "Gets the umask in a format that can be used as a command"
 msgstr "コマンドとして使用できる形式でumaskを取得"
 
@@ -3014,6 +3020,9 @@ msgstr "コマンドの種類を表示"
 
 msgid "Print completions for a commandline specified as a parameter"
 msgstr "パラメータとして指定されたコマンドラインの補完候補を表示"
+
+msgid "Print cursor position after expansion"
+msgstr ""
 
 msgid "Print directory stack"
 msgstr "ディレクトリスタックを表示"

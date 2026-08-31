@@ -1149,4 +1149,19 @@ set -s -l
 set umask abc
 # CHECKERR: set: Tried to modify the special variable 'umask' to an invalid value
 
+# Almost all electric variables are read-only.
+set -e FISH_VERSION
+echo $status
+# CHECKERR: set: Tried to change the read-only variable 'FISH_VERSION'
+# CHECK: 1
+set -e status
+echo $status
+# CHECKERR: set: Tried to change the read-only variable 'status'
+# CHECK: 1
+
+# This is the only electric variable that's read-write. Could add a better error here.
+set -e umask
+echo $status
+# CHECK: 4
+
 exit 0

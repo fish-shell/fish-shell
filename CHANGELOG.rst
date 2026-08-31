@@ -19,6 +19,8 @@ Scripting improvements
 Regression fixes:
 -----------------
 - (From 4.6.0) Chinese and Japanese translation of error messages owned by the C library (:issue:`12895`).
+- (From 4.3.2) Erasing read-only variables with ``set --erase`` was accidentally allowed.
+
 
 fish 4.8.1 (released July 14, 2026)
 ===================================

@@ -740,7 +740,7 @@ impl EnvStackImpl {
         let query = Query::from(mode);
         // Users can't remove read-only keys.
         if query.user && is_read_only(key) {
-            return ModResult::new(EnvStackSetResult::Scope);
+            return ModResult::new(EnvStackSetResult::Perm);
         }
 
         // Helper to invoke remove_from_chain and map a false return to not found.

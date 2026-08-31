@@ -772,7 +772,7 @@ fn erase(
             let retval;
             if split.indexes.is_empty() {
                 // unset the var
-                retval = parser.remove_var(split.varname, ParserEnvSetMode::new(mode));
+                retval = parser.remove_var(split.varname, ParserEnvSetMode::user(mode));
                 // When a non-existent-variable is unset, return NotFound as $status
                 // but do not emit any errors at the console as a compromise between user
                 // friendliness and correctness.

@@ -69,12 +69,25 @@ pub enum PathFilter {
 /// Flags controlling expansions.
 #[derive(Copy, Clone)]
 pub struct ExpandFlags {
+    //# Which expansion stages to skip / fail.
     /// How to handle command substitutions.
     pub cmdsubst: CmdsubstMode,
     /// Skip variable expansion.
     pub skip_variables: bool,
     /// Skip wildcard expansion.
     pub skip_wildcards: bool,
+
+    pub path_filter: Option<PathFilter>,
+
+    //# Knobs for wildcard matching.
+    /// Allow fuzzy matching.
+    pub fuzzy_match: bool,
+    /// Allows matching a leading dot even if the wildcard does not contain one.
+    /// By default, wildcards only match a leading dot literally; this is why e.g. '*' does not
+    /// match hidden files.
+    pub allow_nonliteral_leading_dot: bool,
+
+    //# Output options.
     /// The expansion is being done for tab or auto completions. Returned completions may have the
     /// wildcard as a prefix instead of a match.
     pub for_completions: bool,
@@ -82,13 +95,6 @@ pub struct ExpandFlags {
     pub gen_descriptions: bool,
     /// Un-expand home directories to tildes after.
     pub preserve_home_tildes: bool,
-    /// Allow fuzzy matching.
-    pub fuzzy_match: bool,
-    /// Allows matching a leading dot even if the wildcard does not contain one.
-    /// By default, wildcards only match a leading dot literally; this is why e.g. '*' does not
-    /// match hidden files.
-    pub allow_nonliteral_leading_dot: bool,
-    pub path_filter: Option<PathFilter>,
     /// The token has an unclosed brace, so don't add a space.
     pub no_space_for_unclosed_brace: bool,
 }

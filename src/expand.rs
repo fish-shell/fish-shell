@@ -1616,7 +1616,9 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                     .replace_range(..home.len(), &username_with_tilde);
 
                 // And mark that our tilde is literal, so it doesn't try to escape it.
-                comp.flags.dont_escape_tildes = true;
+                if comp.flags.wants_escaping() {
+                    comp.flags.dont_escape_tildes();
+                }
             }
         }
     }

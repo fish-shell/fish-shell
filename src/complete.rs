@@ -107,15 +107,22 @@ pub enum ReplacementScope {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+pub enum WantsEscaping {
+    Yes {
+        escape_tildes: bool,
+    },
+    /// This completion should be inserted as-is, without escaping.
+    No,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct CompleteFlags {
-    /// Whether to insert a (space) suffix when this completion is selected.
-    pub wants_suffix: WantsSuffix,
     /// This is not the suffix of a token, but replaces part of the commandline.
     pub replaces: Option<ReplacementScope>,
-    /// This completion should be inserted as-is, without escaping.
-    pub dont_escape: bool,
-    /// If you do escape, don't escape tildes.
-    pub dont_escape_tildes: bool,
+    /// Whether to insert a (space) suffix when this completion is selected.
+    pub wants_suffix: WantsSuffix,
+    /// How this completion should be escaped before insertion.
+    pub wants_escaping: WantsEscaping,
     /// Do not sort supplied completions
     pub dont_sort: bool,
     /// This completion looks to have the same string as an existing argument.
@@ -134,10 +141,11 @@ impl Default for CompleteFlags {
 
 impl CompleteFlags {
     const DEFAULT: Self = Self {
-        wants_suffix: WantsSuffix::Yes(SuffixType::DEFAULT),
         replaces: None,
-        dont_escape: false,
-        dont_escape_tildes: false,
+        wants_suffix: WantsSuffix::Yes(SuffixType::DEFAULT),
+        wants_escaping: WantsEscaping::Yes {
+            escape_tildes: true,
+        },
         dont_sort: false,
         duplicates_argument: false,
         keep_variable_override_prefix: false,
@@ -163,6 +171,17 @@ impl CompleteFlags {
             WantsSuffix::Yes(st) => Some(st),
             WantsSuffix::No => None,
             WantsSuffix::Auto => panic!(),
+        }
+    }
+
+    pub(crate) fn wants_escaping(&self) -> bool {
+        matches!(self.wants_escaping, WantsEscaping::Yes { .. })
+    }
+
+    pub(crate) fn dont_escape_tildes(&mut self) {
+        match &mut self.wants_escaping {
+            WantsEscaping::Yes { escape_tildes } => *escape_tildes = false,
+            WantsEscaping::No => panic!(),
         }
     }
 }
@@ -1798,7 +1817,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 // Take only the suffix.
                 env_name.slice_from(varlen).to_owned()
             } else {
-                flags.dont_escape = true;
+                flags.wants_escaping = WantsEscaping::No;
                 whole_var.slice_to(start_offset).to_owned() + env_name.as_utfstr()
             };
 
@@ -1957,7 +1976,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     // TODO: propagate overflow?
                     let mut flags = CompleteFlags::NO_SPACE;
                     if r#match.requires_full_replacement() {
-                        flags.dont_escape = true;
+                        flags.wants_escaping = WantsEscaping::No;
                     }
                     let _ = self.completions.add(Completion::new(
                         if r#match.requires_full_replacement() {
@@ -2211,13 +2230,14 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             if !comp.set_replaces_token() {
                 continue;
             }
-            comp.flags.dont_escape_tildes = true; // See #9073.
 
             // We are grafting a completion that is expected to be escaped later. This will break
             // if the original completion doesn't want escaping.  Happily, this is only the case
             // for username completion and variable name completion. They shouldn't end up here
             // anyway because they won't contain '['.
-            if comp.flags.dont_escape {
+            if comp.flags.wants_escaping() {
+                comp.flags.dont_escape_tildes(); // See #9073.
+            } else {
                 flog!(warning, "unexpected completion flag");
             }
             comp.completion.insert_utfstr(0, &unescaped_argument);

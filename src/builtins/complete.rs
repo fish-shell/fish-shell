@@ -590,7 +590,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
         };
         // HACK: Don't escape tildes because at the beginning of a token they probably mean
         // $HOME, for example as produced by a recursive call to "complete -C".
-        flags.dont_escape_tildes = true;
+        flags.dont_escape_tildes();
         if preserve_order {
             flags.dont_sort = true;
         }

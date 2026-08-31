@@ -1644,8 +1644,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             });
         }
 
+        assert!(!self.flags.autosuggestion() || !flags.gen_descriptions);
         // Squelch file descriptions per issue #254.
-        if self.flags.autosuggestion() || do_file {
+        if do_file {
             flags.gen_descriptions = false;
         }
 

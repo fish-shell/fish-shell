@@ -14,20 +14,13 @@ use crate::{
 use fish_common::{EscapeFlags, EscapeStringStyle, escape, escape_string, help_section};
 use fish_widestring::ELLIPSIS_CHAR;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 struct Options {
     print_help: bool,
     show: bool,
-    local: bool,
-    function: bool,
-    global: bool,
-    exportv: bool,
+    set_mode: ParserEnvSetMode,
     erase: bool,
     list: bool,
-    unexport: bool,
-    pathvar: bool,
-    unpathvar: bool,
-    universal: bool,
     query: bool,
     shorten_ok: bool,
     append: bool,
@@ -41,16 +34,9 @@ impl Default for Options {
         Self {
             print_help: false,
             show: false,
-            local: false,
-            function: false,
-            global: false,
-            exportv: false,
+            set_mode: ParserEnvSetMode::user(EnvMode::default()),
             erase: false,
             list: false,
-            unexport: false,
-            pathvar: false,
-            unpathvar: false,
-            universal: false,
             query: false,
             shorten_ok: true,
             append: false,
@@ -62,19 +48,6 @@ impl Default for Options {
 }
 
 impl Options {
-    fn env_mode(&self) -> ParserEnvSetMode {
-        ParserEnvSetMode::user(EnvMode {
-            local: self.local,
-            function: self.function,
-            global: self.global,
-            universal: self.universal,
-            export: self.exportv,
-            unexport: self.unexport,
-            pathvar: self.pathvar,
-            unpathvar: self.unpathvar,
-        })
-    }
-
     fn parse(
         cmd: &wstr,
         args: &mut [&wstr],
@@ -119,10 +92,10 @@ impl Options {
                     opts.erase = true;
                     opts.preserve_failure_exit_status = false;
                 }
-                'f' => opts.function = true,
-                'g' => opts.global = true,
+                'f' => opts.set_mode.mode.function = true,
+                'g' => opts.set_mode.mode.global = true,
                 'h' => opts.print_help = true,
-                'l' => opts.local = true,
+                'l' => opts.set_mode.mode.local = true,
                 'n' => {
                     opts.list = true;
                     opts.preserve_failure_exit_status = false;
@@ -132,12 +105,12 @@ impl Options {
                     opts.query = true;
                     opts.preserve_failure_exit_status = false;
                 }
-                'x' => opts.exportv = true,
-                'u' => opts.unexport = true,
-                PATH_ARG => opts.pathvar = true,
-                UNPATH_ARG => opts.unpathvar = true,
+                'x' => opts.set_mode.mode.export = true,
+                'u' => opts.set_mode.mode.unexport = true,
+                PATH_ARG => opts.set_mode.mode.pathvar = true,
+                UNPATH_ARG => opts.set_mode.mode.unpathvar = true,
                 NO_EVENT_ARG => opts.no_event = true,
-                'U' => opts.universal = true,
+                'U' => opts.set_mode.mode.universal = true,
                 'L' => opts.shorten_ok = false,
                 'S' => {
                     opts.show = true;
@@ -237,7 +210,12 @@ impl Options {
         }
 
         // Variables can only have one scope...
-        if [opts.local, opts.function, opts.global, opts.universal]
+        if [
+            opts.set_mode.mode.local,
+            opts.set_mode.mode.function,
+            opts.set_mode.mode.global,
+            opts.set_mode.mode.universal,
+        ]
             .into_iter()
             .filter(|b| *b)
             .count()
@@ -253,7 +231,7 @@ impl Options {
         }
 
         // Variables can only have one export status.
-        if opts.exportv && opts.unexport {
+        if opts.set_mode.mode.export && opts.set_mode.mode.unexport {
             err_str!(Error::EXPORT_UNEXPORT)
                 .cmd(cmd)
                 .full_trailer(parser)
@@ -262,7 +240,7 @@ impl Options {
         }
 
         // Variables can only have one path status.
-        if opts.pathvar && opts.unpathvar {
+        if opts.set_mode.mode.pathvar && opts.set_mode.mode.unpathvar {
             err_str!(Error::PATH_UNPATH)
                 .cmd(cmd)
                 .full_trailer(parser)
@@ -271,7 +249,7 @@ impl Options {
         }
 
         // Trying to erase and (un)export at the same time doesn't make sense.
-        if opts.erase && (opts.exportv || opts.unexport) {
+        if opts.erase && (opts.set_mode.mode.export || opts.set_mode.mode.unexport) {
             err_str!(Error::INVALID_OPT_COMBO)
                 .cmd(cmd)
                 .full_trailer(parser)
@@ -281,13 +259,13 @@ impl Options {
 
         // The --show flag cannot be combined with any other flag.
         if opts.show
-            && (opts.local
-                || opts.function
-                || opts.global
+            && (opts.set_mode.mode.local
+                || opts.set_mode.mode.function
+                || opts.set_mode.mode.global
                 || opts.erase
                 || opts.list
-                || opts.exportv
-                || opts.universal)
+                || opts.set_mode.mode.export
+                || opts.set_mode.mode.universal)
         {
             err_str!(Error::INVALID_OPT_COMBO)
                 .cmd(cmd)
@@ -317,7 +295,7 @@ fn warn_if_uvar_shadows_global(
     streams: &mut IoStreams,
     parser: &Parser,
 ) {
-    if opts.universal
+    if opts.set_mode.mode.universal
         && parser.is_interactive()
         && parser.vars().getf(dest, EnvMode::GLOBAL).is_some()
     {
@@ -520,7 +498,7 @@ fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<isize>) -> Vec<WS
 /// `set --names` flag was used.
 fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> BuiltinResult {
     let names_only = opts.list;
-    let mut names = parser.vars().get_names(opts.env_mode().mode);
+    let mut names = parser.vars().get_names(opts.set_mode.mode);
     names.sort();
 
     for key in names {
@@ -539,7 +517,7 @@ fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> BuiltinResu
                     }
                     val += &expand_escape_string(history.item_at_index(i).unwrap().str())[..];
                 }
-            } else if let Some(var) = parser.vars().getf_unless_empty(&key, opts.env_mode().mode) {
+            } else if let Some(var) = parser.vars().getf_unless_empty(&key, opts.set_mode.mode) {
                 val = expand_escape_variable(&var);
             }
             if !val.is_empty() {
@@ -572,7 +550,7 @@ fn query(
     args: &[&wstr],
 ) -> BuiltinResult {
     let mut retval = 0;
-    let mode = opts.env_mode().mode;
+    let mode = opts.set_mode.mode;
 
     // No variables given, this is an error.
     // 255 is the maximum return code we allow.
@@ -820,7 +798,7 @@ fn erase(
     // Historical behavior is to go from inner to outer, which may be relevant for scopes that
     // collide with the function scope (i.e. local and global).
     let mut erased = false;
-    let mut set_mode = opts.env_mode();
+    let mut set_mode = opts.set_mode;
     for scope in scopes {
         if *scope(&mut set_mode.mode) {
             let mut set_mode = set_mode;
@@ -925,7 +903,7 @@ fn set_internal(
         return Err(STATUS_INVALID_ARGS);
     }
 
-    let set_mode = opts.env_mode();
+    let set_mode = opts.set_mode;
     let var_expr = argv[0];
     let argv = &argv[1..];
 

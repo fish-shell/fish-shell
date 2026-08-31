@@ -177,7 +177,10 @@ fn write_part(
                 match expand_string(
                     token_text.to_owned(),
                     &mut args,
-                    ExpandFlags::SKIP_CMDSUBST,
+                    ExpandFlags {
+                        skip_cmdsubst: true,
+                        ..Default::default()
+                    },
                     &mut OperationContext::foreground(
                         parser,
                         Box::new(no_cancel),

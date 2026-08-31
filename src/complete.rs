@@ -958,19 +958,26 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     ///   embedded description
     /// - `possible_comp`: the list of possible completions to iterate over
     /// - `flags`: The flags controlling completion
-    /// - `extra_expand_flags`: Additional flags controlling expansion.
+    /// - `allow_nonliteral_leading_dot`: Additional flag controlling expansion.
     fn complete_strings(
         &mut self,
         wc_escaped: &wstr,
         desc_func: &DescriptionFunc,
         possible_comp: &[Completion],
         flags: CompleteFlags,
-        extra_expand_flags: ExpandFlags,
+        allow_nonliteral_leading_dot: bool,
     ) {
+        let expand_flags = ExpandFlags {
+            allow_nonliteral_leading_dot,
+            ..self.expand_flags()
+        };
         let mut tmp = wc_escaped.to_owned();
         if !expand_one(
             &mut tmp,
-            self.expand_flags() | extra_expand_flags | ExpandFlags::SKIP_WILDCARDS,
+            ExpandFlags {
+                skip_wildcards: true,
+                ..expand_flags
+            },
             self.ctx,
             None,
         ) {
@@ -981,7 +988,6 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         for comp in possible_comp {
             let comp_str = &comp.completion;
             if !comp_str.is_empty() {
-                let expand_flags = self.expand_flags() | extra_expand_flags;
                 wildcard_complete(
                     comp_str,
                     &wc,
@@ -995,15 +1001,20 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     }
 
     fn expand_flags(&self) -> ExpandFlags {
-        let mut result = ExpandFlags::empty();
-        result.set(ExpandFlags::FAIL_ON_CMDSUBST, true);
-        result.set(ExpandFlags::FUZZY_MATCH, self.flags.fuzzy_match);
-        result.set(ExpandFlags::GEN_DESCRIPTIONS, self.flags.descriptions);
-        result
+        ExpandFlags {
+            fail_on_cmdsubst: true,
+            fuzzy_match: self.flags.fuzzy_match,
+            gen_descriptions: self.flags.descriptions,
+            ..Default::default()
+        }
     }
 
     fn completion_expand_flags(&self) -> ExpandFlags {
-        self.expand_flags() | ExpandFlags::FOR_COMPLETIONS | ExpandFlags::PRESERVE_HOME_TILDES
+        ExpandFlags {
+            for_completions: true,
+            preserve_home_tildes: true,
+            ..self.expand_flags()
+        }
     }
 
     /// If command to complete is short enough, substitute the description with the whatis information
@@ -1130,9 +1141,11 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     fn complete_cmd(&mut self, str_cmd: WString) {
         // Append all possible executables
         let result = {
-            let expand_flags = self.completion_expand_flags()
-                | ExpandFlags::SPECIAL_FOR_COMMAND
-                | ExpandFlags::EXECUTABLES_ONLY;
+            let expand_flags = ExpandFlags {
+                special_for_command: true,
+                executables_only: true,
+                ..self.completion_expand_flags()
+            };
             expand_to_receiver(
                 str_cmd.clone(),
                 &mut self.completions,
@@ -1153,7 +1166,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // updated with choices for the user.
         let _ = {
             // Append all matching directories
-            let expand_flags = self.completion_expand_flags() | ExpandFlags::DIRECTORIES_ONLY;
+            let expand_flags = ExpandFlags {
+                directories_only: true,
+                ..self.completion_expand_flags()
+            };
             expand_to_receiver(
                 str_cmd.clone(),
                 &mut self.completions,
@@ -1176,7 +1192,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 &{ Box::new(complete_function_desc) as DescriptionFunc },
                 &possible_comp,
                 CompleteFlags::default(),
-                ExpandFlags::empty(),
+                /* allow_nonliteral_leading_dot=*/ false,
             );
 
             // Append all matching builtins
@@ -1190,7 +1206,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 &{ Box::new(|name| builtin_get_desc(name).unwrap_or(L!("")).to_owned()) },
                 &possible_comp,
                 CompleteFlags::default(),
-                ExpandFlags::empty(),
+                /* allow_nonliteral_leading_dot=*/ false,
             );
         }
     }
@@ -1224,7 +1240,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             &{ Box::new(desc_func) as _ },
             &possible_comp,
             CompleteFlags::NO_SPACE,
-            ExpandFlags::empty(),
+            /* allow_nonliteral_leading_dot=*/ false,
         );
     }
 
@@ -1251,7 +1267,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         let eflags = if is_autosuggest {
             ExpandFlags::FAIL_ON_CMDSUBST
         } else {
-            ExpandFlags::empty()
+            ExpandFlags::default()
         };
 
         let possible_comp = Parser::expand_argument_list(args, eflags, self.ctx);
@@ -1267,7 +1283,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             &const_desc(desc),
             &possible_comp,
             flags,
-            ExpandFlags::ALLOW_NONLITERAL_LEADING_DOT,
+            /* allow_nonliteral_leading_dot=*/ true,
         );
     }
 
@@ -1610,23 +1626,23 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         }
         let mut flags = self.completion_expand_flags();
         if !do_file {
-            flags |= ExpandFlags::SKIP_WILDCARDS;
+            flags.skip_wildcards = true;
         }
         if is_unterminated_brace {
-            flags |= ExpandFlags::NO_SPACE_FOR_UNCLOSED_BRACE;
+            flags.no_space_for_unclosed_brace = true;
         }
 
         if handle_as_special_cd && do_file {
             if self.flags.autosuggestion {
-                flags |= ExpandFlags::SPECIAL_FOR_CD_AUTOSUGGESTION;
+                flags.special_for_cd_autosuggestion = true;
             }
-            flags |= ExpandFlags::DIRECTORIES_ONLY;
-            flags |= ExpandFlags::SPECIAL_FOR_CD;
+            flags.directories_only = true;
+            flags.special_for_cd = true;
         }
 
         // Squelch file descriptions per issue #254.
         if self.flags.autosuggestion || do_file {
-            flags -= ExpandFlags::GEN_DESCRIPTIONS;
+            flags.gen_descriptions = false;
         }
 
         // Expand words separated by '=' separately, unless '=' is escaped or quoted.
@@ -1661,7 +1677,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             // Don't do fuzzy matching for files if the string begins with a dash (issue #568). We could
             // consider relaxing this if there was a preceding double-dash argument.
             if string_prefixes_string(L!("-"), s) {
-                flags -= ExpandFlags::FUZZY_MATCH;
+                flags.fuzzy_match = false;
             }
 
             if expand_to_receiver(s.to_owned(), &mut self.completions, flags, self.ctx, None)
@@ -2270,12 +2286,7 @@ fn expand_command_token(ctx: &mut OperationContext<'_>, cmd_tok: &mut WString) -
     // TODO: we give up if the first token expands to more than one argument. We could handle
     // that case by propagating arguments.
     // Also we could expand wildcards.
-    expand_one(
-        cmd_tok,
-        ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
-        ctx,
-        None,
-    )
+    expand_one(cmd_tok, ExpandFlags::NO_IO, ctx, None)
 }
 
 /// Add an unexpanded completion "rule" to generate completions from for a command.

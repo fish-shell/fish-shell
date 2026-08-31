@@ -327,7 +327,6 @@ name = "fish"
 version = "4.8.1"
 dependencies = [
  "assert_matches",
- "bitflags",
  "cc",
  "cfg-if",
  "fish-build-helper",

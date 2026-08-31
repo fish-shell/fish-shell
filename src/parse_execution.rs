@@ -422,7 +422,11 @@ impl ExecutionContext {
             let forbidden = !cmd.is_empty()
                 && expand_one(
                     &mut cmd,
-                    ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_VARIABLES,
+                    ExpandFlags {
+                        fail_on_cmdsubst: true,
+                        skip_variables: true,
+                        ..Default::default()
+                    },
                     ctx,
                     None,
                 )
@@ -1457,7 +1461,10 @@ impl ExecutionContext {
             let target_expanded = expand_one(
                 &mut target,
                 if no_exec() {
-                    ExpandFlags::SKIP_VARIABLES
+                    ExpandFlags {
+                        skip_variables: true,
+                        ..Default::default()
+                    }
                 } else {
                     ExpandFlags::default()
                 },

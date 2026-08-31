@@ -6622,9 +6622,12 @@ fn try_expand_wildcard(
 
     // We do wildcards only.
 
-    let flags = ExpandFlags::FAIL_ON_CMDSUBST
-        | ExpandFlags::SKIP_VARIABLES
-        | ExpandFlags::PRESERVE_HOME_TILDES;
+    let flags = ExpandFlags {
+        fail_on_cmdsubst: true,
+        skip_variables: true,
+        preserve_home_tildes: true,
+        ..Default::default()
+    };
     let mut expanded = CompletionList::new();
     let ret = expand_string(wc, &mut expanded, flags, ctx, None);
     if ret.result != ExpandResultCode::Ok {

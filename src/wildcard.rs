@@ -60,7 +60,7 @@ fn resolve_description(
     }
 
     if let Some(f) = description_func {
-        if expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS) {
+        if expand_flags.gen_descriptions {
             return f(full_completion);
         }
     }
@@ -100,9 +100,7 @@ fn wildcard_complete_internal(
     // Maybe early out for hidden files. We require that the wildcard match these exactly (i.e. a
     // dot); ANY_STRING not allowed.
     if is_first_call
-        && !params
-            .expand_flags
-            .contains(ExpandFlags::ALLOW_NONLITERAL_LEADING_DOT)
+        && !params.expand_flags.allow_nonliteral_leading_dot
         && s.char_at(0) == '.'
         && wc.char_at(0) != '.'
     {
@@ -122,7 +120,7 @@ fn wildcard_complete_internal(
         };
 
         // If we're not allowing fuzzy match, then we require a prefix match.
-        let needs_prefix_match = !params.expand_flags.contains(ExpandFlags::FUZZY_MATCH);
+        let needs_prefix_match = !params.expand_flags.fuzzy_match;
         if needs_prefix_match && !m.is_exact_or_prefix() {
             return WildcardResult::NoMatch;
         }
@@ -323,10 +321,10 @@ fn wildcard_test_flags_then_complete(
     out: &mut CompletionReceiver,
     entry: &DirEntry,
 ) -> bool {
-    let executables_only = expand_flags.contains(ExpandFlags::EXECUTABLES_ONLY);
-    let need_directory = expand_flags.contains(ExpandFlags::DIRECTORIES_ONLY);
+    let executables_only = expand_flags.executables_only;
+    let need_directory = expand_flags.directories_only;
     let mut flags = CompleteFlags::default();
-    if expand_flags.contains(ExpandFlags::NO_SPACE_FOR_UNCLOSED_BRACE) {
+    if expand_flags.no_space_for_unclosed_brace {
         flags.no_space = true;
     }
 
@@ -379,7 +377,7 @@ fn wildcard_test_flags_then_complete(
     // Compute the description.
     // This is effectively only for command completions,
     // because we disable descriptions for regular file completions.
-    let desc = if expand_flags.contains(ExpandFlags::GEN_DESCRIPTIONS) {
+    let desc = if expand_flags.gen_descriptions {
         let is_link: bool = match entry.is_possible_link() {
             Some(n) => n,
             None => {
@@ -543,11 +541,11 @@ mod expander {
                 // Maybe try a fuzzy match (#94) if nothing was found with the literal match. Respect
                 // EXPAND_NO_DIRECTORY_ABBREVIATIONS (issue #2413).
                 // Don't do fuzzy matches if the literal segment was valid (#3211)
-                if self.flags.contains(ExpandFlags::FUZZY_MATCH)
+                if self.flags.fuzzy_match
                     && self.resolved_completions.len() == before
                     && waccess(&intermediate_dirpath, AccessFlags::F_OK).is_err()
                 {
-                    assert!(self.flags.contains(ExpandFlags::FOR_COMPLETIONS));
+                    assert!(self.flags.for_completions);
                     if let Ok(mut base_dir_iter) = self.open_dir(base_dir, false) {
                         self.expand_literal_intermediate_segment_with_fuzz(
                             base_dir,
@@ -580,7 +578,7 @@ mod expander {
                 // return "." and ".." entries if we're doing completions
                 let Ok(mut dir) = self.open_dir(
                     base_dir, /* return . and .. */
-                    self.flags.contains(ExpandFlags::FOR_COMPLETIONS),
+                    self.flags.for_completions,
                 ) else {
                     return;
                 };
@@ -651,7 +649,7 @@ mod expander {
                 return;
             }
 
-            if !self.flags.contains(ExpandFlags::FOR_COMPLETIONS) {
+            if !self.flags.for_completions {
                 // Trailing slash and not accepting incomplete, e.g. `echo /xyz/`. Insert this file after checking it exists.
                 if waccess(base_dir, AccessFlags::F_OK).is_ok() {
                     self.add_expansion_result(base_dir.to_owned());
@@ -806,7 +804,7 @@ mod expander {
         ) {
             // wreaddir_resolving without the out argument is just wreaddir.
             // So we can use the information in case we need it.
-            let need_dir = self.flags.contains(ExpandFlags::DIRECTORIES_ONLY);
+            let need_dir = self.flags.directories_only;
 
             while !self.interrupted_or_overflowed() {
                 let Some(Ok(entry)) = base_dir_iter.next() else {
@@ -818,7 +816,7 @@ mod expander {
                     continue;
                 }
 
-                if self.flags.contains(ExpandFlags::FOR_COMPLETIONS) {
+                if self.flags.for_completions {
                     self.try_add_completion_result(
                         &(base_dir.to_owned() + entry.name.as_utfstr()),
                         &entry.name,
@@ -848,7 +846,7 @@ mod expander {
 
         fn add_expansion_result(&mut self, result: WString) {
             // This function is only for the non-completions case.
-            assert!(!self.flags.contains(ExpandFlags::FOR_COMPLETIONS));
+            assert!(!self.flags.for_completions);
             #[allow(clippy::collapsible_if)]
             if self.completion_set.insert(result.clone()) {
                 if !self.resolved_completions.add(result) {
@@ -924,12 +922,12 @@ mod expander {
             info: ParentInfo,
         ) {
             // This function is only for the completions case.
-            assert!(self.flags.contains(ExpandFlags::FOR_COMPLETIONS));
+            assert!(self.flags.for_completions);
             let mut abs_path = self.working_directory.to_owned();
             append_path_component(&mut abs_path, filepath);
 
             // We must normalize the path to allow 'cd ..' to operate on logical paths.
-            if self.flags.contains(ExpandFlags::SPECIAL_FOR_CD) {
+            if self.flags.special_for_cd {
                 abs_path = normalize_path(&abs_path, true);
             }
 
@@ -959,10 +957,7 @@ mod expander {
                 // hierarchy we can, and then appending any components to each new result.
                 // Only descend deepest unique for cd autosuggest and not for cd tab completion
                 // (issue #4402).
-                if self
-                    .flags
-                    .contains(ExpandFlags::SPECIAL_FOR_CD_AUTOSUGGESTION)
-                {
+                if self.flags.special_for_cd_autosuggestion {
                     let unique_hierarchy = self.descend_unique_hierarchy(&mut abs_path);
                     if !unique_hierarchy.is_empty() {
                         for c in self.resolved_completions[before..after].iter_mut() {
@@ -980,7 +975,7 @@ mod expander {
         fn open_dir(&self, base_dir: &wstr, dotdot: bool) -> std::io::Result<DirIter> {
             let mut path = self.working_directory.to_owned();
             append_path_component(&mut path, base_dir);
-            if self.flags.contains(ExpandFlags::SPECIAL_FOR_CD) {
+            if self.flags.special_for_cd {
                 // cd operates on logical paths.
                 // for example, cd ../<tab> should complete "without resolving symlinks".
                 path = normalize_path(&path, true);
@@ -1021,17 +1016,12 @@ pub fn wildcard_expand_string<'closure>(
 ) -> WildcardResult {
     use expander::{ParentInfo, WildCardExpander};
     // Fuzzy matching only if we're doing completions.
-    assert!(
-        flags.contains(ExpandFlags::FOR_COMPLETIONS) || !flags.contains(ExpandFlags::FUZZY_MATCH)
-    );
+    assert!(flags.for_completions || !flags.fuzzy_match);
 
-    // ExpandFlags::SPECIAL_FOR_CD requires expand_flag::DIRECTORIES_ONLY and
-    // ExpandFlags::FOR_COMPLETIONS and !expand_flag::GEN_DESCRIPTIONS.
+    // CD expansion requires directories-only completion without descriptions.
     assert!(
-        !(flags.contains(ExpandFlags::SPECIAL_FOR_CD))
-            || ((flags.contains(ExpandFlags::DIRECTORIES_ONLY))
-                && (flags.contains(ExpandFlags::FOR_COMPLETIONS))
-                && (!flags.contains(ExpandFlags::GEN_DESCRIPTIONS)))
+        !(flags.special_for_cd)
+            || ((flags.directories_only) && (flags.for_completions) && (!flags.gen_descriptions))
     );
 
     // Hackish fix for issue #1631. Embedded nulls are never allowed in a filename,
@@ -1042,7 +1032,7 @@ pub fn wildcard_expand_string<'closure>(
 
     // We do not support tab-completing recursive (**) wildcards. This is historic behavior.
     // Do not descend any directories if there is a ** wildcard.
-    if flags.contains(ExpandFlags::FOR_COMPLETIONS) && wc.contains(ANY_STRING_RECURSIVE) {
+    if flags.for_completions && wc.contains(ANY_STRING_RECURSIVE) {
         return WildcardResult::NoMatch;
     }
 

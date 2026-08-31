@@ -1728,12 +1728,8 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
         // is empty (and so rm will fail); this is nevertheless a useful command because it
         // confirms the directory is empty.
         let mut expanded_path = path.clone();
-        if expand_one(
-            &mut expanded_path,
-            ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
-            ctx,
-            None,
-        ) && path_is_valid(&expanded_path, &working_directory)
+        if expand_one(&mut expanded_path, ExpandFlags::NO_IO, ctx, None)
+            && path_is_valid(&expanded_path, &working_directory)
         {
             // Note we return the original (unexpanded) path.
             result.push(path);
@@ -1755,12 +1751,7 @@ pub fn all_paths_are_valid(paths: &[WString], ctx: &mut OperationContext<'_>) ->
         if ctx.check_cancel() {
             return false;
         }
-        if !expand_one(
-            &mut path,
-            ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
-            ctx,
-            None,
-        ) {
+        if !expand_one(&mut path, ExpandFlags::NO_IO, ctx, None) {
             return false;
         }
         if !path_is_valid(&path, &working_directory) {

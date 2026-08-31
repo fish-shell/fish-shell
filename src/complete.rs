@@ -76,16 +76,34 @@ pub struct CompletionMode {
 /// Character that separates the completion and description on programmable completions.
 pub const PROG_COMPLETE_SEP: char = '\t';
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct CompleteFlags {
-    /// Do not insert space afterwards if this is the only completion. (The default is to try insert
-    /// a space).
-    pub no_space: bool,
-    /// This is not the suffix of a token, but replaces it entirely.
-    pub replaces_token: bool,
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct SuffixType {
+    // The completion is a variable name, so we may insert a slash instead of space.
+    pub for_variable_name: bool,
+}
+
+impl SuffixType {
+    const DEFAULT: Self = Self {
+        for_variable_name: false,
+    };
+}
+
+/// Whether to insert a (space) suffix when this completion is selected.
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum WantsSuffix {
+    Yes(SuffixType),
+    No,
     /// This completion may or may not want a space at the end - guess by checking the last
     /// character of the completion.
-    pub auto_space: bool,
+    Auto,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub struct CompleteFlags {
+    /// Whether to insert a (space) suffix when this completion is selected.
+    pub wants_suffix: WantsSuffix,
+    /// This is not the suffix of a token, but replaces it entirely.
+    pub replaces_token: bool,
     /// This completion should be inserted as-is, without escaping.
     pub dont_escape: bool,
     /// If you do escape, don't escape tildes.
@@ -98,8 +116,6 @@ pub struct CompleteFlags {
     pub replaces_line: bool,
     /// If replacing the entire token, keep the "foo=" prefix.
     pub keep_variable_override_prefix: bool,
-    /// This is a variable name.
-    pub variable_name: bool,
     /// Suppress showing the pager prefix for this completion.
     pub suppress_pager_prefix: bool,
 }
@@ -112,22 +128,28 @@ impl Default for CompleteFlags {
 
 impl CompleteFlags {
     const DEFAULT: Self = Self {
-        no_space: false,
+        wants_suffix: WantsSuffix::Yes(SuffixType::DEFAULT),
         replaces_token: false,
-        auto_space: false,
         dont_escape: false,
         dont_escape_tildes: false,
         dont_sort: false,
         duplicates_argument: false,
         replaces_line: false,
         keep_variable_override_prefix: false,
-        variable_name: false,
         suppress_pager_prefix: false,
     };
     pub(crate) const NO_SPACE: Self = Self {
-        no_space: true,
+        wants_suffix: WantsSuffix::No,
         ..Self::DEFAULT
     };
+
+    pub(crate) fn suffix_type(&self) -> Option<SuffixType> {
+        match self.wants_suffix {
+            WantsSuffix::Yes(st) => Some(st),
+            WantsSuffix::No => None,
+            WantsSuffix::Auto => panic!(),
+        }
+    }
 }
 
 /// Function which accepts a completion string and returns its description.
@@ -142,7 +164,7 @@ pub fn const_desc(s: &wstr) -> DescriptionFunc {
 pub type CompletionList = Vec<Completion>;
 
 /// This is an individual completion entry, i.e. the result of an expansion of a completion rule.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Completion {
     /// The completion string.
     pub completion: WString,
@@ -179,9 +201,9 @@ impl Completion {
         completion: WString,
         description: WString,
         r#match: StringFuzzyMatch, /* = exact_match */
-        flags: CompleteFlags,
+        mut flags: CompleteFlags,
     ) -> Self {
-        let mut flags = resolve_auto_space(&completion, flags);
+        resolve_auto_space(&completion, &mut flags.wants_suffix);
         if r#match.requires_full_replacement() {
             flags.replaces_token = true;
         }
@@ -472,17 +494,22 @@ static COMPLETION_TOMBSTONES: Mutex<BTreeSet<WString>> = Mutex::new(BTreeSet::ne
 type WrapperMap = HashMap<WString, Vec<WString>>;
 static WRAPPER_MAP: LazyLock<Mutex<WrapperMap>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-/// Clear `auto_space`, and set `no_space` appropriately
-/// depending on the suffix of the string.
-fn resolve_auto_space(comp: &wstr, mut flags: CompleteFlags) -> CompleteFlags {
-    if flags.auto_space {
-        flags.auto_space = false;
-        if let Some('/' | '=' | '@' | ':' | '.' | ',' | '-') = comp.as_char_slice().last() {
-            flags.no_space = true;
+/// Replace `WantsSuffix::Auto` appropriately depending on the suffix of the string.
+fn resolve_auto_space(comp: &wstr, wants_suffix: &mut WantsSuffix) {
+    use WantsSuffix::*;
+    match *wants_suffix {
+        Yes(_) | No => (),
+        Auto => {
+            *wants_suffix = if matches!(
+                comp.as_char_slice().last(),
+                Some('/' | '=' | '@' | ':' | '.' | ',' | '-')
+            ) {
+                No
+            } else {
+                Yes(SuffixType::DEFAULT)
+            }
         }
     }
-
-    flags
 }
 
 // If these functions aren't force inlined, it is actually faster to call
@@ -1737,7 +1764,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             };
 
             let mut flags = CompleteFlags {
-                variable_name: true,
+                wants_suffix: WantsSuffix::Yes(SuffixType {
+                    for_variable_name: true,
+                }),
                 ..Default::default()
             };
             let comp = if !r#match.requires_full_replacement() {
@@ -2660,7 +2689,7 @@ mod tests {
     };
     use crate::{
         abbrs::{self, Abbreviation, with_abbrs_mut},
-        complete::Completion,
+        complete::{Completion, WantsSuffix},
         env::{EnvMode, EnvSetMode, Environment as _},
         io::IoChain,
         operation_context::{
@@ -2999,7 +3028,7 @@ mod tests {
             L!("qux").into(),
             WString::new(),
             CompleteFlags {
-                auto_space: true,
+                wants_suffix: WantsSuffix::Auto,
                 ..Default::default()
             },
         );
@@ -3086,12 +3115,12 @@ mod tests {
         assert_eq!(completions.len(), 2);
         // Abbreviations should not have a space after them.
         assert_eq!(completions[0].completion, L!("zero"));
-        assert!(completions[0].flags.no_space);
+        assert!(completions[0].flags.suffix_type().is_none());
         with_abbrs_mut(|abbrset| {
             abbrset.erase(L!("testabbrsonetwothreezero"), &[]);
         });
         assert_eq!(completions[1].completion, L!("four"));
-        assert!(!completions[1].flags.no_space);
+        assert!(completions[1].flags.suffix_type().is_some());
 
         // Test wraps.
         assert!(comma_join(complete_get_wrap_targets(L!("wrapper1"))).is_empty());

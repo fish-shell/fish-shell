@@ -2,8 +2,8 @@ use super::prelude::*;
 use crate::{
     builtins::Error,
     complete::{
-        CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, complete_add,
-        complete_add_wrapper, complete_print, complete_remove, complete_remove_all,
+        CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, WantsSuffix,
+        complete_add, complete_add_wrapper, complete_print, complete_remove, complete_remove_all,
         complete_remove_wrapper,
     },
     err_fmt, err_raw, err_str,
@@ -531,7 +531,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
                 // is set. We don't want to set COMPLETE_NO_SPACE because that won't close
                 // quotes. What we want is to close the quote, but not append the space. So we
                 // just look for the space and clear it.
-                if !next.flags.no_space
+                if next.flags.suffix_type().is_some()
                     && string_suffixes_string(L!(" "), &faux_cmdline_with_completion)
                 {
                     faux_cmdline_with_completion.truncate(faux_cmdline_with_completion.len() - 1);
@@ -585,7 +585,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
         }
     } else {
         let mut flags = CompleteFlags {
-            auto_space: true,
+            wants_suffix: WantsSuffix::Auto,
             ..Default::default()
         };
         // HACK: Don't escape tildes because at the beginning of a token they probably mean

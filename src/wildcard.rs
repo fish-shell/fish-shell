@@ -2,7 +2,7 @@
 
 use crate::{
     common::{WSL, is_windows_subsystem_for_linux},
-    complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP},
+    complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP, WantsSuffix},
     expand::{ExpandFlags, PathFilter},
     prelude::*,
     wutil::{
@@ -325,7 +325,7 @@ fn wildcard_test_flags_then_complete(
     let need_directory = expand_flags.directories_only();
     let mut flags = CompleteFlags::default();
     if expand_flags.no_space_for_unclosed_brace {
-        flags.no_space = true;
+        flags.wants_suffix = WantsSuffix::No;
     }
 
     // Check if it will match before stat().
@@ -407,7 +407,7 @@ fn wildcard_test_flags_then_complete(
     let desc_func: Option<&dyn Fn(&wstr) -> WString> = Some(&desc_func);
 
     let filename = if entry.is_dir() {
-        flags.no_space = true;
+        flags.wants_suffix = WantsSuffix::No;
         Cow::Owned(filename.to_owned() + L!("/"))
     } else {
         Cow::Borrowed(filename)

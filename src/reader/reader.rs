@@ -28,7 +28,7 @@ use crate::{
     builtins::{ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_OK},
     common::{get_program_name, shell_modes},
     complete::{
-        CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete,
+        CompleteFlags, Completion, CompletionList, CompletionRequestOptions, WantsSuffix, complete,
         complete_load, sort_and_prioritize,
     },
     editable_line::{Edit, EditableLine, line_at_cursor, range_of_line_at_cursor},
@@ -6757,18 +6757,20 @@ pub fn completion_apply_to_command_line(
     append_only: bool,
     is_unique: bool,
 ) -> WString {
-    let mut trailer = (!flags.no_space).then_some(' ');
+    let cursor_pos = *inout_cursor_pos;
+    let mut back_into_trailing_quote = false;
+
     let do_replace_token = flags.replaces_token;
     let do_replace_line = flags.replaces_line;
     let do_escape = !flags.dont_escape;
     let no_tilde = flags.dont_escape_tildes;
-    let keep_variable_override = flags.keep_variable_override_prefix;
-    let is_variable_name = flags.variable_name;
 
-    let cursor_pos = *inout_cursor_pos;
-    let mut back_into_trailing_quote = false;
-    assert!(!is_variable_name || command_line.char_at(cursor_pos) != '/');
-    let have_trailer = command_line.char_at(cursor_pos) == ' ';
+    let mut suffix_builder = flags.suffix_type().map(|suffix_type| {
+        assert!(!suffix_type.for_variable_name || command_line.char_at(cursor_pos) != '/');
+        (suffix_type, ' ')
+    });
+    let have_suffix = command_line.char_at(cursor_pos) == ' ';
+    let keep_variable_override = flags.keep_variable_override_prefix;
 
     if do_replace_line {
         assert!(!do_escape, "unsupported completion flag");
@@ -6782,27 +6784,27 @@ pub fn completion_apply_to_command_line(
     }
 
     let mut escape_flags = EscapeFlags::default();
-    if append_only || !is_unique || trailer.is_none() {
+    if append_only || !is_unique || suffix_builder.is_none() {
         escape_flags.no_quoted = true;
     }
     if no_tilde {
         escape_flags.no_tilde = true;
     }
 
-    let mut maybe_add_slash = |trailer: &mut char, token: &wstr| {
+    let mut maybe_add_slash = |suffix: &mut char, token: &wstr| {
         let mut expanded = token.to_owned();
         if expand_one(&mut expanded, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None)
             && wstat(&expanded).is_ok_and(|md| md.is_dir())
         {
-            *trailer = '/';
+            *suffix = '/';
         }
     };
 
     if do_replace_token {
-        if is_variable_name {
-            assert!(!do_escape);
-            if let Some(trailer) = trailer.as_mut() {
-                maybe_add_slash(trailer, val_str);
+        if let Some((suffix_type, suffix)) = suffix_builder.as_mut() {
+            if suffix_type.for_variable_name {
+                assert!(!do_escape);
+                maybe_add_slash(suffix, val_str);
             }
         }
         let mut move_cursor = 0;
@@ -6827,9 +6829,9 @@ pub fn completion_apply_to_command_line(
             move_cursor += val_str.len();
         }
 
-        if let Some(trailer) = trailer {
-            if !have_trailer {
-                sb.push(trailer);
+        if let Some((_st, suffix)) = suffix_builder {
+            if !have_suffix {
+                sb.push(suffix);
             }
             move_cursor += 1;
         }
@@ -6883,12 +6885,12 @@ pub fn completion_apply_to_command_line(
     result.insert_utfstr(insertion_point, &replaced);
     let mut new_cursor_pos =
         insertion_point + replaced.len() + if back_into_trailing_quote { 1 } else { 0 };
-    if let Some(mut trailer) = trailer {
-        if is_variable_name {
+    if let Some((suffix_type, mut suffix)) = suffix_builder {
+        if suffix_type.for_variable_name {
             let (tok, _) = get_token_extent(command_line, cursor_pos);
-            maybe_add_slash(&mut trailer, &result[tok.start..new_cursor_pos]);
+            maybe_add_slash(&mut suffix, &result[tok.start..new_cursor_pos]);
         }
-        if trailer != '/' {
+        if suffix != '/' {
             if let Some(quote) = quote {
                 if unescaped_quote(command_line, insertion_point) != Some(quote) {
                     // This is a quoted parameter, first print a quote.
@@ -6898,8 +6900,8 @@ pub fn completion_apply_to_command_line(
             }
         }
 
-        if !have_trailer {
-            result.insert(new_cursor_pos, trailer);
+        if !have_suffix {
+            result.insert(new_cursor_pos, suffix);
         }
         new_cursor_pos += 1;
     }
@@ -7145,7 +7147,7 @@ impl<'a> Reader<'a> {
 
             if use_prefix {
                 // More than one completion contributed, so don't insert a space after it.
-                flags.no_space = true;
+                flags.wants_suffix = WantsSuffix::No;
                 self.completion_insert(
                     common_prefix,
                     token_range.end,

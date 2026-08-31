@@ -27,7 +27,6 @@ use crate::{
     wutil::wrealpath,
 };
 use assert_matches::assert_matches;
-use bitflags::bitflags;
 use fish_common::{ScopeGuard, UnescapeFlags, UnescapeStringStyle, escape, unescape_string};
 use fish_util::wcsfilecmp;
 use fish_wcstringutil::{
@@ -77,34 +76,58 @@ pub struct CompletionMode {
 /// Character that separates the completion and description on programmable completions.
 pub const PROG_COMPLETE_SEP: char = '\t';
 
-bitflags! {
-    #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
-    pub struct CompleteFlags: u16 {
-        /// Do not insert space afterwards if this is the only completion. (The default is to try insert
-        /// a space).
-        const NO_SPACE = 1 << 0;
-        /// This is not the suffix of a token, but replaces it entirely.
-        const REPLACES_TOKEN = 1 << 1;
-        /// This completion may or may not want a space at the end - guess by checking the last
-        /// character of the completion.
-        const AUTO_SPACE = 1 << 2;
-        /// This completion should be inserted as-is, without escaping.
-        const DONT_ESCAPE = 1 << 3;
-        /// If you do escape, don't escape tildes.
-        const DONT_ESCAPE_TILDES = 1 << 4;
-        /// Do not sort supplied completions
-        const DONT_SORT = 1 << 5;
-        /// This completion looks to have the same string as an existing argument.
-        const DUPLICATES_ARGUMENT = 1 << 6;
-        /// This completes not just a token but replaces an entire line.
-        const REPLACES_LINE = 1 << 7;
-        /// If replacing the entire token, keep the "foo=" prefix.
-        const KEEP_VARIABLE_OVERRIDE_PREFIX = 1 << 8;
-        /// This is a variable name.
-        const VARIABLE_NAME = 1 << 9;
-        /// Suppress showing the pager prefix for this completion.
-        const SUPPRESS_PAGER_PREFIX = 1 << 10;
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub struct CompleteFlags {
+    /// Do not insert space afterwards if this is the only completion. (The default is to try insert
+    /// a space).
+    pub no_space: bool,
+    /// This is not the suffix of a token, but replaces it entirely.
+    pub replaces_token: bool,
+    /// This completion may or may not want a space at the end - guess by checking the last
+    /// character of the completion.
+    pub auto_space: bool,
+    /// This completion should be inserted as-is, without escaping.
+    pub dont_escape: bool,
+    /// If you do escape, don't escape tildes.
+    pub dont_escape_tildes: bool,
+    /// Do not sort supplied completions
+    pub dont_sort: bool,
+    /// This completion looks to have the same string as an existing argument.
+    pub duplicates_argument: bool,
+    /// This completes not just a token but replaces an entire line.
+    pub replaces_line: bool,
+    /// If replacing the entire token, keep the "foo=" prefix.
+    pub keep_variable_override_prefix: bool,
+    /// This is a variable name.
+    pub variable_name: bool,
+    /// Suppress showing the pager prefix for this completion.
+    pub suppress_pager_prefix: bool,
+}
+
+impl Default for CompleteFlags {
+    fn default() -> Self {
+        Self::DEFAULT
     }
+}
+
+impl CompleteFlags {
+    const DEFAULT: Self = Self {
+        no_space: false,
+        replaces_token: false,
+        auto_space: false,
+        dont_escape: false,
+        dont_escape_tildes: false,
+        dont_sort: false,
+        duplicates_argument: false,
+        replaces_line: false,
+        keep_variable_override_prefix: false,
+        variable_name: false,
+        suppress_pager_prefix: false,
+    };
+    pub(crate) const NO_SPACE: Self = Self {
+        no_space: true,
+        ..Self::DEFAULT
+    };
 }
 
 /// Function which accepts a completion string and returns its description.
@@ -160,7 +183,7 @@ impl Completion {
     ) -> Self {
         let mut flags = resolve_auto_space(&completion, flags);
         if r#match.requires_full_replacement() {
-            flags |= CompleteFlags::REPLACES_TOKEN;
+            flags.replaces_token = true;
         }
         Self {
             completion,
@@ -179,18 +202,18 @@ impl Completion {
             completion,
             description,
             StringFuzzyMatch::exact_match(),
-            CompleteFlags::empty(),
+            CompleteFlags::default(),
         )
     }
 
     /// Returns whether this replaces its token.
     pub fn replaces_token(&self) -> bool {
-        self.flags.contains(CompleteFlags::REPLACES_TOKEN)
+        self.flags.replaces_token
     }
 
     /// Returns whether this replaces the entire commandline.
     pub fn replaces_line(&self) -> bool {
-        self.flags.contains(CompleteFlags::REPLACES_LINE)
+        self.flags.replaces_line
     }
 
     /// Returns the completion's match rank. Lower ranks are better completions.
@@ -446,13 +469,13 @@ static COMPLETION_TOMBSTONES: Mutex<BTreeSet<WString>> = Mutex::new(BTreeSet::ne
 type WrapperMap = HashMap<WString, Vec<WString>>;
 static WRAPPER_MAP: LazyLock<Mutex<WrapperMap>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-/// Clear the [`CompleteFlags::AUTO_SPACE`] flag, and set [`CompleteFlags::NO_SPACE`] appropriately
+/// Clear `auto_space`, and set `no_space` appropriately
 /// depending on the suffix of the string.
 fn resolve_auto_space(comp: &wstr, mut flags: CompleteFlags) -> CompleteFlags {
-    if flags.contains(CompleteFlags::AUTO_SPACE) {
-        flags -= CompleteFlags::AUTO_SPACE;
+    if flags.auto_space {
+        flags.auto_space = false;
         if let Some('/' | '=' | '@' | ':' | '.' | ',' | '-') = comp.as_char_slice().last() {
-            flags |= CompleteFlags::NO_SPACE;
+            flags.no_space = true;
         }
     }
 
@@ -464,14 +487,14 @@ fn resolve_auto_space(comp: &wstr, mut flags: CompleteFlags) -> CompleteFlags {
 
 #[inline(always)]
 fn natural_compare_completions(a: &Completion, b: &Completion) -> Ordering {
-    if (a.flags & b.flags).contains(CompleteFlags::DONT_SORT) {
+    if a.flags.dont_sort && b.flags.dont_sort {
         // Both completions are from a source with the --keep-order flag.
         return Ordering::Equal;
     }
-    if (a.flags).contains(CompleteFlags::DONT_SORT) {
+    if a.flags.dont_sort {
         return Ordering::Less;
     }
-    if (b.flags).contains(CompleteFlags::DONT_SORT) {
+    if b.flags.dont_sort {
         return Ordering::Greater;
     }
     wcsfilecmp(&a.completion, &b.completion)
@@ -479,8 +502,8 @@ fn natural_compare_completions(a: &Completion, b: &Completion) -> Ordering {
 
 #[inline(always)]
 fn compare_completions_by_duplicate_arguments(a: &Completion, b: &Completion) -> Ordering {
-    let ad = a.flags.contains(CompleteFlags::DUPLICATES_ARGUMENT);
-    let bd = b.flags.contains(CompleteFlags::DUPLICATES_ARGUMENT);
+    let ad = a.flags.duplicates_argument;
+    let bd = b.flags.duplicates_argument;
 
     ad.cmp(&bd)
 }
@@ -739,7 +762,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     cur_tok.is_unterminated_brace,
                 );
                 for c in &mut self.completions[first..] {
-                    c.flags |= CompleteFlags::KEEP_VARIABLE_OVERRIDE_PREFIX;
+                    c.flags.keep_variable_override_prefix = true;
                 }
                 return;
             }
@@ -1152,7 +1175,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 &str_cmd,
                 &{ Box::new(complete_function_desc) as DescriptionFunc },
                 &possible_comp,
-                CompleteFlags::empty(),
+                CompleteFlags::default(),
                 ExpandFlags::empty(),
             );
 
@@ -1166,7 +1189,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 &str_cmd,
                 &{ Box::new(|name| builtin_get_desc(name).unwrap_or(L!("")).to_owned()) },
                 &possible_comp,
-                CompleteFlags::empty(),
+                CompleteFlags::default(),
                 ExpandFlags::empty(),
             );
         }
@@ -1558,7 +1581,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     completion.to_owned(),
                     o.desc.localize().to_owned(),
                     r#match,
-                    CompleteFlags::empty(),
+                    CompleteFlags::default(),
                 )) {
                     return false;
                 }
@@ -1692,12 +1715,15 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 continue;
             };
 
-            let mut flags = CompleteFlags::VARIABLE_NAME;
+            let mut flags = CompleteFlags {
+                variable_name: true,
+                ..Default::default()
+            };
             let comp = if !r#match.requires_full_replacement() {
                 // Take only the suffix.
                 env_name.slice_from(varlen).to_owned()
             } else {
-                flags |= CompleteFlags::DONT_ESCAPE;
+                flags.dont_escape = true;
                 whole_var.slice_to(start_offset).to_owned() + env_name.as_utfstr()
             };
 
@@ -1856,7 +1882,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     // TODO: propagate overflow?
                     let mut flags = CompleteFlags::NO_SPACE;
                     if r#match.requires_full_replacement() {
-                        flags |= CompleteFlags::DONT_ESCAPE;
+                        flags.dont_escape = true;
                     }
                     let _ = self.completions.add(Completion::new(
                         if r#match.requires_full_replacement() {
@@ -2110,14 +2136,14 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             if comp.replaces_token() {
                 continue;
             }
-            comp.flags |= CompleteFlags::REPLACES_TOKEN;
-            comp.flags |= CompleteFlags::DONT_ESCAPE_TILDES; // See #9073.
+            comp.flags.replaces_token = true;
+            comp.flags.dont_escape_tildes = true; // See #9073.
 
             // We are grafting a completion that is expected to be escaped later. This will break
             // if the original completion doesn't want escaping.  Happily, this is only the case
             // for username completion and variable name completion. They shouldn't end up here
             // anyway because they won't contain '['.
-            if comp.flags.contains(CompleteFlags::DONT_ESCAPE) {
+            if comp.flags.dont_escape {
                 flog!(warning, "unexpected completion flag");
             }
             comp.completion.insert_utfstr(0, &unescaped_argument);
@@ -2146,7 +2172,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 comp_str.insert_utfstr(0, prefix);
             }
             if arg_strs.binary_search(&comp_str).is_ok() {
-                comp.flags |= CompleteFlags::DUPLICATES_ARGUMENT;
+                comp.flags.duplicates_argument = true;
             }
         }
     }
@@ -2398,7 +2424,7 @@ fn append_switch_long(out: &mut WString, opt: &wstr) {
 fn completion2string(index: &CompletionEntryIndex, o: &CompleteEntryOpt) -> WString {
     let mut out = WString::from(L!("complete"));
 
-    if o.flags.contains(CompleteFlags::DONT_SORT) {
+    if o.flags.dont_sort {
         append_switch_short(&mut out, 'k');
     }
 
@@ -2934,7 +2960,10 @@ mod tests {
         let newcmdline = completion_apply_to_command_line(
             ctx,
             L!("Debug/"),
-            CompleteFlags::REPLACES_TOKEN | CompleteFlags::NO_SPACE,
+            CompleteFlags {
+                replaces_token: true,
+                ..CompleteFlags::NO_SPACE
+            },
             L!("mv debug debug"),
             &mut cursor_pos,
             true,
@@ -2993,7 +3022,10 @@ mod tests {
             vec![],
             L!("qux").into(),
             WString::new(),
-            CompleteFlags::AUTO_SPACE,
+            CompleteFlags {
+                auto_space: true,
+                ..Default::default()
+            },
         );
         let completions = do_complete(ctx, L!("foobarbaz "), CompletionRequestOptions::default());
         assert_eq!(completions.len(), 1);
@@ -3033,11 +3065,7 @@ mod tests {
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
         assert!(!completions[0].replaces_token());
-        assert!(
-            !(completions[0]
-                .flags
-                .contains(CompleteFlags::DUPLICATES_ARGUMENT))
-        );
+        assert!(!(completions[0].flags.duplicates_argument));
         let completions = do_complete(
             ctx,
             L!("cat testfile te"),
@@ -3045,11 +3073,7 @@ mod tests {
         );
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
-        assert!(
-            completions[0]
-                .flags
-                .contains(CompleteFlags::DUPLICATES_ARGUMENT)
-        );
+        assert!(completions[0].flags.duplicates_argument);
         let completions = do_complete(
             ctx,
             L!("cat testfile TE"),
@@ -3058,11 +3082,7 @@ mod tests {
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("testfile"));
         assert!(completions[0].replaces_token());
-        assert!(
-            completions[0]
-                .flags
-                .contains(CompleteFlags::DUPLICATES_ARGUMENT)
-        );
+        assert!(completions[0].flags.duplicates_argument);
         let completions = do_complete(
             ctx,
             L!("something --abc=te"),
@@ -3136,12 +3156,12 @@ mod tests {
         assert_eq!(completions.len(), 2);
         // Abbreviations should not have a space after them.
         assert_eq!(completions[0].completion, L!("zero"));
-        assert!(completions[0].flags.contains(CompleteFlags::NO_SPACE));
+        assert!(completions[0].flags.no_space);
         with_abbrs_mut(|abbrset| {
             abbrset.erase(L!("testabbrsonetwothreezero"), &[]);
         });
         assert_eq!(completions[1].completion, L!("four"));
-        assert!(!completions[1].flags.contains(CompleteFlags::NO_SPACE));
+        assert!(!completions[1].flags.no_space);
 
         // Test wraps.
         assert!(comma_join(complete_get_wrap_targets(L!("wrapper1"))).is_empty());

@@ -530,7 +530,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
                 // is set. We don't want to set COMPLETE_NO_SPACE because that won't close
                 // quotes. What we want is to close the quote, but not append the space. So we
                 // just look for the space and clear it.
-                if !next.flags.contains(CompleteFlags::NO_SPACE)
+                if !next.flags.no_space
                     && string_suffixes_string(L!(" "), &faux_cmdline_with_completion)
                 {
                     faux_cmdline_with_completion.truncate(faux_cmdline_with_completion.len() - 1);
@@ -583,12 +583,15 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
             }
         }
     } else {
-        let mut flags = CompleteFlags::AUTO_SPACE;
+        let mut flags = CompleteFlags {
+            auto_space: true,
+            ..Default::default()
+        };
         // HACK: Don't escape tildes because at the beginning of a token they probably mean
         // $HOME, for example as produced by a recursive call to "complete -C".
-        flags |= CompleteFlags::DONT_ESCAPE_TILDES;
+        flags.dont_escape_tildes = true;
         if preserve_order {
-            flags |= CompleteFlags::DONT_SORT;
+            flags.dont_sort = true;
         }
 
         if remove {

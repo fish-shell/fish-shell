@@ -1,7 +1,7 @@
 //! Pager support.
 
 use crate::{
-    complete::{CompleteFlags, Completion},
+    complete::Completion,
     editable_line::EditableLine,
     highlight::{HighlightRole, HighlightSpec, highlight_shell},
     operation_context::OperationContext,
@@ -349,10 +349,7 @@ impl Pager {
         for comp in &mut self.unfiltered_completion_infos {
             let comp_strings = &mut comp.comp;
 
-            let show_prefix = !comp
-                .representative
-                .flags
-                .contains(CompleteFlags::SUPPRESS_PAGER_PREFIX);
+            let show_prefix = !comp.representative.flags.suppress_pager_prefix;
 
             for (j, comp_string) in comp_strings.iter().enumerate() {
                 // If there's more than one, append the length of ', '.
@@ -440,10 +437,7 @@ impl Pager {
                 let is_selected = Some(idx) == effective_selected_idx;
 
                 // Print this completion on its own "line".
-                let show_prefix = !el
-                    .representative
-                    .flags
-                    .contains(CompleteFlags::SUPPRESS_PAGER_PREFIX);
+                let show_prefix = !el.representative.flags.suppress_pager_prefix;
                 let mut line = self.completion_print_item(
                     CharOffset::Pager(idx),
                     show_prefix.then_some(prefix),

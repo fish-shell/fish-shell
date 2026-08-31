@@ -12,7 +12,7 @@ use crate::{
         STATUS_UNMATCHED_WILDCARD,
     },
     common::valid_var_name_char,
-    complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver},
+    complete::{Completion, CompletionList, CompletionReceiver},
     env::{EnvVar, Environment},
     exec::exec_subshell_for_expand,
     history::{History, history_id},
@@ -1555,7 +1555,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                     .replace_range(..home.len(), &username_with_tilde);
 
                 // And mark that our tilde is literal, so it doesn't try to escape it.
-                comp.flags |= CompleteFlags::DONT_ESCAPE_TILDES;
+                comp.flags.dont_escape_tildes = true;
             }
         }
     }

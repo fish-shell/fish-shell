@@ -5903,7 +5903,12 @@ fn history_pager_search(
             item.str().to_owned(),
             L!("").to_owned(),
             StringFuzzyMatch::exact_match(),
-            CompleteFlags::REPLACES_LINE | CompleteFlags::DONT_ESCAPE | CompleteFlags::DONT_SORT,
+            CompleteFlags {
+                replaces_line: true,
+                dont_escape: true,
+                dont_sort: true,
+                ..Default::default()
+            },
         ));
         next_match_found = search.go_to_next_match(SearchDirection::Backward);
     }
@@ -6629,14 +6634,14 @@ fn try_expand_wildcard(
     // Insert all matches (escaped) and a trailing space.
     let mut joined = WString::new();
     for r#match in expanded {
-        if r#match.flags.contains(CompleteFlags::DONT_ESCAPE) {
+        if r#match.flags.dont_escape {
             joined.push_utfstr(&r#match.completion);
         } else {
             joined.push_utfstr(&escape_string(
                 &r#match.completion,
                 EscapeStringStyle::Script(EscapeFlags {
                     no_quoted: true,
-                    no_tilde: r#match.flags.contains(CompleteFlags::DONT_ESCAPE_TILDES),
+                    no_tilde: r#match.flags.dont_escape_tildes,
                     ..Default::default()
                 }),
             ));
@@ -6749,13 +6754,13 @@ pub fn completion_apply_to_command_line(
     append_only: bool,
     is_unique: bool,
 ) -> WString {
-    let mut trailer = (!flags.contains(CompleteFlags::NO_SPACE)).then_some(' ');
-    let do_replace_token = flags.contains(CompleteFlags::REPLACES_TOKEN);
-    let do_replace_line = flags.contains(CompleteFlags::REPLACES_LINE);
-    let do_escape = !flags.contains(CompleteFlags::DONT_ESCAPE);
-    let no_tilde = flags.contains(CompleteFlags::DONT_ESCAPE_TILDES);
-    let keep_variable_override = flags.contains(CompleteFlags::KEEP_VARIABLE_OVERRIDE_PREFIX);
-    let is_variable_name = flags.contains(CompleteFlags::VARIABLE_NAME);
+    let mut trailer = (!flags.no_space).then_some(' ');
+    let do_replace_token = flags.replaces_token;
+    let do_replace_line = flags.replaces_line;
+    let do_escape = !flags.dont_escape;
+    let no_tilde = flags.dont_escape_tildes;
+    let keep_variable_override = flags.keep_variable_override_prefix;
+    let is_variable_name = flags.variable_name;
 
     let cursor_pos = *inout_cursor_pos;
     let mut back_into_trailing_quote = false;
@@ -6906,7 +6911,7 @@ pub fn completion_apply_to_command_line(
 /// other than if the new token is already an exact replacement, e.g. if the COMPLETE_DONT_ESCAPE
 /// flag is set.
 fn reader_can_replace(s: &wstr, flags: CompleteFlags) -> bool {
-    if flags.contains(CompleteFlags::DONT_ESCAPE) {
+    if flags.dont_escape {
         return true;
     }
 
@@ -7072,7 +7077,7 @@ impl<'a> Reader<'a> {
         if !will_replace_token {
             for c in &mut comp {
                 if c.replaces_token() {
-                    c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
+                    c.flags.suppress_pager_prefix = true;
                 }
             }
         }
@@ -7099,10 +7104,10 @@ impl<'a> Reader<'a> {
         assert!(will_replace_token || all_matches_exact_or_prefix);
         if all_matches_exact_or_prefix {
             // Try to find a common prefix to insert among the surviving completions.
-            let mut flags = CompleteFlags::empty();
+            let mut flags = CompleteFlags::default();
             let mut first = true;
             for c in &comp {
-                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                if c.flags.suppress_pager_prefix {
                     continue;
                 }
                 if first {
@@ -7140,7 +7145,7 @@ impl<'a> Reader<'a> {
 
             if use_prefix {
                 // More than one completion contributed, so don't insert a space after it.
-                flags |= CompleteFlags::NO_SPACE;
+                flags.no_space = true;
                 self.completion_insert(
                     common_prefix,
                     token_range.end,
@@ -7186,12 +7191,12 @@ impl<'a> Reader<'a> {
         if use_prefix {
             let common_prefix_len = common_prefix.len();
             for c in &mut comp {
-                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                if c.flags.suppress_pager_prefix {
                     // Keep replacement semantics and the original prefix so these completions can
                     // fix casing when selected.
                     continue;
                 }
-                c.flags &= !CompleteFlags::REPLACES_TOKEN;
+                c.flags.replaces_token = false;
                 c.completion.replace_range(0..common_prefix_len, L!(""));
             }
         }
@@ -7421,11 +7426,23 @@ mod tests {
             "foo\\'bar^"
         );
 
-        validate!("foo^", "bar", CompleteFlags::REPLACES_TOKEN, false, "bar ^");
+        validate!(
+            "foo^",
+            "bar",
+            CompleteFlags {
+                replaces_token: true,
+                ..Default::default()
+            },
+            false,
+            "bar ^"
+        );
         validate!(
             "'foo^",
             "bar",
-            CompleteFlags::REPLACES_TOKEN,
+            CompleteFlags {
+                replaces_token: true,
+                ..Default::default()
+            },
             false,
             "bar ^"
         );

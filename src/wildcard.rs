@@ -133,8 +133,7 @@ fn wildcard_complete_internal(
         };
 
         // Wildcard complete.
-        let full_replacement =
-            m.requires_full_replacement() || flags.contains(CompleteFlags::REPLACES_TOKEN);
+        let full_replacement = m.requires_full_replacement() || flags.replaces_token;
 
         // If we are not replacing the token, be careful to only store the part of the string after
         // the wildcard.
@@ -184,7 +183,10 @@ fn wildcard_complete_internal(
                 s.slice_from(next_wc_char_pos),
                 wc.slice_from(next_wc_char_pos),
                 params,
-                flags | CompleteFlags::REPLACES_TOKEN,
+                CompleteFlags {
+                    replaces_token: true,
+                    ..flags
+                },
                 out,
                 false,
             );
@@ -325,7 +327,7 @@ fn wildcard_test_flags_then_complete(
     let need_directory = expand_flags.contains(ExpandFlags::DIRECTORIES_ONLY);
     let mut flags = CompleteFlags::default();
     if expand_flags.contains(ExpandFlags::NO_SPACE_FOR_UNCLOSED_BRACE) {
-        flags |= CompleteFlags::NO_SPACE;
+        flags.no_space = true;
     }
 
     // Check if it will match before stat().
@@ -407,7 +409,7 @@ fn wildcard_test_flags_then_complete(
     let desc_func: Option<&dyn Fn(&wstr) -> WString> = Some(&desc_func);
 
     let filename = if entry.is_dir() {
-        flags |= CompleteFlags::NO_SPACE;
+        flags.no_space = true;
         Cow::Owned(filename.to_owned() + L!("/"))
     } else {
         Cow::Borrowed(filename)
@@ -776,7 +778,7 @@ mod expander {
                 for c in self.resolved_completions[before..after].iter_mut() {
                     // Mark the completion as replacing.
                     if !c.replaces_token() {
-                        c.flags |= CompleteFlags::REPLACES_TOKEN;
+                        c.flags.replaces_token = true;
                         c.prepend_token_prefix(&child_prefix);
                     }
 
@@ -947,7 +949,7 @@ mod expander {
                 let after = self.resolved_completions.len();
                 for c in self.resolved_completions[before..after].iter_mut() {
                     if info.has_fuzzy_ancestor && !c.replaces_token() {
-                        c.flags |= CompleteFlags::REPLACES_TOKEN;
+                        c.flags.replaces_token = true;
                         c.prepend_token_prefix(wildcard);
                     }
                     c.prepend_token_prefix(prefix);

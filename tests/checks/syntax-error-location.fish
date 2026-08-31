@@ -167,3 +167,22 @@ $fish -c 'echo foo"bar$(echo)$(echo)bur'
 # CHECKERR: fish: Unexpected end of string, quotes are not balanced
 # CHECKERR: {{^}}echo foo"bar$(echo)$(echo)bur
 # CHECKERR: {{^}}        ^
+
+
+# Check that the error is on the last unclosed expression
+$fish -c 'echo abc"def$(ghi{jkl$mno[pqr'
+# CHECKERR: fish: Unexpected end of string, square brackets do not match
+# CHECKERR: {{^}}echo abc"def$(ghi{jkl$mno[pqr
+# CHECKERR: {{^}}                         ^
+$fish -c 'echo abc(def{ghi$jkl[mno"pqr'
+# CHECKERR: fish: Unexpected end of string, quotes are not balanced
+# CHECKERR: {{^}}echo abc(def{ghi$jkl[mno"pqr
+# CHECKERR: {{^}}                        ^
+$fish -c 'echo abc{def$ghi[jkl"mno$(pqr'
+# CHECKERR: fish: Unexpected end of string, expecting ')'
+# CHECKERR: {{^}}echo abc{def$ghi[jkl"mno$(pqr
+# CHECKERR: {{^}}                         ^
+$fish -c 'echo abc$def[ghi"jkl$(mno{pqr'
+# CHECKERR: fish: Unexpected end of string, incomplete parameter expansion
+# CHECKERR: {{^}}echo abc$def[ghi"jkl$(mno{pqr
+# CHECKERR: {{^}}                         ^

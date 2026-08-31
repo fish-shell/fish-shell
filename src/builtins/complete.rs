@@ -503,14 +503,15 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
                 parser.libdata_mut().builtin_complete_current_commandline = true;
             }
 
+            let complete_options = CompletionRequestOptions::default();
             let (mut comp, _needs_load) = crate::complete::complete(
                 &do_complete_param,
-                CompletionRequestOptions::normal(),
+                complete_options,
                 &mut parser.context(),
             );
 
             // Apply the same sort and deduplication treatment as pager completions
-            crate::complete::sort_and_prioritize(&mut comp, CompletionRequestOptions::default());
+            crate::complete::sort_and_prioritize(&mut comp, complete_options);
 
             for next in comp {
                 // Make a fake commandline, and then apply the completion to it.

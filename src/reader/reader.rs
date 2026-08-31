@@ -5475,7 +5475,7 @@ fn get_autosuggestion_performer(
         }
 
         // Try normal completions.
-        let complete_flags = CompletionRequestOptions::autosuggest();
+        let complete_flags = CompletionRequestOptions::Autosuggestion;
         let mut would_be_cursor = line_range.end;
         let (mut completions, needs_load) =
             complete(&command_line[..would_be_cursor], complete_flags, ctx);
@@ -6994,13 +6994,10 @@ impl<'a> Reader<'a> {
         // Construct a copy of the string from the beginning of the command substitution
         // up to the end of the token we're completing.
 
+        let complete_options = CompletionRequestOptions::default();
         let (mut comp, _needs_load) = {
             let cmdsub = &self.data.command_line.text()[cmdsub_range.start..token_range.end];
-            complete(
-                cmdsub,
-                CompletionRequestOptions::normal(),
-                &mut self.parser.context(),
-            )
+            complete(cmdsub, complete_options, &mut self.parser.context())
         };
 
         let el = &self.command_line;
@@ -7010,7 +7007,7 @@ impl<'a> Reader<'a> {
         token_range.end = std::cmp::min(token_range.end, el.text().len());
 
         // Munge our completions.
-        sort_and_prioritize(&mut comp, CompletionRequestOptions::default());
+        sort_and_prioritize(&mut comp, complete_options);
 
         let el = &self.command_line;
         // Record our cycle_command_line.

@@ -230,32 +230,25 @@ impl Completion {
 }
 
 #[derive(Clone, Copy, Default)]
-pub struct CompletionRequestOptions {
+pub enum CompletionRequestOptions {
+    /// Ordinary completion
+    #[default]
+    Completion,
     /// Requesting autosuggestion
-    pub autosuggestion: bool,
-    /// Make descriptions
-    pub descriptions: bool,
-    /// If set, we do not require a prefix match
-    pub fuzzy_match: bool,
+    Autosuggestion,
 }
 
 impl CompletionRequestOptions {
-    /// Options for an autosuggestion.
-    pub fn autosuggest() -> Self {
-        Self {
-            autosuggestion: true,
-            descriptions: false,
-            fuzzy_match: false,
-        }
+    fn autosuggestion(&self) -> bool {
+        matches!(*self, CompletionRequestOptions::Autosuggestion)
     }
-
-    /// Options for a "normal" completion.
-    pub fn normal() -> Self {
-        Self {
-            autosuggestion: false,
-            descriptions: true,
-            fuzzy_match: true,
-        }
+    /// Making descriptions?
+    fn descriptions(&self) -> bool {
+        !self.autosuggestion()
+    }
+    /// If true, we do not require a prefix match
+    fn fuzzy_match(&self) -> bool {
+        !self.autosuggestion()
     }
 }
 
@@ -569,7 +562,7 @@ pub fn sort_and_prioritize(comps: &mut Vec<Completion>, flags: CompletionRequest
     // Lastly, if this is for an autosuggestion, prefer to avoid completions that duplicate
     // arguments, and penalize files that end in tilde - they're frequently autosave files from e.g.
     // emacs. Also prefer samecase to smartcase.
-    if flags.autosuggestion {
+    if flags.autosuggestion() {
         comps.sort_by(|a, b| {
             a.r#match
                 .case_fold
@@ -670,7 +663,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
     fn perform_for_commandline_impl(&mut self, cmdline: WString) {
         let cursor_pos = cmdline.len();
-        let is_autosuggest = self.flags.autosuggestion;
+        let is_autosuggest = self.flags.autosuggestion();
 
         // Find the process to operate on. The cursor may be past it (#1261), so backtrack
         // until we know we're no longer in a space. But the space may actually be part of the
@@ -1013,8 +1006,8 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     fn expand_flags(&self) -> ExpandFlags {
         ExpandFlags {
             cmdsubst: expand::CmdsubstMode::Fail,
-            fuzzy_match: self.flags.fuzzy_match,
-            gen_descriptions: self.flags.descriptions,
+            fuzzy_match: self.flags.fuzzy_match(),
+            gen_descriptions: self.flags.descriptions(),
             ..Default::default()
         }
     }
@@ -1167,7 +1160,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         if result == ExpandResultCode::Cancel {
             return;
         }
-        if result == ExpandResultCode::Ok && self.flags.descriptions {
+        if result == ExpandResultCode::Ok && self.flags.descriptions() {
             self.complete_cmd_desc(&str_cmd);
         }
 
@@ -1266,7 +1259,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     /// - `desc`: Description of the completion
     /// - `flags`: The flags
     fn complete_from_args(&mut self, s: &wstr, args: &wstr, desc: &wstr, flags: CompleteFlags) {
-        let is_autosuggest = self.flags.autosuggestion;
+        let is_autosuggest = self.flags.autosuggestion();
 
         let mut saved_statuses = None;
         let mut scope = None;
@@ -1568,7 +1561,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 if !s.starts_with("-") {
                     continue;
                 }
-                let anchor_start = !self.flags.fuzzy_match;
+                let anchor_start = !self.flags.fuzzy_match();
                 let Some(r#match) = string_fuzzy_match_string(s, &whole_opt, anchor_start) else {
                     continue;
                 };
@@ -1646,13 +1639,13 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         if handle_as_special_cd && do_file {
             flags.path_filter = Some(PathFilter::Directory {
                 for_cd_argument: Some(ForCdArgument {
-                    for_autosuggestion: self.flags.autosuggestion,
+                    for_autosuggestion: self.flags.autosuggestion(),
                 }),
             });
         }
 
         // Squelch file descriptions per issue #254.
-        if self.flags.autosuggestion || do_file {
+        if self.flags.autosuggestion() || do_file {
             flags.gen_descriptions = false;
         }
 
@@ -1737,7 +1730,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         let mut res = false;
 
         for env_name in self.ctx.vars().get_names(EnvMode::default()) {
-            let anchor_start = !self.flags.fuzzy_match;
+            let anchor_start = !self.flags.fuzzy_match();
             let Some(r#match) = string_fuzzy_match_string(var, &env_name, anchor_start) else {
                 continue;
             };
@@ -1755,7 +1748,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             };
 
             let mut desc = WString::new();
-            if self.flags.descriptions && !self.flags.autosuggestion {
+            if self.flags.descriptions() {
                 // $history can be huge, don't put all of it in the completion description; see
                 // #6288.
                 if env_name == "history" {
@@ -1842,7 +1835,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
         // Now complete if we have a variable start. Note the variable text may be empty; in that case
         // don't generate an autosuggestion, but do allow tab completion.
-        let allow_empty = !self.flags.autosuggestion;
+        let allow_empty = !self.flags.autosuggestion();
         let text_is_empty = variable_start == Some(s.len() - 1);
         if let Some(variable_start) = variable_start {
             if allow_empty || !text_is_empty {
@@ -2000,7 +1993,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             return;
         }
 
-        let is_autosuggest = self.flags.autosuggestion;
+        let is_autosuggest = self.flags.autosuggestion();
         // Perhaps set a transient commandline so that custom completions
         // builtin_commandline will refer to the wrapped command. But not if
         // we're doing autosuggestions.
@@ -2721,8 +2714,10 @@ mod tests {
                            flags: CompletionRequestOptions|
          -> Vec<Completion> { complete(cmd, flags, ctx).0 };
 
-        let mut completions = do_complete(ctx, L!("$"), CompletionRequestOptions::default());
-        sort_and_prioritize(&mut completions, CompletionRequestOptions::default());
+        let plain = CompletionRequestOptions::default();
+        let autosuggest = CompletionRequestOptions::Autosuggestion;
+        let mut completions = do_complete(ctx, L!("$"), plain);
+        sort_and_prioritize(&mut completions, plain);
         assert_eq!(
             completions
                 .into_iter()
@@ -2738,30 +2733,26 @@ mod tests {
         );
 
         // Smartcase test. Lowercase inputs match both lowercase and uppercase.
-        let mut completions = do_complete(ctx, L!("$a"), CompletionRequestOptions::default());
-        sort_and_prioritize(&mut completions, CompletionRequestOptions::default());
+        let mut completions = do_complete(ctx, L!("$a"), plain);
+        sort_and_prioritize(&mut completions, plain);
 
         assert_eq!(completions.len(), 2);
         assert_eq!(completions[0].completion, L!("$ALPHA!"));
         assert_eq!(completions[1].completion, L!("lpha"));
 
-        let mut completions = do_complete(ctx, L!("$F"), CompletionRequestOptions::default());
-        sort_and_prioritize(&mut completions, CompletionRequestOptions::default());
+        let mut completions = do_complete(ctx, L!("$F"), plain);
+        sort_and_prioritize(&mut completions, plain);
         assert_eq!(completions.len(), 3);
         assert_eq!(completions[0].completion, L!("oo1"));
         assert_eq!(completions[1].completion, L!("oo2"));
         assert_eq!(completions[2].completion, L!("oo3"));
 
-        completions = do_complete(ctx, L!("$1"), CompletionRequestOptions::default());
-        sort_and_prioritize(&mut completions, CompletionRequestOptions::default());
+        completions = do_complete(ctx, L!("$1"), autosuggest);
+        sort_and_prioritize(&mut completions, autosuggest);
         assert_eq!(completions, vec![]);
 
-        let fuzzy_options = CompletionRequestOptions {
-            fuzzy_match: true,
-            ..Default::default()
-        };
-        let mut completions = do_complete(ctx, L!("$1"), fuzzy_options);
-        sort_and_prioritize(&mut completions, fuzzy_options);
+        let mut completions = do_complete(ctx, L!("$1"), plain);
+        sort_and_prioritize(&mut completions, plain);
         assert_eq!(completions.len(), 3);
         assert_eq!(completions[0].completion, L!("$Bar1"));
         assert_eq!(completions[1].completion, L!("$Foo1"));
@@ -2789,36 +2780,24 @@ mod tests {
         std::fs::create_dir_all("test/complete_test/foo2").unwrap();
         std::fs::create_dir_all("test/complete_test/foo3").unwrap();
 
-        completions = do_complete(
-            ctx,
-            L!("echo (test/complete_test/testfil"),
-            CompletionRequestOptions::default(),
-        );
+        completions = do_complete(ctx, L!("echo (test/complete_test/testfil"), plain);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("e"));
 
-        completions = do_complete(
-            ctx,
-            L!("echo (ls test/complete_test/testfil"),
-            CompletionRequestOptions::default(),
-        );
+        completions = do_complete(ctx, L!("echo (ls test/complete_test/testfil"), plain);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("e"));
 
         completions = do_complete(
             ctx,
             L!("echo (command ls test/complete_test/testfil"),
-            CompletionRequestOptions::default(),
+            plain,
         );
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("e"));
 
         // Completing after spaces - see #2447
-        completions = do_complete(
-            ctx,
-            L!("echo (ls test/complete_test/has\\ "),
-            CompletionRequestOptions::default(),
-        );
+        completions = do_complete(ctx, L!("echo (ls test/complete_test/has\\ "), plain);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("space"));
 
@@ -2862,21 +2841,21 @@ mod tests {
                 .pushd(pushed_dirs, "test/complete_test/cwd-for-colon");
             whole_token_completion_dominates!(
                 ": ../colon:",
-                CompletionRequestOptions::default(),
+                plain,
                 "TTestWithColon",
                 "test-file-in-cwd",
             );
             // Even when it has a case mismatch.
             whole_token_completion_dominates!(
                 ": ../colon:t",
-                CompletionRequestOptions::default(),
+                plain,
                 "../colon:TTestWithColon",
                 "est-file-in-cwd",
             );
             // Even when it is not a prefix.
             whole_token_completion_dominates!(
                 ": ../colon:Tes",
-                fuzzy_options,
+                plain,
                 "../colon:TTestWithColon",
                 "../colon:test-file-in-cwd",
             );
@@ -2886,7 +2865,7 @@ mod tests {
         macro_rules! unique_completion_applies_as {
             ( $cmdline:expr, $completion_result:expr, $applied:expr $(,)? ) => {
                 let cmdline = L!($cmdline);
-                let completions = do_complete(ctx, cmdline, CompletionRequestOptions::default());
+                let completions = do_complete(ctx, cmdline, autosuggest);
                 assert_eq!(completions.len(), 1);
                 assert_eq!(
                     completions[0].completion,
@@ -2988,36 +2967,20 @@ mod tests {
             .eval(L!("function scuttlebutt; end"), &IoChain::new());
 
         // Complete a function name.
-        completions = do_complete(
-            ctx,
-            L!("echo (scuttlebut"),
-            CompletionRequestOptions::default(),
-        );
+        completions = do_complete(ctx, L!("echo (scuttlebut"), plain);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("t"));
 
         // But not with the command prefix.
-        completions = do_complete(
-            ctx,
-            L!("echo (command scuttlebut"),
-            CompletionRequestOptions::default(),
-        );
+        completions = do_complete(ctx, L!("echo (command scuttlebut"), plain);
         assert_eq!(&completions, &[]);
 
         // Not with the builtin prefix.
-        let completions = do_complete(
-            ctx,
-            L!("echo (builtin scuttlebut"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("echo (builtin scuttlebut"), plain);
         assert_eq!(&completions, &[]);
 
         // Not after a redirection.
-        let completions = do_complete(
-            ctx,
-            L!("echo hi > scuttlebut"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("echo hi > scuttlebut"), plain);
         assert_eq!(&completions, &[]);
 
         // Trailing spaces (#1261).
@@ -3039,106 +3002,65 @@ mod tests {
                 ..Default::default()
             },
         );
-        let completions = do_complete(ctx, L!("foobarbaz "), CompletionRequestOptions::default());
+        let completions = do_complete(ctx, L!("foobarbaz "), plain);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("qux"));
 
         // Don't complete variable names in single quotes (#1023).
-        let completions = do_complete(ctx, L!("echo '$Foo"), CompletionRequestOptions::default());
+        let completions = do_complete(ctx, L!("echo '$Foo"), plain);
         assert_eq!(completions, vec![]);
-        let completions = do_complete(ctx, L!("echo \\$Foo"), CompletionRequestOptions::default());
+        let completions = do_complete(ctx, L!("echo \\$Foo"), plain);
         assert_eq!(completions, vec![]);
 
         // File completions.
-        let completions = do_complete(
-            ctx,
-            L!("cat test/complete_test/te"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("cat test/complete_test/te"), autosuggest);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
-        let completions = do_complete(
-            ctx,
-            L!("echo sup > test/complete_test/te"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("echo sup > test/complete_test/te"), autosuggest);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
-        let completions = do_complete(
-            ctx,
-            L!("echo sup > test/complete_test/te"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("echo sup > test/complete_test/te"), autosuggest);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
 
         ctx.parser().pushd(pushed_dirs, "test/complete_test");
-        let completions = do_complete(ctx, L!("cat te"), CompletionRequestOptions::default());
+        let completions = do_complete(ctx, L!("cat te"), autosuggest);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
         assert!(!completions[0].replaces_token());
         assert!(!(completions[0].flags.duplicates_argument));
-        let completions = do_complete(
-            ctx,
-            L!("cat testfile te"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("cat testfile te"), autosuggest);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
         assert!(completions[0].flags.duplicates_argument);
-        let completions = do_complete(
-            ctx,
-            L!("cat testfile TE"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("cat testfile TE"), autosuggest);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("testfile"));
         assert!(completions[0].replaces_token());
         assert!(completions[0].flags.duplicates_argument);
-        let completions = do_complete(
-            ctx,
-            L!("something --abc=te"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("something --abc=te"), autosuggest);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
-        let completions = do_complete(
-            ctx,
-            L!("something -abc=te"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("something -abc=te"), autosuggest);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
-        let completions = do_complete(
-            ctx,
-            L!("something abc=te"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("something abc=te"), autosuggest);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("stfile"));
-        let completions = do_complete(
-            ctx,
-            L!("something abc=stfile"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("something abc=stfile"), autosuggest);
         assert_eq!(&completions, &[]);
-        let completions = do_complete(ctx, L!("something abc=stfile"), fuzzy_options);
+        let completions = do_complete(ctx, L!("something abc=stfile"), plain);
         assert_eq!(completions.len(), 1);
         assert_eq!(completions[0].completion, L!("abc=testfile"));
 
         // Zero escapes can cause problems. See issue #1631.
-        let completions = do_complete(ctx, L!("cat foo\\0"), CompletionRequestOptions::default());
+        let completions = do_complete(ctx, L!("cat foo\\0"), plain);
         assert_eq!(&completions, &[]);
-        let completions = do_complete(
-            ctx,
-            L!("cat foo\\0bar"),
-            CompletionRequestOptions::default(),
-        );
+        let completions = do_complete(ctx, L!("cat foo\\0bar"), plain);
         assert_eq!(&completions, &[]);
-        let completions = do_complete(ctx, L!("cat \\0"), CompletionRequestOptions::default());
+        let completions = do_complete(ctx, L!("cat \\0"), plain);
         assert_eq!(&completions, &[]);
-        let mut completions =
-            do_complete(ctx, L!("cat te\\0"), CompletionRequestOptions::default());
+        let mut completions = do_complete(ctx, L!("cat te\\0"), plain);
         assert_eq!(&completions, &[]);
 
         ctx.parser().popd(pushed_dirs);
@@ -3159,12 +3081,7 @@ mod tests {
             ));
         });
 
-        let completions = complete(
-            L!("testabbrsonetwothree"),
-            CompletionRequestOptions::default(),
-            ctx,
-        )
-        .0;
+        let completions = complete(L!("testabbrsonetwothree"), plain, ctx).0;
         assert_eq!(completions.len(), 2);
         // Abbreviations should not have a space after them.
         assert_eq!(completions[0].completion, L!("zero"));
@@ -3221,16 +3138,14 @@ mod tests {
         complete_add_wrapper(L!("cdwrap1").into(), L!("cd").into());
         complete_add_wrapper(L!("cdwrap2").into(), L!("cdwrap1").into());
 
-        let mut cd_compl = do_complete(ctx, L!("cd "), CompletionRequestOptions::default());
-        sort_and_prioritize(&mut cd_compl, CompletionRequestOptions::default());
+        let mut cd_compl = do_complete(ctx, L!("cd "), plain);
+        sort_and_prioritize(&mut cd_compl, plain);
 
-        let mut cdwrap1_compl =
-            do_complete(ctx, L!("cdwrap1 "), CompletionRequestOptions::default());
-        sort_and_prioritize(&mut cdwrap1_compl, CompletionRequestOptions::default());
+        let mut cdwrap1_compl = do_complete(ctx, L!("cdwrap1 "), plain);
+        sort_and_prioritize(&mut cdwrap1_compl, plain);
 
-        let mut cdwrap2_compl =
-            do_complete(ctx, L!("cdwrap2 "), CompletionRequestOptions::default());
-        sort_and_prioritize(&mut cdwrap2_compl, CompletionRequestOptions::default());
+        let mut cdwrap2_compl = do_complete(ctx, L!("cdwrap2 "), plain);
+        sort_and_prioritize(&mut cdwrap2_compl, plain);
 
         let min_compl_size = cd_compl
             .len()
@@ -3264,7 +3179,7 @@ mod tests {
             ($command:literal, $expected:literal, $vars:expr) => {
                 let mut comps = complete(
                     L!($command),
-                    CompletionRequestOptions::autosuggest(),
+                    CompletionRequestOptions::Autosuggestion,
                     &mut OperationContext::background($vars, EXPANSION_LIMIT_BACKGROUND),
                 )
                 .0;
@@ -3444,7 +3359,7 @@ mod tests {
             ($command:literal) => {
                 let comps = complete(
                     L!($command),
-                    CompletionRequestOptions::autosuggest(),
+                    CompletionRequestOptions::Autosuggestion,
                     &mut OperationContext::empty(),
                 )
                 .0;

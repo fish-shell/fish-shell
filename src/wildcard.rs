@@ -2,7 +2,10 @@
 
 use crate::{
     common::{WSL, is_windows_subsystem_for_linux},
-    complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP, WantsSuffix},
+    complete::{
+        CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP, ReplacementScope,
+        WantsSuffix,
+    },
     expand::{ExpandFlags, PathFilter},
     prelude::*,
     wutil::{
@@ -131,7 +134,7 @@ fn wildcard_complete_internal(
         };
 
         // Wildcard complete.
-        let full_replacement = m.requires_full_replacement() || flags.replaces_token;
+        let full_replacement = m.requires_full_replacement() || flags.replaces_token();
 
         // If we are not replacing the token, be careful to only store the part of the string after
         // the wildcard.
@@ -182,7 +185,7 @@ fn wildcard_complete_internal(
                 wc.slice_from(next_wc_char_pos),
                 params,
                 CompleteFlags {
-                    replaces_token: true,
+                    replaces: Some(ReplacementScope::Token),
                     ..flags
                 },
                 out,
@@ -776,8 +779,7 @@ mod expander {
                 assert!(before <= after);
                 for c in self.resolved_completions[before..after].iter_mut() {
                     // Mark the completion as replacing.
-                    if !c.replaces_token() {
-                        c.flags.replaces_token = true;
+                    if c.set_replaces_token() {
                         c.prepend_token_prefix(&child_prefix);
                     }
 
@@ -947,8 +949,7 @@ mod expander {
                 // Note that prepend_token_prefix is a no-op unless COMPLETE_REPLACES_TOKEN is set
                 let after = self.resolved_completions.len();
                 for c in self.resolved_completions[before..after].iter_mut() {
-                    if info.has_fuzzy_ancestor && !c.replaces_token() {
-                        c.flags.replaces_token = true;
+                    if info.has_fuzzy_ancestor && c.set_replaces_token() {
                         c.prepend_token_prefix(wildcard);
                     }
                     c.prepend_token_prefix(prefix);

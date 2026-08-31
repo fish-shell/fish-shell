@@ -99,11 +99,19 @@ pub enum WantsSuffix {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+pub enum ReplacementScope {
+    /// This is not the suffix of a token, but replaces it entirely.
+    Token,
+    /// This completes not just a token but replaces an entire line.
+    Line,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct CompleteFlags {
     /// Whether to insert a (space) suffix when this completion is selected.
     pub wants_suffix: WantsSuffix,
-    /// This is not the suffix of a token, but replaces it entirely.
-    pub replaces_token: bool,
+    /// This is not the suffix of a token, but replaces part of the commandline.
+    pub replaces: Option<ReplacementScope>,
     /// This completion should be inserted as-is, without escaping.
     pub dont_escape: bool,
     /// If you do escape, don't escape tildes.
@@ -112,8 +120,6 @@ pub struct CompleteFlags {
     pub dont_sort: bool,
     /// This completion looks to have the same string as an existing argument.
     pub duplicates_argument: bool,
-    /// This completes not just a token but replaces an entire line.
-    pub replaces_line: bool,
     /// If replacing the entire token, keep the "foo=" prefix.
     pub keep_variable_override_prefix: bool,
     /// Suppress showing the pager prefix for this completion.
@@ -129,12 +135,11 @@ impl Default for CompleteFlags {
 impl CompleteFlags {
     const DEFAULT: Self = Self {
         wants_suffix: WantsSuffix::Yes(SuffixType::DEFAULT),
-        replaces_token: false,
+        replaces: None,
         dont_escape: false,
         dont_escape_tildes: false,
         dont_sort: false,
         duplicates_argument: false,
-        replaces_line: false,
         keep_variable_override_prefix: false,
         suppress_pager_prefix: false,
     };
@@ -142,6 +147,16 @@ impl CompleteFlags {
         wants_suffix: WantsSuffix::No,
         ..Self::DEFAULT
     };
+
+    /// Returns whether this replaces its token.
+    pub(crate) fn replaces_token(&self) -> bool {
+        self.replaces == Some(ReplacementScope::Token)
+    }
+
+    /// Returns whether this replaces an entire line.
+    pub(crate) fn replaces_line(&self) -> bool {
+        self.replaces == Some(ReplacementScope::Line)
+    }
 
     pub(crate) fn suffix_type(&self) -> Option<SuffixType> {
         match self.wants_suffix {
@@ -204,8 +219,8 @@ impl Completion {
         mut flags: CompleteFlags,
     ) -> Self {
         resolve_auto_space(&completion, &mut flags.wants_suffix);
-        if r#match.requires_full_replacement() {
-            flags.replaces_token = true;
+        if r#match.requires_full_replacement() && !flags.replaces_line() {
+            flags.replaces = Some(ReplacementScope::Token);
         }
         Self {
             completion,
@@ -229,13 +244,23 @@ impl Completion {
     }
 
     /// Returns whether this replaces its token.
-    pub fn replaces_token(&self) -> bool {
-        self.flags.replaces_token
+    pub fn set_replaces_token(&mut self) -> bool {
+        if self.replaces_token() {
+            return false;
+        }
+        let old = self.flags.replaces.replace(ReplacementScope::Token);
+        assert!(old.is_none());
+        true
     }
 
-    /// Returns whether this replaces the entire commandline.
+    /// Returns whether this replaces its token.
+    pub fn replaces_token(&self) -> bool {
+        self.flags.replaces_token()
+    }
+
+    /// Returns whether this replaces an entire line.
     pub fn replaces_line(&self) -> bool {
-        self.flags.replaces_line
+        self.flags.replaces_line()
     }
 
     /// Returns the completion's match rank. Lower ranks are better completions.
@@ -2183,10 +2208,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             return;
         };
         for comp in completions {
-            if comp.replaces_token() {
+            if !comp.set_replaces_token() {
                 continue;
             }
-            comp.flags.replaces_token = true;
             comp.flags.dont_escape_tildes = true; // See #9073.
 
             // We are grafting a completion that is expected to be escaped later. This will break
@@ -2689,7 +2713,7 @@ mod tests {
     };
     use crate::{
         abbrs::{self, Abbreviation, with_abbrs_mut},
-        complete::{Completion, WantsSuffix},
+        complete::{Completion, ReplacementScope, WantsSuffix},
         env::{EnvMode, EnvSetMode, Environment as _},
         io::IoChain,
         operation_context::{
@@ -2982,7 +3006,7 @@ mod tests {
             ctx,
             L!("Debug/"),
             CompleteFlags {
-                replaces_token: true,
+                replaces: Some(ReplacementScope::Token),
                 ..CompleteFlags::NO_SPACE
             },
             L!("mv debug debug"),

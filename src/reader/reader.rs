@@ -28,8 +28,8 @@ use crate::{
     builtins::{ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_OK},
     common::{get_program_name, shell_modes},
     complete::{
-        CompleteFlags, Completion, CompletionList, CompletionRequestOptions, WantsSuffix, complete,
-        complete_load, sort_and_prioritize,
+        CompleteFlags, Completion, CompletionList, CompletionRequestOptions, ReplacementScope,
+        WantsSuffix, complete, complete_load, sort_and_prioritize,
     },
     editable_line::{Edit, EditableLine, line_at_cursor, range_of_line_at_cursor},
     env::{EnvMode, EnvStack, Environment, Statuses},
@@ -5904,7 +5904,7 @@ fn history_pager_search(
             L!("").to_owned(),
             StringFuzzyMatch::exact_match(),
             CompleteFlags {
-                replaces_line: true,
+                replaces: Some(ReplacementScope::Line),
                 dont_escape: true,
                 dont_sort: true,
                 ..Default::default()
@@ -6760,8 +6760,6 @@ pub fn completion_apply_to_command_line(
     let cursor_pos = *inout_cursor_pos;
     let mut back_into_trailing_quote = false;
 
-    let do_replace_token = flags.replaces_token;
-    let do_replace_line = flags.replaces_line;
     let do_escape = !flags.dont_escape;
     let no_tilde = flags.dont_escape_tildes;
 
@@ -6772,7 +6770,7 @@ pub fn completion_apply_to_command_line(
     let have_suffix = command_line.char_at(cursor_pos) == ' ';
     let keep_variable_override = flags.keep_variable_override_prefix;
 
-    if do_replace_line {
+    if flags.replaces_line() {
         assert!(!do_escape, "unsupported completion flag");
         let cmdsub = get_cmdsubst_extent(command_line, cursor_pos);
         return if !command_line[cmdsub.clone()].contains('\n') {
@@ -6800,7 +6798,7 @@ pub fn completion_apply_to_command_line(
         }
     };
 
-    if do_replace_token {
+    if flags.replaces_token() {
         if let Some((suffix_type, suffix)) = suffix_builder.as_mut() {
             if suffix_type.for_variable_name {
                 assert!(!do_escape);
@@ -7198,7 +7196,7 @@ impl<'a> Reader<'a> {
                     // fix casing when selected.
                     continue;
                 }
-                c.flags.replaces_token = false;
+                c.flags.replaces = None;
                 c.completion.replace_range(0..common_prefix_len, L!(""));
             }
         }
@@ -7250,7 +7248,7 @@ impl<'a> Reader<'a> {
 #[cfg(test)]
 mod tests {
     use super::{combine_command_and_autosuggestion, completion_apply_to_command_line};
-    use crate::complete::CompleteFlags;
+    use crate::complete::{CompleteFlags, ReplacementScope};
     use crate::operation_context::{OperationContext, no_cancel};
     use crate::prelude::*;
     use crate::tests::prelude::*;
@@ -7432,7 +7430,7 @@ mod tests {
             "foo^",
             "bar",
             CompleteFlags {
-                replaces_token: true,
+                replaces: Some(ReplacementScope::Token),
                 ..Default::default()
             },
             false,
@@ -7442,7 +7440,7 @@ mod tests {
             "'foo^",
             "bar",
             CompleteFlags {
-                replaces_token: true,
+                replaces: Some(ReplacementScope::Token),
                 ..Default::default()
             },
             false,

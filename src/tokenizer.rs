@@ -856,7 +856,7 @@ impl<'c> Tokenizer<'c> {
             // These are all "unterminated", so the only char we can mark as an error
             // is the opener (the closing char could be anywhere!)
             //
-            // (except forTokModes::CHAR_ESCAPE, which is one long by definition)
+            // (except for TokModes::CHAR_ESCAPE, which is one long by definition)
             if mode.contains(TokModes::CHAR_ESCAPE) {
                 return self.call_error(
                     TokenizerError::UnterminatedEscape,
@@ -865,37 +865,61 @@ impl<'c> Tokenizer<'c> {
                     None,
                     1,
                 );
-            } else if mode.contains(TokModes::ARRAY_SLICE) {
-                let offset_of_open_slice = *slice_offsets.last().expect("slice_offsets is empty");
-                return self.call_error(
-                    TokenizerError::UnterminatedSlice,
-                    buff_start,
-                    offset_of_open_slice,
-                    None,
-                    1,
-                );
-            } else if mode.contains(TokModes::SUBSHELL) {
-                let offset_of_open_paren = *paren_offsets.last().expect("paren_offsets is empty");
-
-                return self.call_error(
-                    TokenizerError::UnterminatedSubshell,
-                    buff_start,
-                    offset_of_open_paren,
-                    None,
-                    1,
-                );
-            } else if mode.contains(TokModes::CURLY_BRACES) {
-                let offset_of_open_brace = *brace_offsets.last().expect("brace_offsets is empty");
-
-                return self.call_error(
-                    TokenizerError::UnterminatedBrace,
-                    buff_start,
-                    offset_of_open_brace,
-                    None,
-                    1,
-                );
             } else {
-                panic!("Unknown non-regular-text mode");
+                match expecting.pop() {
+                    Some(')') => {
+                        assert!(
+                            mode.contains(TokModes::SUBSHELL),
+                            "Unexpected pending close paren"
+                        );
+                        let offset_of_open_paren =
+                            *paren_offsets.last().expect("paren_offsets is empty");
+                        return self.call_error(
+                            TokenizerError::UnterminatedSubshell,
+                            buff_start,
+                            offset_of_open_paren,
+                            None,
+                            1,
+                        );
+                    }
+                    Some('}') => {
+                        assert!(
+                            mode.contains(TokModes::CURLY_BRACES),
+                            "Unexpected pending close brace"
+                        );
+                        let offset_of_open_brace =
+                            *brace_offsets.last().expect("brace_offsets is empty");
+                        return self.call_error(
+                            TokenizerError::UnterminatedBrace,
+                            buff_start,
+                            offset_of_open_brace,
+                            None,
+                            1,
+                        );
+                    }
+                    Some(']') => {
+                        assert!(
+                            mode.contains(TokModes::ARRAY_SLICE),
+                            "Unexpected pending close bracket"
+                        );
+                        let offset_of_open_slice =
+                            *slice_offsets.last().expect("slice_offsets is empty");
+                        return self.call_error(
+                            TokenizerError::UnterminatedSlice,
+                            buff_start,
+                            offset_of_open_slice,
+                            None,
+                            1,
+                        );
+                    }
+                    None => {
+                        // `expecting` should only be empty if `mode` is empty
+                        // or is `TokModes::CHAR_ESCAPE`, both of which have
+                        // been checked earlier
+                        unreachable!("`expecting` should not be empty");
+                    }
+                    _ => unreachable!("Unexpected pending char"),
+                }
             }
         }
 

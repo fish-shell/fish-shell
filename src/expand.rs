@@ -48,6 +48,24 @@ pub enum CmdsubstMode {
     Skip,
 }
 
+/// Do expansions specifically to support cd. This means using CDPATH as a list of potential
+/// working directories, and to use logical instead of physical paths.
+#[derive(Copy, Clone, PartialEq)]
+pub struct ForCdArgument {
+    pub for_autosuggestion: bool,
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum PathFilter {
+    /// Do expansions specifically to support external command completions. This means using PATH as
+    /// a list of potential working directories.
+    ExecutableFile,
+    /// Do expansions for directories only.
+    Directory {
+        for_cd_argument: Option<ForCdArgument>,
+    },
+}
+
 /// Flags controlling expansions.
 #[derive(Copy, Clone)]
 pub struct ExpandFlags {
@@ -60,10 +78,6 @@ pub struct ExpandFlags {
     /// The expansion is being done for tab or auto completions. Returned completions may have the
     /// wildcard as a prefix instead of a match.
     pub for_completions: bool,
-    /// Only match files that are executable by the current user.
-    pub executables_only: bool,
-    /// Only match directories.
-    pub directories_only: bool,
     /// Generate descriptions, stored in the description field of completions.
     pub gen_descriptions: bool,
     /// Un-expand home directories to tildes after.
@@ -74,15 +88,7 @@ pub struct ExpandFlags {
     /// By default, wildcards only match a leading dot literally; this is why e.g. '*' does not
     /// match hidden files.
     pub allow_nonliteral_leading_dot: bool,
-    /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
-    /// working directories, and to use logical instead of physical paths.
-    pub special_for_cd: bool,
-    /// Do expansions specifically for cd autosuggestion. This is to differentiate between cd
-    /// completions and cd autosuggestions.
-    pub special_for_cd_autosuggestion: bool,
-    /// Do expansions specifically to support external command completions. This means using PATH as
-    /// a list of potential working directories.
-    pub special_for_command: bool,
+    pub path_filter: Option<PathFilter>,
     /// The token has an unclosed brace, so don't add a space.
     pub no_space_for_unclosed_brace: bool,
 }
@@ -99,15 +105,11 @@ impl ExpandFlags {
         skip_variables: false,
         skip_wildcards: false,
         for_completions: false,
-        executables_only: false,
-        directories_only: false,
         gen_descriptions: false,
         preserve_home_tildes: false,
         fuzzy_match: false,
         allow_nonliteral_leading_dot: false,
-        special_for_cd: false,
-        special_for_cd_autosuggestion: false,
-        special_for_command: false,
+        path_filter: None,
         no_space_for_unclosed_brace: false,
     };
     pub(crate) const FAIL_ON_CMDSUBST: Self = Self {
@@ -118,6 +120,21 @@ impl ExpandFlags {
         skip_wildcards: true,
         ..Self::FAIL_ON_CMDSUBST
     };
+
+    pub(crate) fn executables_only(&self) -> bool {
+        matches!(self.path_filter, Some(PathFilter::ExecutableFile))
+    }
+    pub(crate) fn directories_only(&self) -> bool {
+        matches!(self.path_filter, Some(PathFilter::Directory { .. }))
+    }
+    pub(crate) fn is_cd_argument(&self) -> bool {
+        matches!(
+            self.path_filter,
+            Some(PathFilter::Directory {
+                for_cd_argument: Some(_)
+            })
+        )
+    }
 }
 
 impl ExpandResult {
@@ -1456,7 +1473,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         let for_completions = self.flags.for_completions;
         let skip_wildcards = self.flags.skip_wildcards;
 
-        if has_wildcard && self.flags.executables_only {
+        if has_wildcard && self.flags.executables_only() {
             // don't do wildcard expansion for executables, see issue #785
         } else if (for_completions && !skip_wildcards) || has_wildcard {
             // We either have a wildcard, or we don't have a wildcard but we're doing completion
@@ -1468,49 +1485,46 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             // which may be CDPATH if the special flag is set.
             let working_dir = self.ctx.vars().get_pwd_slash();
             let mut effective_working_dirs = vec![];
-            let for_cd = self.flags.special_for_cd;
-            let for_command = self.flags.special_for_command;
-            if !for_cd && !for_command {
-                // Common case.
+
+            // We can handle executables and cd arguments mostly the same way. There's the
+            // following differences:
+            //
+            // 1. An empty CDPATH should be treated as '.', but an empty PATH should be left empty
+            // (no commands can be found). Also, an empty element in either is treated as '.' for
+            // consistency with POSIX shells. Note that we rely on the latter by having called
+            // `munge_colon_delimited_array()` for these special env vars. Thus we do not
+            // special-case them here.
+            //
+            // 2. PATH is only "one level," while CDPATH is multiple levels. That is, input like
+            // 'foo/bar' should resolve against CDPATH, but not PATH.
+            //
+            // In either case, we ignore the path if we start with ./ or /. Also ignore it if we are
+            // doing command completion and we contain a slash, per IEEE 1003.1, chapter 8 under
+            // PATH.
+            let for_cd = self.flags.is_cd_argument();
+            let for_command = self.flags.executables_only();
+            if (!for_cd && !for_command)
+                || path_to_expand.starts_with(L!("/"))
+                || path_to_expand.starts_with(L!("./"))
+                || path_to_expand.starts_with(L!("../"))
+                || (for_command && path_to_expand.contains('/'))
+            {
                 effective_working_dirs.push(working_dir);
             } else {
-                // Either special_for_command or special_for_cd. We can handle these
-                // mostly the same. There's the following differences:
-                //
-                // 1. An empty CDPATH should be treated as '.', but an empty PATH should be left empty
-                // (no commands can be found). Also, an empty element in either is treated as '.' for
-                // consistency with POSIX shells. Note that we rely on the latter by having called
-                // `munge_colon_delimited_array()` for these special env vars. Thus we do not
-                // special-case them here.
-                //
-                // 2. PATH is only "one level," while CDPATH is multiple levels. That is, input like
-                // 'foo/bar' should resolve against CDPATH, but not PATH.
-                //
-                // In either case, we ignore the path if we start with ./ or /. Also ignore it if we are
-                // doing command completion and we contain a slash, per IEEE 1003.1, chapter 8 under
-                // PATH.
-                if path_to_expand.starts_with(L!("/"))
-                    || path_to_expand.starts_with(L!("./"))
-                    || path_to_expand.starts_with(L!("../"))
-                    || (for_command && path_to_expand.contains('/'))
-                {
-                    effective_working_dirs.push(working_dir);
-                } else {
-                    // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
-                    // implies just the current directory, while an empty PATH is left empty.
-                    let mut paths = self
-                        .ctx
-                        .vars()
-                        .get(if for_cd { L!("CDPATH") } else { L!("PATH") })
-                        .map(|var| var.as_list().to_owned())
-                        .unwrap_or_default();
+                // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
+                // implies just the current directory, while an empty PATH is left empty.
+                let mut paths = self
+                    .ctx
+                    .vars()
+                    .get(if for_cd { L!("CDPATH") } else { L!("PATH") })
+                    .map(|var| var.as_list().to_owned())
+                    .unwrap_or_default();
 
-                    // The current directory is always valid.
-                    paths.push(if for_cd { L!(".") } else { L!("") }.to_owned());
-                    for next_path in paths {
-                        effective_working_dirs
-                            .push(path_apply_working_directory(&next_path, &working_dir));
-                    }
+                // The current directory is always valid.
+                paths.push(if for_cd { L!(".") } else { L!("") }.to_owned());
+                for next_path in paths {
+                    effective_working_dirs
+                        .push(path_apply_working_directory(&next_path, &working_dir));
                 }
             }
 

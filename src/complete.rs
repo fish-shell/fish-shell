@@ -7,8 +7,8 @@ use crate::{
     env::{EnvMode, EnvStack, EnvStackSetResult, Environment},
     exec::exec_subshell,
     expand::{
-        self, ExpandFlags, ExpandResultCode, expand_escape_string, expand_escape_variable,
-        expand_one, expand_string, expand_to_receiver,
+        self, ExpandFlags, ExpandResultCode, ForCdArgument, PathFilter, expand_escape_string,
+        expand_escape_variable, expand_one, expand_string, expand_to_receiver,
     },
     flog::{flog, flogf},
     function,
@@ -1142,8 +1142,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // Append all possible executables
         let result = {
             let expand_flags = ExpandFlags {
-                special_for_command: true,
-                executables_only: true,
+                path_filter: Some(PathFilter::ExecutableFile),
                 ..self.completion_expand_flags()
             };
             expand_to_receiver(
@@ -1167,7 +1166,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         let _ = {
             // Append all matching directories
             let expand_flags = ExpandFlags {
-                directories_only: true,
+                path_filter: Some(PathFilter::Directory {
+                    for_cd_argument: None,
+                }),
                 ..self.completion_expand_flags()
             };
             expand_to_receiver(
@@ -1633,11 +1634,11 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         }
 
         if handle_as_special_cd && do_file {
-            if self.flags.autosuggestion {
-                flags.special_for_cd_autosuggestion = true;
-            }
-            flags.directories_only = true;
-            flags.special_for_cd = true;
+            flags.path_filter = Some(PathFilter::Directory {
+                for_cd_argument: Some(ForCdArgument {
+                    for_autosuggestion: self.flags.autosuggestion,
+                }),
+            });
         }
 
         // Squelch file descriptions per issue #254.

@@ -3,7 +3,7 @@
 use crate::{
     common::{WSL, is_windows_subsystem_for_linux},
     complete::{CompleteFlags, Completion, CompletionReceiver, PROG_COMPLETE_SEP},
-    expand::ExpandFlags,
+    expand::{ExpandFlags, PathFilter},
     prelude::*,
     wutil::{
         dir_iter::{DirEntry, DirEntryType},
@@ -321,8 +321,8 @@ fn wildcard_test_flags_then_complete(
     out: &mut CompletionReceiver,
     entry: &DirEntry,
 ) -> bool {
-    let executables_only = expand_flags.executables_only;
-    let need_directory = expand_flags.directories_only;
+    let executables_only = expand_flags.executables_only();
+    let need_directory = expand_flags.directories_only();
     let mut flags = CompleteFlags::default();
     if expand_flags.no_space_for_unclosed_brace {
         flags.no_space = true;
@@ -420,6 +420,7 @@ fn wildcard_test_flags_then_complete(
 mod expander {
 
     use crate::{
+        expand::ForCdArgument,
         path::append_path_component,
         wutil::{DevInode, dir_iter::DirIter, normalize_path},
     };
@@ -804,7 +805,7 @@ mod expander {
         ) {
             // wreaddir_resolving without the out argument is just wreaddir.
             // So we can use the information in case we need it.
-            let need_dir = self.flags.directories_only;
+            let need_dir = self.flags.directories_only();
 
             while !self.interrupted_or_overflowed() {
                 let Some(Ok(entry)) = base_dir_iter.next() else {
@@ -927,7 +928,7 @@ mod expander {
             append_path_component(&mut abs_path, filepath);
 
             // We must normalize the path to allow 'cd ..' to operate on logical paths.
-            if self.flags.special_for_cd {
+            if self.flags.is_cd_argument() {
                 abs_path = normalize_path(&abs_path, true);
             }
 
@@ -953,11 +954,17 @@ mod expander {
                     c.prepend_token_prefix(prefix);
                 }
 
-                // Implement special_for_cd_autosuggestion by descending the deepest unique
-                // hierarchy we can, and then appending any components to each new result.
-                // Only descend deepest unique for cd autosuggest and not for cd tab completion
+                // Autosuggestions for cd. Descend the deepest unique hierarchy we can, and
+                // then append any components to each new result. Not for cd tab completion
                 // (issue #4402).
-                if self.flags.special_for_cd_autosuggestion {
+                if matches!(
+                    self.flags.path_filter,
+                    Some(PathFilter::Directory {
+                        for_cd_argument: Some(ForCdArgument {
+                            for_autosuggestion: true,
+                        })
+                    })
+                ) {
                     let unique_hierarchy = self.descend_unique_hierarchy(&mut abs_path);
                     if !unique_hierarchy.is_empty() {
                         for c in self.resolved_completions[before..after].iter_mut() {
@@ -975,7 +982,7 @@ mod expander {
         fn open_dir(&self, base_dir: &wstr, dotdot: bool) -> std::io::Result<DirIter> {
             let mut path = self.working_directory.to_owned();
             append_path_component(&mut path, base_dir);
-            if self.flags.special_for_cd {
+            if self.flags.is_cd_argument() {
                 // cd operates on logical paths.
                 // for example, cd ../<tab> should complete "without resolving symlinks".
                 path = normalize_path(&path, true);
@@ -1020,8 +1027,8 @@ pub fn wildcard_expand_string<'closure>(
 
     // CD expansion requires directories-only completion without descriptions.
     assert!(
-        !(flags.special_for_cd)
-            || ((flags.directories_only) && (flags.for_completions) && (!flags.gen_descriptions))
+        !flags.is_cd_argument()
+            || (flags.directories_only() && flags.for_completions && !flags.gen_descriptions)
     );
 
     // Hackish fix for issue #1631. Embedded nulls are never allowed in a filename,

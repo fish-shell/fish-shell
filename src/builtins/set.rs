@@ -62,8 +62,8 @@ impl Default for Options {
 }
 
 impl Options {
-    fn env_mode(&self) -> EnvMode {
-        EnvMode {
+    fn env_mode(&self) -> ParserEnvSetMode {
+        ParserEnvSetMode::user(EnvMode {
             local: self.local,
             function: self.function,
             global: self.global,
@@ -72,7 +72,7 @@ impl Options {
             unexport: self.unexport,
             pathvar: self.pathvar,
             unpathvar: self.unpathvar,
-        }
+        })
     }
 
     fn parse(
@@ -336,12 +336,11 @@ fn env_set_reporting_errors(
     cmd: &wstr,
     opts: &Options,
     key: &wstr,
-    mode: EnvMode,
+    mode: ParserEnvSetMode,
     list: Vec<WString>,
     streams: &mut IoStreams,
     parser: &mut Parser,
 ) -> EnvStackSetResult {
-    let mode = ParserEnvSetMode::user(mode);
     let retval = if opts.no_event {
         parser.set_var(key, mode, list)
     } else {
@@ -521,7 +520,7 @@ fn erased_at_indexes(mut input: Vec<WString>, mut indexes: Vec<isize>) -> Vec<WS
 /// `set --names` flag was used.
 fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> BuiltinResult {
     let names_only = opts.list;
-    let mut names = parser.vars().get_names(opts.env_mode());
+    let mut names = parser.vars().get_names(opts.env_mode().mode);
     names.sort();
 
     for key in names {
@@ -540,7 +539,7 @@ fn list(opts: &Options, parser: &Parser, streams: &mut IoStreams) -> BuiltinResu
                     }
                     val += &expand_escape_string(history.item_at_index(i).unwrap().str())[..];
                 }
-            } else if let Some(var) = parser.vars().getf_unless_empty(&key, opts.env_mode()) {
+            } else if let Some(var) = parser.vars().getf_unless_empty(&key, opts.env_mode().mode) {
                 val = expand_escape_variable(&var);
             }
             if !val.is_empty() {
@@ -573,7 +572,7 @@ fn query(
     args: &[&wstr],
 ) -> BuiltinResult {
     let mut retval = 0;
-    let mode = opts.env_mode();
+    let mode = opts.env_mode().mode;
 
     // No variables given, this is an error.
     // 255 is the maximum return code we allow.
@@ -759,9 +758,10 @@ fn erase(
     args: &[&wstr],
 ) -> BuiltinResult {
     let mut ret = Ok(SUCCESS);
-    let mut erase_with_mode = |mode| {
+    let mut erase_with_mode = |set_mode: ParserEnvSetMode| {
         for arg in args {
-            let Some(split) = split_var_and_indexes(arg, mode, parser.vars(), streams) else {
+            let Some(split) = split_var_and_indexes(arg, set_mode.mode, parser.vars(), streams)
+            else {
                 builtin_print_error_trailer(parser, streams.err, cmd);
                 return Err(STATUS_CMD_ERROR);
             };
@@ -775,7 +775,7 @@ fn erase(
             let retval;
             if split.indexes.is_empty() {
                 // unset the var
-                retval = parser.remove_var(split.varname, ParserEnvSetMode::user(mode));
+                retval = parser.remove_var(split.varname, set_mode);
                 // When a non-existent-variable is unset, return NotFound as $status
                 // but do not emit any errors at the console as a compromise between user
                 // friendliness and correctness.
@@ -795,7 +795,7 @@ fn erase(
                     cmd,
                     opts,
                     split.varname,
-                    mode,
+                    set_mode,
                     result,
                     streams,
                     parser,
@@ -820,23 +820,22 @@ fn erase(
     // Historical behavior is to go from inner to outer, which may be relevant for scopes that
     // collide with the function scope (i.e. local and global).
     let mut erased = false;
-    let mut mode = opts.env_mode();
+    let mut set_mode = opts.env_mode();
     for scope in scopes {
-        if *scope(&mut mode) {
-            let mut mode = EnvMode {
-                local: false,
-                function: false,
-                global: false,
-                universal: false,
-                ..mode
-            };
-            *scope(&mut mode) = true;
-            erase_with_mode(mode)?;
+        if *scope(&mut set_mode.mode) {
+            let mut set_mode = set_mode;
+            let mode = &mut set_mode.mode;
+            mode.local = false;
+            mode.function = false;
+            mode.global = false;
+            mode.universal = false;
+            *scope(mode) = true;
+            erase_with_mode(set_mode)?;
             erased = true;
         }
     }
     if !erased {
-        erase_with_mode(mode)?;
+        erase_with_mode(set_mode)?;
     }
     ret
 }
@@ -926,11 +925,11 @@ fn set_internal(
         return Err(STATUS_INVALID_ARGS);
     }
 
-    let mode = opts.env_mode();
+    let set_mode = opts.env_mode();
     let var_expr = argv[0];
     let argv = &argv[1..];
 
-    let Some(split) = split_var_and_indexes(var_expr, mode, parser.vars(), streams) else {
+    let Some(split) = split_var_and_indexes(var_expr, set_mode.mode, parser.vars(), streams) else {
         builtin_print_error_trailer(parser, streams.err, cmd);
         return Err(STATUS_INVALID_ARGS);
     };
@@ -996,8 +995,15 @@ fn set_internal(
     };
 
     // Set the value back in the variable stack and fire any events.
-    let retval =
-        env_set_reporting_errors(cmd, opts, split.varname, mode, new_values, streams, parser);
+    let retval = env_set_reporting_errors(
+        cmd,
+        opts,
+        split.varname,
+        set_mode,
+        new_values,
+        streams,
+        parser,
+    );
 
     if retval == EnvStackSetResult::Ok {
         warn_if_uvar_shadows_global(cmd, opts, split.varname, streams, parser);

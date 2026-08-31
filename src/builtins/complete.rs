@@ -2,8 +2,8 @@ use super::prelude::*;
 use crate::{
     builtins::Error,
     complete::{
-        CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, complete_add,
-        complete_add_wrapper, complete_print, complete_remove, complete_remove_all,
+        CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, WantsSuffix,
+        complete_add, complete_add_wrapper, complete_print, complete_remove, complete_remove_all,
         complete_remove_wrapper,
     },
     err_fmt, err_raw, err_str,
@@ -503,14 +503,15 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
                 parser.libdata_mut().builtin_complete_current_commandline = true;
             }
 
+            let complete_options = CompletionRequestOptions::default();
             let (mut comp, _needs_load) = crate::complete::complete(
                 &do_complete_param,
-                CompletionRequestOptions::normal(),
+                complete_options,
                 &mut parser.context(),
             );
 
             // Apply the same sort and deduplication treatment as pager completions
-            crate::complete::sort_and_prioritize(&mut comp, CompletionRequestOptions::default());
+            crate::complete::sort_and_prioritize(&mut comp, complete_options);
 
             for next in comp {
                 // Make a fake commandline, and then apply the completion to it.
@@ -530,7 +531,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
                 // is set. We don't want to set COMPLETE_NO_SPACE because that won't close
                 // quotes. What we want is to close the quote, but not append the space. So we
                 // just look for the space and clear it.
-                if !next.flags.contains(CompleteFlags::NO_SPACE)
+                if next.flags.suffix_type().is_some()
                     && string_suffixes_string(L!(" "), &faux_cmdline_with_completion)
                 {
                     faux_cmdline_with_completion.truncate(faux_cmdline_with_completion.len() - 1);
@@ -583,12 +584,15 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
             }
         }
     } else {
-        let mut flags = CompleteFlags::AUTO_SPACE;
+        let mut flags = CompleteFlags {
+            wants_suffix: WantsSuffix::Auto,
+            ..Default::default()
+        };
         // HACK: Don't escape tildes because at the beginning of a token they probably mean
         // $HOME, for example as produced by a recursive call to "complete -C".
-        flags |= CompleteFlags::DONT_ESCAPE_TILDES;
+        flags.dont_escape_tildes();
         if preserve_order {
-            flags |= CompleteFlags::DONT_SORT;
+            flags.dont_sort = true;
         }
 
         if remove {

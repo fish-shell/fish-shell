@@ -450,7 +450,11 @@ mod tests {
         let random_string = L!("line 1\\n\nline 2").to_owned();
         let escaped_string = escape_string(
             &random_string,
-            EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
+            EscapeStringStyle::Script(EscapeFlags {
+                no_printables: true,
+                no_quoted: true,
+                ..Default::default()
+            }),
         );
         let Some(unescaped_string) =
             unescape_string(&escaped_string, UnescapeStringStyle::default())
@@ -474,10 +478,9 @@ mod tests {
                     escape_string_with_quote(
                         L!($cmd),
                         $quote,
-                        if $no_tilde {
-                            EscapeFlags::NO_TILDE
-                        } else {
-                            EscapeFlags::empty()
+                        EscapeFlags {
+                            no_tilde: $no_tilde,
+                            ..Default::default()
                         }
                     ),
                     L!($expected)
@@ -490,12 +493,11 @@ mod tests {
                     escape_string_with_quote(
                         L!($cmd),
                         $quote,
-                        EscapeFlags::NO_QUOTED
-                            | if $no_tilde {
-                                EscapeFlags::NO_TILDE
-                            } else {
-                                EscapeFlags::empty()
-                            }
+                        EscapeFlags {
+                            no_quoted: true,
+                            no_tilde: $no_tilde,
+                            ..Default::default()
+                        }
                     ),
                     L!($expected)
                 );

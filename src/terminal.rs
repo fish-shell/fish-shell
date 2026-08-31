@@ -6,37 +6,34 @@ use crate::{
     text_face::{ResettableStyle, TextFace, TextStyling, UnderlineStyle},
     threads::MainThread,
 };
-use bitflags::bitflags;
 use fish_color::{Color, Color24};
 use fish_common::{EscapeStringStyle, escape_string, write_loop};
 use fish_feature_flags::FeatureFlag;
 use fish_widestring::{wcs2bytes, wcs2bytes_appending};
-use std::sync::LazyLock;
+use std::sync::{LazyLock, Mutex};
 use std::{
     cell::{RefCell, RefMut},
     ops::{Deref, DerefMut},
     os::{fd::RawFd, unix::ffi::OsStrExt as _},
-    sync::atomic::{AtomicU8, Ordering},
 };
 
-bitflags! {
-    #[derive(Copy, Clone, Default)]
-    pub struct ColorSupport: u8 {
-        const TERM_256COLOR = 1<<0;
-        const TERM_24BIT = 1<<1;
-    }
+#[derive(Copy, Clone, Default)]
+pub struct ColorSupport {
+    pub term_256color: bool,
+    pub term_24bit: bool,
 }
 
-/// Whether term256 and term24bit are supported.
-static COLOR_SUPPORT: AtomicU8 = AtomicU8::new(0);
+static COLOR_SUPPORT: Mutex<ColorSupport> = Mutex::new(ColorSupport {
+    term_256color: false,
+    term_24bit: false,
+});
 
 pub fn get_color_support() -> ColorSupport {
-    let val = COLOR_SUPPORT.load(Ordering::Relaxed);
-    ColorSupport::from_bits_truncate(val)
+    *COLOR_SUPPORT.lock().unwrap()
 }
 
 pub fn set_color_support(val: ColorSupport) {
-    COLOR_SUPPORT.store(val.bits(), Ordering::Relaxed);
+    *COLOR_SUPPORT.lock().unwrap() = val;
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -235,7 +232,7 @@ fn scroll_content_up(out: &mut Outputter, lines: usize) -> bool {
 }
 
 fn index_for_color(c: Color) -> u8 {
-    if c.is_named() || !(get_color_support().contains(ColorSupport::TERM_256COLOR)) {
+    if c.is_named() || !get_color_support().term_256color {
         return c.to_name_index();
     }
     c.to_term256_index()
@@ -638,7 +635,7 @@ pub fn best_color(candidates: impl Iterator<Item = Color>, support: ColorSupport
     }
 
     // If we have both RGB and named colors, then prefer rgb if term256 is supported.
-    let has_term256 = support.contains(ColorSupport::TERM_256COLOR);
+    let has_term256 = support.term_256color;
     (if (first_rgb.is_some() && has_term256) || first_named.is_none() {
         first_rgb
     } else {
@@ -748,7 +745,7 @@ impl<'a> OutputterStyleWriter<'a> {
     }
 
     fn write_color(&mut self, paintable: Paintable, color: Color) -> bool {
-        let supports_term24bit = get_color_support().contains(ColorSupport::TERM_24BIT);
+        let supports_term24bit = get_color_support().term_24bit;
         if !supports_term24bit || !color.is_rgb() {
             // Indexed or non-24 bit color.
             let idx = index_for_color(color);

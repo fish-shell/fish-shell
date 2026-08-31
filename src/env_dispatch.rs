@@ -432,10 +432,10 @@ fn update_fish_color_support(vars: &EnvStack) {
         );
     }
 
-    let mut color_support = ColorSupport::default();
-    color_support.set(ColorSupport::TERM_256COLOR, supports_256color);
-    color_support.set(ColorSupport::TERM_24BIT, supports_24bit);
-    crate::terminal::set_color_support(color_support);
+    crate::terminal::set_color_support(ColorSupport {
+        term_256color: supports_256color,
+        term_24bit: supports_24bit,
+    });
 }
 
 pub const MIDNIGHT_COMMANDER_SID: &wstr = L!("MC_SID");
@@ -466,7 +466,7 @@ fn init_locale(vars: &EnvStack) {
 
     for var_name in LOCALE_VARIABLES {
         let var = vars
-            .getf_unless_empty(var_name, EnvMode::EXPORT)
+            .getf_unless_empty(var_name, EnvMode::EXPORTED)
             .map(|v| v.as_string());
         if let Some(value) = var {
             flog!(env_locale, "locale var", var_name, "=", value);

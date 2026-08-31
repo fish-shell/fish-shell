@@ -385,7 +385,10 @@ impl BuiltinBind {
             ) {
                 let eseq = escape_string(
                     argv[optind],
-                    EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES),
+                    EscapeStringStyle::Script(EscapeFlags {
+                        no_printables: true,
+                        ..Default::default()
+                    }),
                 );
                 if !self.opts.silent {
                     if seq.len() == 1 {

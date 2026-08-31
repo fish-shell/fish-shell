@@ -2,9 +2,9 @@
 
 use super::prelude::*;
 use crate::{
-    builtins::Error,
+    builtins::{Error, set::set_export_mode},
     common::valid_var_name,
-    env::{EnvMode, EnvVar, EnvVarFlags, Environment as _, READ_BYTE_LIMIT},
+    env::{EnvMode, EnvVar, Environment as _, READ_BYTE_LIMIT},
     err_fmt, err_str,
     history::{HistoryId, MemoryHistoryId},
     input::{DecodeState, InvalidPolicy, decode_utf8},
@@ -38,7 +38,7 @@ pub(crate) enum TokenOutputMode {
 #[derive(Default)]
 struct Options {
     print_help: bool,
-    place: ParserEnvSetMode,
+    set_mode: ParserEnvSetMode,
     prompt: Option<WString>,
     prompt_str: Option<WString>,
     right_prompt: WString,
@@ -58,7 +58,7 @@ struct Options {
 impl Options {
     fn new() -> Self {
         Options {
-            place: ParserEnvSetMode::user(EnvMode::empty()),
+            set_mode: ParserEnvSetMode::user(EnvMode::default()),
             ..Default::default()
         }
     }
@@ -117,10 +117,10 @@ fn parse_cmd_opts(
                 opts.delimiter = Some(w.woptarg.unwrap().to_owned());
             }
             'f' => {
-                opts.place.mode |= EnvMode::FUNCTION;
+                opts.set_mode.mode.function = true;
             }
             'g' => {
-                opts.place.mode |= EnvMode::GLOBAL;
+                opts.set_mode.mode.global = true;
             }
             'h' => {
                 opts.print_help = true;
@@ -129,7 +129,7 @@ fn parse_cmd_opts(
                 opts.one_line = true;
             }
             'l' => {
-                opts.place.mode |= EnvMode::LOCAL;
+                opts.set_mode.mode.local = true;
             }
             'n' => {
                 opts.nchars = match fish_wcstoi(w.woptarg.unwrap()) {
@@ -190,13 +190,13 @@ fn parse_cmd_opts(
                 opts.token_mode = Some(new_mode);
             }
             'U' => {
-                opts.place.mode |= EnvMode::UNIVERSAL;
+                opts.set_mode.mode.universal = true;
             }
             'u' => {
-                opts.place.mode |= EnvMode::UNEXPORT;
+                set_export_mode(parser, streams, cmd, &mut opts.set_mode.mode.export, false)?;
             }
             'x' => {
-                opts.place.mode |= EnvMode::EXPORT;
+                set_export_mode(parser, streams, cmd, &mut opts.set_mode.mode.export, true)?;
             }
             'z' => {
                 opts.split_null = true;
@@ -467,19 +467,10 @@ fn validate_read_args(
         opts.prompt = Some(DEFAULT_READ_PROMPT.to_owned());
     }
 
-    if opts.place.mode.contains(EnvMode::UNEXPORT) && opts.place.mode.contains(EnvMode::EXPORT) {
-        err_str!(Error::EXPORT_UNEXPORT)
-            .cmd(cmd)
-            .full_trailer(parser)
-            .finish(streams);
-        return Err(STATUS_INVALID_ARGS);
-    }
-
-    if opts
-        .place
-        .mode
-        .intersection(EnvMode::ANY_SCOPE)
-        .iter()
+    let mode = opts.set_mode.mode;
+    if [mode.local, mode.function, mode.global, mode.universal]
+        .into_iter()
+        .filter(|selected| *selected)
         .count()
         > 1
     {
@@ -531,7 +522,7 @@ fn validate_read_args(
             varname_error(cmd, arg).full_trailer(parser).finish(streams);
             return Err(STATUS_INVALID_ARGS);
         }
-        if EnvVar::flags_for(arg).contains(EnvVarFlags::READ_ONLY) {
+        if EnvVar::flags_for(arg).read_only {
             err_fmt!("%s: cannot overwrite read-only variable", arg)
                 .cmd(cmd)
                 .full_trailer(parser)
@@ -578,7 +569,7 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
     let vars_left = |var_ptr: usize| argc - var_ptr;
     let clear_remaining_vars = |parser: &mut Parser, var_ptr: &mut usize| {
         while vars_left(*var_ptr) != 0 {
-            parser.set_empty(argv[*var_ptr], opts.place);
+            parser.set_empty(argv[*var_ptr], opts.set_mode);
             *var_ptr += 1;
         }
     };
@@ -652,8 +643,14 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
         }
 
         if let Some(token_mode) = opts.token_mode {
-            let mut tok =
-                Tokenizer::new(&buff, TokFlags::ACCEPT_UNFINISHED | TokFlags::ARGUMENT_LIST);
+            let mut tok = Tokenizer::new(
+                &buff,
+                TokFlags {
+                    accept_unfinished: true,
+                    argument_list: true,
+                    ..Default::default()
+                },
+            );
             let token_text = |tokenizer: &mut Tokenizer<'_>, token: &Tok| -> WString {
                 let mut text = Cow::Borrowed(tokenizer.text_of(token));
                 match token_mode {
@@ -676,7 +673,7 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     tokens.push(token_text(&mut tok, &t));
                 }
 
-                parser.set_var_and_fire(argv[var_ptr], opts.place, tokens);
+                parser.set_var_and_fire(argv[var_ptr], opts.set_mode, tokens);
                 var_ptr += 1;
             } else {
                 while vars_left(var_ptr) - 1 > 0 {
@@ -684,14 +681,14 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                         break;
                     };
                     let out = token_text(&mut tok, &t);
-                    parser.set_var_and_fire(argv[var_ptr], opts.place, vec![out]);
+                    parser.set_var_and_fire(argv[var_ptr], opts.set_mode, vec![out]);
                     var_ptr += 1;
                 }
 
                 // If we still have tokens, set the last variable to them.
                 if let Some(t) = tok.next() {
                     let rest = buff[t.offset()..].to_owned();
-                    parser.set_var_and_fire(argv[var_ptr], opts.place, vec![rest]);
+                    parser.set_var_and_fire(argv[var_ptr], opts.set_mode, vec![rest]);
                     var_ptr += 1;
                 }
             }
@@ -735,13 +732,13 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
 
             if opts.array {
                 // Array mode: assign each char as a separate element of the sole var.
-                parser.set_var_and_fire(argv[var_ptr], opts.place, chars);
+                parser.set_var_and_fire(argv[var_ptr], opts.set_mode, chars);
                 var_ptr += 1;
             } else {
                 // Not array mode: assign each char to a separate var with the remainder being
                 // assigned to the last var.
                 for c in chars {
-                    parser.set_var_and_fire(argv[var_ptr], opts.place, vec![c]);
+                    parser.set_var_and_fire(argv[var_ptr], opts.set_mode, vec![c]);
                     var_ptr += 1;
                 }
             }
@@ -756,7 +753,7 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     .into_iter()
                     .map(|s| s.to_owned())
                     .collect();
-                parser.set_var_and_fire(argv[var_ptr], opts.place, tokens);
+                parser.set_var_and_fire(argv[var_ptr], opts.set_mode, tokens);
                 var_ptr += 1;
             } else {
                 // We're using a delimiter provided by the user so use the `string split` behavior.
@@ -764,7 +761,7 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     .into_iter()
                     .map(|s| s.to_owned())
                     .collect();
-                parser.set_var_and_fire(argv[var_ptr], opts.place, splits);
+                parser.set_var_and_fire(argv[var_ptr], opts.set_mode, splits);
                 var_ptr += 1;
             }
         } else {
@@ -785,7 +782,7 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                         std::mem::swap(&mut val, &mut var_vals[val_idx]);
                         val_idx += 1;
                     }
-                    parser.set_var_and_fire(argv[var_ptr], opts.place, vec![val]);
+                    parser.set_var_and_fire(argv[var_ptr], opts.set_mode, vec![val]);
                     var_ptr += 1;
                 }
             } else {
@@ -795,7 +792,7 @@ pub fn read(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                 let splits = split_about(&buff, delimiter, argc - 1, false);
                 assert!(splits.len() <= vars_left(var_ptr));
                 for split in splits {
-                    parser.set_var_and_fire(argv[var_ptr], opts.place, vec![split.to_owned()]);
+                    parser.set_var_and_fire(argv[var_ptr], opts.set_mode, vec![split.to_owned()]);
                     var_ptr += 1;
                 }
             }

@@ -5,7 +5,7 @@ use crate::{
     builtins::Error,
     complete::Completion,
     err_fmt, err_str,
-    expand::{ExpandFlags, ExpandResultCode, expand_string},
+    expand::{self, ExpandFlags, ExpandResultCode, expand_string},
     input::{CharEvent, ReadlineCmd, input_function_get_code},
     operation_context::{OperationContext, no_cancel},
     parse_constants::ParseTreeFlags,
@@ -177,7 +177,10 @@ fn write_part(
                 match expand_string(
                     token_text.to_owned(),
                     &mut args,
-                    ExpandFlags::SKIP_CMDSUBST,
+                    ExpandFlags {
+                        cmdsubst: expand::CmdsubstMode::Skip,
+                        ..Default::default()
+                    },
                     &mut OperationContext::foreground(
                         parser,
                         Box::new(no_cancel),
@@ -203,7 +206,10 @@ fn write_part(
             TokenOutputMode::Unescaped => {
                 let unescaped = unescape_string(
                     token_text,
-                    UnescapeStringStyle::Script(UnescapeFlags::INCOMPLETE),
+                    UnescapeStringStyle::Script(UnescapeFlags {
+                        incomplete: true,
+                        ..Default::default()
+                    }),
                 )
                 .unwrap();
                 args.push(Completion::from_completion(unescaped));
@@ -215,7 +221,13 @@ fn write_part(
     if range_is_single_token {
         add_token(buff);
     } else {
-        let mut tok = Tokenizer::new(buff, TokFlags::ACCEPT_UNFINISHED);
+        let mut tok = Tokenizer::new(
+            buff,
+            TokFlags {
+                accept_unfinished: true,
+                ..Default::default()
+            },
+        );
         let mut in_redirection = false;
         while let Some(token) = tok.next() {
             if cut_at_cursor && token.end() >= pos {

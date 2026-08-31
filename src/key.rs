@@ -248,7 +248,11 @@ pub const KEY_SEPARATOR: char = ',';
 fn escape_nonprintables(key_name: &wstr) -> WString {
     escape_string(
         key_name,
-        EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED),
+        EscapeStringStyle::Script(EscapeFlags {
+            no_printables: true,
+            no_quoted: true,
+            ..Default::default()
+        }),
     )
 }
 

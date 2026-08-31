@@ -12,7 +12,7 @@ use crate::{
         STATUS_UNMATCHED_WILDCARD,
     },
     common::valid_var_name_char,
-    complete::{CompleteFlags, Completion, CompletionList, CompletionReceiver},
+    complete::{Completion, CompletionList, CompletionReceiver},
     env::{EnvVar, Environment},
     exec::exec_subshell_for_expand,
     history::{History, history_id},
@@ -24,7 +24,6 @@ use crate::{
     wildcard::{WildcardResult, wildcard_expand_string, wildcard_has_internal},
     wutil::{normalize_path, wcstoi, wcstoi_partial},
 };
-use bitflags::bitflags;
 use fish_common::{
     EscapeFlags, EscapeStringStyle, UnescapeFlags, UnescapeStringStyle, escape, escape_string,
     escape_string_for_double_quotes, unescape_string,
@@ -39,46 +38,108 @@ use fish_widestring::{
 };
 use nix::unistd::{User, getpid};
 
-bitflags! {
-    /// Set of flags controlling expansions.
-    #[derive(Copy, Clone, Default)]
-    pub struct ExpandFlags : u16 {
-        /// Fail expansion if there is a command substitution.
-        const FAIL_ON_CMDSUBST = 1 << 0;
-        /// Skip variable expansion.
-        const SKIP_VARIABLES = 1 << 1;
-        /// Skip wildcard expansion.
-        const SKIP_WILDCARDS = 1 << 2;
-        /// The expansion is being done for tab or auto completions. Returned completions may have the
-        /// wildcard as a prefix instead of a match.
-        const FOR_COMPLETIONS = 1 << 3;
-        /// Only match files that are executable by the current user.
-        const EXECUTABLES_ONLY = 1 << 4;
-        /// Only match directories.
-        const DIRECTORIES_ONLY = 1 << 5;
-        /// Generate descriptions, stored in the description field of completions.
-        const GEN_DESCRIPTIONS = 1 << 6;
-        /// Un-expand home directories to tildes after.
-        const PRESERVE_HOME_TILDES = 1 << 7;
-        /// Allow fuzzy matching.
-        const FUZZY_MATCH = 1 << 8;
-        /// Allows matching a leading dot even if the wildcard does not contain one.
-        /// By default, wildcards only match a leading dot literally; this is why e.g. '*' does not
-        /// match hidden files.
-        const ALLOW_NONLITERAL_LEADING_DOT = 1 << 10;
-        /// Do expansions specifically to support cd. This means using CDPATH as a list of potential
-        /// working directories, and to use logical instead of physical paths.
-        const SPECIAL_FOR_CD = 1 << 11;
-        /// Do expansions specifically for cd autosuggestion. This is to differentiate between cd
-        /// completions and cd autosuggestions.
-        const SPECIAL_FOR_CD_AUTOSUGGESTION = 1 << 12;
-        /// Do expansions specifically to support external command completions. This means using PATH as
-        /// a list of potential working directories.
-        const SPECIAL_FOR_COMMAND = 1 << 13;
-        /// The token has an unclosed brace, so don't add a space.
-        const NO_SPACE_FOR_UNCLOSED_BRACE = 1 << 14;
-        /// Skip command substitutions.
-        const SKIP_CMDSUBST = 1 << 15;
+#[derive(Copy, Clone, PartialEq)]
+pub enum CmdsubstMode {
+    /// Expand command substitions, as usual.
+    Expand,
+    /// Fail expansion.
+    Fail,
+    /// Forward command substitutions as-is.
+    Skip,
+}
+
+/// Do expansions specifically to support cd. This means using CDPATH as a list of potential
+/// working directories, and to use logical instead of physical paths.
+#[derive(Copy, Clone, PartialEq)]
+pub struct ForCdArgument {
+    pub for_autosuggestion: bool,
+}
+
+#[derive(Copy, Clone, PartialEq)]
+pub enum PathFilter {
+    /// Do expansions specifically to support external command completions. This means using PATH as
+    /// a list of potential working directories.
+    ExecutableFile,
+    /// Do expansions for directories only.
+    Directory {
+        for_cd_argument: Option<ForCdArgument>,
+    },
+}
+
+/// Flags controlling expansions.
+#[derive(Copy, Clone)]
+pub struct ExpandFlags {
+    //# Which expansion stages to skip / fail.
+    /// How to handle command substitutions.
+    pub cmdsubst: CmdsubstMode,
+    /// Skip variable expansion.
+    pub skip_variables: bool,
+    /// Skip wildcard expansion.
+    pub skip_wildcards: bool,
+
+    pub path_filter: Option<PathFilter>,
+
+    //# Knobs for wildcard matching.
+    /// Allow fuzzy matching.
+    pub fuzzy_match: bool,
+    /// Allows matching a leading dot even if the wildcard does not contain one.
+    /// By default, wildcards only match a leading dot literally; this is why e.g. '*' does not
+    /// match hidden files.
+    pub allow_nonliteral_leading_dot: bool,
+
+    //# Output options.
+    /// The expansion is being done for tab or auto completions. Returned completions may have the
+    /// wildcard as a prefix instead of a match.
+    pub for_completions: bool,
+    /// Generate descriptions, stored in the description field of completions.
+    pub gen_descriptions: bool,
+    /// Un-expand home directories to tildes after.
+    pub preserve_home_tildes: bool,
+    /// The token has an unclosed brace, so don't add a space.
+    pub no_space_for_unclosed_brace: bool,
+}
+
+impl Default for ExpandFlags {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+
+impl ExpandFlags {
+    const DEFAULT: Self = Self {
+        cmdsubst: CmdsubstMode::Expand,
+        skip_variables: false,
+        skip_wildcards: false,
+        for_completions: false,
+        gen_descriptions: false,
+        preserve_home_tildes: false,
+        fuzzy_match: false,
+        allow_nonliteral_leading_dot: false,
+        path_filter: None,
+        no_space_for_unclosed_brace: false,
+    };
+    pub(crate) const FAIL_ON_CMDSUBST: Self = Self {
+        cmdsubst: CmdsubstMode::Fail,
+        ..Self::DEFAULT
+    };
+    pub(crate) const NO_IO: Self = Self {
+        skip_wildcards: true,
+        ..Self::FAIL_ON_CMDSUBST
+    };
+
+    pub(crate) fn executables_only(&self) -> bool {
+        matches!(self.path_filter, Some(PathFilter::ExecutableFile))
+    }
+    pub(crate) fn directories_only(&self) -> bool {
+        matches!(self.path_filter, Some(PathFilter::Directory { .. }))
+    }
+    pub(crate) fn is_cd_argument(&self) -> bool {
+        matches!(
+            self.path_filter,
+            Some(PathFilter::Directory {
+                for_cd_argument: Some(_)
+            })
+        )
     }
 }
 
@@ -160,7 +221,7 @@ pub fn expand_one(
     ctx: &mut OperationContext,
     errors: Option<&mut ParseErrorList>,
 ) -> bool {
-    if !flags.contains(ExpandFlags::FOR_COMPLETIONS) && expand_is_clean(s) {
+    if !flags.for_completions && expand_is_clean(s) {
         return true;
     }
 
@@ -200,7 +261,7 @@ pub fn expand_to_command_and_args(
 
     let mut eflags = ExpandFlags::FAIL_ON_CMDSUBST;
     if skip_wildcards {
-        eflags |= ExpandFlags::SKIP_WILDCARDS;
+        eflags.skip_wildcards = true;
     }
 
     let mut completions = CompletionList::new();
@@ -801,7 +862,7 @@ fn expand_braces(
     }
 
     if brace_count > 0 {
-        if !flags.contains(ExpandFlags::FOR_COMPLETIONS) {
+        if !flags.for_completions {
             syntax_error = true;
         } else {
             // The user hasn't typed an end brace yet; make one up and append it, then expand
@@ -1072,7 +1133,13 @@ pub fn expand_cmdsubst(
     }
 
     for sub_item in sub_res {
-        let sub_item2 = escape_string(&sub_item, EscapeStringStyle::Script(EscapeFlags::COMMA));
+        let sub_item2 = escape_string(
+            &sub_item,
+            EscapeStringStyle::Script(EscapeFlags {
+                comma: true,
+                ..Default::default()
+            }),
+        );
         for tail_item in &*tail_expand {
             let mut whole_item = WString::new();
             whole_item.reserve(
@@ -1225,11 +1292,11 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         mut errors: Option<&'a mut ParseErrorList>,
     ) -> ExpandResult {
         assert!(
-            flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) || ctx.has_parser(),
-            "Must have a parser if not skipping command substitutions"
+            flags.cmdsubst == CmdsubstMode::Fail || ctx.has_parser(),
+            "Must have a parser when expanding command substitutions"
         );
         // Early out. If we're not completing, and there's no magic in the input, we're done.
-        if !flags.contains(ExpandFlags::FOR_COMPLETIONS) && expand_is_clean(&input) {
+        if !flags.for_completions && expand_is_clean(&input) {
             if !out_completions.add(input) {
                 return append_overflow_error(&mut errors, None);
             }
@@ -1287,7 +1354,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
 
         if total_result == ExpandResultCode::Ok {
             // Unexpand tildes if we want to preserve them (see #647).
-            if flags.contains(ExpandFlags::PRESERVE_HOME_TILDES) {
+            if flags.preserve_home_tildes {
                 expand.unexpand_tildes(&input, &mut completions);
             }
             if !out_completions.extend(completions) {
@@ -1299,40 +1366,43 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
     }
 
     fn stage_cmdsubst(&mut self, input: WString, out: &mut CompletionReceiver) -> ExpandResult {
-        if self.flags.contains(ExpandFlags::SKIP_CMDSUBST) {
-            if !out.add(input) {
-                return append_overflow_error(self.errors, None);
+        match self.flags.cmdsubst {
+            CmdsubstMode::Skip => {
+                if !out.add(input) {
+                    return append_overflow_error(self.errors, None);
+                }
+                ExpandResult::ok()
             }
-            return ExpandResult::ok();
-        }
-        if self.flags.contains(ExpandFlags::FAIL_ON_CMDSUBST) {
-            let mut cursor = 0;
-            match locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
-                Err(()) => ExpandResult::make_error(STATUS_EXPAND_ERROR),
-                Ok(None) => {
-                    if !out.add(input) {
-                        return append_overflow_error(self.errors, None);
+            CmdsubstMode::Fail => {
+                let mut cursor = 0;
+                match locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
+                    Err(()) => ExpandResult::make_error(STATUS_EXPAND_ERROR),
+                    Ok(None) => {
+                        if !out.add(input) {
+                            return append_overflow_error(self.errors, None);
+                        }
+                        ExpandResult::ok()
                     }
-                    ExpandResult::ok()
-                }
-                Ok(Some(cmdsub)) => {
-                    append_cmdsub_error!(
-                        self.errors,
-                        cmdsub.opening_paren_offset(),
-                        cmdsub.end() - 1,
-                        wgettext!(
-                            "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-                        )
-                    );
-                    ExpandResult::make_error(STATUS_EXPAND_ERROR)
+                    Ok(Some(cmdsub)) => {
+                        append_cmdsub_error!(
+                            self.errors,
+                            cmdsub.opening_paren_offset(),
+                            cmdsub.end() - 1,
+                            wgettext!(
+                                "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
+                            )
+                        );
+                        ExpandResult::make_error(STATUS_EXPAND_ERROR)
+                    }
                 }
             }
-        } else {
-            assert!(
-                self.ctx.has_parser(),
-                "Must have a parser to expand command substitutions"
-            );
-            expand_cmdsubst(input, self.ctx, out, self.errors)
+            CmdsubstMode::Expand => {
+                assert!(
+                    self.ctx.has_parser(),
+                    "Must have a parser to expand command substitutions"
+                );
+                expand_cmdsubst(input, self.ctx, out, self.errors)
+            }
         }
     }
 
@@ -1342,11 +1412,15 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         // strings from the commandline.
         let mut next = unescape_string(
             &input,
-            UnescapeStringStyle::Script(UnescapeFlags::SPECIAL | UnescapeFlags::INCOMPLETE),
+            UnescapeStringStyle::Script(UnescapeFlags {
+                special: true,
+                incomplete: true,
+                ..Default::default()
+            }),
         )
         .unwrap_or_default();
 
-        if self.flags.contains(ExpandFlags::SKIP_VARIABLES) {
+        if self.flags.skip_variables {
             for i in next.as_char_slice_mut() {
                 if [VARIABLE_EXPAND, VARIABLE_EXPAND_SINGLE].contains(i) {
                     *i = '$';
@@ -1382,7 +1456,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         mut input: WString,
         out: &mut CompletionReceiver,
     ) -> ExpandResult {
-        remove_internal_separator(&mut input, self.flags.contains(ExpandFlags::SKIP_WILDCARDS));
+        remove_internal_separator(&mut input, self.flags.skip_wildcards);
 
         expand_home_directory(&mut input, self.ctx.vars());
         if !feature_test(FeatureFlag::RemovePercentSelf) {
@@ -1402,10 +1476,10 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         let mut result = ExpandResult::ok();
 
         let has_wildcard = wildcard_has_internal(&path_to_expand); // e.g. ANY_STRING
-        let for_completions = self.flags.contains(ExpandFlags::FOR_COMPLETIONS);
-        let skip_wildcards = self.flags.contains(ExpandFlags::SKIP_WILDCARDS);
+        let for_completions = self.flags.for_completions;
+        let skip_wildcards = self.flags.skip_wildcards;
 
-        if has_wildcard && self.flags.contains(ExpandFlags::EXECUTABLES_ONLY) {
+        if has_wildcard && self.flags.executables_only() {
             // don't do wildcard expansion for executables, see issue #785
         } else if (for_completions && !skip_wildcards) || has_wildcard {
             // We either have a wildcard, or we don't have a wildcard but we're doing completion
@@ -1417,49 +1491,46 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             // which may be CDPATH if the special flag is set.
             let working_dir = self.ctx.vars().get_pwd_slash();
             let mut effective_working_dirs = vec![];
-            let for_cd = self.flags.contains(ExpandFlags::SPECIAL_FOR_CD);
-            let for_command = self.flags.contains(ExpandFlags::SPECIAL_FOR_COMMAND);
-            if !for_cd && !for_command {
-                // Common case.
+
+            // We can handle executables and cd arguments mostly the same way. There's the
+            // following differences:
+            //
+            // 1. An empty CDPATH should be treated as '.', but an empty PATH should be left empty
+            // (no commands can be found). Also, an empty element in either is treated as '.' for
+            // consistency with POSIX shells. Note that we rely on the latter by having called
+            // `munge_colon_delimited_array()` for these special env vars. Thus we do not
+            // special-case them here.
+            //
+            // 2. PATH is only "one level," while CDPATH is multiple levels. That is, input like
+            // 'foo/bar' should resolve against CDPATH, but not PATH.
+            //
+            // In either case, we ignore the path if we start with ./ or /. Also ignore it if we are
+            // doing command completion and we contain a slash, per IEEE 1003.1, chapter 8 under
+            // PATH.
+            let for_cd = self.flags.is_cd_argument();
+            let for_command = self.flags.executables_only();
+            if (!for_cd && !for_command)
+                || path_to_expand.starts_with(L!("/"))
+                || path_to_expand.starts_with(L!("./"))
+                || path_to_expand.starts_with(L!("../"))
+                || (for_command && path_to_expand.contains('/'))
+            {
                 effective_working_dirs.push(working_dir);
             } else {
-                // Either special_for_command or special_for_cd. We can handle these
-                // mostly the same. There's the following differences:
-                //
-                // 1. An empty CDPATH should be treated as '.', but an empty PATH should be left empty
-                // (no commands can be found). Also, an empty element in either is treated as '.' for
-                // consistency with POSIX shells. Note that we rely on the latter by having called
-                // `munge_colon_delimited_array()` for these special env vars. Thus we do not
-                // special-case them here.
-                //
-                // 2. PATH is only "one level," while CDPATH is multiple levels. That is, input like
-                // 'foo/bar' should resolve against CDPATH, but not PATH.
-                //
-                // In either case, we ignore the path if we start with ./ or /. Also ignore it if we are
-                // doing command completion and we contain a slash, per IEEE 1003.1, chapter 8 under
-                // PATH.
-                if path_to_expand.starts_with(L!("/"))
-                    || path_to_expand.starts_with(L!("./"))
-                    || path_to_expand.starts_with(L!("../"))
-                    || (for_command && path_to_expand.contains('/'))
-                {
-                    effective_working_dirs.push(working_dir);
-                } else {
-                    // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
-                    // implies just the current directory, while an empty PATH is left empty.
-                    let mut paths = self
-                        .ctx
-                        .vars()
-                        .get(if for_cd { L!("CDPATH") } else { L!("PATH") })
-                        .map(|var| var.as_list().to_owned())
-                        .unwrap_or_default();
+                // Get the PATH/CDPATH and CWD. Perhaps these should be passed in. An empty CDPATH
+                // implies just the current directory, while an empty PATH is left empty.
+                let mut paths = self
+                    .ctx
+                    .vars()
+                    .get(if for_cd { L!("CDPATH") } else { L!("PATH") })
+                    .map(|var| var.as_list().to_owned())
+                    .unwrap_or_default();
 
-                    // The current directory is always valid.
-                    paths.push(if for_cd { L!(".") } else { L!("") }.to_owned());
-                    for next_path in paths {
-                        effective_working_dirs
-                            .push(path_apply_working_directory(&next_path, &working_dir));
-                    }
+                // The current directory is always valid.
+                paths.push(if for_cd { L!(".") } else { L!("") }.to_owned());
+                for next_path in paths {
+                    effective_working_dirs
+                        .push(path_apply_working_directory(&next_path, &working_dir));
                 }
             }
 
@@ -1521,7 +1592,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         //
         // However if we are not completing, just expanding, then expansion just produces the full paths
         // so we should unconditionally unexpand tildes.
-        let only_replacers = self.flags.contains(ExpandFlags::FOR_COMPLETIONS);
+        let only_replacers = self.flags.for_completions;
 
         // Helper to decide whether to process a completion.
         let should_process = |c: &Completion| !only_replacers || c.replaces_token();
@@ -1545,7 +1616,9 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                     .replace_range(..home.len(), &username_with_tilde);
 
                 // And mark that our tilde is literal, so it doesn't try to escape it.
-                comp.flags |= CompleteFlags::DONT_ESCAPE_TILDES;
+                if comp.flags.wants_escaping() {
+                    comp.flags.dont_escape_tildes();
+                }
             }
         }
     }
@@ -1680,6 +1753,10 @@ mod tests {
 
         // Testing parameter expansion
         let noflags = ExpandFlags::default();
+        let for_completions = ExpandFlags {
+            for_completions: true,
+            ..Default::default()
+        };
 
         expand_test!("foo", noflags, "foo", "Strings do not expand to themselves");
 
@@ -1691,19 +1768,25 @@ mod tests {
         );
         expand_test!(
             "a*",
-            ExpandFlags::SKIP_WILDCARDS,
+            ExpandFlags {
+                skip_wildcards: true,
+                ..noflags
+            },
             "a*",
             "Cannot skip wildcard expansion"
         );
         expand_test!(
             "/bin/l\\0",
-            ExpandFlags::FOR_COMPLETIONS,
+            for_completions,
             (),
             "Failed to handle null escape in expansion"
         );
         expand_test!(
             "foo\\$bar",
-            ExpandFlags::SKIP_VARIABLES,
+            ExpandFlags {
+                skip_variables: true,
+                ..noflags
+            },
             "foo$bar",
             "Failed to handle dollar sign in variable-skipping expansion"
         );
@@ -1837,7 +1920,7 @@ mod tests {
 
         expand_test!(
             "test/fish_expand_test/BA",
-            ExpandFlags::FOR_COMPLETIONS,
+            for_completions,
             (
                 "test/fish_expand_test/bar",
                 "test/fish_expand_test/bax/",
@@ -1848,7 +1931,7 @@ mod tests {
 
         expand_test!(
             "test/fish_expand_test/BA",
-            ExpandFlags::FOR_COMPLETIONS,
+            for_completions,
             (
                 "test/fish_expand_test/bar",
                 "test/fish_expand_test/bax/",
@@ -1859,14 +1942,20 @@ mod tests {
 
         expand_test!(
             "test/fish_expand_test/bb/yyy",
-            ExpandFlags::FOR_COMPLETIONS,
+            for_completions,
             (), /* nothing! */
             "Wrong fuzzy matching 1"
         );
 
+        let fuzzy_comp = ExpandFlags {
+            for_completions: true,
+            fuzzy_match: true,
+            ..noflags
+        };
+
         expand_test!(
             "test/fish_expand_test/bb/x",
-            ExpandFlags::FOR_COMPLETIONS | ExpandFlags::FUZZY_MATCH,
+            fuzzy_comp,
             "",
             // we just expect the empty string since this is an exact match
             "Wrong fuzzy matching 2"
@@ -1874,7 +1963,6 @@ mod tests {
 
         // Some vswprintfs refuse to append ANY_STRING in a format specifiers, so don't use
         // format_string here.
-        let fuzzy_comp = ExpandFlags::FOR_COMPLETIONS | ExpandFlags::FUZZY_MATCH;
         let any_str_str = ANY_STRING.to_string();
         expand_test!(
             "test/fish_expand_test/b/xx*",

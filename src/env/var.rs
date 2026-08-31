@@ -1,6 +1,5 @@
 use crate::env::r#impl::is_read_only;
 use crate::signal::RawSignal;
-use bitflags::bitflags;
 use fish_wcstringutil::join_strings;
 use fish_widestring::{L, WString, wstr};
 use libc::c_int;
@@ -11,41 +10,72 @@ use std::sync::Arc;
 pub const PATH_ARRAY_SEP: char = ':';
 pub const NONPATH_ARRAY_SEP: char = ' ';
 
-bitflags! {
-    /// Flags that may be passed as the 'mode' in env_stack_t::set() / environment_t::get().
-    /// The default is empty.
-    #[repr(C)]
-    #[derive(Copy, Clone, Default, PartialEq, Eq)]
-    pub struct EnvMode: u16 {
-        /// Flag for local (to the current block) variable.
-        const LOCAL = 1 << 0;
-        const FUNCTION = 1 << 1;
-        /// Flag for global variable.
-        const GLOBAL = 1 << 2;
-        /// Flag for universal variable.
-        const UNIVERSAL = 1 << 3;
-        /// Flag for exported (to commands) variable.
-        const EXPORT = 1 << 4;
-        /// Flag for unexported variable.
-        const UNEXPORT = 1 << 5;
-        /// Flag to mark a variable as a path variable.
-        const PATHVAR = 1 << 6;
-        /// Flag to unmark a variable as a path variable.
-        const UNPATHVAR = 1 << 7;
+/// Options passed to environment get and set operations.
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct EnvMode {
+    /// Flag for local (to the current block) variable.
+    pub local: bool,
+    pub function: bool,
+    /// Flag for global variable.
+    pub global: bool,
+    /// Flag for universal variable.
+    pub universal: bool,
+    /// Whether to export or unexport this variable.
+    pub export: Option<bool>,
+    /// Whether to mark/unmark this variable as a path variable.
+    pub pathvar: Option<bool>,
+}
+
+impl Default for EnvMode {
+    fn default() -> Self {
+        Self::DEFAULT
     }
 }
 
 impl EnvMode {
-    pub const ANY_SCOPE: EnvMode = EnvMode::LOCAL
-        .union(EnvMode::FUNCTION)
-        .union(EnvMode::GLOBAL)
-        .union(EnvMode::UNIVERSAL);
-}
+    const DEFAULT: Self = Self {
+        local: false,
+        function: false,
+        global: false,
+        universal: false,
+        export: None,
+        pathvar: None,
+    };
 
-impl From<EnvMode> for u16 {
-    fn from(val: EnvMode) -> Self {
-        val.bits()
-    }
+    pub const EXPORTED: Self = Self {
+        export: Some(true),
+        ..Self::DEFAULT
+    };
+
+    pub const UNEXPORT: Self = Self {
+        export: Some(false),
+        ..Self::DEFAULT
+    };
+
+    pub const LOCAL: Self = Self {
+        local: true,
+        ..Self::DEFAULT
+    };
+
+    pub const LOCAL_EXPORTED: Self = Self {
+        export: Some(true),
+        ..Self::LOCAL
+    };
+
+    pub const GLOBAL: Self = Self {
+        global: true,
+        ..Self::DEFAULT
+    };
+
+    pub const GLOBAL_EXPORTED: Self = Self {
+        export: Some(true),
+        ..Self::GLOBAL
+    };
+
+    pub const UNIVERSAL: Self = Self {
+        universal: true,
+        ..Self::DEFAULT
+    };
 }
 
 #[derive(Copy, Clone, Default)]
@@ -108,13 +138,14 @@ impl Default for Statuses {
     }
 }
 
-bitflags! {
-    #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
-    pub struct EnvVarFlags: u8 {
-        const EXPORT = 1 << 0;    // whether the variable is exported
-        const READ_ONLY = 1 << 1; // whether the variable is read only
-        const PATHVAR = 1 << 2;   // whether the variable is a path variable
-    }
+#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
+pub struct EnvVarFlags {
+    // Whether the variable is exported.
+    pub exported: bool,
+    // Whether the variable is read only.
+    pub read_only: bool,
+    // Whether the variable is a path variable.
+    pub pathvar: bool,
 }
 
 /// EnvVar is an immutable value-type data structure representing the value of an environment
@@ -136,7 +167,7 @@ impl Default for EnvVar {
 
         EnvVar {
             values: Arc::clone(&*EMPTY_LIST),
-            flags: EnvVarFlags::empty(),
+            flags: EnvVarFlags::default(),
         }
     }
 }
@@ -172,17 +203,17 @@ impl EnvVar {
 
     /// Returns whether the variable is exported.
     pub fn exports(&self) -> bool {
-        self.flags.contains(EnvVarFlags::EXPORT)
+        self.flags.exported
     }
 
     /// Returns whether the variable is a path variable.
     pub fn is_pathvar(&self) -> bool {
-        self.flags.contains(EnvVarFlags::PATHVAR)
+        self.flags.pathvar
     }
 
     /// Returns whether the variable is read-only.
     pub fn is_read_only(&self) -> bool {
-        self.flags.contains(EnvVarFlags::READ_ONLY)
+        self.flags.read_only
     }
 
     /// Returns the variable's flags.
@@ -220,7 +251,7 @@ impl EnvVar {
     /// Returns a copy of the variable with the export flag changed.
     pub fn setting_exports(&self, export: bool) -> Self {
         let mut flags = self.flags;
-        flags.set(EnvVarFlags::EXPORT, export);
+        flags.exported = export;
         EnvVar {
             values: self.values.clone(),
             flags,
@@ -230,7 +261,7 @@ impl EnvVar {
     /// Returns a copy of the variable with the path variable flag changed.
     pub fn setting_pathvar(&self, pathvar: bool) -> Self {
         let mut flags = self.flags;
-        flags.set(EnvVarFlags::PATHVAR, pathvar);
+        flags.pathvar = pathvar;
         EnvVar {
             values: self.values.clone(),
             flags,
@@ -239,9 +270,9 @@ impl EnvVar {
 
     /// Returns flags for a variable with the given name.
     pub fn flags_for(name: &wstr) -> EnvVarFlags {
-        let mut result = EnvVarFlags::empty();
+        let mut result = EnvVarFlags::default();
         if is_read_only(name) {
-            result.insert(EnvVarFlags::READ_ONLY);
+            result.read_only = true;
         }
         result
     }
@@ -270,7 +301,7 @@ mod tests {
 
         vars.set_one(
             L!("TZ"),
-            EnvSetMode::new(EnvMode::EXPORT, false),
+            EnvSetMode::new(EnvMode::EXPORTED, false),
             timezone.to_owned(),
         );
 
@@ -308,13 +339,14 @@ mod tests {
         test_timezone_env_vars();
         // TODO: Add tests for the locale vars.
 
-        let v1 = EnvVar::new(L!("abc").to_owned(), EnvVarFlags::EXPORT);
-        let v2 = EnvVar::new_vec(vec![L!("abc").to_owned()], EnvVarFlags::EXPORT);
-        let v3 = EnvVar::new_vec(vec![L!("abc").to_owned()], EnvVarFlags::empty());
-        let v4 = EnvVar::new_vec(
-            vec![L!("abc").to_owned(), L!("def").to_owned()],
-            EnvVarFlags::EXPORT,
-        );
+        let exported = EnvVarFlags {
+            exported: true,
+            ..Default::default()
+        };
+        let v1 = EnvVar::new(L!("abc").to_owned(), exported);
+        let v2 = EnvVar::new_vec(vec![L!("abc").to_owned()], exported);
+        let v3 = EnvVar::new_vec(vec![L!("abc").to_owned()], EnvVarFlags::default());
+        let v4 = EnvVar::new_vec(vec![L!("abc").to_owned(), L!("def").to_owned()], exported);
         assert_eq!(v1, v2);
         assert_ne!(v1, v3);
         assert_ne!(v1, v4);

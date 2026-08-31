@@ -1376,7 +1376,10 @@ fn append_block_description_to_stack_trace(
                 if !arg.is_empty() {
                     args_str.push_utfstr(&escape_string(
                         arg,
-                        EscapeStringStyle::Script(EscapeFlags::NO_QUOTED),
+                        EscapeStringStyle::Script(EscapeFlags {
+                            no_quoted: true,
+                            ..Default::default()
+                        }),
                     ));
                 } else {
                     args_str.push_str("\"\"");

@@ -521,7 +521,11 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
 
         let mut tokenizer = Tokenizer::new(
             gap_text,
-            TokFlags::SHOW_COMMENTS | TokFlags::SHOW_BLANK_LINES,
+            TokFlags {
+                show_comments: true,
+                show_blank_lines: true,
+                ..Default::default()
+            },
         );
         while let Some(tok) = tokenizer.next() {
             let tok_text = tokenizer.text_of(&tok);
@@ -632,7 +636,11 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         // like \U or \x, because we want to leave them intact.
         let Some(mut unescaped) = unescape_string(
             input,
-            UnescapeStringStyle::Script(UnescapeFlags::SPECIAL | UnescapeFlags::NO_BACKSLASHES),
+            UnescapeStringStyle::Script(UnescapeFlags {
+                special: true,
+                no_backslashes: true,
+                ..Default::default()
+            }),
             // TODO: If we cannot unescape that means there's something fishy,
             // like a NUL in the source.
         ) else {

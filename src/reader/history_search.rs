@@ -1,6 +1,6 @@
 //! Encapsulation of the reader's history search functionality.
 
-use crate::history::{self, History, HistorySearch, SearchDirection, SearchFlags, SearchType};
+use crate::history::{self, History, HistorySearch, SearchDirection, SearchType};
 use crate::parse_constants::SourceRange;
 use crate::prelude::*;
 use crate::tokenizer::{TokFlags, TokenType, Tokenizer};
@@ -12,7 +12,10 @@ use std::sync::Arc;
 // Make the search case-insensitive unless we have an uppercase character.
 pub fn smartcase_flags(query: &wstr) -> history::SearchFlags {
     if query == query.to_lowercase() {
-        history::SearchFlags::IGNORE_CASE
+        history::SearchFlags {
+            ignore_case: true,
+            ..Default::default()
+        }
     } else {
         history::SearchFlags::default()
     }
@@ -172,7 +175,10 @@ impl ReaderHistorySearch {
         self.match_index = 0;
         self.mode = mode;
         self.token_offset = token_offset;
-        let flags = SearchFlags::NO_DEDUP | smartcase_flags(&text);
+        let flags = history::SearchFlags {
+            no_dedup: true,
+            ..smartcase_flags(&text)
+        };
         // We can skip dedup in history_search_t because we do it ourselves in skips_.
         self.search = Some(HistorySearch::new_with(
             hist,
@@ -222,7 +228,13 @@ impl ReaderHistorySearch {
             let offset = find(text, needle).unwrap();
             self.add_if_new(SearchMatch::new(text.to_owned(), offset));
         } else if matches!(self.mode, SearchMode::Token | SearchMode::LastToken) {
-            let mut tok = Tokenizer::new(text, TokFlags::ACCEPT_UNFINISHED);
+            let mut tok = Tokenizer::new(
+                text,
+                TokFlags {
+                    accept_unfinished: true,
+                    ..Default::default()
+                },
+            );
 
             let mut local_tokens = vec![];
             while let Some(token) = tok.next() {

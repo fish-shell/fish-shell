@@ -28,8 +28,8 @@ use crate::{
     builtins::{ErrorCode, STATUS_CMD_ERROR, STATUS_CMD_OK},
     common::{get_program_name, shell_modes},
     complete::{
-        CompleteFlags, Completion, CompletionList, CompletionRequestOptions, complete,
-        complete_load, sort_and_prioritize,
+        CompleteFlags, Completion, CompletionList, CompletionRequestOptions, ReplacementScope,
+        WantsEscaping, WantsSuffix, WillReplaceToken, complete, complete_load, sort_and_prioritize,
     },
     editable_line::{Edit, EditableLine, line_at_cursor, range_of_line_at_cursor},
     env::{EnvMode, EnvStack, Environment, Statuses},
@@ -39,7 +39,7 @@ use crate::{
     },
     event,
     exec::exec_subshell,
-    expand::{ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_tilde},
+    expand::{self, ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_tilde},
     fd_readable_set::poll_fd_readable,
     fds::{make_fd_blocking, wopen_cloexec},
     flog::{flog, flogf},
@@ -4445,7 +4445,13 @@ impl<'a> Reader<'a> {
         }
 
         let cmdsubst_range = get_cmdsubst_extent(&buffer, pos);
-        for token in Tokenizer::new(&buffer[cmdsubst_range.clone()], TokFlags::ACCEPT_UNFINISHED) {
+        for token in Tokenizer::new(
+            &buffer[cmdsubst_range.clone()],
+            TokFlags {
+                accept_unfinished: true,
+                ..Default::default()
+            },
+        ) {
             if token.type_ != TokenType::String {
                 continue;
             }
@@ -4460,9 +4466,16 @@ impl<'a> Reader<'a> {
 
 /// Returns true if the last token is a comment.
 fn text_ends_in_comment(text: &wstr) -> bool {
-    Tokenizer::new(text, TokFlags::ACCEPT_UNFINISHED | TokFlags::SHOW_COMMENTS)
-        .last()
-        .is_some_and(|token| token.type_ == TokenType::Comment)
+    Tokenizer::new(
+        text,
+        TokFlags {
+            accept_unfinished: true,
+            show_comments: true,
+            ..Default::default()
+        },
+    )
+    .last()
+    .is_some_and(|token| token.type_ == TokenType::Comment)
 }
 
 impl<'a> Reader<'a> {
@@ -5065,7 +5078,11 @@ pub fn reader_write_title(
                 title_function_call.push(' ');
                 title_function_call.push_utfstr(&escape_string(
                     cmd,
-                    EscapeStringStyle::Script(EscapeFlags::NO_QUOTED | EscapeFlags::NO_TILDE),
+                    EscapeStringStyle::Script(EscapeFlags {
+                        no_quoted: true,
+                        no_tilde: true,
+                        ..Default::default()
+                    }),
                 ));
             }
             title_command = Some(&title_function_call);
@@ -5347,7 +5364,10 @@ fn get_autosuggestion_performer(
                 history.clone(),
                 search_string.to_owned(),
                 search_type,
-                SearchFlags::IGNORE_CASE,
+                SearchFlags {
+                    ignore_case: true,
+                    ..Default::default()
+                },
                 0,
             );
 
@@ -5455,7 +5475,7 @@ fn get_autosuggestion_performer(
         }
 
         // Try normal completions.
-        let complete_flags = CompletionRequestOptions::autosuggest();
+        let complete_flags = CompletionRequestOptions::Autosuggestion;
         let mut would_be_cursor = line_range.end;
         let (mut completions, needs_load) =
             complete(&command_line[..would_be_cursor], complete_flags, ctx);
@@ -5883,7 +5903,12 @@ fn history_pager_search(
             item.str().to_owned(),
             L!("").to_owned(),
             StringFuzzyMatch::exact_match(),
-            CompleteFlags::REPLACES_LINE | CompleteFlags::DONT_ESCAPE | CompleteFlags::DONT_SORT,
+            CompleteFlags {
+                replaces: Some(ReplacementScope::Line),
+                wants_escaping: WantsEscaping::No,
+                dont_sort: true,
+                ..Default::default()
+            },
         ));
         next_match_found = search.go_to_next_match(SearchDirection::Backward);
     }
@@ -6597,9 +6622,12 @@ fn try_expand_wildcard(
 
     // We do wildcards only.
 
-    let flags = ExpandFlags::FAIL_ON_CMDSUBST
-        | ExpandFlags::SKIP_VARIABLES
-        | ExpandFlags::PRESERVE_HOME_TILDES;
+    let flags = ExpandFlags {
+        cmdsubst: expand::CmdsubstMode::Fail,
+        skip_variables: true,
+        preserve_home_tildes: true,
+        ..Default::default()
+    };
     let mut expanded = CompletionList::new();
     let ret = expand_string(wc, &mut expanded, flags, ctx, None);
     if ret.result != ExpandResultCode::Ok {
@@ -6609,19 +6637,20 @@ fn try_expand_wildcard(
     // Insert all matches (escaped) and a trailing space.
     let mut joined = WString::new();
     for r#match in expanded {
-        if r#match.flags.contains(CompleteFlags::DONT_ESCAPE) {
-            joined.push_utfstr(&r#match.completion);
-        } else {
-            let tildeflag = if r#match.flags.contains(CompleteFlags::DONT_ESCAPE_TILDES) {
-                EscapeFlags::NO_TILDE
-            } else {
-                EscapeFlags::default()
-            };
-            joined.push_utfstr(&escape_string(
+        joined.push_utfstr(&if let WantsEscaping::Yes { escape_tildes } =
+            r#match.flags.wants_escaping
+        {
+            escape_string(
                 &r#match.completion,
-                EscapeStringStyle::Script(EscapeFlags::NO_QUOTED | tildeflag),
-            ));
-        }
+                EscapeStringStyle::Script(EscapeFlags {
+                    no_quoted: true,
+                    no_tilde: !escape_tildes,
+                    ..Default::default()
+                }),
+            )
+        } else {
+            r#match.completion
+        });
         joined.push(' ');
     }
 
@@ -6730,21 +6759,31 @@ pub fn completion_apply_to_command_line(
     append_only: bool,
     is_unique: bool,
 ) -> WString {
-    let mut trailer = (!flags.contains(CompleteFlags::NO_SPACE)).then_some(' ');
-    let do_replace_token = flags.contains(CompleteFlags::REPLACES_TOKEN);
-    let do_replace_line = flags.contains(CompleteFlags::REPLACES_LINE);
-    let do_escape = !flags.contains(CompleteFlags::DONT_ESCAPE);
-    let no_tilde = flags.contains(CompleteFlags::DONT_ESCAPE_TILDES);
-    let keep_variable_override = flags.contains(CompleteFlags::KEEP_VARIABLE_OVERRIDE_PREFIX);
-    let is_variable_name = flags.contains(CompleteFlags::VARIABLE_NAME);
-
     let cursor_pos = *inout_cursor_pos;
     let mut back_into_trailing_quote = false;
-    assert!(!is_variable_name || command_line.char_at(cursor_pos) != '/');
-    let have_trailer = command_line.char_at(cursor_pos) == ' ';
 
-    if do_replace_line {
-        assert!(!do_escape, "unsupported completion flag");
+    let mut suffix_builder = flags.suffix_type().map(|suffix_type| {
+        assert!(!suffix_type.for_variable_name || command_line.char_at(cursor_pos) != '/');
+        (suffix_type, ' ')
+    });
+    let have_suffix = command_line.char_at(cursor_pos) == ' ';
+    let escape_flags = match flags.wants_escaping {
+        WantsEscaping::Yes { escape_tildes } => {
+            let mut escape_flags = EscapeFlags::default();
+            if append_only || !is_unique || suffix_builder.is_none() {
+                escape_flags.no_quoted = true;
+            }
+            if !escape_tildes {
+                escape_flags.no_tilde = true;
+            }
+            Some(escape_flags)
+        }
+        WantsEscaping::No => None,
+    };
+    let keep_variable_override = flags.keep_variable_override_prefix;
+
+    if flags.replaces_line() {
+        assert!(escape_flags.is_none(), "unsupported completion flag");
         let cmdsub = get_cmdsubst_extent(command_line, cursor_pos);
         return if !command_line[cmdsub.clone()].contains('\n') {
             *inout_cursor_pos = cmdsub.start + val_str.len();
@@ -6754,28 +6793,20 @@ pub fn completion_apply_to_command_line(
         };
     }
 
-    let mut escape_flags = EscapeFlags::empty();
-    if append_only || !is_unique || trailer.is_none() {
-        escape_flags.insert(EscapeFlags::NO_QUOTED);
-    }
-    if no_tilde {
-        escape_flags.insert(EscapeFlags::NO_TILDE);
-    }
-
-    let mut maybe_add_slash = |trailer: &mut char, token: &wstr| {
+    let mut maybe_add_slash = |suffix: &mut char, token: &wstr| {
         let mut expanded = token.to_owned();
         if expand_one(&mut expanded, ExpandFlags::FAIL_ON_CMDSUBST, ctx, None)
             && wstat(&expanded).is_ok_and(|md| md.is_dir())
         {
-            *trailer = '/';
+            *suffix = '/';
         }
     };
 
-    if do_replace_token {
-        if is_variable_name {
-            assert!(!do_escape);
-            if let Some(trailer) = trailer.as_mut() {
-                maybe_add_slash(trailer, val_str);
+    if flags.replaces_token() {
+        if let Some((suffix_type, suffix)) = suffix_builder.as_mut() {
+            if suffix_type.for_variable_name {
+                assert!(escape_flags.is_none());
+                maybe_add_slash(suffix, val_str);
             }
         }
         let mut move_cursor = 0;
@@ -6791,7 +6822,7 @@ pub fn completion_apply_to_command_line(
             move_cursor += key.len();
         }
 
-        if do_escape {
+        if let Some(escape_flags) = escape_flags {
             let escaped = escape_string(val_str, EscapeStringStyle::Script(escape_flags));
             sb.push_utfstr(&escaped);
             move_cursor += escaped.len();
@@ -6800,9 +6831,9 @@ pub fn completion_apply_to_command_line(
             move_cursor += val_str.len();
         }
 
-        if let Some(trailer) = trailer {
-            if !have_trailer {
-                sb.push(trailer);
+        if let Some((_st, suffix)) = suffix_builder {
+            if !have_suffix {
+                sb.push(suffix);
             }
             move_cursor += 1;
         }
@@ -6814,7 +6845,7 @@ pub fn completion_apply_to_command_line(
     }
 
     let mut quote = None;
-    let replaced = if do_escape {
+    let replaced = if let Some(mut escape_flags) = escape_flags {
         let (tok, _) = get_token_extent(command_line, cursor_pos);
         // Find the last quote in the token to complete.
         let mut have_token = false;
@@ -6837,7 +6868,7 @@ pub fn completion_apply_to_command_line(
         }
 
         if have_token {
-            escape_flags.insert(EscapeFlags::NO_QUOTED);
+            escape_flags.no_quoted = true;
         }
 
         escape_string_with_quote(val_str, quote, escape_flags)
@@ -6856,12 +6887,12 @@ pub fn completion_apply_to_command_line(
     result.insert_utfstr(insertion_point, &replaced);
     let mut new_cursor_pos =
         insertion_point + replaced.len() + if back_into_trailing_quote { 1 } else { 0 };
-    if let Some(mut trailer) = trailer {
-        if is_variable_name {
+    if let Some((suffix_type, mut suffix)) = suffix_builder {
+        if suffix_type.for_variable_name {
             let (tok, _) = get_token_extent(command_line, cursor_pos);
-            maybe_add_slash(&mut trailer, &result[tok.start..new_cursor_pos]);
+            maybe_add_slash(&mut suffix, &result[tok.start..new_cursor_pos]);
         }
-        if trailer != '/' {
+        if suffix != '/' {
             if let Some(quote) = quote {
                 if unescaped_quote(command_line, insertion_point) != Some(quote) {
                     // This is a quoted parameter, first print a quote.
@@ -6871,8 +6902,8 @@ pub fn completion_apply_to_command_line(
             }
         }
 
-        if !have_trailer {
-            result.insert(new_cursor_pos, trailer);
+        if !have_suffix {
+            result.insert(new_cursor_pos, suffix);
         }
         new_cursor_pos += 1;
     }
@@ -6887,7 +6918,7 @@ pub fn completion_apply_to_command_line(
 /// other than if the new token is already an exact replacement, e.g. if the COMPLETE_DONT_ESCAPE
 /// flag is set.
 fn reader_can_replace(s: &wstr, flags: CompleteFlags) -> bool {
-    if flags.contains(CompleteFlags::DONT_ESCAPE) {
+    if !flags.wants_escaping() {
         return true;
     }
 
@@ -6967,13 +6998,10 @@ impl<'a> Reader<'a> {
         // Construct a copy of the string from the beginning of the command substitution
         // up to the end of the token we're completing.
 
+        let complete_options = CompletionRequestOptions::default();
         let (mut comp, _needs_load) = {
             let cmdsub = &self.data.command_line.text()[cmdsub_range.start..token_range.end];
-            complete(
-                cmdsub,
-                CompletionRequestOptions::normal(),
-                &mut self.parser.context(),
-            )
+            complete(cmdsub, complete_options, &mut self.parser.context())
         };
 
         let el = &self.command_line;
@@ -6983,7 +7011,7 @@ impl<'a> Reader<'a> {
         token_range.end = std::cmp::min(token_range.end, el.text().len());
 
         // Munge our completions.
-        sort_and_prioritize(&mut comp, CompletionRequestOptions::default());
+        sort_and_prioritize(&mut comp, complete_options);
 
         let el = &self.command_line;
         // Record our cycle_command_line.
@@ -7053,7 +7081,9 @@ impl<'a> Reader<'a> {
         if !will_replace_token {
             for c in &mut comp {
                 if c.replaces_token() {
-                    c.flags |= CompleteFlags::SUPPRESS_PAGER_PREFIX;
+                    c.flags.replaces = Some(ReplacementScope::Token(WillReplaceToken {
+                        show_pager_prefix: false,
+                    }));
                 }
             }
         }
@@ -7080,10 +7110,10 @@ impl<'a> Reader<'a> {
         assert!(will_replace_token || all_matches_exact_or_prefix);
         if all_matches_exact_or_prefix {
             // Try to find a common prefix to insert among the surviving completions.
-            let mut flags = CompleteFlags::empty();
+            let mut flags = CompleteFlags::default();
             let mut first = true;
             for c in &comp {
-                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                if !c.wants_pager_prefix() {
                     continue;
                 }
                 if first {
@@ -7121,7 +7151,7 @@ impl<'a> Reader<'a> {
 
             if use_prefix {
                 // More than one completion contributed, so don't insert a space after it.
-                flags |= CompleteFlags::NO_SPACE;
+                flags.wants_suffix = WantsSuffix::No;
                 self.completion_insert(
                     common_prefix,
                     token_range.end,
@@ -7167,12 +7197,12 @@ impl<'a> Reader<'a> {
         if use_prefix {
             let common_prefix_len = common_prefix.len();
             for c in &mut comp {
-                if c.flags.contains(CompleteFlags::SUPPRESS_PAGER_PREFIX) {
+                if !c.wants_pager_prefix() {
                     // Keep replacement semantics and the original prefix so these completions can
                     // fix casing when selected.
                     continue;
                 }
-                c.flags &= !CompleteFlags::REPLACES_TOKEN;
+                c.flags.replaces = None;
                 c.completion.replace_range(0..common_prefix_len, L!(""));
             }
         }
@@ -7224,7 +7254,7 @@ impl<'a> Reader<'a> {
 #[cfg(test)]
 mod tests {
     use super::{combine_command_and_autosuggestion, completion_apply_to_command_line};
-    use crate::complete::CompleteFlags;
+    use crate::complete::{CompleteFlags, ReplacementScope};
     use crate::operation_context::{OperationContext, no_cancel};
     use crate::prelude::*;
     use crate::tests::prelude::*;
@@ -7402,11 +7432,23 @@ mod tests {
             "foo\\'bar^"
         );
 
-        validate!("foo^", "bar", CompleteFlags::REPLACES_TOKEN, false, "bar ^");
+        validate!(
+            "foo^",
+            "bar",
+            CompleteFlags {
+                replaces: Some(ReplacementScope::Token(Default::default())),
+                ..Default::default()
+            },
+            false,
+            "bar ^"
+        );
         validate!(
             "'foo^",
             "bar",
-            CompleteFlags::REPLACES_TOKEN,
+            CompleteFlags {
+                replaces: Some(ReplacementScope::Token(Default::default())),
+                ..Default::default()
+            },
             false,
             "bar ^"
         );

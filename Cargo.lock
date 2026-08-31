@@ -327,7 +327,6 @@ name = "fish"
 version = "4.8.1"
 dependencies = [
  "assert_matches",
- "bitflags",
  "cc",
  "cfg-if",
  "fish-build-helper",
@@ -397,7 +396,6 @@ dependencies = [
 name = "fish-common"
 version = "0.0.0"
 dependencies = [
- "bitflags",
  "fish-build-helper",
  "fish-feature-flags",
  "fish-widestring",

@@ -691,29 +691,28 @@ fn validate_arg<'opts>(
 
     parser.vars().push(true /* new_scope */);
 
-    let local_exported_mode = ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT);
     parser.set_one(
         L!("_argparse_cmd"),
-        local_exported_mode,
+        ParserEnvSetMode::new(EnvMode::LOCAL_EXPORTED),
         opts_name.to_owned(),
     );
     let flag_name = WString::from(VAR_NAME_PREFIX) + "name";
     if is_long_flag {
         parser.set_one(
             &flag_name,
-            local_exported_mode,
+            ParserEnvSetMode::new(EnvMode::LOCAL_EXPORTED),
             opt_spec.long_flag.to_owned(),
         );
     } else {
         parser.set_one(
             &flag_name,
-            local_exported_mode,
+            ParserEnvSetMode::new(EnvMode::LOCAL_EXPORTED),
             WString::from_chars(vec![opt_spec.short_flag]),
         );
     }
     parser.set_one(
         &(WString::from(VAR_NAME_PREFIX) + "value"),
-        local_exported_mode,
+        ParserEnvSetMode::new(EnvMode::LOCAL_EXPORTED),
         woptarg.to_owned(),
     );
 

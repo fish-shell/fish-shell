@@ -265,9 +265,11 @@ pub fn functions(
                     } else {
                         escape_string(
                             localized_description,
-                            EscapeStringStyle::Script(
-                                EscapeFlags::NO_PRINTABLES | EscapeFlags::NO_QUOTED,
-                            ),
+                            EscapeStringStyle::Script(EscapeFlags {
+                                no_printables: true,
+                                no_quoted: true,
+                                ..Default::default()
+                            }),
                         )
                     }
                 }

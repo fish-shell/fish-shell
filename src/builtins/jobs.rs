@@ -84,7 +84,10 @@ fn builtin_jobs_print(j: &Job, mode: JobsPrintMode, header: bool, streams: &mut 
 
             let cmd = escape_string(
                 j.command(),
-                EscapeStringStyle::Script(EscapeFlags::NO_PRINTABLES),
+                EscapeStringStyle::Script(EscapeFlags {
+                    no_printables: true,
+                    ..Default::default()
+                }),
             );
             out += &cmd[..];
 

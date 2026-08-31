@@ -1,4 +1,3 @@
-use bitflags::bitflags;
 use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_widestring::{
     ANY_CHAR, ANY_STRING, ANY_STRING_RECURSIVE, ASCII_MAX, BRACE_BEGIN, BRACE_END, BRACE_SEP,
@@ -61,24 +60,22 @@ impl TryFrom<&wstr> for EscapeStringStyle {
     }
 }
 
-bitflags! {
-    /// Flags for the [`escape_string()`] function. These are only applicable when the escape style is
-    /// [`EscapeStringStyle::Script`].
-    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-    pub struct EscapeFlags: u32 {
-        /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
-        /// characters and backslashes.
-        const NO_PRINTABLES = 1 << 0;
-        /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
-        /// string.
-        const NO_QUOTED = 1 << 1;
-        /// Do not escape tildes.
-        const NO_TILDE = 1 << 2;
-        /// Replace non-printable control characters with Unicode symbols.
-        const SYMBOLIC = 1 << 3;
-        /// Escape ,
-        const COMMA = 1 << 4;
-    }
+/// Options for the [`escape_string()`] function. These are only applicable when the escape style is
+/// [`EscapeStringStyle::Script`].
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+pub struct EscapeFlags {
+    /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
+    /// characters and backslashes.
+    pub no_printables: bool,
+    /// Do not try to use 'simplified' quoted escapes, and do not use empty quotes as the empty
+    /// string.
+    pub no_quoted: bool,
+    /// Do not escape tildes.
+    pub no_tilde: bool,
+    /// Replace non-printable control characters with Unicode symbols.
+    pub symbolic: bool,
+    /// Escape commas.
+    pub comma: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -107,17 +104,15 @@ impl TryFrom<&wstr> for UnescapeStringStyle {
     }
 }
 
-bitflags! {
-    /// Flags for unescape_string functions.
-    #[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
-    pub struct UnescapeFlags: u32 {
-        /// escape special fish syntax characters like the semicolon
-        const SPECIAL = 1 << 0;
-        /// allow incomplete escape sequences
-        const INCOMPLETE = 1 << 1;
-        /// don't handle backslash escapes
-        const NO_BACKSLASHES = 1 << 2;
-    }
+/// Options for unescape_string functions.
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+pub struct UnescapeFlags {
+    /// Escape special fish syntax characters like the semicolon.
+    pub special: bool,
+    /// Allow incomplete escape sequences.
+    pub incomplete: bool,
+    /// Don't handle backslash escapes.
+    pub no_backslashes: bool,
 }
 /// Replace special characters with backslash escape sequences. Newline is replaced with `\n`, etc.
 pub fn escape(s: &wstr) -> WString {
@@ -136,12 +131,12 @@ pub fn escape_string(s: &wstr, style: EscapeStringStyle) -> WString {
 
 /// Escape a string in a fashion suitable for using in fish script.
 fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
-    let escape_printables = !flags.contains(EscapeFlags::NO_PRINTABLES);
-    let escape_comma = flags.contains(EscapeFlags::COMMA);
-    let no_quoted = flags.contains(EscapeFlags::NO_QUOTED);
-    let no_tilde = flags.contains(EscapeFlags::NO_TILDE);
+    let escape_printables = !flags.no_printables;
+    let escape_comma = flags.comma;
+    let no_quoted = flags.no_quoted;
+    let no_tilde = flags.no_tilde;
     let no_qmark = feature_test(FeatureFlag::QuestionMarkNoGlob);
-    let symbolic = flags.contains(EscapeFlags::SYMBOLIC);
+    let symbolic = flags.symbolic;
 
     assert!(
         !symbolic || !escape_printables,
@@ -318,7 +313,7 @@ fn escape_string_script(input: &wstr, flags: EscapeFlags) -> WString {
         out.push_utfstr(&escape_string_with_quote(
             input,
             Some(quote),
-            EscapeFlags::empty(),
+            EscapeFlags::default(),
         ));
         out.push(quote);
     }
@@ -512,9 +507,9 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
     let mut result = WString::new();
     result.reserve(input.len());
 
-    let unescape_special = flags.contains(UnescapeFlags::SPECIAL);
-    let allow_incomplete = flags.contains(UnescapeFlags::INCOMPLETE);
-    let ignore_backslashes = flags.contains(UnescapeFlags::NO_BACKSLASHES);
+    let unescape_special = flags.special;
+    let allow_incomplete = flags.incomplete;
+    let ignore_backslashes = flags.no_backslashes;
     let allow_percent_self = !feature_test(FeatureFlag::RemovePercentSelf);
 
     // The positions of open braces.

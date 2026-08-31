@@ -11,7 +11,6 @@ use crate::wutil::{
     INVALID_FILE_ID, file_id_for_path, lwstat, normalize_path, waccess, wbasename, wdirname,
     wrealpath, wstat,
 };
-use bitflags::bitflags;
 use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::split_string_tok;
 use libc::{PATH_MAX, S_ISGID, S_ISUID, mode_t};
@@ -30,80 +29,68 @@ fn arguments<'iter, 'args>(
     Arguments::new(args, optind, streams, PATH_CHUNK_SIZE)
 }
 
-bitflags! {
-    #[derive(Copy, Clone, Default)]
-    pub struct TypeFlags: u32 {
-        /// A block device
-        const BLOCK = 1 << 0;
-        /// A directory
-        const DIR = 1 << 1;
-        /// A regular file
-        const FILE = 1 << 2;
-        /// A link
-        const LINK = 1 << 3;
-        /// A character device
-        const CHAR = 1 << 4;
-        /// A fifo
-        const FIFO = 1 << 5;
-        /// A socket
-        const SOCK = 1 << 6;
+#[derive(Copy, Clone, Default)]
+pub struct TypeFlags {
+    /// A block device.
+    block: bool,
+    /// A directory.
+    dir: bool,
+    /// A regular file.
+    file: bool,
+    /// A link.
+    link: bool,
+    /// A character device.
+    char: bool,
+    /// A fifo.
+    fifo: bool,
+    /// A socket.
+    sock: bool,
+}
+
+impl TypeFlags {
+    fn add_from_string(&mut self, value: &wstr) -> bool {
+        *match value {
+            t if t == "file" => &mut self.file,
+            t if t == "dir" => &mut self.dir,
+            t if t == "block" => &mut self.block,
+            t if t == "char" => &mut self.char,
+            t if t == "fifo" => &mut self.fifo,
+            t if t == "socket" => &mut self.sock,
+            t if t == "link" => &mut self.link,
+            _ => return false,
+        } = true;
+        true
     }
 }
 
-impl TryFrom<&wstr> for TypeFlags {
-    type Error = ();
-
-    fn try_from(value: &wstr) -> Result<Self, Self::Error> {
-        let flag = match value {
-            t if t == "file" => Self::FILE,
-            t if t == "dir" => Self::DIR,
-            t if t == "block" => Self::BLOCK,
-            t if t == "char" => Self::CHAR,
-            t if t == "fifo" => Self::FIFO,
-            t if t == "socket" => Self::SOCK,
-            t if t == "link" => Self::LINK,
-            _ => return Err(()),
-        };
-
-        Ok(flag)
-    }
-}
-
-bitflags! {
-    #[derive(Copy, Clone, Default)]
-    pub struct PermFlags: u32 {
-        const READ = 1 << 0;
-        const WRITE = 1 << 1;
-        const EXEC = 1 << 2;
-        const SUID = 1 << 3;
-        const SGID = 1 << 4;
-        const USER = 1 << 5;
-        const GROUP = 1 << 6;
-    }
+#[derive(Copy, Clone, Default)]
+pub struct PermFlags {
+    read: bool,
+    write: bool,
+    exec: bool,
+    suid: bool,
+    sgid: bool,
+    user: bool,
+    group: bool,
 }
 
 impl PermFlags {
-    fn is_special(self) -> bool {
-        self.intersects(Self::SUID | Self::SGID | Self::USER | Self::GROUP)
+    fn add_from_string(&mut self, value: &wstr) -> bool {
+        *match value {
+            t if t == "read" => &mut self.read,
+            t if t == "write" => &mut self.write,
+            t if t == "exec" => &mut self.exec,
+            t if t == "suid" => &mut self.suid,
+            t if t == "sgid" => &mut self.sgid,
+            t if t == "user" => &mut self.user,
+            t if t == "group" => &mut self.group,
+            _ => return false,
+        } = true;
+        true
     }
-}
 
-impl TryFrom<&wstr> for PermFlags {
-    type Error = ();
-
-    fn try_from(value: &wstr) -> Result<Self, Self::Error> {
-        let flag = match value {
-            t if t == "read" => Self::READ,
-            t if t == "write" => Self::WRITE,
-            t if t == "exec" => Self::EXEC,
-            t if t == "suid" => Self::SUID,
-            t if t == "sgid" => Self::SGID,
-            t if t == "user" => Self::USER,
-            t if t == "group" => Self::GROUP,
-            _ => return Err(()),
-        };
-
-        Ok(flag)
+    fn is_special(self) -> bool {
+        self.suid || self.sgid || self.user || self.group
     }
 }
 
@@ -272,13 +259,12 @@ fn parse_opts<'args>(
                 let types = opts.types.get_or_insert_default();
                 let types_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for t in types_args {
-                    let Ok(r#type) = t.try_into() else {
+                    if !types.add_from_string(t) {
                         err_fmt!("Invalid type '%s'", t)
                             .subcmd(cmd, subcmd)
                             .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
-                    };
-                    *types |= r#type;
+                    }
                 }
                 continue;
             }
@@ -286,13 +272,12 @@ fn parse_opts<'args>(
                 let perms = opts.perms.get_or_insert_default();
                 let perms_args = split_string_tok(w.woptarg.unwrap(), L!(","), None);
                 for p in perms_args {
-                    let Ok(perm) = p.try_into() else {
+                    if !perms.add_from_string(p) {
                         err_fmt!("Invalid permission '%s'", p)
                             .subcmd(cmd, subcmd)
                             .finish(streams);
                         return Err(STATUS_INVALID_ARGS);
-                    };
-                    *perms |= perm;
+                    }
                 }
                 continue;
             }
@@ -302,32 +287,32 @@ fn parse_opts<'args>(
             }
             'r' if opts.perms_valid => {
                 let perms = opts.perms.get_or_insert_default();
-                *perms |= PermFlags::READ;
+                perms.read = true;
                 continue;
             }
             'w' if opts.perms_valid => {
                 let perms = opts.perms.get_or_insert_default();
-                *perms |= PermFlags::WRITE;
+                perms.write = true;
                 continue;
             }
             'x' if opts.perms_valid => {
                 let perms = opts.perms.get_or_insert_default();
-                *perms |= PermFlags::EXEC;
+                perms.exec = true;
                 continue;
             }
             'f' if opts.types_valid => {
                 let types = opts.types.get_or_insert_default();
-                *types |= TypeFlags::FILE;
+                types.file = true;
                 continue;
             }
             'l' if opts.types_valid => {
                 let types = opts.types.get_or_insert_default();
-                *types |= TypeFlags::LINK;
+                types.link = true;
                 continue;
             }
             'd' if opts.types_valid => {
                 let types = opts.types.get_or_insert_default();
-                *types |= TypeFlags::DIR;
+                types.dir = true;
                 continue;
             }
             'u' if opts.unique_valid => {
@@ -775,7 +760,7 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<Uid>, gid: Option<Gid>) 
 
     if let Some(t) = opts.types {
         let mut type_ok = false;
-        if t.contains(TypeFlags::LINK) {
+        if t.link {
             let md = lwstat(path);
             type_ok = md.as_ref().is_ok_and(Metadata::is_symlink);
         }
@@ -787,12 +772,12 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<Uid>, gid: Option<Gid>) 
         let ft = md.file_type();
         type_ok = match type_ok {
             true => true,
-            _ if t.contains(TypeFlags::FILE) && ft.is_file() => true,
-            _ if t.contains(TypeFlags::DIR) && ft.is_dir() => true,
-            _ if t.contains(TypeFlags::BLOCK) && ft.is_block_device() => true,
-            _ if t.contains(TypeFlags::CHAR) && ft.is_char_device() => true,
-            _ if t.contains(TypeFlags::FIFO) && ft.is_fifo() => true,
-            _ if t.contains(TypeFlags::SOCK) && ft.is_socket() => true,
+            _ if t.file && ft.is_file() => true,
+            _ if t.dir && ft.is_dir() => true,
+            _ if t.block && ft.is_block_device() => true,
+            _ if t.char && ft.is_char_device() => true,
+            _ if t.fifo && ft.is_fifo() => true,
+            _ if t.sock && ft.is_socket() => true,
             _ => false,
         };
 
@@ -804,24 +789,13 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<Uid>, gid: Option<Gid>) 
 
     if let Some(perm) = opts.perms {
         let mut amode = AccessFlags::empty();
-        // TODO: Update bitflags so this works
-        /*
-        for f in perm {
-            amode |= match f {
-                PermFlags::READ => R_OK,
-                PermFlags::WRITE => W_OK,
-                PermFlags::EXEC => X_OK,
-                _ => PermFlags::empty(),
-            }
-        }
-        */
-        if perm.contains(PermFlags::READ) {
+        if perm.read {
             amode.insert(AccessFlags::R_OK);
         }
-        if perm.contains(PermFlags::WRITE) {
+        if perm.write {
             amode.insert(AccessFlags::W_OK);
         }
-        if perm.contains(PermFlags::EXEC) {
+        if perm.exec {
             amode.insert(AccessFlags::X_OK);
         }
         // Skip this if we don't have a mode to check - the stat can do existence too.
@@ -845,13 +819,13 @@ fn filter_path(opts: &Options, path: &wstr, uid: Option<Uid>, gid: Option<Gid>) 
             };
 
             #[allow(clippy::if_same_then_else)]
-            if perm.contains(PermFlags::SUID) && (md.mode() as mode_t & S_ISUID) == 0 {
+            if perm.suid && (md.mode() as mode_t & S_ISUID) == 0 {
                 return false;
-            } else if perm.contains(PermFlags::SGID) && (md.mode() as mode_t & S_ISGID) == 0 {
+            } else if perm.sgid && (md.mode() as mode_t & S_ISGID) == 0 {
                 return false;
-            } else if perm.contains(PermFlags::USER) && uid.map(|u| u.as_raw()) != Some(md.uid()) {
+            } else if perm.user && uid.map(|u| u.as_raw()) != Some(md.uid()) {
                 return false;
-            } else if perm.contains(PermFlags::GROUP) && gid.map(|g| g.as_raw()) != Some(md.gid()) {
+            } else if perm.group && gid.map(|g| g.as_raw()) != Some(md.gid()) {
                 return false;
             }
         }
@@ -890,12 +864,12 @@ fn path_filter_maybe_is(
     });
 
     // If we're looking for the owner/group, get our euid/egid here once.
-    let uid = if opts.perms.unwrap_or_default().contains(PermFlags::USER) {
+    let uid = if opts.perms.unwrap_or_default().user {
         Some(Uid::effective())
     } else {
         None
     };
-    let gid = if opts.perms.unwrap_or_default().contains(PermFlags::GROUP) {
+    let gid = if opts.perms.unwrap_or_default().group {
         Some(Gid::effective())
     } else {
         None

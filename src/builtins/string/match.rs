@@ -4,10 +4,7 @@ use std::num::NonZeroUsize;
 
 use super::*;
 use crate::{
-    env::{EnvVar, EnvVarFlags},
-    flog::flog,
-    parse_util::unescape_wildcards,
-    parser::ParserEnvSetMode,
+    env::EnvVar, flog::flog, parse_util::unescape_wildcards, parser::ParserEnvSetMode,
     wildcard::wildcard_match,
 };
 use fish_widestring::{ANY_STRING, str2wcstring};
@@ -317,7 +314,7 @@ impl<'opts, 'args> RegexMatcher<'opts, 'args> {
     ) -> Result<(), RegexError> {
         for name in capture_group_names.iter().filter_map(|n| n.as_ref()) {
             let wname = str2wcstring(name);
-            if EnvVar::flags_for(&wname).contains(EnvVarFlags::READ_ONLY) {
+            if EnvVar::flags_for(&wname).read_only {
                 return Err(RegexError::InvalidCaptureGroupName { name: wname });
             }
         }

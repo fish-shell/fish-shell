@@ -75,9 +75,13 @@ impl<'src, 'wd, 'opctx> FileTester<'src, 'wd, 'opctx> {
         }
 
         // Unescape the token.
-        let Some(mut token) =
-            unescape_string(token, UnescapeStringStyle::Script(UnescapeFlags::SPECIAL))
-        else {
+        let Some(mut token) = unescape_string(
+            token,
+            UnescapeStringStyle::Script(UnescapeFlags {
+                special: true,
+                ..Default::default()
+            }),
+        ) else {
             return false;
         };
 

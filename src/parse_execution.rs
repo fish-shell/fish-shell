@@ -12,15 +12,12 @@ use crate::{
     },
     common::{get_program_name, valid_var_name},
     complete::CompletionList,
-    env::{
-        EnvMode, EnvStackSetResult, EnvVar, EnvVarFlags, Environment as _, Statuses,
-        handle_env_return,
-    },
+    env::{EnvMode, EnvStackSetResult, EnvVar, Environment as _, Statuses, handle_env_return},
     err_fmt,
     event::{self, Event},
     exec::exec_job,
     expand::{
-        ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_to_command_and_args,
+        self, ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_to_command_and_args,
     },
     flog::flog,
     function,
@@ -425,7 +422,11 @@ impl ExecutionContext {
             let forbidden = !cmd.is_empty()
                 && expand_one(
                     &mut cmd,
-                    ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_VARIABLES,
+                    ExpandFlags {
+                        cmdsubst: expand::CmdsubstMode::Fail,
+                        skip_variables: true,
+                        ..Default::default()
+                    },
                     ctx,
                     None,
                 )
@@ -650,7 +651,7 @@ impl ExecutionContext {
             }
             let set_result = ctx.parser().set_var_and_fire(
                 variable_name,
-                ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
+                ParserEnvSetMode::new(EnvMode::LOCAL_EXPORTED),
                 vals,
             );
             // TODO Do we really want to create `IoStreams` here?
@@ -929,7 +930,7 @@ impl ExecutionContext {
             return ret;
         }
         let var = ctx.parser().vars().get(&for_var_name);
-        if EnvVar::flags_for(&for_var_name).contains(EnvVarFlags::READ_ONLY) {
+        if EnvVar::flags_for(&for_var_name).read_only {
             return report_error!(
                 self,
                 ctx,
@@ -963,7 +964,7 @@ impl ExecutionContext {
 
             let retval = ctx.parser().set_var(
                 &for_var_name,
-                ParserEnvSetMode::user(EnvMode::empty()),
+                ParserEnvSetMode::user(EnvMode::default()),
                 vec![val],
             );
             assert_eq!(
@@ -1460,7 +1461,10 @@ impl ExecutionContext {
             let target_expanded = expand_one(
                 &mut target,
                 if no_exec() {
-                    ExpandFlags::SKIP_VARIABLES
+                    ExpandFlags {
+                        skip_variables: true,
+                        ..Default::default()
+                    }
                 } else {
                     ExpandFlags::default()
                 },

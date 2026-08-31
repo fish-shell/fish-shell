@@ -1546,7 +1546,7 @@ impl<'a> TokenStream<'a> {
     fn new(src: &'a wstr, flags: ParseTreeFlags, freestanding_arguments: bool) -> Self {
         let mut flags = TokFlags::from(flags);
         if freestanding_arguments {
-            flags |= TokFlags::ARGUMENT_LIST;
+            flags.argument_list = true;
         }
         Self {
             lookahead: [ParseToken::new(ParseTokenType::Invalid); Self::MAX_LOOKAHEAD],
@@ -2745,17 +2745,17 @@ enum ParserStatus {
 /// Return tokenizer flags corresponding to parse tree flags.
 impl From<ParseTreeFlags> for TokFlags {
     fn from(flags: ParseTreeFlags) -> Self {
-        let mut tok_flags = TokFlags::empty();
+        let mut tok_flags = TokFlags::default();
         // Note we do not need to respect parse_flag_show_blank_lines, no clients are interested
         // in them.
         if flags.include_comments {
-            tok_flags |= TokFlags::SHOW_COMMENTS;
+            tok_flags.show_comments = true;
         }
         if flags.accept_incomplete_tokens {
-            tok_flags |= TokFlags::ACCEPT_UNFINISHED;
+            tok_flags.accept_unfinished = true;
         }
         if flags.continue_after_error {
-            tok_flags |= TokFlags::CONTINUE_AFTER_ERROR;
+            tok_flags.continue_after_error = true;
         }
         tok_flags
     }

@@ -122,7 +122,7 @@ pub fn fg(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         // Provide value for `status current-command`
         parser.libdata_mut().status_vars.command = ft.clone();
         // Also provide a value for the deprecated fish 2.0 $_ variable
-        parser.set_var_and_fire(L!("_"), ParserEnvSetMode::new(EnvMode::EXPORT), vec![ft]);
+        parser.set_var_and_fire(L!("_"), ParserEnvSetMode::new(EnvMode::EXPORTED), vec![ft]);
         // Provide value for `status current-commandline`
         parser.libdata_mut().status_vars.commandline = job.command().to_owned();
     }

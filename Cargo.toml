@@ -14,7 +14,6 @@ license = "GPL-2.0-only AND LGPL-2.0-or-later AND MIT AND PSF-2.0"
 anstyle = "1.0.13"
 anyhow = "1.0.102"
 assert_matches = "1.5.0"
-bitflags = "2.5.0"
 cc = "1.0.94"
 cfg-if = "1.0.3"
 clap = { version = "4.5.54", features = ["derive"] }
@@ -116,7 +115,6 @@ readme = "README.rst"
 
 [dependencies]
 assert_matches.workspace = true
-bitflags.workspace = true
 cfg-if.workspace = true
 fish-build-helper.workspace = true
 fish-build-man-pages = { workspace = true, optional = true }

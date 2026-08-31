@@ -554,9 +554,9 @@ impl EnvUniversal {
                 break;
             }
             if r#match(&mut cursor, f3::EXPORT) {
-                flags |= EnvVarFlags::EXPORT;
+                flags.exported = true;
             } else if r#match(&mut cursor, f3::PATH) {
-                flags |= EnvVarFlags::PATHVAR;
+                flags.pathvar = true;
             } else {
                 // Skip this unknown flag, for future proofing.
                 while !cursor.is_empty() && !matches!(cursor.char_at(0), ' ' | '\t') {
@@ -581,7 +581,7 @@ impl EnvUniversal {
         }
         let mut flags = EnvVarFlags::default();
         if r#match(&mut cursor, f2x::SET_EXPORT) {
-            flags |= EnvVarFlags::EXPORT;
+            flags.exported = true;
         } else if r#match(&mut cursor, f2x::SET) {
         } else {
             flogf!(warning, PARSE_ERR, msg);
@@ -726,11 +726,11 @@ fn append_file_entry(
     result.push(b' ');
 
     // Append flags.
-    if flags.contains(EnvVarFlags::EXPORT) {
+    if flags.exported {
         result.extend_from_slice(f3::EXPORT);
         result.push(b' ');
     }
-    if flags.contains(EnvVarFlags::PATHVAR) {
+    if flags.pathvar {
         result.extend_from_slice(f3::PATH);
         result.push(b' ');
     }
@@ -830,7 +830,7 @@ mod tests {
         for j in 0..UVARS_PER_THREAD {
             let key = sprintf!("key_%d_%d", x, j);
             let val = sprintf!("val_%d_%d", x, j);
-            uvars.set(&key, EnvVar::new(val, EnvVarFlags::empty()));
+            uvars.set(&key, EnvVar::new(val, EnvVarFlags::default()));
             let (synced, _) = uvars.sync();
             assert!(
                 synced,
@@ -874,7 +874,7 @@ mod tests {
                 } else {
                     Some(EnvVar::new(
                         sprintf!("val_%d_%d", i, j),
-                        EnvVarFlags::empty(),
+                        EnvVarFlags::default(),
                     ))
                 };
                 let var = uvars.get(&key);
@@ -887,15 +887,26 @@ mod tests {
     #[serial]
     fn test_universal_output() {
         test_init();
-        let flag_export = EnvVarFlags::EXPORT;
-        let flag_pathvar = EnvVarFlags::PATHVAR;
+        let flag_export = EnvVarFlags {
+            exported: true,
+            ..Default::default()
+        };
+        let flag_pathvar = EnvVarFlags {
+            pathvar: true,
+            ..Default::default()
+        };
+        let flag_export_pathvar = EnvVarFlags {
+            exported: true,
+            pathvar: true,
+            ..Default::default()
+        };
 
         let mut vars = VarTable::new();
         vars.insert(
             L!("varA").to_owned(),
             EnvVar::new_vec(
                 vec![L!("ValA1").to_owned(), L!("ValA2").to_owned()],
-                EnvVarFlags::empty(),
+                EnvVarFlags::default(),
             ),
         );
         vars.insert(
@@ -904,11 +915,11 @@ mod tests {
         );
         vars.insert(
             L!("varC").to_owned(),
-            EnvVar::new_vec(vec![L!("ValC1").to_owned()], EnvVarFlags::empty()),
+            EnvVar::new_vec(vec![L!("ValC1").to_owned()], EnvVarFlags::default()),
         );
         vars.insert(
             L!("varD").to_owned(),
-            EnvVar::new_vec(vec![L!("ValD1").to_owned()], flag_export | flag_pathvar),
+            EnvVar::new_vec(vec![L!("ValD1").to_owned()], flag_export_pathvar),
         );
         vars.insert(
             L!("varE").to_owned(),
@@ -921,7 +932,7 @@ mod tests {
             L!("varF").to_owned(),
             EnvVar::new_vec(
                 vec![WString::from_chars([char_offset(ENCODE_DIRECT_BASE, 0xfc)])],
-                EnvVarFlags::empty(),
+                EnvVarFlags::default(),
             ),
         );
 
@@ -955,8 +966,19 @@ mod tests {
         )
         .as_bytes();
 
-        let flag_export = EnvVarFlags::EXPORT;
-        let flag_pathvar = EnvVarFlags::PATHVAR;
+        let flag_export = EnvVarFlags {
+            exported: true,
+            ..Default::default()
+        };
+        let flag_pathvar = EnvVarFlags {
+            pathvar: true,
+            ..Default::default()
+        };
+        let flag_export_pathvar = EnvVarFlags {
+            exported: true,
+            pathvar: true,
+            ..Default::default()
+        };
 
         let mut vars = VarTable::new();
 
@@ -964,7 +986,7 @@ mod tests {
             L!("varA").to_owned(),
             EnvVar::new_vec(
                 vec![L!("ValA1").to_owned(), L!("ValA2").to_owned()],
-                EnvVarFlags::empty(),
+                EnvVarFlags::default(),
             ),
         );
         vars.insert(
@@ -973,11 +995,11 @@ mod tests {
         );
         vars.insert(
             L!("varC").to_owned(),
-            EnvVar::new_vec(vec![L!("ValC1").to_owned()], EnvVarFlags::empty()),
+            EnvVar::new_vec(vec![L!("ValC1").to_owned()], EnvVarFlags::default()),
         );
         vars.insert(
             L!("varD").to_owned(),
-            EnvVar::new_vec(vec![L!("ValD1").to_owned()], flag_export | flag_pathvar),
+            EnvVar::new_vec(vec![L!("ValD1").to_owned()], flag_export_pathvar),
         );
         vars.insert(
             L!("varE").to_owned(),
@@ -1008,12 +1030,18 @@ mod tests {
             L!("varA").to_owned(),
             EnvVar::new_vec(
                 vec![L!("ValA1").to_owned(), L!("ValA2").to_owned()],
-                EnvVarFlags::empty(),
+                EnvVarFlags::default(),
             ),
         );
         vars.insert(
             L!("varB").to_owned(),
-            EnvVar::new(L!("ValB1").to_owned(), EnvVarFlags::EXPORT),
+            EnvVar::new(
+                L!("ValB1").to_owned(),
+                EnvVarFlags {
+                    exported: true,
+                    ..Default::default()
+                },
+            ),
         );
 
         let mut parsed_vars = VarTable::new();
@@ -1041,7 +1069,7 @@ mod tests {
             };
         }
 
-        let noflags = EnvVarFlags::empty();
+        let noflags = EnvVarFlags::default();
 
         // Put some variables into both.
         uvars1.set(L!("alpha"), EnvVar::new(L!("1").to_owned(), noflags)); //
@@ -1059,7 +1087,13 @@ mod tests {
         uvars1.set(L!("alpha"), EnvVar::new(L!("2").to_owned(), noflags)); // changes value
         uvars1.set(
             L!("beta"),
-            EnvVar::new(L!("1").to_owned(), EnvVarFlags::EXPORT),
+            EnvVar::new(
+                L!("1").to_owned(),
+                EnvVarFlags {
+                    exported: true,
+                    ..Default::default()
+                },
+            ),
         ); // changes export
         uvars1.remove(L!("delta")); // erases value
         uvars1.set(L!("epsilon"), EnvVar::new(L!("1").to_owned(), noflags)); // changes nothing
@@ -1128,7 +1162,7 @@ mod tests {
         assert!(!uvars.is_ok_to_save(), "Should still not be OK to save");
         uvars.set(
             L!("SOMEVAR"),
-            EnvVar::new(L!("SOMEVALUE").to_owned(), EnvVarFlags::empty()),
+            EnvVar::new(L!("SOMEVALUE").to_owned(), EnvVarFlags::default()),
         );
 
         // Ensure file is same.

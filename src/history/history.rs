@@ -38,7 +38,6 @@ use crate::{
     wildcard::wildcard_match,
     wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
 };
-use bitflags::bitflags;
 use fish_common::{UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{subsequence_in_string, trim_in_place};
 use fish_widestring::{ANY_STRING, bytes2wcstring, cstr2wcstring, subslice_position};
@@ -1080,9 +1079,12 @@ fn do_1_history_search(
         search_string,
         search_type,
         if case_sensitive {
-            SearchFlags::empty()
+            SearchFlags::default()
         } else {
-            SearchFlags::IGNORE_CASE
+            SearchFlags {
+                ignore_case: true,
+                ..Default::default()
+            }
         },
         0,
     );
@@ -1492,15 +1494,13 @@ impl History {
     }
 }
 
-bitflags! {
-    /// Flags for history searching.
-    #[derive(Clone, Copy, Default)]
-    pub struct SearchFlags: u32 {
-        /// If set, ignore case.
-        const IGNORE_CASE = 1 << 0;
-        /// If set, do not deduplicate, which can help performance.
-        const NO_DEDUP = 1 << 1;
-    }
+/// Options for history searching.
+#[derive(Clone, Copy, Default)]
+pub struct SearchFlags {
+    /// Ignore case.
+    pub ignore_case: bool,
+    /// Do not deduplicate, which can help performance.
+    pub no_dedup: bool,
 }
 
 /// Support for searching a history backwards.
@@ -1659,12 +1659,12 @@ impl HistorySearch {
 
     /// Returns whether we are case insensitive.
     pub fn ignores_case(&self) -> bool {
-        self.flags.contains(SearchFlags::IGNORE_CASE)
+        self.flags.ignore_case
     }
 
     /// Returns whether we deduplicate items.
     fn dedup(&self) -> bool {
-        !self.flags.contains(SearchFlags::NO_DEDUP)
+        !self.flags.no_dedup
     }
 }
 
@@ -1728,12 +1728,8 @@ pub fn expand_and_detect_paths<P: IntoIterator<Item = WString>>(
         // is empty (and so rm will fail); this is nevertheless a useful command because it
         // confirms the directory is empty.
         let mut expanded_path = path.clone();
-        if expand_one(
-            &mut expanded_path,
-            ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
-            ctx,
-            None,
-        ) && path_is_valid(&expanded_path, &working_directory)
+        if expand_one(&mut expanded_path, ExpandFlags::NO_IO, ctx, None)
+            && path_is_valid(&expanded_path, &working_directory)
         {
             // Note we return the original (unexpanded) path.
             result.push(path);
@@ -1755,12 +1751,7 @@ pub fn all_paths_are_valid(paths: &[WString], ctx: &mut OperationContext<'_>) ->
         if ctx.check_cancel() {
             return false;
         }
-        if !expand_one(
-            &mut path,
-            ExpandFlags::FAIL_ON_CMDSUBST | ExpandFlags::SKIP_WILDCARDS,
-            ctx,
-            None,
-        ) {
+        if !expand_one(&mut path, ExpandFlags::NO_IO, ctx, None) {
             return false;
         }
         if !path_is_valid(&path, &working_directory) {
@@ -1873,7 +1864,10 @@ mod tests {
             L!("ALPH"),
             L!("ZZZ"),
         ];
-        let nocase = SearchFlags::IGNORE_CASE;
+        let nocase = SearchFlags {
+            ignore_case: true,
+            ..Default::default()
+        };
 
         // Populate a history.
         let history = create_test_history(L!("test_history"), &hist_dir);

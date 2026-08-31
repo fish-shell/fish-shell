@@ -103,7 +103,7 @@ pub fn exec_job(parser: &mut Parser, job: &Job, block_io: IoChain) -> bool {
         for assignment in &job.processes()[0].variable_assignments {
             parser.set_var(
                 &assignment.variable_name,
-                ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
+                ParserEnvSetMode::new(EnvMode::LOCAL_EXPORTED),
                 assignment.values.clone(),
             );
         }
@@ -508,8 +508,7 @@ fn internal_exec(vars: &EnvStack, is_repainting: bool, j: &Job, block_io: IoChai
     {
         // Decrement SHLVL as we're removing ourselves from the shell "stack".
         if is_interactive_session() {
-            let global_exported_mode = EnvMode::GLOBAL | EnvMode::EXPORT;
-            let shlvl_var = vars.getf(L!("SHLVL"), global_exported_mode);
+            let shlvl_var = vars.getf(L!("SHLVL"), EnvMode::GLOBAL_EXPORTED);
             let mut shlvl_str = L!("0").to_owned();
             if let Some(shlvl_var) = shlvl_var {
                 if let Ok(shlvl) = fish_wcstol(&shlvl_var.as_string()) {
@@ -520,7 +519,7 @@ fn internal_exec(vars: &EnvStack, is_repainting: bool, j: &Job, block_io: IoChai
             }
             vars.set_one(
                 L!("SHLVL"),
-                EnvSetMode::new(global_exported_mode, is_repainting),
+                EnvSetMode::new(EnvMode::GLOBAL_EXPORTED, is_repainting),
                 shlvl_str,
             );
         }
@@ -1327,7 +1326,7 @@ fn exec_process_in_job(
     for assignment in &p.variable_assignments {
         parser.set_var(
             &assignment.variable_name,
-            ParserEnvSetMode::new(EnvMode::LOCAL | EnvMode::EXPORT),
+            ParserEnvSetMode::new(EnvMode::LOCAL_EXPORTED),
             assignment.values.clone(),
         );
     }

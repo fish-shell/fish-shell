@@ -11,7 +11,7 @@ pub const PATH_ARRAY_SEP: char = ':';
 pub const NONPATH_ARRAY_SEP: char = ' ';
 
 /// Options passed to environment get and set operations.
-#[derive(Copy, Clone, Default, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub struct EnvMode {
     /// Flag for local (to the current block) variable.
     pub local: bool,
@@ -20,14 +20,16 @@ pub struct EnvMode {
     pub global: bool,
     /// Flag for universal variable.
     pub universal: bool,
-    /// Flag for exported (to commands) variable.
-    pub export: bool,
-    /// Flag for unexported variable.
-    pub unexport: bool,
-    /// Flag to mark a variable as a path variable.
-    pub pathvar: bool,
-    /// Flag to unmark a variable as a path variable.
-    pub unpathvar: bool,
+    /// Whether to export or unexport this variable.
+    pub export: Option<bool>,
+    /// Whether to mark/unmark this variable as a path variable.
+    pub pathvar: Option<bool>,
+}
+
+impl Default for EnvMode {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
 }
 
 impl EnvMode {
@@ -36,19 +38,17 @@ impl EnvMode {
         function: false,
         global: false,
         universal: false,
-        export: false,
-        unexport: false,
-        pathvar: false,
-        unpathvar: false,
+        export: None,
+        pathvar: None,
     };
 
     pub const EXPORTED: Self = Self {
-        export: true,
+        export: Some(true),
         ..Self::DEFAULT
     };
 
     pub const UNEXPORT: Self = Self {
-        unexport: true,
+        export: Some(false),
         ..Self::DEFAULT
     };
 
@@ -58,7 +58,7 @@ impl EnvMode {
     };
 
     pub const LOCAL_EXPORTED: Self = Self {
-        export: true,
+        export: Some(true),
         ..Self::LOCAL
     };
 
@@ -68,7 +68,7 @@ impl EnvMode {
     };
 
     pub const GLOBAL_EXPORTED: Self = Self {
-        export: true,
+        export: Some(true),
         ..Self::GLOBAL
     };
 

@@ -90,17 +90,11 @@ struct Query {
     pub global: bool,
     pub universal: bool,
 
-    /// Whether export or unexport was specified.
-    pub has_export_unexport: bool,
-
-    /// Whether to search exported and unexported variables.
-    pub exports: bool,
-    pub unexports: bool,
+    /// Whether to restrict the search to exported or unexported variables.
+    pub export: Option<bool>,
 
     /// Whether pathvar or unpathvar was set.
-    pub has_pathvar_unpathvar: bool,
-    pub pathvar: bool,
-    pub unpathvar: bool,
+    pub pathvar: Option<bool>,
 
     /// Whether this is a "user" set.
     pub user: bool,
@@ -120,7 +114,6 @@ impl Query {
     /// Creates a `Query` from env mode flags.
     fn new(mode: EnvMode, user: bool) -> Self {
         let has_scope = mode.local || mode.function || mode.global || mode.universal;
-        let has_export_unexport = mode.export || mode.unexport;
         Query {
             has_scope,
             local: !has_scope || mode.local,
@@ -128,14 +121,8 @@ impl Query {
             global: !has_scope || mode.global,
             universal: !has_scope || mode.universal,
 
-            has_export_unexport,
-            exports: !has_export_unexport || mode.export,
-            unexports: !has_export_unexport || mode.unexport,
-
-            // note we don't use pathvar for searches, so these don't default to true if unspecified.
-            has_pathvar_unpathvar: mode.pathvar || mode.unpathvar,
+            export: mode.export,
             pathvar: mode.pathvar,
-            unpathvar: mode.unpathvar,
 
             user,
         }
@@ -143,28 +130,13 @@ impl Query {
 
     /// Returns whether an environment variable matches the query's export criteria.
     fn export_matches(&self, var: &EnvVar) -> bool {
-        if self.has_export_unexport {
-            if var.exports() {
-                self.exports
-            } else {
-                self.unexports
-            }
-        } else {
-            true
-        }
+        self.export.is_none_or(|export| var.exports() == export)
     }
 
     /// Returns whether an environment variable matches the query's path variable criteria.
     fn pathvar_matches(&self, var: &EnvVar) -> bool {
-        if self.has_pathvar_unpathvar {
-            if var.is_pathvar() {
-                self.pathvar
-            } else {
-                self.unpathvar
-            }
-        } else {
-            true
-        }
+        self.pathvar
+            .is_none_or(|pathvar| pathvar == var.is_pathvar())
     }
 }
 
@@ -445,19 +417,16 @@ impl EnvScopedImpl {
             add_keys(&self.globals.borrow().env, &mut names);
             // Add electrics.
             for ev in ELECTRIC_VARIABLES {
-                let matches = if ev.exports() {
-                    query.exports
-                } else {
-                    query.unexports
-                };
-                if matches {
+                if ev.exports() == query.export.unwrap_or_default() {
                     names.insert(WString::from(ev.name));
                 }
             }
         }
 
         if query.universal {
-            let uni_list = uvars().get_names(query.exports, query.unexports);
+            let show_exported = matches!(query.export, None | Some(true));
+            let show_unexported = matches!(query.export, None | Some(false));
+            let uni_list = uvars().get_names(show_exported, show_unexported);
             names.extend(uni_list);
         }
         names.into_iter().collect()
@@ -671,11 +640,11 @@ impl EnvStackImpl {
             flags.pathvar = Some(existing.is_pathvar());
             flags.parent_exports = existing.exports();
         }
-        if query.has_export_unexport {
-            flags.exports = Some(query.exports);
+        if let Some(export) = query.export {
+            flags.exports = Some(export);
         }
-        if query.has_pathvar_unpathvar {
-            flags.pathvar = Some(query.pathvar);
+        if let Some(pathvar) = query.pathvar {
+            flags.pathvar = Some(pathvar);
         }
 
         let mut result = ModResult::new(EnvStackSetResult::Ok);
@@ -887,15 +856,8 @@ impl EnvStackImpl {
         }
 
         // Be picky about exporting.
-        if query.has_export_unexport {
-            let matches = if ev.exports() {
-                query.exports
-            } else {
-                query.unexports
-            };
-            if !matches {
-                return Some(EnvStackSetResult::Scope);
-            }
+        if query.export.is_some_and(|export| export != ev.exports()) {
+            return Some(EnvStackSetResult::Scope);
         }
 
         // Handle computed mutable electric variables.
@@ -930,23 +892,17 @@ impl EnvStackImpl {
         let oldvar = oldvar.as_ref();
 
         // Resolve whether or not to export.
-        let mut exports = false;
-        if query.has_export_unexport {
-            exports = query.exports;
-        } else if let Some(v) = oldvar {
-            exports = v.exports();
-        }
+        let exports = query
+            .export
+            .or_else(|| oldvar.map(|v| v.exports()))
+            .unwrap_or_default();
 
         // Resolve whether to be a path variable.
         // Here we fall back to the auto-pathvar behavior.
-        let pathvar;
-        if query.has_pathvar_unpathvar {
-            pathvar = query.pathvar;
-        } else if let Some(v) = oldvar {
-            pathvar = v.is_pathvar();
-        } else {
-            pathvar = variable_should_auto_pathvar(key);
-        }
+        let pathvar = query
+            .pathvar
+            .or_else(|| oldvar.map(|v| v.is_pathvar()))
+            .unwrap_or_else(|| variable_should_auto_pathvar(key));
 
         // Split about ':' if it's a path variable.
         if pathvar {

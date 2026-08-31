@@ -47,6 +47,44 @@ impl Default for Options {
     }
 }
 
+pub(crate) fn set_export_mode(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    export: &mut Option<bool>,
+    value: bool,
+) -> Result<(), ErrorCode> {
+    // Variables can only have one export status.
+    if *export == Some(!value) {
+        err_str!(Error::EXPORT_UNEXPORT)
+            .cmd(cmd)
+            .full_trailer(parser)
+            .finish(streams);
+        return Err(STATUS_INVALID_ARGS);
+    }
+    *export = Some(value);
+    Ok(())
+}
+
+pub(crate) fn set_pathvar_mode(
+    parser: &Parser,
+    streams: &mut IoStreams,
+    cmd: &wstr,
+    pathvar: &mut Option<bool>,
+    value: bool,
+) -> Result<(), ErrorCode> {
+    // Variables can only have one path status.
+    if *pathvar == Some(!value) {
+        err_str!(Error::PATH_UNPATH)
+            .cmd(cmd)
+            .full_trailer(parser)
+            .finish(streams);
+        return Err(STATUS_INVALID_ARGS);
+    }
+    *pathvar = Some(value);
+    Ok(())
+}
+
 impl Options {
     fn parse(
         cmd: &wstr,
@@ -105,10 +143,19 @@ impl Options {
                     opts.query = true;
                     opts.preserve_failure_exit_status = false;
                 }
-                'x' => opts.set_mode.mode.export = true,
-                'u' => opts.set_mode.mode.unexport = true,
-                PATH_ARG => opts.set_mode.mode.pathvar = true,
-                UNPATH_ARG => opts.set_mode.mode.unpathvar = true,
+                'x' => {
+                    set_export_mode(parser, streams, cmd, &mut opts.set_mode.mode.export, true)?;
+                }
+                'u' => {
+                    set_export_mode(parser, streams, cmd, &mut opts.set_mode.mode.export, false)?;
+                }
+                PATH_ARG => {
+                    set_pathvar_mode(parser, streams, cmd, &mut opts.set_mode.mode.pathvar, true)?;
+                }
+                UNPATH_ARG => {
+                    set_pathvar_mode(parser, streams, cmd, &mut opts.set_mode.mode.pathvar, false)?;
+                }
+
                 NO_EVENT_ARG => opts.no_event = true,
                 'U' => opts.set_mode.mode.universal = true,
                 'L' => opts.shorten_ok = false,
@@ -230,26 +277,8 @@ impl Options {
             return Err(STATUS_INVALID_ARGS);
         }
 
-        // Variables can only have one export status.
-        if opts.set_mode.mode.export && opts.set_mode.mode.unexport {
-            err_str!(Error::EXPORT_UNEXPORT)
-                .cmd(cmd)
-                .full_trailer(parser)
-                .finish(streams);
-            return Err(STATUS_INVALID_ARGS);
-        }
-
-        // Variables can only have one path status.
-        if opts.set_mode.mode.pathvar && opts.set_mode.mode.unpathvar {
-            err_str!(Error::PATH_UNPATH)
-                .cmd(cmd)
-                .full_trailer(parser)
-                .finish(streams);
-            return Err(STATUS_INVALID_ARGS);
-        }
-
         // Trying to erase and (un)export at the same time doesn't make sense.
-        if opts.erase && (opts.set_mode.mode.export || opts.set_mode.mode.unexport) {
+        if opts.erase && opts.set_mode.mode.export.is_some() {
             err_str!(Error::INVALID_OPT_COMBO)
                 .cmd(cmd)
                 .full_trailer(parser)
@@ -264,7 +293,7 @@ impl Options {
                 || opts.set_mode.mode.global
                 || opts.erase
                 || opts.list
-                || opts.set_mode.mode.export
+                || opts.set_mode.mode.export.is_some()
                 || opts.set_mode.mode.universal)
         {
             err_str!(Error::INVALID_OPT_COMBO)

@@ -2,7 +2,7 @@
 
 use super::prelude::*;
 use crate::{
-    builtins::Error,
+    builtins::{Error, set::set_export_mode},
     common::valid_var_name,
     env::{EnvMode, EnvVar, Environment as _, READ_BYTE_LIMIT},
     err_fmt, err_str,
@@ -193,10 +193,10 @@ fn parse_cmd_opts(
                 opts.set_mode.mode.universal = true;
             }
             'u' => {
-                opts.set_mode.mode.unexport = true;
+                set_export_mode(parser, streams, cmd, &mut opts.set_mode.mode.export, false)?;
             }
             'x' => {
-                opts.set_mode.mode.export = true;
+                set_export_mode(parser, streams, cmd, &mut opts.set_mode.mode.export, true)?;
             }
             'z' => {
                 opts.split_null = true;
@@ -465,14 +465,6 @@ fn validate_read_args(
         opts.prompt = Some(L!("echo ").to_owned() + &escape(prompt_str)[..]);
     } else if opts.prompt.is_none() {
         opts.prompt = Some(DEFAULT_READ_PROMPT.to_owned());
-    }
-
-    if opts.set_mode.mode.unexport && opts.set_mode.mode.export {
-        err_str!(Error::EXPORT_UNEXPORT)
-            .cmd(cmd)
-            .full_trailer(parser)
-            .finish(streams);
-        return Err(STATUS_INVALID_ARGS);
     }
 
     let mode = opts.set_mode.mode;

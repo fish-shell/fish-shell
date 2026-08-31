@@ -229,6 +229,16 @@ impl Completion {
     }
 }
 
+#[derive(Clone, Copy, Default)]
+pub struct CompletionRequestOptions {
+    /// Requesting autosuggestion
+    pub autosuggestion: bool,
+    /// Make descriptions
+    pub descriptions: bool,
+    /// If set, we do not require a prefix match
+    pub fuzzy_match: bool,
+}
+
 impl CompletionRequestOptions {
     /// Options for an autosuggestion.
     pub fn autosuggest() -> Self {
@@ -2645,16 +2655,6 @@ pub fn complete_get_wrap_targets(command: &wstr) -> Vec<WString> {
 
     let wrappers = WRAPPER_MAP.lock().expect("poisoned mutex");
     wrappers.get(command).cloned().unwrap_or_default()
-}
-
-#[derive(Clone, Copy, Default)]
-pub struct CompletionRequestOptions {
-    /// Requesting autosuggestion
-    pub autosuggestion: bool,
-    /// Make descriptions
-    pub descriptions: bool,
-    /// If set, we do not require a prefix match
-    pub fuzzy_match: bool,
 }
 
 #[cfg(test)]

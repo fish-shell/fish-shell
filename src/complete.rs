@@ -7,8 +7,8 @@ use crate::{
     env::{EnvMode, EnvStack, EnvStackSetResult, Environment},
     exec::exec_subshell,
     expand::{
-        ExpandFlags, ExpandResultCode, expand_escape_string, expand_escape_variable, expand_one,
-        expand_string, expand_to_receiver,
+        self, ExpandFlags, ExpandResultCode, expand_escape_string, expand_escape_variable,
+        expand_one, expand_string, expand_to_receiver,
     },
     flog::{flog, flogf},
     function,
@@ -1002,7 +1002,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
     fn expand_flags(&self) -> ExpandFlags {
         ExpandFlags {
-            fail_on_cmdsubst: true,
+            cmdsubst: expand::CmdsubstMode::Fail,
             fuzzy_match: self.flags.fuzzy_match,
             gen_descriptions: self.flags.descriptions,
             ..Default::default()

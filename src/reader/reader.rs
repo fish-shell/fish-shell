@@ -39,7 +39,7 @@ use crate::{
     },
     event,
     exec::exec_subshell,
-    expand::{ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_tilde},
+    expand::{self, ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_tilde},
     fd_readable_set::poll_fd_readable,
     fds::{make_fd_blocking, wopen_cloexec},
     flog::{flog, flogf},
@@ -6623,7 +6623,7 @@ fn try_expand_wildcard(
     // We do wildcards only.
 
     let flags = ExpandFlags {
-        fail_on_cmdsubst: true,
+        cmdsubst: expand::CmdsubstMode::Fail,
         skip_variables: true,
         preserve_home_tildes: true,
         ..Default::default()

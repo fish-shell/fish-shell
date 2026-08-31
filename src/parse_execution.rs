@@ -17,7 +17,7 @@ use crate::{
     event::{self, Event},
     exec::exec_job,
     expand::{
-        ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_to_command_and_args,
+        self, ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_to_command_and_args,
     },
     flog::flog,
     function,
@@ -423,7 +423,7 @@ impl ExecutionContext {
                 && expand_one(
                     &mut cmd,
                     ExpandFlags {
-                        fail_on_cmdsubst: true,
+                        cmdsubst: expand::CmdsubstMode::Fail,
                         skip_variables: true,
                         ..Default::default()
                     },

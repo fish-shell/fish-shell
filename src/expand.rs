@@ -38,11 +38,21 @@ use fish_widestring::{
 };
 use nix::unistd::{User, getpid};
 
+#[derive(Copy, Clone, PartialEq)]
+pub enum CmdsubstMode {
+    /// Expand command substitions, as usual.
+    Expand,
+    /// Fail expansion.
+    Fail,
+    /// Forward command substitutions as-is.
+    Skip,
+}
+
 /// Flags controlling expansions.
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone)]
 pub struct ExpandFlags {
-    /// Fail expansion if there is a command substitution.
-    pub fail_on_cmdsubst: bool,
+    /// How to handle command substitutions.
+    pub cmdsubst: CmdsubstMode,
     /// Skip variable expansion.
     pub skip_variables: bool,
     /// Skip wildcard expansion.
@@ -75,13 +85,17 @@ pub struct ExpandFlags {
     pub special_for_command: bool,
     /// The token has an unclosed brace, so don't add a space.
     pub no_space_for_unclosed_brace: bool,
-    /// Skip command substitutions.
-    pub skip_cmdsubst: bool,
+}
+
+impl Default for ExpandFlags {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
 }
 
 impl ExpandFlags {
     const DEFAULT: Self = Self {
-        fail_on_cmdsubst: false,
+        cmdsubst: CmdsubstMode::Expand,
         skip_variables: false,
         skip_wildcards: false,
         for_completions: false,
@@ -95,10 +109,9 @@ impl ExpandFlags {
         special_for_cd_autosuggestion: false,
         special_for_command: false,
         no_space_for_unclosed_brace: false,
-        skip_cmdsubst: false,
     };
     pub(crate) const FAIL_ON_CMDSUBST: Self = Self {
-        fail_on_cmdsubst: true,
+        cmdsubst: CmdsubstMode::Fail,
         ..Self::DEFAULT
     };
     pub(crate) const NO_IO: Self = Self {
@@ -1256,8 +1269,8 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         mut errors: Option<&'a mut ParseErrorList>,
     ) -> ExpandResult {
         assert!(
-            flags.fail_on_cmdsubst || ctx.has_parser(),
-            "Must have a parser if not skipping command substitutions"
+            flags.cmdsubst == CmdsubstMode::Fail || ctx.has_parser(),
+            "Must have a parser when expanding command substitutions"
         );
         // Early out. If we're not completing, and there's no magic in the input, we're done.
         if !flags.for_completions && expand_is_clean(&input) {
@@ -1330,40 +1343,43 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
     }
 
     fn stage_cmdsubst(&mut self, input: WString, out: &mut CompletionReceiver) -> ExpandResult {
-        if self.flags.skip_cmdsubst {
-            if !out.add(input) {
-                return append_overflow_error(self.errors, None);
+        match self.flags.cmdsubst {
+            CmdsubstMode::Skip => {
+                if !out.add(input) {
+                    return append_overflow_error(self.errors, None);
+                }
+                ExpandResult::ok()
             }
-            return ExpandResult::ok();
-        }
-        if self.flags.fail_on_cmdsubst {
-            let mut cursor = 0;
-            match locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
-                Err(()) => ExpandResult::make_error(STATUS_EXPAND_ERROR),
-                Ok(None) => {
-                    if !out.add(input) {
-                        return append_overflow_error(self.errors, None);
+            CmdsubstMode::Fail => {
+                let mut cursor = 0;
+                match locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
+                    Err(()) => ExpandResult::make_error(STATUS_EXPAND_ERROR),
+                    Ok(None) => {
+                        if !out.add(input) {
+                            return append_overflow_error(self.errors, None);
+                        }
+                        ExpandResult::ok()
                     }
-                    ExpandResult::ok()
-                }
-                Ok(Some(cmdsub)) => {
-                    append_cmdsub_error!(
-                        self.errors,
-                        cmdsub.opening_paren_offset(),
-                        cmdsub.end() - 1,
-                        wgettext!(
-                            "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
-                        )
-                    );
-                    ExpandResult::make_error(STATUS_EXPAND_ERROR)
+                    Ok(Some(cmdsub)) => {
+                        append_cmdsub_error!(
+                            self.errors,
+                            cmdsub.opening_paren_offset(),
+                            cmdsub.end() - 1,
+                            wgettext!(
+                                "command substitutions not allowed in command position. Try var=(your-cmd) $var ..."
+                            )
+                        );
+                        ExpandResult::make_error(STATUS_EXPAND_ERROR)
+                    }
                 }
             }
-        } else {
-            assert!(
-                self.ctx.has_parser(),
-                "Must have a parser to expand command substitutions"
-            );
-            expand_cmdsubst(input, self.ctx, out, self.errors)
+            CmdsubstMode::Expand => {
+                assert!(
+                    self.ctx.has_parser(),
+                    "Must have a parser to expand command substitutions"
+                );
+                expand_cmdsubst(input, self.ctx, out, self.errors)
+            }
         }
     }
 

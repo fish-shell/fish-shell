@@ -5,7 +5,7 @@ use crate::{
     builtins::Error,
     complete::Completion,
     err_fmt, err_str,
-    expand::{ExpandFlags, ExpandResultCode, expand_string},
+    expand::{self, ExpandFlags, ExpandResultCode, expand_string},
     input::{CharEvent, ReadlineCmd, input_function_get_code},
     operation_context::{OperationContext, no_cancel},
     parse_constants::ParseTreeFlags,
@@ -178,7 +178,7 @@ fn write_part(
                     token_text.to_owned(),
                     &mut args,
                     ExpandFlags {
-                        skip_cmdsubst: true,
+                        cmdsubst: expand::CmdsubstMode::Skip,
                         ..Default::default()
                     },
                     &mut OperationContext::foreground(

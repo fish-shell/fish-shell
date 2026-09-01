@@ -179,7 +179,7 @@ impl ProcStatus {
 
     /// Return if we are stopped (as in SIGSTOP).
     pub fn stopped(&self) -> bool {
-        WIFSTOPPED(self.status())
+        WIFSTOPPED(self.status()) && (!cfg!(target_os = "netbsd") || !self.continued())
     }
 
     /// Return if we are continued (as in SIGCONT).

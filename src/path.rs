@@ -693,9 +693,12 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
                     }
                 } else if #[cfg(target_os = "netbsd")] {
                     // NetBSD doesn't have statfs, but MNT_LOCAL works for statvfs.
-                    let Ok(buf) = nix::sys::statvfs::statvfs(narrow) else {
+                    use std::mem::MaybeUninit;
+                    let mut buf = MaybeUninit::uninit();
+                    if unsafe { libc::statvfs(narrow.as_ptr(), buf.as_mut_ptr()) } < 0 {
                         return DirRemoteness::Unknown;
-                    };
+                    }
+                    let buf = unsafe { buf.assume_init() };
                     #[allow(clippy::useless_conversion)]
                     let flags = buf.f_flag as u64;
                     #[allow(clippy::unnecessary_cast)]

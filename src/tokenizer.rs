@@ -707,37 +707,17 @@ impl<'c> Tokenizer<'c> {
                 brace_offsets.push(self.token_cursor);
                 expecting.push(Expecting::Brace);
             } else if c == ')' {
-                match expecting.pop() {
+                let result = match expecting.pop() {
                     Some(Expecting::Paren) => {
                         paren_offsets.pop();
+                        Ok(())
                     }
-                    Some(Expecting::Brace) => {
-                        return self.call_error(
-                            TokenizerError::UnexpectedPcloseWantedBclose,
-                            self.token_cursor,
-                            self.token_cursor,
-                            Some(1),
-                            1,
-                        );
-                    }
-                    Some(Expecting::Slice) => {
-                        return self.call_error(
-                            TokenizerError::UnexpectedPcloseWantedSclose,
-                            self.token_cursor,
-                            self.token_cursor,
-                            Some(1),
-                            1,
-                        );
-                    }
-                    None => {
-                        return self.call_error(
-                            TokenizerError::ClosingUnopenedSubshell,
-                            self.token_cursor,
-                            self.token_cursor,
-                            Some(1),
-                            1,
-                        );
-                    }
+                    Some(Expecting::Brace) => Err(TokenizerError::UnexpectedPcloseWantedBclose),
+                    Some(Expecting::Slice) => Err(TokenizerError::UnexpectedPcloseWantedSclose),
+                    None => Err(TokenizerError::ClosingUnopenedSubshell),
+                };
+                if let Err(err) = result {
+                    return self.call_error(err, self.token_cursor, self.token_cursor, Some(1), 1);
                 }
                 // Check if the ) completed a quoted command substitution.
                 if quoted_cmdsubs.last().map(|cmd| cmd.subst_depth) == Some(paren_offsets.len()) {
@@ -766,32 +746,20 @@ impl<'c> Tokenizer<'c> {
                     }
                 }
             } else if c == '}' {
-                match expecting.pop() {
+                let result = match expecting.pop() {
                     Some(Expecting::Brace) => {
                         brace_offsets.pop();
+                        Ok(())
                     }
-                    Some(Expecting::Paren) => {
-                        return self.call_error(
-                            TokenizerError::UnexpectedBcloseWantedPclose,
-                            self.token_cursor,
-                            self.token_cursor,
-                            Some(1),
-                            1,
-                        );
-                    }
-                    Some(Expecting::Slice) => {
-                        return self.call_error(
-                            TokenizerError::UnexpectedBcloseWantedSclose,
-                            self.token_cursor,
-                            self.token_cursor,
-                            Some(1),
-                            1,
-                        );
-                    }
+                    Some(Expecting::Paren) => Err(TokenizerError::UnexpectedBcloseWantedPclose),
+                    Some(Expecting::Slice) => Err(TokenizerError::UnexpectedBcloseWantedSclose),
                     None => {
                         // Let the caller throw an error.
                         break;
                     }
+                };
+                if let Err(err) = result {
+                    return self.call_error(err, self.token_cursor, self.token_cursor, Some(1), 1);
                 }
             } else if c == '[' {
                 if self.token_cursor != buff_start {
@@ -852,41 +820,23 @@ impl<'c> Tokenizer<'c> {
         if !self.accept_unfinished {
             // These are all "unterminated", so the only char we can mark as an error
             // is the opener (the closing char could be anywhere!)
-            match expecting.last() {
-                Some(Expecting::Paren) => {
-                    let offset_of_open_paren =
-                        *paren_offsets.last().expect("paren_offsets is empty");
-                    return self.call_error(
-                        TokenizerError::UnterminatedSubshell,
-                        buff_start,
-                        offset_of_open_paren,
-                        None,
-                        1,
-                    );
-                }
-                Some(Expecting::Brace) => {
-                    let offset_of_open_brace =
-                        *brace_offsets.last().expect("brace_offsets is empty");
-                    return self.call_error(
-                        TokenizerError::UnterminatedBrace,
-                        buff_start,
-                        offset_of_open_brace,
-                        None,
-                        1,
-                    );
-                }
-                Some(Expecting::Slice) => {
-                    let offset_of_open_slice =
-                        *slice_offsets.last().expect("slice_offsets is empty");
-                    return self.call_error(
-                        TokenizerError::UnterminatedSlice,
-                        buff_start,
-                        offset_of_open_slice,
-                        None,
-                        1,
-                    );
-                }
-                None => {}
+            let result = match expecting.last() {
+                Some(Expecting::Paren) => Err((
+                    *paren_offsets.last().expect("paren_offsets is empty"),
+                    TokenizerError::UnterminatedSubshell,
+                )),
+                Some(Expecting::Brace) => Err((
+                    *brace_offsets.last().expect("brace_offsets is empty"),
+                    TokenizerError::UnterminatedBrace,
+                )),
+                Some(Expecting::Slice) => Err((
+                    *slice_offsets.last().expect("slice_offsets is empty"),
+                    TokenizerError::UnterminatedSlice,
+                )),
+                None => Ok(()),
+            };
+            if let Err((offset, error)) = result {
+                return self.call_error(error, buff_start, offset, None, 1);
             }
         }
 

@@ -637,6 +637,12 @@ impl<'c> Tokenizer<'c> {
         let buff_start = self.token_cursor;
         let mut is_token_begin = true;
 
+        #[derive(Debug, PartialEq)]
+        enum Expecting {
+            Paren,
+            Brace,
+            Slice,
+        }
         struct QuotedSubst {
             quote_location: usize,
             subst_depth: usize, // aka index in paren_offsets
@@ -696,16 +702,16 @@ impl<'c> Tokenizer<'c> {
                 self.token_cursor = comment_end(self.start, self.token_cursor) - 1;
             } else if c == '(' {
                 paren_offsets.push(self.token_cursor);
-                expecting.push(')');
+                expecting.push(Expecting::Paren);
             } else if c == '{' {
                 brace_offsets.push(self.token_cursor);
-                expecting.push('}');
+                expecting.push(Expecting::Brace);
             } else if c == ')' {
                 match expecting.pop() {
-                    Some(')') => {
+                    Some(Expecting::Paren) => {
                         paren_offsets.pop();
                     }
-                    Some('}') => {
+                    Some(Expecting::Brace) => {
                         return self.call_error(
                             TokenizerError::UnexpectedPcloseWantedBclose,
                             self.token_cursor,
@@ -714,7 +720,7 @@ impl<'c> Tokenizer<'c> {
                             1,
                         );
                     }
-                    Some(']') => {
+                    Some(Expecting::Slice) => {
                         return self.call_error(
                             TokenizerError::UnexpectedPcloseWantedSclose,
                             self.token_cursor,
@@ -732,7 +738,6 @@ impl<'c> Tokenizer<'c> {
                             1,
                         );
                     }
-                    Some(_) => unreachable!(),
                 }
                 // Check if the ) completed a quoted command substitution.
                 if quoted_cmdsubs.last().map(|cmd| cmd.subst_depth) == Some(paren_offsets.len()) {
@@ -762,10 +767,10 @@ impl<'c> Tokenizer<'c> {
                 }
             } else if c == '}' {
                 match expecting.pop() {
-                    Some('}') => {
+                    Some(Expecting::Brace) => {
                         brace_offsets.pop();
                     }
-                    Some(')') => {
+                    Some(Expecting::Paren) => {
                         return self.call_error(
                             TokenizerError::UnexpectedBcloseWantedPclose,
                             self.token_cursor,
@@ -774,7 +779,7 @@ impl<'c> Tokenizer<'c> {
                             1,
                         );
                     }
-                    Some(']') => {
+                    Some(Expecting::Slice) => {
                         return self.call_error(
                             TokenizerError::UnexpectedBcloseWantedSclose,
                             self.token_cursor,
@@ -787,12 +792,11 @@ impl<'c> Tokenizer<'c> {
                         // Let the caller throw an error.
                         break;
                     }
-                    Some(_) => unreachable!(),
                 }
             } else if c == '[' {
                 if self.token_cursor != buff_start {
                     slice_offsets.push(self.token_cursor);
-                    expecting.push(']');
+                    expecting.push(Expecting::Slice);
                 } else {
                     // This is actually allowed so the test operator `[` can be used as the head of a
                     // command
@@ -802,7 +806,7 @@ impl<'c> Tokenizer<'c> {
             // any unclosed paren or brace since the opening of the slice. If we do, consider
             // the bracket to be a parameter, e.g. last parameter to `[` test alias,
             // e.g. `echo $argv[([ $x -eq $y ])]`
-            else if c == ']' && expecting.last() == Some(&']') {
+            else if c == ']' && expecting.last() == Some(&Expecting::Slice) {
                 slice_offsets.pop();
                 expecting.pop();
             } else if c == '\'' || c == '"' {
@@ -845,11 +849,11 @@ impl<'c> Tokenizer<'c> {
             self.token_cursor += 1;
         }
 
-        if !self.accept_unfinished && !expecting.is_empty() {
+        if !self.accept_unfinished {
             // These are all "unterminated", so the only char we can mark as an error
             // is the opener (the closing char could be anywhere!)
             match expecting.last() {
-                Some(')') => {
+                Some(Expecting::Paren) => {
                     let offset_of_open_paren =
                         *paren_offsets.last().expect("paren_offsets is empty");
                     return self.call_error(
@@ -860,7 +864,7 @@ impl<'c> Tokenizer<'c> {
                         1,
                     );
                 }
-                Some('}') => {
+                Some(Expecting::Brace) => {
                     let offset_of_open_brace =
                         *brace_offsets.last().expect("brace_offsets is empty");
                     return self.call_error(
@@ -871,7 +875,7 @@ impl<'c> Tokenizer<'c> {
                         1,
                     );
                 }
-                Some(']') => {
+                Some(Expecting::Slice) => {
                     let offset_of_open_slice =
                         *slice_offsets.last().expect("slice_offsets is empty");
                     return self.call_error(
@@ -882,14 +886,14 @@ impl<'c> Tokenizer<'c> {
                         1,
                     );
                 }
-                _ => unreachable!("Unexpected pending char"),
+                None => {}
             }
         }
 
         let mut result = Tok::new(TokenType::String);
         result.set_offset(buff_start);
         result.set_length(self.token_cursor - buff_start);
-        result.is_unterminated_brace = expecting.contains(&'}');
+        result.is_unterminated_brace = expecting.contains(&Expecting::Brace);
         result
     }
 }

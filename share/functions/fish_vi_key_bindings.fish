@@ -469,10 +469,21 @@ function fish_vi_key_bindings --description 'vi-like key bindings for fish'
     bind --preset -M operator t --sets-mode t ''
     bind --preset -M operator T --sets-mode T ''
 
-    bind --preset -M f '' get-key 'fish_vi_exec_motion commandline --forward-jump=$fish_key' 'set -eg fish_key'
-    bind --preset -M F '' get-key 'fish_vi_exec_motion commandline --backward-jump=$fish_key' 'set -eg fish_key'
-    bind --preset -M t '' get-key 'fish_vi_exec_motion commandline --forward-jump-till=$fish_key' 'set -eg fish_key'
-    bind --preset -M T '' get-key 'fish_vi_exec_motion commandline --backward-jump-till=$fish_key' 'set -eg fish_key'
+    function __fish_vi_key_bindings_operator_jump -a jump_key motion backward
+        bind --preset -M operator $jump_key --sets-mode $jump_key ''
+        bind --preset -M $jump_key '' \
+            ($backward && echo 'set -g fish_cursor_selection_mode exclusive') \
+            get-key \
+            "fish_vi_exec_motion commandline --$motion=\$fish_key" \
+            'set -eg fish_key' \
+            ($backward && echo 'set -g fish_cursor_selection_mode inclusive')
+    end
+
+    __fish_vi_key_bindings_operator_jump f forward-jump false
+    __fish_vi_key_bindings_operator_jump F backward-jump true
+    __fish_vi_key_bindings_operator_jump t forward-jump-till false
+    __fish_vi_key_bindings_operator_jump T backward-jump-till true
+    functions --erase __fish_vi_key_bindings_operator_jump
 
     bind --preset -M operator ';' 'fish_vi_exec_motion repeat-jump'
     bind --preset -M operator , 'fish_vi_exec_motion repeat-jump-reverse'

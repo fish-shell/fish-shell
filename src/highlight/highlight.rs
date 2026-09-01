@@ -228,20 +228,13 @@ pub(crate) fn parse_text_face_for_highlight(var: &EnvVar) -> Option<TextFace> {
     })
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum CommandKind {
-    Builtin,
-    Function,
-    Plain,
-}
-
-fn command_kind(
+fn command_role(
     cmd: &wstr,
     decoration: StatementDecoration,
     working_directory: &wstr,
     vars: &dyn Environment,
-) -> Option<CommandKind> {
-    use CommandKind::*;
+) -> Option<HighlightRole> {
+    use HighlightRole::{Builtin, Command, Function};
 
     // Determine which types we check, based on the decoration.
     let mut builtin_ok = true;
@@ -278,17 +271,17 @@ fn command_kind(
 
     // Abbreviations
     if abbreviation_ok && with_abbrs(|set| set.has_match(cmd, abbrs::Position::Command, L!(""))) {
-        return Some(Plain);
+        return Some(Command);
     }
 
     // Regular commands
     if command_ok && path_get_path(cmd, vars).is_some() {
-        return Some(Plain);
+        return Some(Command);
     }
 
     // Implicit cd
     if implicit_cd_ok && path_as_implicit_cd(cmd, working_directory, vars).is_some() {
-        return Some(Plain);
+        return Some(Command);
     }
 
     None
@@ -808,15 +801,9 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
     }
 
     // Color a command.
-    fn color_command(&mut self, node: &ast::String_, cmd_kind: CommandKind) {
+    fn color_command(&mut self, node: &ast::String_, role: HighlightRole) {
         let source_range = node.source_range();
         let cmd_str = self.get_source(source_range);
-
-        let role = match cmd_kind {
-            CommandKind::Builtin => HighlightRole::Builtin,
-            CommandKind::Function => HighlightRole::Function,
-            CommandKind::Plain => HighlightRole::Command,
-        };
 
         color_string_internal(
             cmd_str,
@@ -1062,12 +1049,12 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
         let cmd = stmt.command.source(self.buff);
 
         let mut expanded_cmd = WString::new();
-        let mut cmd_kind = None;
+        let mut cmd_role = None;
         if !self.io_still_ok() {
             // We cannot check if the command is invalid, so just assume it's valid.
-            cmd_kind = Some(CommandKind::Plain);
+            cmd_role = Some(HighlightRole::Command);
         } else if variable_assignment_equals_pos(cmd).is_some() {
-            cmd_kind = Some(CommandKind::Plain);
+            cmd_role = Some(HighlightRole::Command);
         } else {
             // Check to see if the command is valid.
             // Try expanding it. If we cannot, it's an error.
@@ -1076,7 +1063,7 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
             {
                 expanded_cmd = expanded;
                 if !has_expand_reserved(&expanded_cmd) {
-                    cmd_kind = command_kind(
+                    cmd_role = command_role(
                         &expanded_cmd,
                         stmt.decoration(),
                         self.working_directory,
@@ -1087,8 +1074,8 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
         }
 
         // Color our statement.
-        if let Some(cmd_kind) = cmd_kind {
-            self.color_command(&stmt.command, cmd_kind);
+        if let Some(cmd_role) = cmd_role {
+            self.color_command(&stmt.command, cmd_role);
         } else {
             self.color_node(&stmt.command, HighlightSpec::with_fg(HighlightRole::Error));
         }

@@ -83,7 +83,7 @@ pub struct BindingName {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum KeyNameStyle {
-    Plain,
+    Normal,
     RawEscapeSequence,
 }
 
@@ -431,7 +431,7 @@ pub fn init_input() {
             let sets_mode = Some(DEFAULT_BIND_MODE.to_owned());
             bindings.add1(
                 key,
-                KeyNameStyle::Plain,
+                KeyNameStyle::Normal,
                 cmd.into(),
                 mode,
                 sets_mode,
@@ -577,7 +577,7 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
             flog!(reader, "matched delayed escape prefix in alt sequence");
             return self.next_is_char(style, Key::from_raw(key.codepoint), true);
         }
-        if *style == KeyNameStyle::Plain {
+        if *style == KeyNameStyle::Normal {
             let result = match_key_event_to_key(&kevt.key, &key);
             if let Some(key_match) = &result {
                 assert_eq!(self.subidx, 0);
@@ -670,7 +670,8 @@ impl<'q, Queuer: InputEventQueuer + ?Sized> EventQueuePeeker<'q, Queuer> {
         for key in seq {
             // If we just read an escape, we need to add a timeout for the next char,
             // to distinguish between the actual escape key and an "alt"-modifier.
-            let escaped = *style != KeyNameStyle::Plain && prev == Some(Key::from_raw(key::ESCAPE));
+            let escaped =
+                *style != KeyNameStyle::Normal && prev == Some(Key::from_raw(key::ESCAPE));
             let Some(spec) = self.next_is_char(style, *key, escaped) else {
                 return false;
             };
@@ -1228,7 +1229,7 @@ mod tests {
         let mut bindings = BindingSet::default();
         bindings.add1(
             prefix_binding,
-            KeyNameStyle::Plain,
+            KeyNameStyle::Normal,
             L!("up-line").to_owned(),
             bind_mode(),
             None,
@@ -1237,7 +1238,7 @@ mod tests {
         );
         bindings.add1(
             desired_binding.clone(),
-            KeyNameStyle::Plain,
+            KeyNameStyle::Normal,
             L!("down-line").to_owned(),
             bind_mode(),
             None,

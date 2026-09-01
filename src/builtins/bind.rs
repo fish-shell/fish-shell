@@ -97,7 +97,7 @@ impl BuiltinBind {
 
         out.push(' ');
         match bind.key_name_style {
-            KeyNameStyle::Plain => {
+            KeyNameStyle::Normal => {
                 // Append the name.
                 for (i, key) in seq.iter().enumerate() {
                     if i != 0 {
@@ -281,7 +281,7 @@ impl BuiltinBind {
         let key_name_style = if is_raw_escape_sequence {
             KeyNameStyle::RawEscapeSequence
         } else {
-            KeyNameStyle::Plain
+            KeyNameStyle::Normal
         };
         let definition_file = parser.current_filename();
         self.bindings.add(

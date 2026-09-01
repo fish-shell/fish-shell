@@ -99,9 +99,22 @@ pub enum WantsSuffix {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
+pub struct WillReplaceToken {
+    pub show_pager_prefix: bool,
+}
+
+impl Default for WillReplaceToken {
+    fn default() -> Self {
+        Self {
+            show_pager_prefix: true,
+        }
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ReplacementScope {
     /// This is not the suffix of a token, but replaces it entirely.
-    Token,
+    Token(WillReplaceToken),
     /// This completes not just a token but replaces an entire line.
     Line,
 }
@@ -129,8 +142,6 @@ pub struct CompleteFlags {
     pub duplicates_argument: bool,
     /// If replacing the entire token, keep the "foo=" prefix.
     pub keep_variable_override_prefix: bool,
-    /// Suppress showing the pager prefix for this completion.
-    pub suppress_pager_prefix: bool,
 }
 
 impl Default for CompleteFlags {
@@ -149,7 +160,6 @@ impl CompleteFlags {
         dont_sort: false,
         duplicates_argument: false,
         keep_variable_override_prefix: false,
-        suppress_pager_prefix: false,
     };
     pub(crate) const NO_SPACE: Self = Self {
         wants_suffix: WantsSuffix::No,
@@ -158,7 +168,7 @@ impl CompleteFlags {
 
     /// Returns whether this replaces its token.
     pub(crate) fn replaces_token(&self) -> bool {
-        self.replaces == Some(ReplacementScope::Token)
+        matches!(self.replaces, Some(ReplacementScope::Token(_)))
     }
 
     /// Returns whether this replaces an entire line.
@@ -239,7 +249,7 @@ impl Completion {
     ) -> Self {
         resolve_auto_space(&completion, &mut flags.wants_suffix);
         if r#match.requires_full_replacement() && !flags.replaces_line() {
-            flags.replaces = Some(ReplacementScope::Token);
+            flags.replaces = Some(ReplacementScope::Token(Default::default()));
         }
         Self {
             completion,
@@ -267,7 +277,10 @@ impl Completion {
         if self.replaces_token() {
             return false;
         }
-        let old = self.flags.replaces.replace(ReplacementScope::Token);
+        let old = self
+            .flags
+            .replaces
+            .replace(ReplacementScope::Token(Default::default()));
         assert!(old.is_none());
         true
     }
@@ -275,6 +288,14 @@ impl Completion {
     /// Returns whether this replaces its token.
     pub fn replaces_token(&self) -> bool {
         self.flags.replaces_token()
+    }
+
+    /// Whether this completion wants the pager to to show the prefix shared among completions.
+    pub(crate) fn wants_pager_prefix(&self) -> bool {
+        self.flags.replaces.is_none_or(|replaces| match replaces {
+            ReplacementScope::Token(will_replace_token) => will_replace_token.show_pager_prefix,
+            ReplacementScope::Line => true,
+        })
     }
 
     /// Returns whether this replaces an entire line.
@@ -3026,7 +3047,7 @@ mod tests {
             ctx,
             L!("Debug/"),
             CompleteFlags {
-                replaces: Some(ReplacementScope::Token),
+                replaces: Some(ReplacementScope::Token(Default::default())),
                 ..CompleteFlags::NO_SPACE
             },
             L!("mv debug debug"),

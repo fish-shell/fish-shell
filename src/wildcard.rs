@@ -185,7 +185,7 @@ fn wildcard_complete_internal(
                 wc.slice_from(next_wc_char_pos),
                 params,
                 CompleteFlags {
-                    replaces: Some(ReplacementScope::Token),
+                    replaces: Some(ReplacementScope::Token(Default::default())),
                     ..flags
                 },
                 out,

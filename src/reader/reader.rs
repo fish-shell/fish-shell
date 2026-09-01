@@ -29,7 +29,7 @@ use crate::{
     common::{get_program_name, shell_modes},
     complete::{
         CompleteFlags, Completion, CompletionList, CompletionRequestOptions, ReplacementScope,
-        WantsEscaping, WantsSuffix, complete, complete_load, sort_and_prioritize,
+        WantsEscaping, WantsSuffix, WillReplaceToken, complete, complete_load, sort_and_prioritize,
     },
     editable_line::{Edit, EditableLine, line_at_cursor, range_of_line_at_cursor},
     env::{EnvMode, EnvStack, Environment, Statuses},
@@ -7081,7 +7081,9 @@ impl<'a> Reader<'a> {
         if !will_replace_token {
             for c in &mut comp {
                 if c.replaces_token() {
-                    c.flags.suppress_pager_prefix = true;
+                    c.flags.replaces = Some(ReplacementScope::Token(WillReplaceToken {
+                        show_pager_prefix: false,
+                    }));
                 }
             }
         }
@@ -7111,7 +7113,7 @@ impl<'a> Reader<'a> {
             let mut flags = CompleteFlags::default();
             let mut first = true;
             for c in &comp {
-                if c.flags.suppress_pager_prefix {
+                if !c.wants_pager_prefix() {
                     continue;
                 }
                 if first {
@@ -7195,7 +7197,7 @@ impl<'a> Reader<'a> {
         if use_prefix {
             let common_prefix_len = common_prefix.len();
             for c in &mut comp {
-                if c.flags.suppress_pager_prefix {
+                if !c.wants_pager_prefix() {
                     // Keep replacement semantics and the original prefix so these completions can
                     // fix casing when selected.
                     continue;
@@ -7434,7 +7436,7 @@ mod tests {
             "foo^",
             "bar",
             CompleteFlags {
-                replaces: Some(ReplacementScope::Token),
+                replaces: Some(ReplacementScope::Token(Default::default())),
                 ..Default::default()
             },
             false,
@@ -7444,7 +7446,7 @@ mod tests {
             "'foo^",
             "bar",
             CompleteFlags {
-                replaces: Some(ReplacementScope::Token),
+                replaces: Some(ReplacementScope::Token(Default::default())),
                 ..Default::default()
             },
             false,

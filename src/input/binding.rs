@@ -157,7 +157,6 @@ macro_rules! define_readline_cmds {
         $( ( $name:literal, $readline_cmd:ident ), )*
     } => {
         #[derive(Debug, Copy, Clone, PartialEq)]
-        #[repr(u8)]
         pub enum ReadlineCmd {
             $( $readline_cmd , )*
         }

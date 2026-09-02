@@ -39,7 +39,7 @@ targets:
       replacepattern: 'rust-version: {{ source "rust_stable_version" }} # updatecli.d/rust.yml'
   update_msrv:
     name: "Update MSRV"
-    sourceid: rust_stable_version
+    sourceid: debian_stable_rust_version
     kind: file
     spec:
       file: .github/actions/rust-toolchain/action.yml

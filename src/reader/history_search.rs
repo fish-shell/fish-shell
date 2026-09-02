@@ -34,7 +34,7 @@ impl SearchMatch {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum SearchMode {
     #[default]
     /// no search

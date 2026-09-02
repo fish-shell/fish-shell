@@ -372,13 +372,13 @@ impl EvalRes {
 
 /// A newtype for the block index.
 /// This is the naive position in the block list.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BlockId(usize);
 
 /// Controls the behavior when fish itself receives a signal and there are
 /// no blocks on the stack.
 /// The "outermost" parser is responsible for clearing the signal.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
 pub enum CancelBehavior {
     #[default]
     /// Return the signal to the caller
@@ -1443,7 +1443,7 @@ fn append_block_description_to_stack_trace(
 }
 
 /// Types of blocks.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum BlockType {
     /// While loop block
     WhileBlock,
@@ -1473,7 +1473,7 @@ pub enum BlockType {
 }
 
 /// Possible states for a loop.
-#[derive(Clone, Copy, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Default, PartialEq)]
 pub enum LoopStatus {
     /// current loop block executed as normal
     #[default]

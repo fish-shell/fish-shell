@@ -190,7 +190,7 @@ fn slice_contains_slice<T: Eq>(a: &[T], b: &[T]) -> bool {
     subslice_position(a, b).is_some()
 }
 
-#[derive(Copy, Debug, Clone, PartialEq, Eq)]
+#[derive(Copy, Debug, Clone, PartialEq)]
 pub enum WSL {
     Any,
     V1,

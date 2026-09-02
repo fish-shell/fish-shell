@@ -18,7 +18,7 @@ mod test_expressions {
     use std::os::unix::prelude::*;
     use std::sync::LazyLock;
 
-    #[derive(Copy, Clone, PartialEq, Eq)]
+    #[derive(Copy, Clone, PartialEq)]
     pub(super) enum Token {
         Unknown,                         // Arbitrary string
         Unary(UnaryToken),               // Takes one string/file
@@ -41,12 +41,12 @@ mod test_expressions {
         }
     }
 
-    #[derive(Copy, Clone, PartialEq, Eq)]
+    #[derive(Copy, Clone, PartialEq)]
     pub(super) enum UnaryBooleanToken {
         Bang, // "!", inverts sense
     }
 
-    #[derive(Copy, Clone, PartialEq, Eq)]
+    #[derive(Copy, Clone, PartialEq)]
     pub(super) enum Combiner {
         And, // "-a", true if left and right are both true
         Or,  // "-o", true if either left or right is true
@@ -61,13 +61,13 @@ mod test_expressions {
                 }
             )*
         ) => {
-            #[derive(Copy, Clone, PartialEq, Eq)]
+            #[derive(Copy, Clone, PartialEq)]
             pub(super) enum $enum {
                 $($variant($sub_type),)*
             }
 
             $(
-                #[derive(Copy, Clone, PartialEq, Eq)]
+                #[derive(Copy, Clone, PartialEq)]
                 #[allow(non_camel_case_types)]
                 pub(super) enum $sub_type { $($sub_variant,)+ }
 

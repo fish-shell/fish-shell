@@ -8,7 +8,7 @@ use std::{
 
 /// The list of flags.
 #[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum FeatureFlag {
     /// Whether ^ is supported for stderr redirection.
     StderrNoCaret,

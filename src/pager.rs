@@ -42,7 +42,7 @@ impl PageRendering {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum SelectionMotion {
     // Visual directions.
     North,

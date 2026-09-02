@@ -14,7 +14,7 @@ use std::ops::Range;
 use std::os::fd::RawFd;
 
 /// Token types. XXX Why this isn't ParseTokenType, I'm not really sure.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum TokenType {
     /// Error reading token
     Error,
@@ -40,7 +40,7 @@ pub enum TokenType {
     Comment,
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TokenizerError {
     None,
     UnterminatedQuote,

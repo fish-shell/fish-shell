@@ -528,7 +528,7 @@ impl CommandlineState {
 }
 
 /// Strategy for determining how the selection behaves.
-#[derive(Eq, PartialEq)]
+#[derive(PartialEq)]
 pub enum CursorSelectionMode {
     /// The character at/after the cursor is excluded.
     /// This is most useful with a line cursor shape.
@@ -538,7 +538,7 @@ pub enum CursorSelectionMode {
     Inclusive,
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(PartialEq)]
 pub enum CursorEndMode {
     Exclusive,
     Inclusive,
@@ -552,19 +552,19 @@ enum Kill {
     Prepend,
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum JumpDirection {
     Forward,
     Backward,
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum JumpPrecision {
     Till,
     To,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 enum CompletionAction {
     ShownAmbiguous,
     InsertedUnique,
@@ -602,7 +602,7 @@ impl ReadlineLoopState {
 }
 
 /// Data wrapping up the visual selection.
-#[derive(Clone, Copy, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Default, PartialEq)]
 struct SelectionData {
     /// The position of the cursor when selection was initiated.
     begin: usize,
@@ -645,13 +645,13 @@ struct LayoutData {
     right_prompt_buff: WString,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum EditableLineTag {
     Commandline,
     SearchField,
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 enum TransientEdit {
     Pager,
     HistorySearch,
@@ -5851,7 +5851,7 @@ pub(super) struct HistoryPagerResult {
     motion: Option<SelectionMotion>,
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(PartialEq)]
 pub(super) enum HistoryPagerInvocation {
     Anew,
     Advance,

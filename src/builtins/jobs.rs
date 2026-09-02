@@ -17,7 +17,7 @@ use std::num::NonZeroU32;
 
 /// Print modes for the jobs builtin.
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 enum JobsPrintMode {
     Default,      // print lots of general info
     PrintPid,     // print pid of each process in job

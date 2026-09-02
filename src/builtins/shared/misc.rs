@@ -36,7 +36,7 @@ pub fn localized_version_string<'a>(package_name: impl ToFluentValue<'a>) -> Loc
 
 // Return values (`$status` values for fish scripts) for various situations.
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Success {
     pub preserve_failure_exit_status: bool,
 }
@@ -981,7 +981,7 @@ pub fn builtin_break_continue(
 /// Option character for --color flag
 pub const COLOR_OPTION_CHAR: char = '\x10';
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum ColorEnabled {
     #[default]
     Auto,

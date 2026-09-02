@@ -75,7 +75,7 @@ pub fn slice_length(input: &wstr) -> Option<usize> {
     None
 }
 
-#[derive(Debug, Default, Eq, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub struct CommandSubstitution {
     range: Range<usize>,
     num_closing: usize,

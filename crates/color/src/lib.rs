@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use fish_common::assert_sorted_by_name;
 use fish_widestring::{L, wstr};
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Color24 {
     pub r: u8,
     pub g: u8,
@@ -23,7 +23,7 @@ impl Color24 {
 }
 
 /// A type that represents a color.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Color {
     // TODO: remove this? Users should probably use `Option<RgbColor>` instead
     None,

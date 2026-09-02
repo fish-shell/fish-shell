@@ -45,7 +45,7 @@ pub fn path_get_cache() -> ValidatedPath<'static> {
     CACHE_DIRECTORY.validated_path()
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum DirRemoteness {
     /// directory status is unknown
     Unknown,

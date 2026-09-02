@@ -30,7 +30,7 @@
 
 /// Error type for failing to parse a hexadecimal floating-point number.
 /// Only syntax errors may occur.
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct SyntaxError;
 
 /// Parses a hexadecimal floating-point number from a character iterator.

@@ -755,7 +755,7 @@ pub(crate) enum DecodeState {
     Error,
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(PartialEq)]
 pub(crate) enum InvalidPolicy {
     Error,
     Passthrough,

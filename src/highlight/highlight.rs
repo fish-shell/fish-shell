@@ -494,7 +494,7 @@ fn color_string_internal(buffstr: &wstr, base_color: HighlightSpec, colors: &mut
         return;
     }
 
-    #[derive(Eq, PartialEq)]
+    #[derive(PartialEq)]
     enum Mode {
         Unquoted,
         SingleQuoted,

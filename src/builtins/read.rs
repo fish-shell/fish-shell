@@ -28,7 +28,7 @@ use std::{
     sync::atomic::Ordering,
 };
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub(crate) enum TokenOutputMode {
     Expanded,
     Raw,

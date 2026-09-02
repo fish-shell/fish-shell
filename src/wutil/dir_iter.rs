@@ -7,7 +7,7 @@ use nix::{errno::Errno, fcntl::AtFlags, sys::stat::fstatat};
 use std::{cell::Cell, io, os::unix::prelude::BorrowedFd, ptr::NonNull};
 
 /// Types of files that may be in a directory.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum DirEntryType {
     Fifo = 1, // FIFO file
     Chr,      // character device

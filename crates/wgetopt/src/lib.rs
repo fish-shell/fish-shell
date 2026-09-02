@@ -39,7 +39,7 @@ fn empty_wstr() -> &'static wstr {
 ///
 /// Note that any arguments passed after `--` will be treated as non-option elements,
 /// regardless of [Ordering].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 enum Ordering {
     /// Stop processing options when the first non-option element is encountered.
     /// Traditionally used by Unix systems.
@@ -60,7 +60,7 @@ enum Ordering {
 
 /// Indicates whether an option takes an argument, and whether that argument
 /// is optional.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum ArgType {
     /// The option takes no arguments.
     #[default]

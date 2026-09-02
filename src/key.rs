@@ -72,7 +72,7 @@ pub(crate) const KEY_NAMES: &[(char, &wstr)] = &[
     (PRINT_SCREEN, L!("printscreen")),
 ];
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Modifiers {
     pub ctrl: bool,
     pub alt: bool,
@@ -114,14 +114,14 @@ impl Modifiers {
 }
 
 /// Position in terminal coordinates, i.e. not starting from the prompt
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct ViewportPosition {
     pub x: usize,
     pub y: usize,
 }
 impl FloggableDebug for ViewportPosition {}
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Key {
     pub modifiers: Modifiers,
     pub codepoint: char,

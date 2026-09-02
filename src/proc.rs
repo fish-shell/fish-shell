@@ -70,7 +70,7 @@ pub enum ProcessType {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum JobControl {
     All,
     Interactive,
@@ -284,7 +284,7 @@ impl InternalProc {
 
 /// A type-safe equivalent to [`libc::pid_t`].
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct Pid(NonZeroU32);
 
 impl Pid {
@@ -604,7 +604,7 @@ pub struct JobFlags {
 
 /// The non user-visible, never-recycled job ID.
 /// Every job has a unique positive value for this.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Default, Eq, Ord, PartialEq, PartialOrd)]
 pub struct InternalJobId(u64);
 
 /// A struct representing a job. A job is a pipeline of one or more processes.

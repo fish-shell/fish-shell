@@ -59,7 +59,7 @@ use std::{io::ErrorKind, rc::Rc, sync::Arc};
 /// An eval_result represents evaluation errors including wildcards which failed to match, syntax
 /// errors, or other expansion errors. It also tracks when evaluation was skipped due to signal
 /// cancellation. Note it does not track the exit status of commands.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum EndExecutionReason {
     /// Evaluation was successful.
     Ok,
@@ -1925,7 +1925,7 @@ impl ExecutionContext {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(PartialEq)]
 enum WildcardNoMatchBehavior {
     /// failglob
     Fail,

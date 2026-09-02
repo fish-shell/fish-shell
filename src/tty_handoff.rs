@@ -61,7 +61,7 @@ pub fn xtversion() -> Option<&'static wstr> {
 }
 
 // Facts that affect how we communicate with the TTY.
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TtyQuirks {
     None,
     // Running Midnight Commander which can't parse CSI yet.
@@ -97,7 +97,7 @@ impl TtyQuirks {
 }
 
 // Helper to determine which keyboard protocols to enable.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 enum ProtocolKind {
     KittyKeyboard, // Kitty keyboard support, producing CSI-u style encoding.
     Other,         // Other protocols (e.g., modifyOtherKeys)

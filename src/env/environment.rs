@@ -48,7 +48,7 @@ use std::{
 static UVARS_LOCALLY_MODIFIED: RelaxedAtomicBool = RelaxedAtomicBool::new(false);
 
 /// Return values for `EnvStack::set()`.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum EnvStackSetResult {
     #[default]
     Ok, // The variable was set successfully.

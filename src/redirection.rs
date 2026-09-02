@@ -6,7 +6,7 @@ use crate::wutil::fish_wcstoi;
 use nix::fcntl::OFlag;
 use std::os::fd::RawFd;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Hash)]
 pub enum RedirectionMode {
     Overwrite, // normal redirection: > file.txt
     Append,    // appending redirection: >> file.txt

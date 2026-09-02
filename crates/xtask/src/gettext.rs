@@ -249,7 +249,7 @@ msgstr "Content-Type: text/plain; charset=UTF-8\n"
 
 "#;
 
-    #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Hash)]
+    #[derive(Eq, Ord, PartialEq, PartialOrd, Clone, Copy, Hash)]
     enum LocalizationTier {
         Tier1,
         Tier2,

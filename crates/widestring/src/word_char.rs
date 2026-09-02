@@ -3,7 +3,7 @@
 use std::{cmp::Ordering, ops::RangeInclusive};
 
 /// Character class for word movements
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum WordCharClass {
     Blank,       // whitespace
     Newline,     // newline

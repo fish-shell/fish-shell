@@ -28,7 +28,7 @@ use std::{
 /// The buffer tracks a sequence of elements. Some elements are explicitly separated and should not
 /// be further split; other elements have inferred separation and may be split by IFS (or not,
 /// depending on its value).
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum SeparationType {
     /// this element should be further separated by IFS
     Inferred,
@@ -157,7 +157,7 @@ impl SeparatedBuffer {
 }
 
 /// Describes what type of IO operation an io_data_t represents.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum IoMode {
     File,
     Pipe,

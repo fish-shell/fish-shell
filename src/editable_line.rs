@@ -4,7 +4,7 @@ use crate::highlight::HighlightSpec;
 use crate::prelude::*;
 
 /// An edit action that can be undone.
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct Edit {
     /// When undoing the edit we use this to restore the previous cursor position.
     pub cursor_position_before_edit: usize,

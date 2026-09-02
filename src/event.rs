@@ -31,7 +31,7 @@ pub enum EventType {
     Generic,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Eq, Ord, PartialEq, PartialOrd)]
 pub enum EventDescription {
     /// Matches any event type (not always any event, as the function name may limit the choice as
     /// well).
@@ -200,7 +200,7 @@ impl EventHandler {
 }
 type EventHandlerList = Vec<Arc<EventHandler>>;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Event {
     desc: EventDescription,
     arguments: Vec<WString>,

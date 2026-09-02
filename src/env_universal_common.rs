@@ -17,7 +17,7 @@ use std::io::{Read as _, Write as _};
 use std::mem::MaybeUninit;
 
 /// Callback data, reflecting a change in universal variables.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CallbackData {
     // The name of the variable.
     pub key: WString,
@@ -29,7 +29,7 @@ pub struct CallbackData {
 pub type CallbackDataList = Vec<CallbackData>;
 
 // List of fish universal variable formats.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(non_camel_case_types)]
 enum UvarFormat {
     Fish_2_x,

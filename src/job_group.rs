@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 #[repr(transparent)]
 pub struct JobId(NonZeroU32);
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct MaybeJobId(pub Option<JobId>);
 
 impl std::ops::Deref for MaybeJobId {

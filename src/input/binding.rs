@@ -17,7 +17,7 @@ use std::{
     },
 };
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub(crate) enum KeyMatchQuality {
     BaseLayoutModuloShift,
     BaseLayout,
@@ -81,14 +81,14 @@ pub struct BindingName {
     pub mode: WString,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum KeyNameStyle {
     Normal,
     RawEscapeSequence,
 }
 
 /// Struct representing a keybinding.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Binding {
     /// Character sequence which triggers this binding.
     seq: Vec<Key>,
@@ -156,7 +156,7 @@ macro_rules! define_readline_cmds {
     {
         $( ( $name:literal, $readline_cmd:ident ), )*
     } => {
-        #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+        #[derive(Debug, Copy, Clone, PartialEq)]
         #[repr(u8)]
         pub enum ReadlineCmd {
             $( $readline_cmd , )*

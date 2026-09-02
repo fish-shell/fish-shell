@@ -27,7 +27,7 @@ use fish_wcstringutil::join_strings;
 use std::ops::Range;
 
 /// Which part of the comandbuffer are we operating on.
-#[derive(Eq, PartialEq)]
+#[derive(PartialEq)]
 enum TextScope {
     String,
     Job,
@@ -36,7 +36,7 @@ enum TextScope {
 }
 
 /// For text insertion, how should it be done.
-#[derive(Eq, PartialEq)]
+#[derive(PartialEq)]
 enum AppendMode {
     // replace current text
     Replace,

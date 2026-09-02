@@ -13,7 +13,7 @@ use unicode_width::UnicodeWidthStr as _;
 use widestring::Utf32Str as wstr;
 
 /// Possible errors from printf.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq)]
 pub enum Error {
     /// Invalid format string.
     BadFormatString,
@@ -65,7 +65,7 @@ impl ModifierFlags {
 
 // The set of prefixes of conversion specifiers.
 // Note that we mostly ignore prefixes - we take sizes of values from the arguments themselves.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types)]
 enum ConversionPrefix {
     Empty,
@@ -79,7 +79,7 @@ enum ConversionPrefix {
     L,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[allow(non_camel_case_types)]
 #[rustfmt::skip]
 pub(super) enum ConversionSpec {

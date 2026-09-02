@@ -17,7 +17,7 @@ pub fn count_newlines(s: &wstr) -> usize {
     count
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(PartialEq)]
 pub enum IsPrefix {
     Prefix,
     Equal,
@@ -144,7 +144,7 @@ pub fn ifind(haystack: &wstr, needle: &wstr, fuzzy: bool /* = false */) -> Optio
 // The ways one string can contain another.
 //
 // Note that the order of entries below affects the sort order of completions.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum ContainType {
     /// Exact match
     Exact,
@@ -159,7 +159,7 @@ pub enum ContainType {
 // The case-folding required for the match.
 //
 // Note that the order of entries below affects the sort order of completions.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub enum CaseSensitivity {
     /// Exact match: `foobar` only matches `foobar`
     Sensitive,
@@ -170,7 +170,7 @@ pub enum CaseSensitivity {
 }
 
 /// A lightweight value-type describing how closely a string fuzzy-matches another string.
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct StringFuzzyMatch {
     pub from_separator: bool,
     pub typ: ContainType,

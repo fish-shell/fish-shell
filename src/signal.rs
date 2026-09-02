@@ -454,7 +454,7 @@ fn match_signal_name(canonical: &wstr, mut name: &wstr) -> bool {
     equals_ascii_icase(canonical.slice_from(3), name)
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 /// A wrapper around the system signal code.
 pub struct RawSignal(NonZeroI32);
 
@@ -519,6 +519,7 @@ impl RawSignal {
 
 // Allow signals to be compared against i32.
 impl PartialEq<i32> for RawSignal {
+    // TODO
     fn eq(&self, other: &i32) -> bool {
         self.code() == *other
     }

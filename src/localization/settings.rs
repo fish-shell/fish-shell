@@ -6,7 +6,7 @@ use itertools::{Itertools as _, chain};
 use std::collections::HashSet;
 use std::sync::Mutex;
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy)]
 enum LanguagePrecedenceOrigin {
     Default,
     LocaleVariable(LocaleVariable),
@@ -14,7 +14,7 @@ enum LanguagePrecedenceOrigin {
     StatusLanguage,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy)]
 enum LocaleVariable {
     #[allow(clippy::upper_case_acronyms)]
     LANG,

@@ -78,7 +78,7 @@ impl Function {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ErrorKind {
     UnknownFunction,
     MissingClosingParen,
@@ -111,14 +111,14 @@ impl ErrorKind {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Error {
     pub kind: ErrorKind,
     pub position: usize,
     pub len: usize,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Operator {
     Add,
     Sub,

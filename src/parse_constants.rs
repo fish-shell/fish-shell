@@ -28,7 +28,7 @@ pub struct ParseTreeFlags {
 
 /// Represents parse issues found during validation.
 /// If this is returned as the error of a Result, then either `error` or `incomplete` (or both) is set.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct ParseIssue {
     pub error: bool,      // An error was found.
     pub incomplete: bool, // Incomplete input, such as unclosed block or pipe.
@@ -47,7 +47,7 @@ impl ParseIssue {
 }
 
 /// A range of source code.
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
+#[derive(PartialEq, Clone, Copy, Debug, Default)]
 pub struct SourceRange {
     pub start: u32,
     pub length: u32,
@@ -59,7 +59,7 @@ impl SourceRange {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum ParseTokenType {
     #[default]
     Invalid = 1,
@@ -82,7 +82,7 @@ pub enum ParseTokenType {
     Comment,
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum ParseKeyword {
     // 'None' is not a keyword, it is a sentinel indicating nothing.
     // Note it proves convenient to keep this as a value rather than using Option.
@@ -109,7 +109,7 @@ pub enum ParseKeyword {
 }
 
 // Statement decorations like 'command' or 'exec'.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum StatementDecoration {
     None,
     Command,
@@ -118,7 +118,7 @@ pub enum StatementDecoration {
 }
 
 // Parse error code list.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum ParseErrorCode {
     #[default]
     None,
@@ -145,7 +145,7 @@ pub enum ParseErrorCode {
 }
 
 // The location of a pipeline.
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum PipelinePosition {
     None,       // not part of a pipeline
     First,      // first command in a pipeline
@@ -279,7 +279,7 @@ impl From<&wstr> for ParseKeyword {
     }
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct ParseError {
     /// Text of the error.
     pub text: WString,

@@ -8,7 +8,7 @@ use std::{
 
 /// Struct for representing a file's inode. We use this to detect and avoid symlink loops, among
 /// other things.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, PartialOrd, Hash)]
 pub struct DevInode {
     pub device: u64,
     pub inode: u64,
@@ -17,7 +17,7 @@ pub struct DevInode {
 /// While an inode / dev pair is sufficient to distinguish co-existing files, Linux
 /// seems to aggressively reuse inodes, so it cannot determine if a file has been deleted
 /// (ABA problem). Therefore we include richer information to detect file changes.
-#[derive(Debug, Clone, Eq, Hash, Ord, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Hash, PartialEq, PartialOrd)]
 pub struct FileId {
     pub dev_inode: DevInode,
     pub size: u64,

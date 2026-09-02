@@ -278,7 +278,7 @@ impl std::ops::DerefMut for KeyEvent {
 
 /// Hackish: the input style, which describes how char events (only) are applied to the command
 /// line. Note this is set only after applying bindings; it is not set from readb().
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum CharInputStyle {
     // Insert characters normally.
     Normal,
@@ -401,18 +401,18 @@ impl InputData {
     }
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct BackgroundColorQuery {
     pub result: Option<xterm_color::Color>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum CursorPositionQueryReason {
     NewPrompt,
     WindowHeightChange,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct CursorPositionQuery {
     pub reason: CursorPositionQueryReason,
     pub result: Option<ViewportPosition>,
@@ -427,13 +427,13 @@ impl CursorPositionQuery {
     }
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct RecurrentQuery {
     pub background_color: Option<BackgroundColorQuery>,
     pub cursor_position: Option<CursorPositionQuery>,
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum TerminalQuery {
     Initial,
     Recurrent(RecurrentQuery),

@@ -976,7 +976,7 @@ fn do_indent(
     args: Vec<WString>,
 ) -> BuiltinResult {
     // Types of output we support
-    #[derive(Eq, PartialEq)]
+    #[derive(PartialEq)]
     enum OutputType {
         PlainText,
         File,

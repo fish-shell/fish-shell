@@ -56,7 +56,7 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SearchType {
     /// Search for commands exactly matching the given string.
     Exact,
@@ -75,7 +75,7 @@ pub enum SearchType {
 }
 
 /// Ways that a history item may be written to disk (or omitted).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PersistenceMode {
     /// The history item is written to disk normally
     Disk,
@@ -85,7 +85,7 @@ pub enum PersistenceMode {
     Ephemeral,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SearchDirection {
     Forward,
     Backward,
@@ -307,7 +307,7 @@ pub enum HistoryId {
 static HISTORIES: Mutex<BTreeMap<HistoryId, Arc<History>>> = Mutex::new(BTreeMap::new());
 
 /// When deleting, whether the deletion should be only for this session or for all sessions.
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq)]
 enum DeletionScope {
     SessionOnly,
     AllSessions,

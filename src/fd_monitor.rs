@@ -170,7 +170,7 @@ impl FdEventSignaller {
 
 /// Each item added to FdMonitor is assigned a unique ID, which is not recycled. Items may have
 /// their callback triggered immediately by passing the ID. Zero is a sentinel.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Hash)]
 pub struct FdMonitorItemId(u64);
 
 impl From<FdMonitorItemId> for u64 {

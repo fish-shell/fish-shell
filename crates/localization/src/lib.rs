@@ -53,14 +53,14 @@ impl<'a> PhfBorrow<Language<'a>> for Language<'a> {
 }
 
 pub trait LocalizationLanguage:
-    AsRef<Language<'static>> + Clone + Copy + Eq + Hash + Ord + PartialEq + PartialOrd + Borrow<str>
+    AsRef<Language<'static>> + Clone + Copy + Eq + Ord + Hash + PartialEq + PartialOrd + Borrow<str>
 {
 }
 
 #[macro_export]
 macro_rules! define_localization_language_type {
     ($name:ident) => {
-        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Hash)]
         pub struct $name(Language<'static>);
 
         impl LocalizationLanguage for $name {}

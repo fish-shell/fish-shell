@@ -11,7 +11,7 @@ pub const PATH_ARRAY_SEP: char = ':';
 pub const NONPATH_ARRAY_SEP: char = ' ';
 
 /// Options passed to environment get and set operations.
-#[derive(Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct EnvMode {
     /// Flag for local (to the current block) variable.
     pub local: bool,
@@ -138,7 +138,7 @@ impl Default for Statuses {
     }
 }
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct EnvVarFlags {
     // Whether the variable is exported.
     pub exported: bool,
@@ -150,7 +150,7 @@ pub struct EnvVarFlags {
 
 /// EnvVar is an immutable value-type data structure representing the value of an environment
 /// variable.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct EnvVar {
     /// The list of values in this variable.
     /// Arc allows for cheap copying

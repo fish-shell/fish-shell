@@ -8,10 +8,10 @@ pub(crate) trait StyleSet {
     fn difference_prefer_empty(self, other: Self) -> Self;
 }
 
-#[derive(Default, Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub(crate) enum ResettableStyle<T = ()>
 where
-    T: Copy + std::fmt::Debug + Eq,
+    T: Copy + std::fmt::Debug,
 {
     #[default]
     Unchanged,
@@ -21,10 +21,10 @@ where
 
 impl<T> StyleSet for ResettableStyle<T>
 where
-    T: Copy + std::fmt::Debug + Eq,
+    T: Copy + std::fmt::Debug,
 {
     fn union_prefer_right(self, other: Self) -> Self {
-        if other == Self::Unchanged {
+        if matches!(other, Self::Unchanged) {
             self
         } else {
             other
@@ -32,7 +32,7 @@ where
     }
 
     fn difference_prefer_empty(self, other: Self) -> Self {
-        if other != Self::Unchanged {
+        if !matches!(other, Self::Unchanged) {
             Self::Unchanged
         } else {
             self
@@ -40,7 +40,7 @@ where
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) enum UnderlineStyle {
     Single,
     Double,
@@ -49,7 +49,7 @@ pub(crate) enum UnderlineStyle {
     Dashed,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub(crate) struct TextStyling {
     pub(crate) bold: bool,
     pub(crate) underline_style: ResettableStyle<UnderlineStyle>,
@@ -141,7 +141,7 @@ impl TextStyling {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct TextFace {
     pub(crate) fg: Color,
     pub(crate) bg: Color,
@@ -185,7 +185,7 @@ impl TextFace {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct SpecifiedTextFace {
     pub(crate) fg: Option<Color>,
     pub(crate) bg: Option<Color>,

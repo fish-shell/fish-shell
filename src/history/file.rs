@@ -23,7 +23,7 @@ use std::{
 };
 
 /// History file types.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum HistoryFileType {
     Fish1_x, // old format with just timestamp and item

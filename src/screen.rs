@@ -1348,7 +1348,7 @@ pub fn screen_force_clear_to_end() {
 }
 
 /// Information about the layout of a prompt.
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 struct PromptLayout {
     /// Start offsets for each line in the truncated prompt.
     line_starts: Vec<usize>,
@@ -1828,7 +1828,7 @@ pub(crate) fn only_grayscale() -> bool {
     ONLY_GRAYSCALE.load()
 }
 
-#[derive(Debug, Default, Eq, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 struct ScreenLayout {
     // The left prompt that we're going to use.
     pub(crate) left_prompt: WString,

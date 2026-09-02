@@ -3,7 +3,7 @@ use crate::err_str;
 // Implementation of the block builtin.
 use super::prelude::*;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 enum Scope {
     #[default]
     Unset,

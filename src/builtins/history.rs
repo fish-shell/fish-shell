@@ -8,7 +8,7 @@ use crate::{err_fmt, err_str};
 
 use super::prelude::*;
 
-#[derive(Default, Eq, PartialEq)]
+#[derive(Default, PartialEq)]
 enum HistCmd {
     Search,
     Delete,

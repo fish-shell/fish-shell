@@ -63,7 +63,7 @@ localizable_consts!(
     ABBR_DESC "Abbreviation: %s"
 );
 
-#[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, Default, PartialEq, Debug)]
 pub struct CompletionMode {
     /// If set, skip file completions.
     pub no_files: bool,
@@ -454,7 +454,7 @@ impl CompletionReceiver {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum CompleteOptionType {
     /// no option
     ArgsOnly,
@@ -546,7 +546,7 @@ impl CompletionEntry {
 }
 
 /// Set of all completion entries. Keyed by the command name, and whether it is a path.
-#[derive(Clone, Debug, PartialOrd, Ord, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
 struct CompletionEntryIndex {
     name: WString,
     is_path: bool,
@@ -1880,7 +1880,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     }
 
     fn try_complete_variable(&mut self, s: &wstr) -> bool {
-        #[derive(PartialEq, Eq)]
+        #[derive(PartialEq)]
         enum Mode {
             Unquoted,
             SingleQuoted,

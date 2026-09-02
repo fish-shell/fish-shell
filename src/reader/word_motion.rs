@@ -5,7 +5,7 @@ use crate::reader::is_backslashed;
 use crate::tokenizer::tok_is_string_character;
 use fish_widestring::word_char::{WordCharClass, is_blank};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum MoveWordStyle {
     /// stop at punctuation
     Punctuation,
@@ -15,7 +15,7 @@ pub enum MoveWordStyle {
     Whitespace,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum MoveWordDir {
     Left,
     Right,

@@ -10,7 +10,7 @@ use std::num::NonZeroU16;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Termsize {
     /// Width of the terminal, in columns.
     width: NonZeroU16,

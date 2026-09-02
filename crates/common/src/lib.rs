@@ -32,7 +32,7 @@ pub const STDERR_FD: BorrowedFd = unsafe { BorrowedFd::borrow_raw(STDERR_FILENO)
 
 pub const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum EscapeStringStyle {
     Script(EscapeFlags),
     Url,
@@ -62,7 +62,7 @@ impl TryFrom<&wstr> for EscapeStringStyle {
 
 /// Options for the [`escape_string()`] function. These are only applicable when the escape style is
 /// [`EscapeStringStyle::Script`].
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct EscapeFlags {
     /// Do not escape special fish syntax characters like the semicolon. Only escape non-printable
     /// characters and backslashes.
@@ -78,7 +78,7 @@ pub struct EscapeFlags {
     pub comma: bool,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum UnescapeStringStyle {
     Script(UnescapeFlags),
     Url,
@@ -105,7 +105,7 @@ impl TryFrom<&wstr> for UnescapeStringStyle {
 }
 
 /// Options for unescape_string functions.
-#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub struct UnescapeFlags {
     /// Escape special fish syntax characters like the semicolon.
     pub special: bool,
@@ -521,7 +521,7 @@ fn unescape_string_internal(input: &wstr, flags: UnescapeFlags) -> Option<WStrin
     let mut potential_word_start = None;
 
     let mut errored = false;
-    #[derive(PartialEq, Eq)]
+    #[derive(PartialEq)]
     enum Mode {
         Unquoted,
         SingleQuotes,

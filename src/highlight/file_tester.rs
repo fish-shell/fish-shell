@@ -39,10 +39,10 @@ struct PathFlags {
 
 // When a file test is OK, we may also return whether this was a file.
 // This is used for underlining and is dependent on the particular file test.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct IsFile(pub bool);
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct IsErr;
 
 /// The result of a file test.

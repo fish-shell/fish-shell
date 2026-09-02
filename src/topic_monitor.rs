@@ -37,7 +37,7 @@ use std::{cell::UnsafeCell, pin::Pin};
 
 /// The list of topics which may be observed.
 #[repr(u8)]
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
 pub enum Topic {
     SigHupIntTerm = 0, // Corresponds to both SIGHUP and SIGINT signals.
     SigChld = 1,       // Corresponds to SIGCHLD signal.
@@ -46,7 +46,7 @@ pub enum Topic {
 
 pub type Generation = u64;
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, PartialOrd, Eq, Ord)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, PartialOrd)]
 pub struct GenerationsList {
     pub sighupintterm: Generation,
     pub sigchld: Generation,

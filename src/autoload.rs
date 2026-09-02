@@ -46,7 +46,7 @@ pub fn has_asset(cmd: &str) -> bool {
     Asset::get(cmd).is_some()
 }
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, PartialEq)]
 enum AssetDir {
     Functions,
     Completions,

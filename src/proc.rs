@@ -283,7 +283,6 @@ impl InternalProc {
 }
 
 /// A type-safe equivalent to [`libc::pid_t`].
-#[repr(transparent)]
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialOrd, PartialEq, Hash)]
 pub struct Pid(NonZeroU32);
 

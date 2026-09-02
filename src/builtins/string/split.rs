@@ -29,7 +29,6 @@ impl Default for Split<'_> {
     }
 }
 
-#[repr(transparent)]
 struct Fields(Vec<usize>);
 
 // we have a newtype just for the sake of implementing TryFrom

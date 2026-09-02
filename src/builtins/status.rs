@@ -88,14 +88,6 @@ str_enum!(
     (TestTerminalFeature, "test-terminal-feature"),
 );
 
-/// Values that may be returned from the test-feature option to status.
-#[repr(i32)]
-enum TestFeatureRetVal {
-    On,
-    Off,
-    NotRecognized,
-}
-
 struct Options {
     level: i32,
     new_job_control_mode: Option<JobControl>,
@@ -431,16 +423,19 @@ pub fn status(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
                     .finish(streams);
                 return Err(STATUS_INVALID_ARGS);
             }
-            let mut retval = TestFeatureRetVal::NotRecognized;
-            for md in features::METADATA {
-                if md.name == args[0] {
-                    retval = match feature_test(md.flag) {
-                        true => TestFeatureRetVal::On,
-                        false => TestFeatureRetVal::Off,
-                    };
-                }
-            }
-            return Err(retval as i32);
+            return features::METADATA
+                .iter()
+                .find(|md| md.name == args[0])
+                .map_or(
+                    Err(2), // Feature not recognized.
+                    |md| {
+                        if feature_test(md.flag) {
+                            Ok(SUCCESS) // On
+                        } else {
+                            Err(1) // Off
+                        }
+                    },
+                );
         }
         c @ GetFile => {
             if args.len() != 1 {

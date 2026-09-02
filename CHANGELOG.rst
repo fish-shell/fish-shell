@@ -4,26 +4,25 @@ fish ?.?.? (released ???)
 Interactive improvements
 ------------------------
 - On some terminals like kitty, keys like :kbd:`shift-space` and :kbd:`space` can now be mapped independently (:issue:`12898`).
-- Fix slow tab completion in directories that contain slow-to-resolve symlinks (e.g. links targeting a network mount) (:issue:`12905`).
-- To mitigate issues in Konsole v26.07.80's initial implementation of the kitty keyboard protocol, fish no longer requests that protocol on Konsole.
-  The ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be enabled to enable the kitty keyboard protocol on Konsole again (:issue:`12948`).
+- Fixed slow tab completion in directories that contain slow-to-resolve symlinks (e.g. links targeting a network mount) (:issue:`12905`).
+- To mitigate issues in Konsole version v26.07.80's implementation of the kitty keyboard protocol, fish no longer requests that protocol on Konsole.
+  The ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be turned on to enable the kitty keyboard protocol on Konsole again (:issue:`12948`).
 - Abbreviations can now be given a description, which will be displayed in the completion pager (:issue:`11291`).
 - Vi mode commands like ``cF`` and ``cT`` now work correctly (:issue:`12947`).
 
 Scripting improvements
 ----------------------
 - List indexing can now be nested in more cases; for example ``$foo[$bar[1] 2]`` is now allowed (:issue:`12903`).
+- Escaped square brackets (e.g. ``\133`` for ``[``) are no longer considered a slicing operator (:issue:`7969`).
+- Variables containing a closing square brackets and used to index into another variable will no longer close the slice early (:issue:`12819`).
 - Builtin help pages now respect an override of the ``man`` function (:issue:`12886`).
 - Commands like ``status=123 echo $status`` now throw an error instead of silently ignore the variable override (:issue:`7790`).
-- Escaped square brackets (e.g. ``\133`` for ``[``) are no longer considered a slicing operator (:issue:`7969`).
-- Variables containing a closing square brackets and used to index into another variable will not longer close the slice early (:issue:`12819`).
 
 Regression fixes:
 -----------------
 - (From 4.6.0) Chinese and Japanese translation of error messages owned by the C library (:issue:`12895`).
 - (From 4.3.2) Erasing read-only variables with ``set --erase`` was accidentally allowed.
 - (From 4.0.0) Builtin ``fg`` on NetBSD (:issue:`12929`).
-
 
 fish 4.8.1 (released July 14, 2026)
 ===================================

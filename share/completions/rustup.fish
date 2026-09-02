@@ -210,7 +210,7 @@ end
 
 # All valid toolchains excluding installed
 function __rustup_installable_toolchains
-    comm -2 -3 (__rustup_all_toolchains | psub -F) (printf "%s\n" $__rustup_toolchains | psub -F) \
+    comm -2 -3 (__rustup_all_toolchains | psub -F) (printf "%s\n" (__rustup_toolchains) | psub -F) \
         # Ignore warnings about lists not being in sorted order, as we are aware of their contents
         2>/dev/null
 end
@@ -229,10 +229,14 @@ function __rustup_installable_targets
 end
 
 # Trim trailing attributes, e.g. "rust-whatever (default)" -> "rust-whatever"
-set -l __rustup_toolchains (rustup toolchain list | string replace -r "\s+.*" '')
+function __rustup_toolchains
+    rustup toolchain list | string replace -r "\s+.*" ''
+end
 # By default, the long name of a toolchain is used (e.g. nightly-x86_64-unknown-linux-gnu),
 # but a shorter version can be used if it is unambiguous.
-set -l __rustup_toolchains_short (__rustup_strip_common_suffix_strict $__rustup_toolchains)
+function __rustup_toolchains_short
+    __rustup_strip_common_suffix_strict (__rustup_toolchains)
+end
 
 set -l rustup_profiles minimal default complete
 
@@ -242,17 +246,17 @@ complete -c rustup -n __fish_should_complete_switches -s V -l version
 
 complete -c rustup -n "__fish_is_nth_token 1" -xa "$subcmds"
 
-complete -c rustup -n "__fish_prev_arg_in default" -xa "$__rustup_toolchains_short $__rustup_toolchains"
+complete -c rustup -n "__fish_prev_arg_in default" -xa "(__rustup_toolchains_short) (__rustup_toolchains)"
 complete -c rustup -n "__fish_prev_arg_in toolchain" -xa "add install list remove uninstall link help"
 complete -c rustup -n "__fish_prev_arg_in target" -xa "list add install remove uninstall help"
 complete -c rustup -n "__fish_prev_arg_in component" -xa "list add install remove uninstall help"
 complete -c rustup -n "__fish_prev_arg_in override" -xa "list set unset help"
-complete -c rustup -n "__fish_prev_arg_in run" -xa "$__rustup_toolchains_short $__rustup_toolchains"
+complete -c rustup -n "__fish_prev_arg_in run" -xa "(__rustup_toolchains_short) (__rustup_toolchains)"
 complete -c rustup -n "__fish_prev_arg_in self" -xa "update remove uninstall upgrade-data help"
 complete -c rustup -n "__fish_prev_arg_in set" -xa "default-host profile help"
 
 complete -c rustup -n "__fish_seen_subcommand_from toolchain; and __fish_prev_arg_in remove uninstall" \
-    -xa "$__rustup_toolchains $__rustup_toolchains_short"
+    -xa "(__rustup_toolchains) (__rustup_toolchains_short)"
 complete -c rustup -n "__fish_seen_subcommand_from toolchain; and __fish_prev_arg_in add install" \
     -xa "(__rustup_installable_toolchains)"
 
@@ -275,7 +279,7 @@ complete -c rustup -n "__fish_seen_subcommand_from set; and __fish_prev_arg_in p
     -xa "$rustup_profiles"
 
 # Global argument completions where valid
-complete -c rustup -n "__fish_prev_arg_in --toolchain" -xa "$__rustup_toolchains_short $__rustup_toolchains"
+complete -c rustup -n "__fish_prev_arg_in --toolchain" -xa "(__rustup_toolchains_short) (__rustup_toolchains)"
 
 complete -f -c rustup -n '__fish_seen_subcommand_from doc' -a '(__fish_rustup_docs_primitives)'
 complete -f -c rustup -n '__fish_seen_subcommand_from doc' -a '(__fish_rustup_docs_keywords)'

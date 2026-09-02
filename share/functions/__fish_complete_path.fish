@@ -11,9 +11,7 @@ function __fish_complete_path --description "Complete using path"
             set target "$argv[1]"
             set description "$argv[2]"
     end
-    # Prevent `complete` from treating `=` as an option or assignment delimiter.
-    set -l completion_target (string replace -a = '\=' -- "$target")
-    set -l targets (complete -C"'' $completion_target")
+    set -l targets (complete -C"'' $target")
     if set -q targets[1]
         printf "%s\n" $targets\t"$description"
     end

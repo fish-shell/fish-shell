@@ -3,10 +3,10 @@ fish ?.?.? (released ???)
 
 Interactive improvements
 ------------------------
-- On some terminals like kitty, keys like :kbd:`shift-space` and :kbd:`space` can now be mapped independently (:issue:`12898`).
-- Fixed slow tab completion in directories that contain slow-to-resolve symlinks (e.g. links targeting a network mount) (:issue:`12905`).
 - To mitigate issues in Konsole version v26.07.80's implementation of the kitty keyboard protocol, fish no longer requests that protocol on Konsole.
   The ``omit-term-workarounds`` :ref:`feature flag <featureflags>` can be turned on to enable the kitty keyboard protocol on Konsole again (:issue:`12948`).
+- On some terminals like kitty, keys like :kbd:`shift-space` and :kbd:`space` can now be mapped independently (:issue:`12898`).
+- Fixed slow tab completion in directories that contain slow-to-resolve symlinks (e.g. links to network-mounted files) (:issue:`12905`).
 - Abbreviations can now be given a description, which will be displayed in the completion pager (:issue:`11291`).
 - Vi mode commands like ``cF`` and ``cT`` now work correctly (:issue:`12947`).
 
@@ -20,9 +20,9 @@ Scripting improvements
 
 Regression fixes:
 -----------------
-- (From 4.6.0) Chinese and Japanese translation of error messages owned by the C library (:issue:`12895`).
+- (From 4.6.0) Chinese and Japanese translation of error messages owned by the C library were broken (:issue:`12895`).
 - (From 4.3.2) Erasing read-only variables with ``set --erase`` was accidentally allowed.
-- (From 4.0.0) Builtin ``fg`` on NetBSD (:issue:`12929`).
+- (From 4.0.0) Builtin ``fg`` was not working on NetBSD (:issue:`12929`).
 
 fish 4.8.1 (released July 14, 2026)
 ===================================

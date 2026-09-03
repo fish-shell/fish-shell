@@ -71,14 +71,7 @@ fn detect_cfgs(target: &mut Target) {
         ("apple", &(|_| target_os_is_apple())),
         ("bsd", &(|_| target_os_is_bsd())),
         ("cygwin", &(|_| target_os_is_cygwin())),
-        ("have_eventfd", &|target| {
-            // FIXME: NetBSD 10 has eventfd, but the libc crate does not expose it.
-            if target_os() == "netbsd" {
-                false
-            } else {
-                target.has_header("sys/eventfd.h")
-            }
-        }),
+        ("have_eventfd", &|target| target.has_header("sys/eventfd.h")),
         ("have_localeconv_l", &|target| {
             target.has_symbol("localeconv_l")
         }),

@@ -152,7 +152,7 @@ function fish_config --description "Launch fish's web based configuration"
                         if functions -q $func
                             funcsave $func
                         else
-                            rm -f $__fish_config_dir/functions/$func.fish
+                            command rm -f $__fish_config_dir/functions/$func.fish
                         end
                     end
                     if not functions -q fish_mode_prompt

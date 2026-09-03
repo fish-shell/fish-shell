@@ -6,7 +6,13 @@ function __fish_theme_cat -a theme_name
         echo >&2 Searched (__fish_theme_dir) "and `status list-files themes`"
         return 1
     end
-    set -l theme_data (if string match -q '/*' -- $theme_path; cat $theme_path; else status get-file $theme_path; end)
+    set -l theme_data (
+        if string match -q '/*' -- $theme_path
+            command cat $theme_path
+        else
+            status get-file $theme_path
+        end
+    )
     set -l allowed_lines \
         '\s*' \
         '\s*#.*' \

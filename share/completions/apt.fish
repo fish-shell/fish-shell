@@ -69,20 +69,20 @@ function __fish_apt_list_repos
     # The trailing `sort -u` is largely decorative.
     set -l repos
     if test -f /etc/apt/sources.list
-        set -a repos (cat /etc/apt/sources.list | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1')
+        set -a repos (command cat /etc/apt/sources.list | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1')
     end
 
     if test -d /etc/apt/sources.list.d/
         set -l lists (find /etc/apt/sources.list.d/ -name "*.list")
         if test -n "$lists"
-            set -a repos (cat $lists | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1')
+            set -a repos (command cat $lists | string replace -rf '^\s*deb *(?:\[.*?\])? (?:[^ ]+) +([^ ]+) .*' '$1')
         end
 
         # New format of apt sources (https://wiki.debian.org/SourcesList https://manpages.debian.org/trixie/dpkg-dev/deb822.5.en.html)
         # The old one and the new one may coexist in one system
         set -l lists (find /etc/apt/sources.list.d/ -name "*.sources")
         if test -n "$lists"
-            set -a repos (cat $lists | string replace -rf '^Suites: +(.*)' '$1' | string replace --all ' ' \n)
+            set -a repos (command cat $lists | string replace -rf '^Suites: +(.*)' '$1' | string replace --all ' ' \n)
         end
 
     end

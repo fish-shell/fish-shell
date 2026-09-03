@@ -38,7 +38,7 @@ function __fish_complete_ant_targets -d "Print list of targets from build.xml an
             __parse_ant_targets_from_projecthelp $buildfile >$cache_file
         end
 
-        cat $cache_file
+        command cat $cache_file
     end
 
     set -l tokens $argv

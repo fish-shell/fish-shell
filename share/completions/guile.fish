@@ -57,7 +57,7 @@ function __fish_guile__complete_function_names
         sed -n 1p)
 
     test -e "$path" && begin
-        cat $path |
+        command cat $path |
             string match --all --groups-only --regex '\(\s*define\s+\(\s*(\w+)'
     end
 end

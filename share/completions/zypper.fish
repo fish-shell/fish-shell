@@ -44,7 +44,7 @@ function __fish_zypper_print_repos
     # Because spaces and special characters are allowed in repo aliases (bad
     # practice though, but allowed), it's impossible to parse the aliases from
     # zypper's output correctly. So we fetch them from the repo files.
-    set -l repos (cat /etc/zypp/repos.d/*.repo | string replace -rf '^\[(.+)\]$' '$1')
+    set -l repos (command cat /etc/zypp/repos.d/*.repo | string replace -rf '^\[(.+)\]$' '$1')
     # Then use the aliases to match their names from zypper's output.
     string replace -rf '^[\d\s]+\| ('(string escape -n $repos | string join \|)') +\| (.+)\s+\|.*\|.*\|.*$' '$1\t$2' -- $zypper_lr
 end
@@ -79,11 +79,11 @@ function __fish_zypper_print_packages
     end
 
     if test -z "$type"
-        cat $idx | string replace -rf '^([^\t]+)\t.*\t.*$' '$1'
+        command cat $idx | string replace -rf '^([^\t]+)\t.*\t.*$' '$1'
     else if test "$type" = package
-        cat $idx | string match -rv '^('(string join \| $__fish_zypper_package_types)'):' | string replace -rf '^([^\t]+)\t.*\t.*$' '$1'
+        command cat $idx | string match -rv '^('(string join \| $__fish_zypper_package_types)'):' | string replace -rf '^([^\t]+)\t.*\t.*$' '$1'
     else
-        cat $idx | string replace -rf "^$type"':([^\t]+)\t.*\t.*$' '$1\t'"$type"
+        command cat $idx | string replace -rf "^$type"':([^\t]+)\t.*\t.*$' '$1\t'"$type"
     end
 end
 

@@ -2,7 +2,7 @@
 # Completions from commandline
 #
 
-complete -c darcs -n "not __fish_use_subcommand" -a "(test -f _darcs/prefs/repos; and cat _darcs/prefs/repos)" -d "Darcs repo"
+complete -c darcs -n "not __fish_use_subcommand" -a "(test -f _darcs/prefs/repos; and command cat _darcs/prefs/repos)" -d "Darcs repo"
 complete -c darcs -a "test predist boringfile binariesfile" -n "contains setpref (commandline -pxc)" -d "Set the specified option" -x
 
 #

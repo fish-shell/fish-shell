@@ -19,7 +19,7 @@ function __fish_print_magento_modules -d "Lists all Magento modules"
     test -f $config_path; or return
 
     set -l in_modules 0
-    cat $config_path | while read -l line
+    command cat $config_path | while read -l line
         if test "$in_modules" -eq 0
             if string match -rq '[\'"]modules[\'"]\s*=>.*\[' -- $line
                 set in_modules 1

@@ -91,7 +91,7 @@ print("\n".join(data.get("dependencies", []))); print("\n".join(data.get("devDep
         jq -r '.dependencies as $a1 | .devDependencies as $a2 | ($a1 + $a2) | to_entries[] | .key' $package_json
     else
         set -l depsFound 0
-        for line in (cat $package_json)
+        for line in (command cat $package_json)
             # echo "evaluating $line"
             if test $depsFound -eq 0
                 # echo "mode: noDeps"

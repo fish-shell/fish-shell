@@ -5,7 +5,7 @@ function prompt_login --description "display user name for the prompt"
         set -l debian_chroot $debian_chroot
 
         if test -r /etc/debian_chroot
-            set debian_chroot (cat /etc/debian_chroot)
+            set debian_chroot (command cat /etc/debian_chroot)
         end
 
         if set -q debian_chroot[1]

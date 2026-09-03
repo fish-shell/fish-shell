@@ -47,8 +47,8 @@ function fish_hg_prompt --description 'Write out the hg prompt'
     or return 1
 
     # Read branch and bookmark
-    set -l branch (cat $root/branch 2>/dev/null; or echo default)
-    if set -l bookmark (cat $root/bookmarks.current 2>/dev/null)
+    set -l branch (command cat $root/branch 2>/dev/null; or echo default)
+    if set -l bookmark (command cat $root/bookmarks.current 2>/dev/null)
         set branch "$branch|$bookmark"
     end
 

@@ -38,10 +38,10 @@ function __fish_cached --description "Cache the command output for a given amoun
             command --search waitpid &>/dev/null
             and waitpid --exited --timeout 1 $last_pid
             and test -f $cache_file
-            and cat $cache_file
+            and command cat $cache_file
         end
     else
-        cat $cache_file
+        command cat $cache_file
 
         if test $cache_age -gt $max_age
             __fish_cache_put $cache_file

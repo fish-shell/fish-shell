@@ -180,7 +180,7 @@ You can also install Sphinx another way and drop the ``uv run --no-managed-pytho
     git checkout "$(git for-each-ref refs/tags/ | awk '$2 == "tag" { print $3 }' | tail -1)"
 
     uv run --no-managed-python \
-        cargo install --path .
+        cargo install --locked --path .
 
 This will place standalone binaries in ``~/.cargo/bin/``, but you can move them wherever you want.
 

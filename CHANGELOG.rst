@@ -1,5 +1,5 @@
-fish ?.?.? (released ???)
-=========================
+fish 4.9.0 (released September 03, 2026)
+========================================
 
 Interactive improvements
 ------------------------

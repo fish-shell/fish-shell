@@ -879,7 +879,6 @@ impl<'a> Reader<'a> {
             return;
         }
         std::mem::drop(bindings);
-        peeker.restart();
 
         if peeker.char_sequence_interrupted() {
             // This may happen if we received a signal in the middle of an escape sequence or other

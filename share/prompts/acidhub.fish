@@ -14,6 +14,7 @@ function fish_prompt -d "Write out the prompt"
         set git_branch (set_color -o blue)"$git_branch"
         set -l git_status
         if git rev-parse --quiet --verify HEAD >/dev/null
+            and not git rev-parse --is-bare-repository >/dev/null
             and not command git diff-index --quiet HEAD --
 
             for i in (git status --porcelain | string sub -l 2 | sort | uniq)

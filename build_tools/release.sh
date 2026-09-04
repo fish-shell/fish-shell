@@ -157,6 +157,40 @@ do
     TIMEOUT=30 gh run watch "$run_id" ||:
     sleep 5
 done
+
+{
+gh_api_repo() {
+    path=$1
+    shift
+    command gh api \
+        -H "Accept: application/vnd.github+json" \
+        -H "X-GitHub-Api-Version: 2022-11-28" \
+        "/repos/$repository_owner/fish-shell/$path" \
+        "$@"
+}
+
+# Approve macos-codesign
+# TODO what if current user can't approve?
+gh_pending_deployments() {
+    gh_api_repo "actions/runs/$run_id/pending_deployments" "$@"
+}
+while {
+    environment_id=$(gh_pending_deployments | jq .[].environment.id)
+    [ -z "$environment_id" ]
+}
+do
+    sleep 5
+done
+echo '
+        {
+            "environment_ids": ['"$environment_id"'],
+            "state": "approved",
+            "comment": "Approved via ./build_tools/release.sh"
+        }
+    ' |
+gh_pending_deployments --method POST --input=-
+}
+
 actual_tag_oid=$(git ls-remote "$remote" |
     awk '$2 == "refs/tags/'"$version"'" { print $1 }')
 [ "$tag_oid" = "$actual_tag_oid" ]
@@ -212,37 +246,6 @@ rm -rf "$tmpdir"
         | Created by ../fish-shell/build_tools/release.sh
     " | sed 's,^\s*| \?,,')"
 )
-
-gh_api_repo() {
-    path=$1
-    shift
-    command gh api \
-        -H "Accept: application/vnd.github+json" \
-        -H "X-GitHub-Api-Version: 2022-11-28" \
-        "/repos/$repository_owner/fish-shell/$path" \
-        "$@"
-}
-
-# Approve macos-codesign
-# TODO what if current user can't approve?
-gh_pending_deployments() {
-    gh_api_repo "actions/runs/$run_id/pending_deployments" "$@"
-}
-while {
-    environment_id=$(gh_pending_deployments | jq .[].environment.id)
-    [ -z "$environment_id" ]
-}
-do
-    sleep 5
-done
-echo '
-        {
-            "environment_ids": ['"$environment_id"'],
-            "state": "approved",
-            "comment": "Approved via ./build_tools/release.sh"
-        }
-    ' |
-gh_pending_deployments --method POST --input=-
 
 while {
     ! draft=$(gh release view "$version" --json=isDraft --jq=.isDraft) \

@@ -1,5 +1,5 @@
-fish ?.?.? (released ???)
-=========================
+fish 4.9.1 (released September 04, 2026)
+========================================
 
 This release fixes the following problems identified in fish 4.9.0:
 

@@ -408,9 +408,11 @@ impl AutoloadFileCache {
 
 #[cfg(test)]
 mod tests {
-    use super::{Autoload, AutoloadResult};
+    use super::{Autoload, AutoloadResult, KnownFile, Timestamp};
+    use crate::autoload::AutoloadableFileInfo;
     use crate::prelude::*;
     use crate::tests::prelude::*;
+    use crate::wutil::file_id_for_path;
     use assert_matches::assert_matches;
 
     #[test]
@@ -527,5 +529,50 @@ mod tests {
         autoload.invalidate_cache();
         assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());
         autoload.mark_autoload_finished(L!("file1"));
+    }
+
+    #[test]
+    fn test_path_thrashing_preserves_cache() {
+        let mut autoload = Autoload::new(L!("test_var"));
+
+        let base_paths = vec![WString::from_str("/usr/share/fish/functions")];
+        let nix_store_paths = vec![
+            WString::from_str("/nix/store/abc-fish-dep/functions"),
+            WString::from_str("/usr/share/fish/functions"),
+        ];
+
+        let cmd = WString::from_str("my_nix_function");
+        let resolved_path =
+            WString::from_str("/nix/store/abc-fish-dep/functions/my_nix_function.fish");
+
+        autoload
+            .cache
+            .command_to_path
+            .get_or_insert(cmd.clone(), || resolved_path.clone());
+        let file_id = file_id_for_path(&resolved_path);
+        autoload.cache.known_files.insert(
+            cmd.clone(),
+            KnownFile {
+                file: AutoloadableFileInfo::OnDisk {
+                    path: resolved_path.clone(),
+                    file_id,
+                },
+                last_checked: Timestamp::now(),
+            },
+        );
+
+        // The maps should remain populated regardless of path mutations.
+        for _ in 0..100 {
+            autoload.resolve_command_impl(&cmd, &nix_store_paths);
+            assert!(autoload.cache.command_to_path.contains(&cmd));
+
+            autoload.resolve_command_impl(&cmd, &base_paths);
+            assert!(autoload.cache.command_to_path.contains(&cmd));
+        }
+
+        assert_eq!(
+            autoload.cache.command_to_path.get(&cmd),
+            Some(&resolved_path)
+        );
     }
 }

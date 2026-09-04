@@ -38,7 +38,7 @@ pub(crate) fn match_key_event_to_key(event: &KeyEvent, key: &Key) -> Option<KeyM
         return Some(KeyMatchQuality::ModuloShift);
     }
 
-    if event.base_layout_codepoint != '\0' {
+    if event.base_layout_codepoint != '\0' && event.modifiers.is_some() {
         let mut base_layout_key = event.key;
         base_layout_key.codepoint = event.base_layout_codepoint;
         if base_layout_key == *key {
@@ -1168,10 +1168,14 @@ mod tests {
         validate!(KeyEvent::new(none, 'Ä'), Key::new(none, 'Ä'), Some(exact));
         validate!(KeyEvent::new(none, 'Ä'), Key::new(shift, 'ä'), None);
 
+        // Unmodified codepoints should not be matched against base layout
+        let text = Default::default();
+        let dvorak_s = KeyEvent::new_with(none, false, 's', None, Some(';'), text);
+        validate!(dvorak_s, Key::new(none, ';'), None);
+
         // FYI: for codepoints that are not letters with uppercase/lowercase versions, we use
         // the shifted key in the canonical notation, because the unshifted one may depend on the
         // keyboard layout.
-        let text = Default::default();
         let ctrl_shift_equals = KeyEvent::new_with(ctrl_shift, true, '=', Some('+'), None, text);
         validate!(ctrl_shift_equals, Key::new(ctrl_shift, '='), Some(exact));
         validate!(ctrl_shift_equals, Key::new(ctrl, '+'), Some(modulo_shift)); // canonical notation

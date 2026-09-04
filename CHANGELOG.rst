@@ -1,6 +1,10 @@
 fish ?.?.? (released ???)
 =========================
 
+Regression fixes:
+-----------------
+- (From 4.9.0) Text-oriented bindings were also matched against unmodified keys in the base layout when kitty keyboard protocol is supported (:issue:`12968`).
+
 fish 4.9.0 (released September 03, 2026)
 ========================================
 

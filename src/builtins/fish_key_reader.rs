@@ -131,7 +131,7 @@ fn process_input(
                 ));
             }
         }
-        if kevt.key.base_layout_codepoint != '\0' {
+        if kevt.key.base_layout_codepoint != '\0' && kevt.key.modifiers.is_some() {
             let mut base_layout_key = kevt.key.key;
             base_layout_key.codepoint = kevt.key.base_layout_codepoint;
             keys.push((base_layout_key, "physical key"));

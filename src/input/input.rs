@@ -27,10 +27,10 @@ use std::{
 #[derive(Clone, Debug, PartialEq)]
 pub struct ReadlineCmdEvent {
     pub cmd: ReadlineCmd,
-    /// The sequence of characters in the input mapping which generated this event.
+    /// The triggering key events.
     /// Note that the generic self-insert case does not have any characters, so this would be empty.
     /// This is also empty for invalid Unicode code points, which produce multiple characters.
-    pub seq: WString,
+    pub key_events: Vec<CharEvent>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -160,12 +160,8 @@ impl CharEvent {
         })
     }
 
-    pub fn from_readline(cmd: ReadlineCmd) -> CharEvent {
-        Self::from_readline_seq(cmd, WString::new())
-    }
-
-    pub fn from_readline_seq(cmd: ReadlineCmd, seq: WString) -> CharEvent {
-        CharEvent::Readline(ReadlineCmdEvent { cmd, seq })
+    pub fn from_readline(cmd: ReadlineCmd, key_events: Vec<CharEvent>) -> CharEvent {
+        Self::Readline(ReadlineCmdEvent { cmd, key_events })
     }
 
     pub fn from_check_exit() -> CharEvent {
@@ -942,8 +938,8 @@ mod tests {
         let mut queue = InputEventQueue::new(0, None);
         queue.push_back(CharEvent::from_char('a'));
         queue.push_back(CharEvent::from_char('b'));
-        queue.push_back(CharEvent::from_readline(ReadlineCmd::Undo));
-        queue.push_back(CharEvent::from_readline(ReadlineCmd::Redo));
+        queue.push_back(CharEvent::from_readline(ReadlineCmd::Undo, vec![]));
+        queue.push_back(CharEvent::from_readline(ReadlineCmd::Redo, vec![]));
         queue.push_back(CharEvent::from_char('c'));
         queue.push_back(CharEvent::from_char('d'));
         queue.promote_interruptions_to_front();

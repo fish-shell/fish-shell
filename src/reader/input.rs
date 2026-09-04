@@ -63,11 +63,14 @@ impl<'a> InputEventQueuer for Reader<'a> {
 
     fn paste_start_buffering(&mut self) {
         self.input_data.paste_buffer = Some(vec![]);
-        self.push_front(CharEvent::from_readline(ReadlineCmd::BeginUndoGroup));
+        self.push_front(CharEvent::from_readline(
+            ReadlineCmd::BeginUndoGroup,
+            vec![],
+        ));
     }
 
     fn paste_commit(&mut self) {
-        self.push_front(CharEvent::from_readline(ReadlineCmd::EndUndoGroup));
+        self.push_front(CharEvent::from_readline(ReadlineCmd::EndUndoGroup, vec![]));
         let Some(buffer) = self.input_data.paste_buffer.take() else {
             return;
         };

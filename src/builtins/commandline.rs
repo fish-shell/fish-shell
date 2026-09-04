@@ -481,7 +481,7 @@ pub fn commandline(
             }
 
             // Inserts the readline function at the back of the queue.
-            reader_execute_readline_cmd(parser, CharEvent::from_readline(cmd));
+            reader_execute_readline_cmd(parser, CharEvent::from_readline(cmd, vec![]));
         }
 
         return Ok(SUCCESS);

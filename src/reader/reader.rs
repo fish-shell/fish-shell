@@ -1657,7 +1657,7 @@ impl ReaderData {
         }
         self.force_exec_prompt_and_repaint = true;
         self.input_data
-            .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint));
+            .queue_char(CharEvent::from_readline(ReadlineCmd::Repaint, vec![]));
     }
 }
 

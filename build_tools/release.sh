@@ -244,9 +244,6 @@ echo '
     ' |
 gh_pending_deployments --method POST --input=-
 
-# Await completion.
-gh run watch "$run_id"
-
 while {
     ! draft=$(gh release view "$version" --json=isDraft --jq=.isDraft) \
     || [ "$draft" = true ]

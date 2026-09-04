@@ -1,6 +1,13 @@
 fish ?.?.? (released ???)
 =========================
 
+This release fixes the following problems identified in fish 4.9.0:
+
+- On non-default keyboard layouts, fish executed bindings for physical keys instead of only bindings for the layout's key.
+  For example, on the Dvorak layout, typing :kbd:`s` would insert ``;`` because there is a default binding for :kbd:`;` (:issue:`12968`).
+- When typing :kbd:`space` to accept a character entered via certain IMEs, fish would insert a space instead of the desired character, which has been fixed (:issue:`12974`).
+- On macOS terminals, keys like :kbd:`option-l` would execute bindings for :kbd:`alt-l` instead of the historical behavior of inserting a character (like ``@`` on a German layout) (:issue:`12973`).
+
 fish 4.9.0 (released September 03, 2026)
 ========================================
 

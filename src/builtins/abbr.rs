@@ -228,7 +228,7 @@ fn abbr_rename(opts: Options, streams: &mut IoStreams) -> BuiltinResult {
     }
 
     if contains_whitespace(new_name) {
-        err_fmt!(ABBR_CANNOT_HAVE_SPACES, new_name.as_utfstr())
+        err_fmt!(ABBR_CANNOT_HAVE_SPACES, new_name)
             .subcmd(CMD, subcmd)
             .finish(streams);
         return Err(STATUS_INVALID_ARGS);
@@ -241,7 +241,7 @@ fn abbr_rename(opts: Options, streams: &mut IoStreams) -> BuiltinResult {
         {
             err_fmt!(
                 "No abbreviation named %s with the specified command restrictions",
-                old_name.as_utfstr()
+                old_name,
             )
             .subcmd(CMD, subcmd)
             .finish(streams);
@@ -255,8 +255,8 @@ fn abbr_rename(opts: Options, streams: &mut IoStreams) -> BuiltinResult {
             if opts.commands.is_empty() {
                 err_fmt!(
                     "Abbreviation %s already exists, cannot rename %s",
-                    new_name.as_utfstr(),
-                    old_name.as_utfstr()
+                    new_name,
+                    old_name,
                 )
                 .subcmd(CMD, subcmd)
                 .finish(streams);
@@ -272,9 +272,9 @@ fn abbr_rename(opts: Options, streams: &mut IoStreams) -> BuiltinResult {
 
                 err_fmt!(
                     "Abbreviation %s already exists for commands %s, cannot rename %s",
-                    new_name.as_utfstr(),
-                    cmd_list.as_utfstr(),
-                    old_name.as_utfstr()
+                    new_name,
+                    cmd_list,
+                    old_name,
                 )
                 .subcmd(CMD, subcmd)
                 .finish(streams);
@@ -326,7 +326,7 @@ fn abbr_add(opts: Options, streams: &mut IoStreams) -> BuiltinResult {
     let mut args = opts.args.into_iter();
     let name = args.next().unwrap();
     if name.chars().any(|c| c.is_whitespace()) {
-        err_fmt!(ABBR_CANNOT_HAVE_SPACES, name.as_utfstr())
+        err_fmt!(ABBR_CANNOT_HAVE_SPACES, name)
             .subcmd(CMD, subcmd)
             .finish(streams);
         return Err(STATUS_INVALID_ARGS);
@@ -346,7 +346,7 @@ fn abbr_add(opts: Options, streams: &mut IoStreams) -> BuiltinResult {
         if let Err(error) = result {
             let mut err = err_fmt!(Error::REGEX_COMPILE, error.error_message());
             if let Some(offset) = error.offset() {
-                err.append_assign_to_msg(&sprintf!("\n%s: %s", CMD, regex_pattern.as_utfstr()));
+                err.append_assign_to_msg(&sprintf!("\n%s: %s", CMD, &regex_pattern));
                 // TODO: This is misaligned if `regex_pattern` contains characters which are not
                 // exactly 1 terminal cell wide or not on a single line.
                 let mut marker = " ".repeat(offset.saturating_sub(1));
@@ -379,7 +379,7 @@ fn abbr_add(opts: Options, streams: &mut IoStreams) -> BuiltinResult {
         // Abbreviation function names disallow spaces.
         // This is to prevent accidental usage of e.g. `--function 'string replace'`
         if !valid_func_name(function) || contains_whitespace(function) {
-            err_fmt!("Invalid function name: %s", function.as_utfstr())
+            err_fmt!("Invalid function name: %s", function)
                 .cmd(CMD)
                 .finish(streams);
             return Err(STATUS_INVALID_ARGS);

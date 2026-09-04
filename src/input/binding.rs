@@ -38,9 +38,9 @@ pub(crate) fn match_key_event_to_key(event: &KeyEvent, key: &Key) -> Option<KeyM
         return Some(KeyMatchQuality::ModuloShift);
     }
 
-    if event.base_layout_codepoint != '\0' {
+    if let Some(base_layout_codepoint) = event.base_layout_codepoint() {
         let mut base_layout_key = event.key;
-        base_layout_key.codepoint = event.base_layout_codepoint;
+        base_layout_key.codepoint = base_layout_codepoint;
         if base_layout_key == *key {
             return Some(KeyMatchQuality::BaseLayout);
         }
@@ -1211,6 +1211,10 @@ mod tests {
         // transformation.
         validate!(ctrl_shift_ц, Key::new(ctrl, 'Ц'), Some(modulo_shift));
         validate!(ctrl_shift_ц, Key::new(ctrl_shift, 'w'), Some(base_layout));
+
+        let dvorak_s = KeyEvent::new_with(none, false, 's', None, Some(';'), text);
+        validate!(dvorak_s, Key::new(none, 's'), Some(exact));
+        validate!(dvorak_s, Key::new(none, ';'), None);
     }
 
     #[test]

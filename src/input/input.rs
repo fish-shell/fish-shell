@@ -248,6 +248,11 @@ impl KeyEvent {
         }
         Some(c)
     }
+
+    pub fn base_layout_codepoint(&self) -> Option<char> {
+        (self.modifiers.is_some() && self.base_layout_codepoint != '\0')
+            .then_some(self.base_layout_codepoint)
+    }
 }
 
 impl From<Key> for KeyEvent {

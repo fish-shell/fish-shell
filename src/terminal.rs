@@ -89,7 +89,7 @@ pub(crate) enum TerminalCommand<'a> {
     DecrstAlternateScreenBuffer,
 
     // Keyboard protocols
-    KittyKeyboardProgressiveEnhancementsEnable,
+    KittyKeyboardProgressiveEnhancementsEnable { report_all_keys_as_escape: bool },
     KittyKeyboardProgressiveEnhancementsDisable,
     QueryKittyKeyboardProgressiveEnhancements,
 
@@ -308,7 +308,16 @@ impl Outputter {
             QueryXtgettcap(cap) => query_xtgettcap(self, cap),
             DecsetAlternateScreenBuffer => write(self, b"\x1b[?1049h"),
             DecrstAlternateScreenBuffer => write(self, b"\x1b[?1049l"),
-            KittyKeyboardProgressiveEnhancementsEnable => write(self, b"\x1b[=29u"),
+            KittyKeyboardProgressiveEnhancementsEnable {
+                report_all_keys_as_escape,
+            } => write(
+                self,
+                if report_all_keys_as_escape {
+                    b"\x1b[=29u"
+                } else {
+                    b"\x1b[=5u"
+                },
+            ),
             KittyKeyboardProgressiveEnhancementsDisable => write(self, b"\x1b[=0u"),
             QueryKittyKeyboardProgressiveEnhancements => query_kitty_progressive_enhancements(self),
             ModifyOtherKeysEnable => write(self, b"\x1b[>4;1m"),

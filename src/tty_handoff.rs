@@ -95,10 +95,10 @@ impl TtyQuirks {
             Tmux(version)
         } else if xtversion.starts_with(L!("WezTerm ")) {
             Wezterm
-        } else if terminal_os_name.is_some_and(|os_name| os_name == "Darwin")
-            || iterm2_version.is_some()
-            || xtversion.starts_with("ghostty ")
-        {
+        } else if match terminal_os_name {
+            Some(os_name) => os_name == "Darwin",
+            Option::None => iterm2_version.is_some() || xtversion.starts_with("ghostty "),
+        } {
             MacOs
         } else {
             None

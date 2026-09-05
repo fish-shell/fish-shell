@@ -179,7 +179,7 @@ impl TtyQuirks {
         }
         match KITTY_KEYBOARD_SUPPORTED.get() {
             Some(&true) => ProtocolKind::KittyKeyboard {
-                macos: *self != MacOs,
+                macos: *self == MacOs,
             },
             Some(&false) => {
                 if *self == Wezterm {

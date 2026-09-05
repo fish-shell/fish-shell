@@ -1,6 +1,8 @@
 fish ?.?.? (released ???)
 =========================
 
+This release corrects the fix for macOS terminals from 4.9.1 (:issue:`12973`)
+
 fish 4.9.1 (released September 04, 2026)
 ========================================
 

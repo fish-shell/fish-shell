@@ -113,7 +113,7 @@ def run_fish_cmd(text, strict=False, env=None):
     out = out.decode("utf-8", "replace")
     err = err.decode("utf-8", "replace")
     if strict:
-        assert err == ""
+        assert err == "", err
         # TODO use check_output()
         return out
     return out, err
@@ -815,7 +815,7 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
             + "__fish_theme_export_for_webconfig",
             env=os.environ | {"__fish_force_load_default_theme": "1"},
         )
-        assert err == ""
+        assert err == "", err
 
         words = iter(shlex.split(out))
         current = next(words)
@@ -1242,8 +1242,8 @@ class FishConfigHTTPRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
                 + "    end\n"
                 + "end\n"
             )
-            assert out == ""
-            assert err == ""
+            assert out == "", out
+            assert err == "", err
 
         elif p == "/get_function/":
             what = postvars.get("what")

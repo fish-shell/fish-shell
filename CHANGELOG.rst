@@ -1,5 +1,5 @@
-fish ?.?.? (released ???)
-=========================
+fish 4.9.2 (released September 05, 2026)
+========================================
 
 This release corrects the fix for macOS terminals from 4.9.1 (:issue:`12973`)
 

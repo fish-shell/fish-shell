@@ -163,9 +163,7 @@ impl Autoload {
     /// Return whether a command could potentially be autoloaded.
     /// This does not actually mark the command as being autoloaded.
     pub fn can_autoload(&mut self, cmd: &wstr) -> bool {
-        self.cache
-            .check(self.env_var_name, cmd, true /* allow stale */)
-            .is_some()
+        self.cache.command_to_path.contains(cmd)
     }
 
     /// Return whether autoloading has been attempted for a command.
@@ -195,7 +193,7 @@ impl Autoload {
     /// Invalidate any underlying cache.
     #[cfg(test)]
     fn invalidate_cache(&mut self) {
-        self.cache = AutoloadFileCache::with_dirs(self.cache.dirs().to_owned());
+        self.cache = AutoloadFileCache::new();
     }
 
     /// Like resolve_autoload(), but accepts the paths directly.
@@ -209,12 +207,9 @@ impl Autoload {
         // Check to see if our paths have changed. If so, replace our cache.
         // Note we don't have to modify autoloadable_files_. We'll naturally detect if those have
         // changed when we query the cache.
-        if paths != self.cache.dirs() {
-            self.cache = AutoloadFileCache::with_dirs(paths.to_owned());
-        }
 
         // Do we have an entry to load?
-        let Some(file) = self.cache.check(self.env_var_name, cmd, false) else {
+        let Some(file) = self.cache.check(self.env_var_name, paths, cmd, false) else {
             return AutoloadResult::None;
         };
 
@@ -256,7 +251,6 @@ enum AutoloadableFileInfo {
 
 // A timestamp is a monotonic point in time.
 type Timestamp = time::Instant;
-type MissesLruCache = LruCache<WString, Timestamp>;
 
 struct KnownFile {
     file: AutoloadableFileInfo,
@@ -266,15 +260,7 @@ struct KnownFile {
 /// Class representing a cache of files that may be autoloaded.
 /// This is responsible for performing cached accesses to a set of paths.
 struct AutoloadFileCache {
-    /// The directories from which to load.
-    dirs: Vec<WString>,
-
-    /// Our LRU cache of checks that were misses.
-    /// The key is the command, the  value is the time of the check.
-    misses_cache: MissesLruCache,
-
-    /// The set of files that we have returned to the caller, along with the time of the check.
-    /// The key is the command (not the path).
+    command_to_path: LruCache<WString, WString>,
     known_files: HashMap<WString, KnownFile>,
 }
 
@@ -285,23 +271,12 @@ impl Default for AutoloadFileCache {
 }
 
 impl AutoloadFileCache {
-    /// Initialize with a set of directories.
-    fn with_dirs(dirs: Vec<WString>) -> Self {
-        Self {
-            dirs,
-            misses_cache: MissesLruCache::new(NonZeroUsize::new(1024).unwrap()),
-            known_files: HashMap::new(),
-        }
-    }
-
     /// Initialize with empty directories.
     fn new() -> Self {
-        Self::with_dirs(vec![])
-    }
-
-    /// Return the directories.
-    fn dirs(&self) -> &[WString] {
-        &self.dirs
+        Self {
+            command_to_path: LruCache::new(NonZeroUsize::new(1024).unwrap()),
+            known_files: Default::default(),
+        }
     }
 
     /// Check if a command `cmd` can be loaded.
@@ -310,6 +285,7 @@ impl AutoloadFileCache {
     fn check(
         &mut self,
         env_var_name: &wstr,
+        dirs: &[WString],
         cmd: &wstr,
         allow_stale: bool,
     ) -> Option<AutoloadableFileInfo> {
@@ -333,21 +309,11 @@ impl AutoloadFileCache {
             self.known_files.remove(cmd);
         }
 
-        // Check misses.
-        if let Some(miss) = self.misses_cache.get(cmd) {
-            if allow_stale || Self::is_fresh(*miss, Self::current_timestamp()) {
-                // Re-use this cached miss.
-                return None;
-            }
-            // The miss is stale, remove it.
-            self.misses_cache.pop(cmd);
-        }
-
         // We couldn't satisfy this request from the cache. Hit the disk.
         let file = self
-            .locate_file(cmd, asset_dir, false)
+            .locate_file(cmd, dirs, asset_dir, false)
             .or_else(|| self.locate_asset(cmd, asset_dir?))
-            .or_else(|| self.locate_file(cmd, asset_dir, true));
+            .or_else(|| self.locate_file(cmd, dirs, asset_dir, true));
         if let Some(file) = file.as_ref() {
             let old_value = self.known_files.insert(
                 cmd.to_owned(),
@@ -360,21 +326,13 @@ impl AutoloadFileCache {
                 old_value.is_none(),
                 "Known files cache should not have contained this cmd"
             );
-        } else {
-            let old_value = self
-                .misses_cache
-                .put(cmd.to_owned(), Self::current_timestamp());
-            assert!(
-                old_value.is_none(),
-                "Misses cache should not have contained this cmd",
-            );
         }
         file
     }
 
     /// Return true if a command is cached (either as a hit or miss).
     fn is_cached(&self, cmd: &wstr) -> bool {
-        self.known_files.contains_key(cmd) || self.misses_cache.contains(cmd)
+        self.command_to_path.contains(cmd)
     }
 
     /// Return the current timestamp.
@@ -391,8 +349,9 @@ impl AutoloadFileCache {
     /// Attempt to find an autoloadable file by searching our path list for a given command.
     /// Return the file, or none() if none.
     fn locate_file(
-        &self,
+        &mut self,
         cmd: &wstr,
+        dirs: &[WString],
         asset_dir: Option<AssetDir>,
         want_generated_completions: bool,
     ) -> Option<AutoloadableFileInfo> {
@@ -407,7 +366,7 @@ impl AutoloadFileCache {
         }
         // Re-use the storage for path.
         let mut path;
-        for dir in self.dirs() {
+        for dir in dirs {
             if asset_dir == Some(AssetDir::Completions) {
                 // HACK: Ignore generated_completions until we tried the embedded assets
                 if dir.ends_with(L!("/generated_completions")) != want_generated_completions {
@@ -423,6 +382,8 @@ impl AutoloadFileCache {
             let file_id = file_id_for_path(&path);
             if file_id != INVALID_FILE_ID {
                 // Found it.
+                self.command_to_path
+                    .get_or_insert(cmd.to_owned(), || path.to_owned());
                 return Some(AutoloadableFileInfo::OnDisk { path, file_id });
             }
         }
@@ -447,9 +408,11 @@ impl AutoloadFileCache {
 
 #[cfg(test)]
 mod tests {
-    use super::{Autoload, AutoloadResult};
+    use super::{Autoload, AutoloadResult, KnownFile, Timestamp};
+    use crate::autoload::AutoloadableFileInfo;
     use crate::prelude::*;
     use crate::tests::prelude::*;
+    use crate::wutil::file_id_for_path;
     use assert_matches::assert_matches;
 
     #[test]
@@ -566,5 +529,50 @@ mod tests {
         autoload.invalidate_cache();
         assert!(autoload.resolve_command_impl(L!("file1"), paths).is_some());
         autoload.mark_autoload_finished(L!("file1"));
+    }
+
+    #[test]
+    fn test_path_thrashing_preserves_cache() {
+        let mut autoload = Autoload::new(L!("test_var"));
+
+        let base_paths = vec![WString::from_str("/usr/share/fish/functions")];
+        let nix_store_paths = vec![
+            WString::from_str("/nix/store/abc-fish-dep/functions"),
+            WString::from_str("/usr/share/fish/functions"),
+        ];
+
+        let cmd = WString::from_str("my_nix_function");
+        let resolved_path =
+            WString::from_str("/nix/store/abc-fish-dep/functions/my_nix_function.fish");
+
+        autoload
+            .cache
+            .command_to_path
+            .get_or_insert(cmd.clone(), || resolved_path.clone());
+        let file_id = file_id_for_path(&resolved_path);
+        autoload.cache.known_files.insert(
+            cmd.clone(),
+            KnownFile {
+                file: AutoloadableFileInfo::OnDisk {
+                    path: resolved_path.clone(),
+                    file_id,
+                },
+                last_checked: Timestamp::now(),
+            },
+        );
+
+        // The maps should remain populated regardless of path mutations.
+        for _ in 0..100 {
+            autoload.resolve_command_impl(&cmd, &nix_store_paths);
+            assert!(autoload.cache.command_to_path.contains(&cmd));
+
+            autoload.resolve_command_impl(&cmd, &base_paths);
+            assert!(autoload.cache.command_to_path.contains(&cmd));
+        }
+
+        assert_eq!(
+            autoload.cache.command_to_path.get(&cmd),
+            Some(&resolved_path)
+        );
     }
 }

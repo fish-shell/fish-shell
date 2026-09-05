@@ -32,6 +32,7 @@ Scripting improvements
 - Variables containing a closing square brackets and used to index into another variable will no longer close the slice early (:issue:`12819`).
 - Builtin help pages now respect an override of the ``man`` function (:issue:`12886`).
 - Commands like ``status=123 echo $status`` now throw an error instead of silently ignore the variable override (:issue:`7790`).
+- Better error messages for exit status 126 (:issue:`11433`).
 
 Regression fixes:
 -----------------

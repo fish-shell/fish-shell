@@ -223,13 +223,17 @@ pub fn execute_fork() -> pid_t {
     }
     exit_without_destructors(1)
 }
-
 pub(crate) fn signal_safe_report_exec_error(
     err: Errno,
     actual_cmd: &CStr,
     argvv: &OwningNullTerminatedArray,
     envv: &OwningNullTerminatedArray,
 ) {
+    macro_rules! log {
+        ($($msg:expr),+ $(,)?) => {
+            flog_safe!(exec, "Failed to execute process '", actual_cmd, "': ", $($msg),+)
+        };
+    }
     match err {
         Errno::E2BIG => {
             let szenv = envv.iter().map(|s| s.to_bytes().len()).sum::<usize>();
@@ -239,11 +243,8 @@ pub(crate) fn signal_safe_report_exec_error(
             if arg_max > 0 {
                 let arg_max = arg_max as usize;
                 if sz >= arg_max {
-                    flog_safe!(
-                        exec,
-                        "Failed to execute process '",
-                        actual_cmd,
-                        "': the total size of the argument list and exported variables (",
+                    log!(
+                        "The total size of the argument list and exported variables (",
                         sz,
                         ") exceeds the OS limit of ",
                         arg_max,
@@ -253,12 +254,7 @@ pub(crate) fn signal_safe_report_exec_error(
                     // MAX_ARG_STRLEN, a linux thing that limits the size of one argument. It's
                     // defined in binfmts.h, but we don't want to include that just to be able to
                     // print the real limit.
-                    flog_safe!(
-                        exec,
-                        "Failed to execute process '",
-                        actual_cmd,
-                        "': An argument or exported variable exceeds the OS argument length limit."
-                    );
+                    log!("An argument or exported variable exceeds the OS argument length limit.");
                 }
 
                 if szenv >= arg_max / 2 {
@@ -269,11 +265,8 @@ pub(crate) fn signal_safe_report_exec_error(
                     );
                 }
             } else {
-                flog_safe!(
-                    exec,
-                    "Failed to execute process '",
-                    actual_cmd,
-                    "': the total size of the argument list and exported variables (",
+                log!(
+                    "The total size of the argument list and exported variables (",
                     sz,
                     ") exceeds the operating system limit.",
                 );
@@ -281,12 +274,7 @@ pub(crate) fn signal_safe_report_exec_error(
         }
 
         Errno::ENOEXEC => {
-            flog_safe!(
-                exec,
-                "Failed to execute process: '",
-                actual_cmd,
-                "' the file could not be run by the operating system."
-            );
+            log!("The file could not be run by the operating system.");
             let mut interpreter_buf = [b'\0'; 128];
             if get_interpreter(actual_cmd, &mut interpreter_buf).is_none() {
                 // Paths ending in ".fish" need to start with a shebang
@@ -317,180 +305,63 @@ pub(crate) fn signal_safe_report_exec_error(
                     fstat(fd).map_err(|_| ())
                 };
 
-                fn err_or_no_exec_handling(interpreter: &CStr, actual_cmd: &CStr) {
+                let err_or_no_exec_handling = |interpreter: &CStr| {
                     // Detect Windows line endings and complain specifically about them.
                     let interpreter = interpreter.to_bytes();
                     if interpreter.last() == Some(&b'\r') {
-                        flog_safe!(
-                            exec,
-                            "Failed to execute process '",
-                            actual_cmd,
-                            "':  The file uses Windows line endings (\\r\\n). Run dos2unix or similar to fix it."
+                        log!(
+                            "The file uses Windows line endings (\\r\\n). Run dos2unix or similar to fix it."
                         );
                     } else {
-                        flog_safe!(
-                            exec,
-                            "Failed to execute process '",
-                            actual_cmd,
-                            "': The file specified the interpreter '",
+                        log!(
+                            "The file specified the interpreter '",
                             interpreter,
                             "', which is not an executable command."
                         );
                     }
-                }
+                };
 
                 if let Ok(metadata) = md {
                     #[allow(clippy::useless_conversion)] // for mode
                     if unsafe { libc::access(interpreter.as_ptr(), libc::X_OK) } != 0 {
-                        err_or_no_exec_handling(interpreter, actual_cmd);
+                        err_or_no_exec_handling(interpreter);
                     } else if metadata.mode() & u32::from(libc::S_IFMT) == u32::from(libc::S_IFDIR)
                     {
-                        flog_safe!(
-                            exec,
-                            "Failed to execute process '",
-                            actual_cmd,
-                            "': The file specified the interpreter '",
+                        log!(
+                            "The file specified the interpreter '",
                             interpreter,
                             "', which is a directory."
                         );
                     }
                 } else {
-                    err_or_no_exec_handling(interpreter, actual_cmd);
+                    err_or_no_exec_handling(interpreter);
                 }
             } else if unsafe { libc::access(actual_cmd.as_ptr(), libc::X_OK) } == 0 {
-                flog_safe!(
-                    exec,
-                    "Failed to execute process '",
-                    actual_cmd,
-                    "': The file exists and is executable. Check the interpreter or linker?"
-                );
+                log!("The file exists and is executable. Check the interpreter or linker?");
             } else if err == Errno::ENOENT {
-                flog_safe!(
-                    exec,
-                    "Failed to execute process '",
-                    actual_cmd,
-                    "': The file does not exist or could not be executed."
-                );
+                log!("The file does not exist or could not be executed.");
             } else {
-                flog_safe!(
-                    exec,
-                    "Failed to execute process '",
-                    actual_cmd,
-                    "': The file could not be accessed."
-                );
+                log!("The file could not be accessed.");
             }
         }
 
-        Errno::ENOMEM => {
-            flog_safe!(exec, "Out of memory");
-        }
-
-        Errno::ETXTBSY => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': File is currently open for writing.",
-            );
-        }
-
-        Errno::ELOOP => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': Too many layers of symbolic links. Maybe a loop?"
-            );
-        }
-
-        Errno::EINVAL => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': Unsupported format."
-            );
-        }
-        Errno::EISDIR => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': File is a directory."
-            );
-        }
-        Errno::ENOTDIR => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': A path component is not a directory."
-            );
-        }
-
-        Errno::EMFILE => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': Too many open files in this process."
-            );
-        }
-        Errno::ENFILE => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': Too many open files on the system."
-            );
-        }
-        Errno::ENAMETOOLONG => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': Name is too long."
-            );
-        }
+        Errno::ENOMEM => flog_safe!(exec, "Out of memory."),
+        Errno::EMFILE => flog_safe!(exec, "Too many open files in this process."),
+        Errno::ENFILE => flog_safe!(exec, "Too many open files on the system."),
+        Errno::ETXTBSY => log!("File is currently open for writing."),
+        Errno::ELOOP => log!("Too many levels of symbolic links. Maybe a loop?"),
+        Errno::ENAMETOOLONG => log!("File name is too long."),
+        Errno::EINVAL => log!("Invalid argument."),
+        Errno::EISDIR => log!("File is a directory."),
+        Errno::ENOTDIR => log!("One of the parent files is not a directory.."),
         Errno::EPERM => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': No permission. \
-                Either suid/sgid is forbidden or you lack capabilities."
-            );
+            log!("No permission. Either suid/sgid is forbidden or you lack capabilities.");
         }
-
         #[cfg(apple)]
-        Errno::EBADARCH => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': Bad CPU type in executable."
-            );
-        }
-
+        Errno::EBADARCH => log!("Bad CPU type in executable."),
         #[cfg(apple)]
-        Errno::EBADMACHO => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "': Malformed Mach-O file."
-            );
-        }
-
-        err => {
-            flog_safe!(
-                exec,
-                "Failed to execute process '",
-                actual_cmd,
-                "', unknown error number ",
-                err as i32,
-            );
-        }
+        Errno::EBADMACHO => log!("Malformed Mach-O file."),
+        err => log!("Unknown error number ", err as i32),
     }
 }
 

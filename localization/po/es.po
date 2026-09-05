@@ -1455,18 +1455,6 @@ msgstr "Color desconocido '%s'"
 msgid "Unknown command"
 msgstr "Comando desconocido"
 
-#, c-format
-msgid "Unknown command. '%s' exists but is not an executable file."
-msgstr "Comando desconocido. ‘%s’ existe pero no es un archivo ejecutable."
-
-#, c-format
-msgid "Unknown command. A component of '%s' is not a directory."
-msgstr "Comando desconocido. Un componente de ‘%s’ no es un directorio."
-
-#, c-format
-msgid "Unknown command. A component of '%s' is not a directory. Check your $PATH."
-msgstr "Comando desconocido. Un componente de ‘%s’ no es un directorio. Verifique su $PATH."
-
 msgid "Unknown command:"
 msgstr "Comando desconocido:"
 

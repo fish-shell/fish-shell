@@ -1476,18 +1476,6 @@ msgstr "未知颜色 '%s'"
 msgid "Unknown command"
 msgstr "未知的命令"
 
-#, c-format
-msgid "Unknown command. '%s' exists but is not an executable file."
-msgstr "未知的命令。'%s' 存在，但不是一个可执行文件。"
-
-#, c-format
-msgid "Unknown command. A component of '%s' is not a directory."
-msgstr "未知的命令。%s 的一个组件不是目录。"
-
-#, c-format
-msgid "Unknown command. A component of '%s' is not a directory. Check your $PATH."
-msgstr "未知的命令。%s 的一个组件不是目录。检查你的 $PATH."
-
 msgid "Unknown command:"
 msgstr "未知的命令："
 

@@ -63,13 +63,24 @@ localizable_consts!(
     ABBR_DESC "Abbreviation: %s"
 );
 
-#[derive(Clone, Copy, Default, PartialEq, Debug)]
-pub struct CompletionMode {
-    /// If set, skip file completions.
-    pub no_files: bool,
-    pub force_files: bool,
+/// Whether to allow file completions.
+/// Note this is in ascending priority order: --force-files beats --no-files.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum FileCompletionPolicy {
+    #[default]
+    Inherit, // Defer to surrounding completion logic
+    Skip,  // No file completions: --no-files or --exclusive
+    Force, // Always perform: --force-files
+}
+
+/// Controls the behavior of completing an argument after a switch.
+#[derive(Clone, Copy, Default, PartialEq, Eq, Debug)]
+pub struct ArgumentPolicy {
+    /// Whether to perform file completions.
+    pub files: FileCompletionPolicy,
 
     /// If set, require a parameter after completion.
+    /// Only applies to option-arguments.
     pub requires_param: bool,
 }
 
@@ -491,7 +502,7 @@ struct CompleteEntryOpt {
     /// Type of the option: `ArgsOnly`, `Short`, `SingleLong`, or `DoubleLong`.
     typ: CompleteOptionType,
     /// Determines how completions should be performed on the argument after the switch.
-    result_mode: CompletionMode,
+    argument_policy: ArgumentPolicy,
     /// Completion flags.
     flags: CompleteFlags,
 }
@@ -675,9 +686,9 @@ struct CustomArgData<'a> {
     /// Whether a -- has been encountered, which suppresses options.
     had_ddash: bool,
     /// Whether to perform file completions.
-    /// This is an "out" parameter of the wrap chain walk: if any wrapped command suppresses file
-    /// completions this gets set to false.
-    do_file: bool,
+    /// This is an "out" parameter of the wrap chain walk: if any wrapped command has an opinion
+    /// (`--no-files` or `--force-files`), this is updated to match.
+    file_policy: FileCompletionPolicy,
     /// Depth in the wrap chain.
     wrap_depth: usize,
     /// The list of variable assignments: escaped strings of the form VAR=VAL.
@@ -694,7 +705,7 @@ impl<'a> CustomArgData<'a> {
             previous_argument: WString::new(),
             current_argument: WString::new(),
             had_ddash: false,
-            do_file: true,
+            file_policy: FileCompletionPolicy::Inherit,
             wrap_depth: 0,
             var_assignments,
             visited_wrapped_commands: HashSet::new(),
@@ -930,15 +941,15 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             if let (Some(prev), Some(cur)) = (prev, cur) {
                 arg_data.previous_argument = prev;
                 arg_data.current_argument = cur;
-                // Have to walk over the command and its entire wrap chain. If any command
-                // disables do_file, then they all do.
+                // Have to walk over the command and its entire wrap chain. The last command
+                // in the chain to express an opinion (--no-files or --force-files) wins.
                 self.walk_wrap_chain(
                     &exp_command,
                     effective_cmdline,
                     command_range,
                     &mut arg_data,
                 );
-                do_file = arg_data.do_file;
+                do_file = arg_data.file_policy != FileCompletionPolicy::Skip;
 
                 // If we're autosuggesting, and the token is empty, don't do file suggestions.
                 if is_autosuggest && arg_data.current_argument.is_empty() {
@@ -1022,7 +1033,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             });
 
             if let Some(matched) = matched {
-                if matched.result_mode.requires_param {
+                if matched.argument_policy.requires_param {
                     return Some(pos);
                 }
             } else {
@@ -1421,8 +1432,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     }
 
     /// complete_param: Given a command, find completions for the argument `s` of command `cmd_orig`
-    /// with previous option `popt`. If file completions should be disabled, then mark
-    /// `out_do_file` as `false`.
+    /// with previous option `popt`. If this command's completions have an opinion on file
+    /// completions (`--no-files` or `--force-files`), that opinion is written into
+    /// `out_file_policy`; otherwise it is left untouched.
     ///
     /// Returns `true` if successful, `false` if there's an error.
     ///
@@ -1438,10 +1450,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         popt: &wstr,
         s: &wstr,
         use_switches: bool,
-        out_do_file: &mut bool,
+        out_file_policy: &mut FileCompletionPolicy,
     ) -> bool {
-        let mut use_files = true;
-        let mut has_force = false;
+        let mut file_policy = FileCompletionPolicy::Inherit;
 
         let cmd_string = CmdString::new(cmd_orig, self.ctx.vars());
         let cmd_name = cmd_string.basename(cmd_orig);
@@ -1479,10 +1490,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             // a previous completion has set it to false and when it has its default value.
             let mut last_option_requires_param = None;
 
-            // Whether this token has been claimed as the argument to a specific switch.
-            let mut token_claimed = false;
-
             if use_switches {
+                // Whether this token has been claimed as the argument to a specific switch.
+                let mut token_claimed = false;
                 if s.char_at(0) == '-' {
                     // Check if we are entering a combined option and argument (like --color=auto or
                     // -I/usr/include).
@@ -1504,19 +1514,14 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                                 // Only override a true last_option_requires_param value with a false
                                 // one
                                 *last_option_requires_param
-                                    .get_or_insert(o.result_mode.requires_param) &=
-                                    o.result_mode.requires_param;
+                                    .get_or_insert(o.argument_policy.requires_param) &=
+                                    o.argument_policy.requires_param;
                             }
                             if let Some(arg_offset) = arg_offset {
-                                if o.result_mode.requires_param {
+                                if o.argument_policy.requires_param {
                                     token_claimed = true;
                                 }
-                                if o.result_mode.no_files {
-                                    use_files = false;
-                                }
-                                if o.result_mode.force_files {
-                                    has_force = true;
-                                }
+                                file_policy = file_policy.max(o.argument_policy.files);
                                 let (arg_prefix, arg) = s.split_once(arg_offset);
                                 let first_new = self.completions.completions.len();
                                 self.complete_from_args(arg, &o.comp, o.desc.localize(), o.flags);
@@ -1541,15 +1546,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                             && self.conditions_test(&o.conditions)
                         {
                             old_style_match = false;
-                            if o.result_mode.requires_param {
+                            if o.argument_policy.requires_param {
                                 token_claimed = true;
                             }
-                            if o.result_mode.no_files {
-                                use_files = false;
-                            }
-                            if o.result_mode.force_files {
-                                has_force = true;
-                            }
+                            file_policy = file_policy.max(o.argument_policy.files);
                             self.complete_from_args(s, &o.comp, o.desc.localize(), o.flags);
                         }
                     }
@@ -1563,7 +1563,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                             // token, so that it can be differed from a regular argument.
                             // Here we are testing the previous argument for a GNU-style match,
                             // to see how we should complete the current argument
-                            if !o.result_mode.requires_param {
+                            if !o.argument_policy.requires_param {
                                 continue;
                             }
 
@@ -1577,24 +1577,19 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                                 r#match = param_match(o, popt);
                             }
                             if r#match && self.conditions_test(&o.conditions) {
-                                if o.result_mode.requires_param {
+                                if o.argument_policy.requires_param {
                                     token_claimed = true;
                                 }
-                                if o.result_mode.no_files {
-                                    use_files = false;
-                                }
-                                if o.result_mode.force_files {
-                                    has_force = true;
-                                }
+                                file_policy = file_policy.max(o.argument_policy.files);
                                 self.complete_from_args(s, &o.comp, o.desc.localize(), o.flags);
                             }
                         }
                     }
                 }
-            }
 
-            if token_claimed {
-                continue;
+                if token_claimed {
+                    continue;
+                }
             }
 
             // Try completing both options and positional arguments.
@@ -1608,8 +1603,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     continue;
                 }
                 if o.option.is_empty() {
-                    use_files &= !o.result_mode.no_files;
-                    has_force |= o.result_mode.force_files;
+                    file_policy = file_policy.max(o.argument_policy.files);
                     self.complete_from_args(s, &o.comp, o.desc.localize(), o.flags);
                 }
 
@@ -1682,7 +1676,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 // does this switch have any known arguments
                 let has_arg = !o.comp.is_empty();
                 // does this switch _require_ an argument
-                let req_arg = o.result_mode.requires_param;
+                let req_arg = o.argument_policy.requires_param;
 
                 if o.typ == CompleteOptionType::DoubleLong && (has_arg && !req_arg) {
                     // Optional arguments to a switch can only be handled using the '=', so we add it as
@@ -1714,10 +1708,8 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             }
         }
 
-        if has_force {
-            *out_do_file = true;
-        } else if !use_files {
-            *out_do_file = false;
+        if file_policy != FileCompletionPolicy::Inherit {
+            *out_file_policy = file_policy;
         }
 
         true
@@ -2123,7 +2115,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 &ad.previous_argument,
                 &ad.current_argument,
                 !ad.had_ddash,
-                &mut ad.do_file,
+                &mut ad.file_policy,
             );
         }
         if let Some(block) = block {
@@ -2424,7 +2416,7 @@ fn expand_command_token(ctx: &mut OperationContext<'_>, cmd_tok: &mut WString) -
 /// - `option`: The name of an option.
 /// - `option_type`: The type of option: can be option_type_short (-x),
 ///   option_type_single_long (-foo), option_type_double_long (--bar).
-/// - `result_mode`: Controls how to search further completions when this completion has been
+/// - `argument_policy`: Controls how to search further completions when this completion has been
 ///   successfully matched.
 /// - `comp`: A space separated list of completions which may contain subshells.
 /// - `desc`: A description of the completion.
@@ -2437,7 +2429,7 @@ pub fn complete_add(
     cmd_is_path: bool,
     option: WString,
     option_type: CompleteOptionType,
-    result_mode: CompletionMode,
+    argument_policy: ArgumentPolicy,
     condition: Vec<WString>,
     comp: WString,
     desc: WString,
@@ -2462,7 +2454,7 @@ pub fn complete_add(
     let opt = CompleteEntryOpt {
         option,
         typ: option_type,
-        result_mode,
+        argument_policy,
         comp,
         // The external source is a completion script in `share`,
         // from which `cargo xtask gettext update` extracts descriptions.
@@ -2552,13 +2544,17 @@ fn completion2string(key: &CompletionEntryKey, o: &CompleteEntryOpt) -> WString 
         append_switch_short(&mut out, 'k');
     }
 
-    if o.result_mode.no_files && o.result_mode.requires_param {
+    let ArgumentPolicy {
+        files,
+        requires_param,
+    } = o.argument_policy;
+    if files == FileCompletionPolicy::Skip && requires_param {
         append_switch_long(&mut out, L!("exclusive"));
-    } else if o.result_mode.no_files {
+    } else if files == FileCompletionPolicy::Skip {
         append_switch_long(&mut out, L!("no-files"));
-    } else if o.result_mode.force_files {
+    } else if files == FileCompletionPolicy::Force {
         append_switch_long(&mut out, L!("force-files"));
-    } else if o.result_mode.requires_param {
+    } else if requires_param {
         append_switch_long(&mut out, L!("require-parameter"));
     }
 
@@ -2762,9 +2758,9 @@ pub fn complete_get_wrap_targets(command: &wstr) -> Vec<WString> {
 #[cfg(test)]
 mod tests {
     use super::{
-        CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, complete,
-        complete_add, complete_add_wrapper, complete_get_wrap_targets, complete_remove_wrapper,
-        sort_and_prioritize,
+        ArgumentPolicy, CompleteFlags, CompleteOptionType, CompletionRequestOptions,
+        FileCompletionPolicy, complete, complete_add, complete_add_wrapper,
+        complete_get_wrap_targets, complete_remove_wrapper, sort_and_prioritize,
     };
     use crate::{
         abbrs::{self, Abbreviation, with_abbrs_mut},
@@ -3093,8 +3089,8 @@ mod tests {
         assert_eq!(&completions, &[]);
 
         // Trailing spaces (#1261).
-        let no_files = CompletionMode {
-            no_files: true,
+        let no_files = ArgumentPolicy {
+            files: FileCompletionPolicy::Skip,
             ..Default::default()
         };
         complete_add(

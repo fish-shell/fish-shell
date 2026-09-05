@@ -2,9 +2,9 @@ use super::prelude::*;
 use crate::{
     builtins::Error,
     complete::{
-        CompleteFlags, CompleteOptionType, CompletionMode, CompletionRequestOptions, WantsSuffix,
-        complete_add, complete_add_wrapper, complete_print, complete_remove, complete_remove_all,
-        complete_remove_wrapper,
+        ArgumentPolicy, CompleteFlags, CompleteOptionType, CompletionRequestOptions,
+        FileCompletionPolicy, WantsSuffix, complete_add, complete_add_wrapper, complete_print,
+        complete_remove, complete_remove_all, complete_remove_wrapper,
     },
     err_fmt, err_raw, err_str,
     highlight::highlight_and_colorize,
@@ -31,7 +31,7 @@ fn builtin_complete_add2(
     short_opt: &wstr,
     gnu_opts: &[&wstr],
     old_opts: &[&wstr],
-    result_mode: CompletionMode,
+    argument_policy: ArgumentPolicy,
     condition: &[WString],
     comp: &wstr,
     desc: &wstr,
@@ -43,7 +43,7 @@ fn builtin_complete_add2(
             cmd_is_path,
             WString::from(&[short_opt][..]),
             CompleteOptionType::Short,
-            result_mode,
+            argument_policy,
             condition.to_vec(),
             comp.to_owned(),
             desc.to_owned(),
@@ -57,7 +57,7 @@ fn builtin_complete_add2(
             cmd_is_path,
             gnu_opt.to_owned(),
             CompleteOptionType::DoubleLong,
-            result_mode,
+            argument_policy,
             condition.to_vec(),
             comp.to_owned(),
             desc.to_owned(),
@@ -71,7 +71,7 @@ fn builtin_complete_add2(
             cmd_is_path,
             old_opt.to_owned(),
             CompleteOptionType::SingleLong,
-            result_mode,
+            argument_policy,
             condition.to_vec(),
             comp.to_owned(),
             desc.to_owned(),
@@ -85,7 +85,7 @@ fn builtin_complete_add2(
             cmd_is_path,
             WString::new(),
             CompleteOptionType::ArgsOnly,
-            result_mode,
+            argument_policy,
             condition.to_vec(),
             comp.to_owned(),
             desc.to_owned(),
@@ -102,7 +102,7 @@ fn builtin_complete_add(
     short_opt: &wstr,
     gnu_opt: &[&wstr],
     old_opt: &[&wstr],
-    result_mode: CompletionMode,
+    argument_policy: ArgumentPolicy,
     condition: &[WString],
     comp: &wstr,
     desc: &wstr,
@@ -115,7 +115,7 @@ fn builtin_complete_add(
             short_opt,
             gnu_opt,
             old_opt,
-            result_mode,
+            argument_policy,
             condition,
             comp,
             desc,
@@ -129,7 +129,7 @@ fn builtin_complete_add(
             short_opt,
             gnu_opt,
             old_opt,
-            result_mode,
+            argument_policy,
             condition,
             comp,
             desc,
@@ -250,7 +250,6 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
 
     let cmd = argv[0];
     let argc = argv.len();
-    let mut result_mode = CompletionMode::default();
     let mut remove = false;
     let mut short_opt = WString::new();
     let mut gnu_opt = vec![];
@@ -294,23 +293,27 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
 
     let mut have_x = false;
 
+    let mut no_files = false;
+    let mut force_files = false;
+    let mut requires_param = false;
+
     let mut w = WGetopter::new(short_options, long_options, argv);
     while let Some(opt) = w.next_opt() {
         match opt {
             'x' => {
-                result_mode.no_files = true;
-                result_mode.requires_param = true;
+                no_files = true;
+                requires_param = true;
                 // Needed to print an error later;
                 have_x = true;
             }
             'f' => {
-                result_mode.no_files = true;
+                no_files = true;
             }
             'F' => {
-                result_mode.force_files = true;
+                force_files = true;
             }
             'r' => {
-                result_mode.requires_param = true;
+                requires_param = true;
             }
             'k' => {
                 preserve_order = true;
@@ -405,7 +408,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
         }
     }
 
-    if result_mode.no_files && result_mode.force_files {
+    if no_files && force_files {
         if !have_x {
             err_fmt!(
                 Error::INVALID_OPT_COMBO_WITH_CTX,
@@ -425,6 +428,18 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
         }
         return Err(STATUS_INVALID_ARGS);
     }
+    // Ok, at most one of force_files and no_files is set.
+    let files = if force_files {
+        FileCompletionPolicy::Force
+    } else if no_files {
+        FileCompletionPolicy::Skip
+    } else {
+        FileCompletionPolicy::Inherit
+    };
+    let argument_policy = ArgumentPolicy {
+        files,
+        requires_param,
+    };
 
     if w.wopt_index != argc {
         // Use one left-over arg as the do-complete argument
@@ -570,9 +585,9 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
         && desc.is_empty()
         && condition.is_empty()
         && wrap_targets.is_empty()
-        && !result_mode.no_files
-        && !result_mode.force_files
-        && !result_mode.requires_param
+        && !no_files
+        && !force_files
+        && !requires_param
     {
         // No arguments that would add or remove anything specified, so we print the definitions of
         // all matching completions.
@@ -611,7 +626,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
                 &short_opt,
                 &gnu_opt,
                 &old_opt,
-                result_mode,
+                argument_policy,
                 &condition,
                 &comp,
                 &desc,

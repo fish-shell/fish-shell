@@ -89,3 +89,41 @@ complete -C 'CCC=ccc show_vars_cmd3 '
 # CHECK: AAA:aaa
 # CHECK: BBB:bbb
 # CHECK: CCC:ccc
+
+# Check --no-files and --force-files across wrap chains.
+touch wraps_test_file
+
+# The top command has --force-files and wraps one with --no-files: force wins.
+complete -c forcewrap --force-files
+complete -c nofilewrap --no-files
+complete -c forcewrap --wraps nofilewrap
+if complete -C'forcewrap wraps_test_f' | string match -q wraps_test_file
+    echo forcewrap: force won
+else
+    echo forcewrap: unexpected no-files
+end
+# CHECK: forcewrap: force won
+
+# The top command has --no-files and wraps one with --force-files: no-files wins.
+complete -c skipwrap --no-files
+complete -c forcetarget --force-files
+complete -c skipwrap --wraps forcetarget
+if complete -C'skipwrap wraps_test_f' | string match -q wraps_test_file
+    echo skipwrap: unexpected file completion
+else
+    echo skipwrap: no-files won
+end
+# CHECK: skipwrap: no-files won
+
+# The top command defers to its wrap target.
+complete -c passthru --wraps midforce
+complete -c midforce --force-files --wraps deepnofiles
+complete -c deepnofiles --no-files
+if complete -C'passthru wraps_test_f' | string match -q wraps_test_file
+    echo passthru: force won
+else
+    echo passthru: unexpected no-files
+end
+# CHECK: passthru: force won
+
+rm wraps_test_file

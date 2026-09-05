@@ -1,3 +1,10 @@
+fish ?.?.? (released ???)
+=========================
+
+Interactive improvements
+------------------------
+- Completion options `--no-files` and `--force-files` on a wrapping command now take precedence over such options on the commands it wraps.
+
 fish 4.9.2 (released September 05, 2026)
 ========================================
 

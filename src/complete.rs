@@ -65,6 +65,7 @@ localizable_consts!(
 
 /// Whether to allow file completions.
 /// Note this is in ascending priority order: --force-files beats --no-files.
+/// Between items in a wrap chain, the first policy other than "Inherit" wins.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub enum FileCompletionPolicy {
     #[default]
@@ -941,8 +942,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             if let (Some(prev), Some(cur)) = (prev, cur) {
                 arg_data.previous_argument = prev;
                 arg_data.current_argument = cur;
-                // Have to walk over the command and its entire wrap chain. The last command
-                // in the chain to express an opinion (--no-files or --force-files) wins.
+                // Have to walk over the command and its entire wrap chain. The command
+                // itself is visited before any wrap target, so the topmost command with
+                // a file completion opinion (--no-files or --force-files) wins.
                 self.walk_wrap_chain(
                     &exp_command,
                     effective_cmdline,
@@ -1708,7 +1710,8 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             }
         }
 
-        if file_policy != FileCompletionPolicy::Inherit {
+        // Across the wrap chain, the topmost command with an opinion wins.
+        if *out_file_policy == FileCompletionPolicy::Inherit {
             *out_file_policy = file_policy;
         }
 

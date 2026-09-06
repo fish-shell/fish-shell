@@ -1552,7 +1552,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                             && param_match(o, popt)
                             && self.conditions_test(&o.conditions)
                         {
-                            old_style_match = false;
+                            old_style_match = true;
                             if o.argument_policy.requires_param {
                                 token_claimed = true;
                             }

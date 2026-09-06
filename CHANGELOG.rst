@@ -5,6 +5,11 @@ Interactive improvements
 ------------------------
 - Completion options `--no-files` and `--force-files` on a wrapping command now take precedence over such options on the commands it wraps.
 
+Regression fixes:
+-----------------
+- (From 4.0.0) Short options are no longer offered as completions if an old-style completion matches (like `-foo`).
+
+
 fish 4.9.2 (released September 05, 2026)
 ========================================
 

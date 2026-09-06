@@ -1532,12 +1532,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                                 }
                                 file_policy = file_policy.max(o.argument_policy.files);
                                 let (arg_prefix, arg) = s.split_once(arg_offset);
-                                let first_new = self.completions.completions.len();
+                                let first_new = self.completions.len();
                                 self.complete_from_args(arg, &o.comp, o.desc.localize(), o.flags);
-                                for compl in &mut self.completions.completions[first_new..] {
-                                    if compl.replaces_token() {
-                                        compl.completion.insert_utfstr(0, arg_prefix);
-                                    }
+                                for compl in &mut self.completions[first_new..] {
+                                    compl.prepend_token_prefix(arg_prefix);
                                 }
                             }
                         }

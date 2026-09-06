@@ -1440,11 +1440,10 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     }
 
     /// complete_param: Given a command, find completions for the argument `s` of command `cmd_orig`
-    /// with previous option `popt`. If this command's completions have an opinion on file
-    /// completions (`--no-files` or `--force-files`), that opinion is written into
-    /// `out_file_policy`; otherwise it is left untouched.
+    /// with previous option `popt`.
     ///
-    /// Returns `true` if successful, `false` if there's an error.
+    /// Returns this command's file completion policy.
+    /// On completion overflow this just returns Inherit (the default).
     ///
     /// Examples in format (cmd, popt, str):
     ///
@@ -1458,8 +1457,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         popt: &wstr,
         s: &wstr,
         use_switches: bool,
-        out_file_policy: &mut FileCompletionPolicy,
-    ) -> bool {
+    ) -> FileCompletionPolicy {
         let mut file_policy = FileCompletionPolicy::Inherit;
 
         let cmd_string = CmdString::new(cmd_orig, self.ctx.vars());
@@ -1654,7 +1652,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                         .completions
                         .add(Completion::with_desc(o.option.clone(), desc.to_owned()))
                     {
-                        return false;
+                        return FileCompletionPolicy::Inherit;
                     }
                 }
 
@@ -1703,7 +1701,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                         r#match,
                         CompleteFlags::NO_SPACE,
                     )) {
-                        return false;
+                        return FileCompletionPolicy::Inherit;
                     }
                 }
 
@@ -1714,17 +1712,12 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     r#match,
                     CompleteFlags::default(),
                 )) {
-                    return false;
+                    return FileCompletionPolicy::Inherit;
                 }
             }
         }
 
-        // Across the wrap chain, the topmost command with an opinion wins.
-        if *out_file_policy == FileCompletionPolicy::Inherit {
-            *out_file_policy = file_policy;
-        }
-
-        true
+        file_policy
     }
 
     /// Perform generic (not command-specific) expansions on the specified string.
@@ -2122,13 +2115,16 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         let block = self.apply_var_assignments(ad.var_assignments);
         if !self.ctx.check_cancel() {
             // Invoke any custom completions for this command.
-            self.complete_param_for_command(
+            let file_policy = self.complete_param_for_command(
                 cmd,
                 &ad.previous_argument,
                 &ad.current_argument,
                 !ad.had_ddash,
-                &mut ad.file_policy,
             );
+            // Across the wrap chain, the topmost command with an opinion wins.
+            if ad.file_policy == FileCompletionPolicy::Inherit {
+                ad.file_policy = file_policy;
+            }
         }
         if let Some(block) = block {
             self.ctx.parser().pop_block(block);

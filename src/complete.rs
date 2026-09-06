@@ -40,7 +40,7 @@ use std::{
     mem,
     ops::{Deref, DerefMut},
     sync::{
-        LazyLock, Mutex, MutexGuard,
+        Arc, LazyLock, Mutex, MutexGuard,
         atomic::{self, AtomicUsize},
     },
     time::{Duration, Instant},
@@ -523,7 +523,9 @@ static COMPLETE_ORDER: AtomicUsize = AtomicUsize::new(0);
 
 struct CompletionEntry {
     /// List of all options.
-    options: Vec<CompleteEntryOpt>,
+    /// Stored in an Arc so options can be read outside of the global
+    /// completion lock without copying everything. `make_mut()` is used during mtuations.
+    options: Arc<Vec<CompleteEntryOpt>>,
     /// Order for when this completion was created. This aids in outputting completions sorted by
     /// time.
     order: usize,
@@ -532,7 +534,7 @@ struct CompletionEntry {
 impl CompletionEntry {
     pub fn new() -> Self {
         Self {
-            options: vec![],
+            options: Arc::new(vec![]),
             order: COMPLETE_ORDER.fetch_add(1, atomic::Ordering::Relaxed),
         }
     }
@@ -542,17 +544,21 @@ impl CompletionEntry {
         &self.options
     }
 
+    /// Getter for the option list, inside an Arc.
+    pub fn get_options_arc(&self) -> Arc<Vec<CompleteEntryOpt>> {
+        Arc::clone(&self.options)
+    }
+
     /// Adds an option.
     pub fn add_option(&mut self, opt: CompleteEntryOpt) {
-        self.options.push(opt);
+        Arc::make_mut(&mut self.options).push(opt);
     }
 
     /// Remove all completion options in the specified entry that match the specified short / long
     /// option strings. Returns true if it is now empty and should be deleted, false if it's not
     /// empty.
     pub fn remove_option(&mut self, option: &wstr, typ: CompleteOptionType) -> bool {
-        self.options
-            .retain(|opt| opt.option != option || opt.typ != typ);
+        Arc::make_mut(&mut self.options).retain(|opt| opt.option != option || opt.typ != typ);
         self.options.is_empty()
     }
 }
@@ -1022,32 +1028,36 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
     /// Return the position of the short option that may take the rest of the token as its
     /// parameter. If no such option exists, return the last valid short option in the token.
-    fn short_option_pos(&mut self, arg: &wstr, options: &[CompleteEntryOpt]) -> Option<usize> {
+    fn short_option_pos<'a>(
+        &mut self,
+        arg: &wstr,
+        options: impl Iterator<Item = &'a CompleteEntryOpt> + Clone,
+    ) -> Option<usize> {
         if arg.len() <= 1 || leading_dash_count(arg) != 1 {
             return None;
         }
 
+        let mut last_option_pos = None;
         for (pos, arg_char) in arg.chars().enumerate().skip(1) {
-            let matched = options.iter().find(|o| {
+            let matched = options.clone().find(|o| {
                 o.typ == CompleteOptionType::Short
                     && o.option.char_at(0) == arg_char
                     && self.conditions_test(&o.conditions)
             });
 
-            if let Some(matched) = matched {
-                if matched.argument_policy.requires_param {
-                    return Some(pos);
-                }
-            } else {
-                // The first character after the dash is not a valid option.
-                if pos == 1 {
-                    return None;
-                }
-                return Some(pos - 1);
+            let Some(matched) = matched else {
+                // Unrecognized option - stop.
+                break;
+            };
+
+            last_option_pos = Some(pos);
+            if matched.argument_policy.requires_param {
+                // The rest of the token is the param.
+                break;
             }
         }
 
-        Some(arg.len() - 1)
+        last_option_pos
     }
 
     /// Copy any strings in `possible_comp` which have the specified prefix to the
@@ -1401,7 +1411,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     fn complete_entry_options_for_command(
         cmd_string: &CmdString,
         cmd_name: &wstr,
-    ) -> Vec<Vec<CompleteEntryOpt>> {
+    ) -> Vec<Arc<Vec<CompleteEntryOpt>>> {
         COMPLETION_MAP
             .lock()
             .unwrap()
@@ -1421,11 +1431,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                                 .is_some_and(|stripped| wildcard_match(stripped, &key.name, false))
                     );
                 if has_match {
-                    // Copy all of their options into our list. Oof, this is a lot of copying.
-                    let mut options = completion.get_options().to_vec();
-                    // We have to copy them in reverse order to preserve legacy behavior (#9221).
-                    options.reverse();
-                    Some(options)
+                    Some(completion.get_options_arc())
                 } else {
                     None
                 }
@@ -1481,13 +1487,16 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         }
 
         // Make a list of lists of all options that we care about.
-        let all_options: Vec<Vec<CompleteEntryOpt>> =
+        let all_options: Vec<Arc<Vec<CompleteEntryOpt>>> =
             Self::complete_entry_options_for_command(&cmd_string, cmd_name);
 
         // Now release the lock and test each option that we captured above. We have to do this outside
         // the lock because callouts (like the condition) may add or remove completions. See issue #2.
-        for options in all_options {
-            let short_opt_pos = self.short_option_pos(s, &options);
+        for options_vec in all_options {
+            // Always iterate in reverse to preserve legacy ordering (#9221).
+            // We pull out a single iterator and just clone it.
+            let options = options_vec.iter().rev();
+            let short_opt_pos = self.short_option_pos(s, options.clone());
             // We want last_option_requires_param to default to false but distinguish between when
             // a previous completion has set it to false and when it has its default value.
             let mut last_option_requires_param = None;
@@ -1498,7 +1507,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 if s.char_at(0) == '-' {
                     // Check if we are entering a combined option and argument (like --color=auto or
                     // -I/usr/include).
-                    for o in &options {
+                    for o in options.clone() {
                         let arg_offset = if o.typ == CompleteOptionType::Short {
                             let Some(short_opt_pos) = short_opt_pos else {
                                 continue;
@@ -1542,7 +1551,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     let mut old_style_match = false;
 
                     // If we are using old style long options, check for them first.
-                    for o in &options {
+                    for o in options.clone() {
                         if o.typ == CompleteOptionType::SingleLong
                             && param_match(o, popt)
                             && self.conditions_test(&o.conditions)
@@ -1559,8 +1568,8 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     // No old style option matched, or we are not using old style options. We check if
                     // any short (or gnu style) options do.
                     if !old_style_match {
-                        let prev_short_opt_pos = self.short_option_pos(popt, &options);
-                        for o in &options {
+                        let prev_short_opt_pos = self.short_option_pos(popt, options.clone());
+                        for o in options.clone() {
                             // Gnu-style options with _optional_ arguments must be specified as a single
                             // token, so that it can be differed from a regular argument.
                             // Here we are testing the previous argument for a GNU-style match,
@@ -1599,7 +1608,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             let last_option_requires_param = last_option_requires_param.unwrap_or(false);
 
             // Now we try to complete an option itself
-            for o in &options {
+            for o in options.clone() {
                 // If this entry is for the base command, check if any of the arguments match.
                 if !self.conditions_test(&o.conditions) {
                     continue;

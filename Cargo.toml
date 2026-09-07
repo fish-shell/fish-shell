@@ -76,7 +76,6 @@ proc-macro2 = "1.0"
 rand = { version = "0.10.1", default-features = false, features = [
   "thread_rng",
 ] }
-regex = "1.12.3"
 rsconf = "0.3.0"
 rust-embed = { version = "8.11.0", features = [
   "deterministic-timestamps",

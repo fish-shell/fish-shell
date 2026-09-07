@@ -1,3 +1,8 @@
+fish ?.?.? (released ???)
+=========================
+
+This release fixes another macOS issue where dead keys, for example the two-key sequence :kbd:`",space` on the US International keyboard layout would incorrectly insert space (:issue:`12979`).
+
 fish 4.9.2 (released September 05, 2026)
 ========================================
 

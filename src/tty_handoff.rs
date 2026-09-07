@@ -72,34 +72,24 @@ pub enum TtyQuirks {
     Tmux((u32, u32)),
     // Whether we are running under WezTerm.
     Wezterm,
-    // Running in a macOS terminal.
-    MacOs,
 }
 
 impl TtyQuirks {
     // Create a new TtyQuirks instance with the current environment.
-    fn detect(
-        vars: &dyn Environment,
-        xtversion: &wstr,
-        terminal_os_name: Option<&WString>,
-    ) -> Self {
+    fn detect(vars: &dyn Environment, xtversion: &wstr) -> Self {
         use TtyQuirks::*;
-        let iterm2_version = get_iterm2_version(xtversion);
         if vars.get(MIDNIGHT_COMMANDER_SID).is_some()
             && vars.get(L!("__mc_kitty_keyboard")).is_none()
         {
             PreCsiUMidnightCommander
-        } else if iterm2_version.is_some_and(|v| v < (3, 5, 12)) || is_konsole(xtversion) {
+        } else if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12))
+            || is_konsole(xtversion)
+        {
             BuggyKittyKeyboardProtocol
         } else if let Some(version) = get_tmux_version(xtversion) {
             Tmux(version)
         } else if xtversion.starts_with(L!("WezTerm ")) {
             Wezterm
-        } else if match terminal_os_name {
-            Some(os_name) => os_name == "Darwin",
-            Option::None => iterm2_version.is_some() || xtversion.starts_with("ghostty "),
-        } {
-            MacOs
         } else {
             None
         }
@@ -109,8 +99,8 @@ impl TtyQuirks {
 // Helper to determine which keyboard protocols to enable.
 #[derive(Debug, Copy, Clone, PartialEq)]
 enum ProtocolKind {
-    KittyKeyboard { macos: bool }, // Kitty keyboard support, producing CSI-u style encoding.
-    Other,                         // Other protocols (e.g., modifyOtherKeys)
+    KittyKeyboard, // Kitty keyboard support, producing CSI-u style encoding.
+    Other,         // Other protocols (e.g., modifyOtherKeys)
     WorkAroundWezTerm,
     None, // No protocols
 }
@@ -119,7 +109,6 @@ enum ProtocolKind {
 // the full serialized command sequence as bytes.
 struct ProtocolBytes {
     kitty_keyboard: Box<[u8]>,
-    kitty_keyboard_macos: Box<[u8]>,
     other: Box<[u8]>,
     wezterm_workaround: Box<[u8]>,
     none: Box<[u8]>,
@@ -144,13 +133,7 @@ impl TtyProtocolsSet {
             &self.disablers
         };
         match protocol {
-            ProtocolKind::KittyKeyboard { macos } => {
-                if macos {
-                    &cmds.kitty_keyboard_macos
-                } else {
-                    &cmds.kitty_keyboard
-                }
-            }
+            ProtocolKind::KittyKeyboard => &cmds.kitty_keyboard,
             ProtocolKind::Other => &cmds.other,
             ProtocolKind::WorkAroundWezTerm => &cmds.wezterm_workaround,
             ProtocolKind::None => &cmds.none,
@@ -170,7 +153,7 @@ fn serialize_commands<'a>(cmds: impl Iterator<Item = TerminalCommand<'a>>) -> Bo
 impl TtyQuirks {
     // Determine which keyboard protocol.
     fn get_supported_protocol(&self) -> ProtocolKind {
-        use TtyQuirks::{BuggyKittyKeyboardProtocol, MacOs, PreCsiUMidnightCommander, Wezterm};
+        use TtyQuirks::{BuggyKittyKeyboardProtocol, PreCsiUMidnightCommander, Wezterm};
         if *self == PreCsiUMidnightCommander {
             return ProtocolKind::None;
         }
@@ -178,9 +161,7 @@ impl TtyQuirks {
             return ProtocolKind::Other;
         }
         match KITTY_KEYBOARD_SUPPORTED.get() {
-            Some(&true) => ProtocolKind::KittyKeyboard {
-                macos: *self == MacOs,
-            },
+            Some(&true) => ProtocolKind::KittyKeyboard,
             Some(&false) => {
                 if *self == Wezterm {
                     ProtocolKind::WorkAroundWezTerm
@@ -215,16 +196,9 @@ impl TtyQuirks {
         let off_chain = || off_chain.clone().into_iter();
 
         let enablers = ProtocolBytes {
-            kitty_keyboard: serialize_commands(on_chain().chain([
-                KittyKeyboardProgressiveEnhancementsEnable {
-                    report_all_keys_as_escape: true,
-                },
-            ])),
-            kitty_keyboard_macos: serialize_commands(on_chain().chain([
-                KittyKeyboardProgressiveEnhancementsEnable {
-                    report_all_keys_as_escape: false,
-                },
-            ])),
+            kitty_keyboard: serialize_commands(
+                on_chain().chain([KittyKeyboardProgressiveEnhancementsEnable]),
+            ),
             other: serialize_commands(on_chain().chain([
                 ModifyOtherKeysEnable,       // XTerm's modifyOtherKeys
                 ApplicationKeypadModeEnable, // set application keypad mode, so the keypad keys send unique codes
@@ -232,11 +206,10 @@ impl TtyQuirks {
             wezterm_workaround: serialize_commands(on_chain().chain([ApplicationKeypadModeEnable])),
             none: serialize_commands(on_chain()),
         };
-        let disable_kitty_keyboard =
-            serialize_commands(off_chain().chain([KittyKeyboardProgressiveEnhancementsDisable]));
         let disablers = ProtocolBytes {
-            kitty_keyboard: disable_kitty_keyboard.clone(),
-            kitty_keyboard_macos: disable_kitty_keyboard,
+            kitty_keyboard: serialize_commands(
+                off_chain().chain([KittyKeyboardProgressiveEnhancementsDisable]),
+            ),
             other: serialize_commands(
                 off_chain().chain([ModifyOtherKeysDisable, ApplicationKeypadModeDisable]),
             ),
@@ -267,7 +240,7 @@ pub fn initialize_tty_protocols(vars: &dyn Environment) {
     // Default missing query responses.
     KITTY_KEYBOARD_SUPPORTED.get_or_init(|| false);
     SCROLL_CONTENT_UP_SUPPORTED.get_or_init(|| false);
-    let terminal_os_name = TERMINAL_OS_NAME.get_or_init(|| None);
+    TERMINAL_OS_NAME.get_or_init(|| None);
     let xtversion = XTVERSION.get_or_init(WString::new);
 
     use std::sync::atomic::Ordering::{Acquire, Release};
@@ -275,9 +248,7 @@ pub fn initialize_tty_protocols(vars: &dyn Environment) {
     let mut p = TTY_PROTOCOLS.load(Acquire);
     if p.is_null() {
         // Try to swap in a new TTY protocols set.
-        p = Box::into_raw(Box::new(
-            TtyQuirks::detect(vars, xtversion, terminal_os_name.as_ref()).get_protocols(),
-        ));
+        p = Box::into_raw(Box::new(TtyQuirks::detect(vars, xtversion).get_protocols()));
         if let Err(_e) = TTY_PROTOCOLS.compare_exchange(std::ptr::null_mut(), p, Release, Acquire) {
             // Safety: p comes from Box::into_raw right above,
             // and wasn't shared with any other thread.
@@ -325,9 +296,7 @@ fn set_tty_protocols_active(on_write: fn(), enable: bool) {
     // Flog any terminal protocol changes of interest.
     let mode = if enable { "Enabling" } else { "Disabling" };
     match protocols.quirks.get_supported_protocol() {
-        ProtocolKind::KittyKeyboard { macos } => {
-            flog!(reader, mode, "kitty keyboard protocol, macos:", macos);
-        }
+        ProtocolKind::KittyKeyboard => flog!(reader, mode, "kitty keyboard protocol"),
         ProtocolKind::Other => flog!(reader, mode, "other extended keys"),
         ProtocolKind::WorkAroundWezTerm => flog!(reader, mode, "wezterm; no modifyOtherKeys"),
         ProtocolKind::None => (),

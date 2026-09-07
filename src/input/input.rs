@@ -175,7 +175,7 @@ pub struct KeyEvent {
     pub key: Key,
     pub(crate) explicit_modifiers: bool,
     pub shifted_codepoint: char,
-    pub base_layout_codepoint: char,
+    base_layout_codepoint: char,
     pub associated_text: [char; 4],
 }
 

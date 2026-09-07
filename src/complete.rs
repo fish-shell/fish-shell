@@ -1783,7 +1783,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // foo=bar => expand the whole thing, and also just bar
         //
         // We also support colon separator (#2178). If there's more than one, prefer the last one.
-        let sep_index = if get_quote(s, s.len()).is_some() {
+        let sep_index = if get_quote(s).is_some() {
             None
         } else {
             let mut end = s.len();

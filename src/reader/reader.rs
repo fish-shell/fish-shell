@@ -6708,7 +6708,8 @@ fn replace_line_at_cursor(
     text[..start].to_owned() + replacement + &text[end..]
 }
 
-pub(crate) fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
+/// Return the quote left open at the end of the given text.
+pub(crate) fn get_quote(cmd_str: &wstr) -> Option<char> {
     let cmd = cmd_str.as_char_slice();
     let mut i = 0;
     while i < cmd.len() {
@@ -6721,9 +6722,6 @@ pub(crate) fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
         } else if cmd[i] == '\'' || cmd[i] == '"' {
             match quote_end(cmd_str, i, cmd[i]) {
                 Some(end) => {
-                    if end >= len {
-                        return Some(cmd[i]);
-                    }
                     i = end + 1;
                 }
                 None => return Some(cmd[i]),
@@ -6850,7 +6848,7 @@ pub fn completion_apply_to_command_line(
         // Find the last quote in the token to complete.
         let mut have_token = false;
         if tok.contains(&cursor_pos) || cursor_pos == tok.end {
-            quote = get_quote(&command_line[tok.clone()], cursor_pos - tok.start);
+            quote = get_quote(&command_line[tok.start..cursor_pos]);
             have_token = !tok.is_empty();
         }
 

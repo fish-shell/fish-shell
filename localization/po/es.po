@@ -845,8 +845,8 @@ msgid "Invalid number: %s"
 msgstr "Número inválido: %s"
 
 #, c-format
-msgid "Invalid padding character of width zero '\\u%02x'"
-msgstr "Carácter de relleno no válido de ancho cero '\\u%02x'"
+msgid "Invalid padding character of width zero '%s'"
+msgstr "Carácter de relleno no válido de ancho cero '%s'"
 
 #, c-format
 msgid "Invalid permission '%s'"

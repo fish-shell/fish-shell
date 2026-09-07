@@ -1,3 +1,5 @@
+use crate::key::char_to_symbol;
+
 use super::*;
 use fish_fallback::fish_wcwidth;
 
@@ -42,8 +44,8 @@ impl StringSubCommand<'_> for Pad {
                 self.pad_char_width = match fish_wcwidth(*pad_char) {
                     None | Some(0) => {
                         return Err(err_fmt!(
-                            "Invalid padding character of width zero '\\u%02x'",
-                            u32::from(*pad_char)
+                            "Invalid padding character of width zero '%s'",
+                            char_to_symbol(*pad_char, false)
                         )
                         .into());
                     }

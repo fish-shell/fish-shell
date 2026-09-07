@@ -866,8 +866,8 @@ msgid "Invalid number: %s"
 msgstr "无效的数字：%s"
 
 #, c-format
-msgid "Invalid padding character of width zero '\\u%02x'"
-msgstr "宽度为零的无效的填充字符 '\\u%02x'"
+msgid "Invalid padding character of width zero '%s'"
+msgstr "宽度为零的无效的填充字符 '%s'"
 
 #, c-format
 msgid "Invalid permission '%s'"

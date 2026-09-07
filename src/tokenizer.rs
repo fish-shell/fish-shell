@@ -236,8 +236,8 @@ struct BraceStatementParser {
 pub struct Tokenizer<'c> {
     /// A pointer into the original string, showing where the next token begins.
     token_cursor: usize,
-    /// The start of the original string.
-    start: &'c wstr,
+    /// The original string.
+    text: &'c wstr,
     /// Whether we have additional tokens.
     has_next: bool,
     /// Parser state regarding brace statements. None if reading an argument list.
@@ -260,28 +260,28 @@ impl<'c> Tokenizer<'c> {
     /// Constructor for a tokenizer. b is the string that is to be tokenized. It is not copied, and
     /// should not be freed by the caller until after the tokenizer is destroyed.
     ///
-    /// \param start The string to tokenize
+    /// \param text The string to tokenize
     /// \param flags Flags to the tokenizer. Setting `TokFlags::accept_unfinished` will cause the tokenizer
     /// to accept incomplete tokens, such as a subshell without a closing parenthesis, as a valid
     /// token. Setting `TokFlags::show_comments` will return comments as tokens
-    pub fn new(start: &'c wstr, flags: TokFlags) -> Self {
-        Self::new_impl(start, flags, None)
+    pub fn new(text: &'c wstr, flags: TokFlags) -> Self {
+        Self::new_impl(text, flags, None)
     }
     pub fn with_quote_events(
-        start: &'c wstr,
+        text: &'c wstr,
         flags: TokFlags,
         on_quote_toggle: &'c mut dyn FnMut(usize),
     ) -> Self {
-        Self::new_impl(start, flags, Some(on_quote_toggle))
+        Self::new_impl(text, flags, Some(on_quote_toggle))
     }
     fn new_impl(
-        start: &'c wstr,
+        text: &'c wstr,
         flags: TokFlags,
         on_quote_toggle: Option<&'c mut dyn FnMut(usize)>,
     ) -> Self {
         Tokenizer {
             token_cursor: 0,
-            start,
+            text,
             has_next: true,
             brace_statement_parser: (!flags.argument_list).then_some(BraceStatementParser {
                 at_command_position: true,
@@ -309,24 +309,24 @@ impl<'c> Iterator for Tokenizer<'c> {
         // it.
         loop {
             let i = self.token_cursor;
-            if self.start.get(i..i + 2) == Some(L!("\\\n")) {
+            if self.text.get(i..i + 2) == Some(L!("\\\n")) {
                 self.token_cursor += 2;
                 self.continue_line_after_comment = true;
-            } else if i < self.start.len() && iswspace_not_nl(self.start.char_at(i)) {
+            } else if i < self.text.len() && iswspace_not_nl(self.text.char_at(i)) {
                 self.token_cursor += 1;
             } else {
                 break;
             }
         }
 
-        while self.start.char_at(self.token_cursor) == '#' {
+        while self.text.char_at(self.token_cursor) == '#' {
             // We have a comment, walk over the comment.
             let comment_start = self.token_cursor;
-            self.token_cursor = comment_end(self.start, self.token_cursor);
+            self.token_cursor = comment_end(self.text, self.token_cursor);
             let comment_len = self.token_cursor - comment_start;
 
             // If we are going to continue after the comment, skip any trailing newline.
-            if self.start.as_char_slice().get(self.token_cursor) == Some(&'\n')
+            if self.text.as_char_slice().get(self.token_cursor) == Some(&'\n')
                 && self.continue_line_after_comment
             {
                 self.token_cursor += 1;
@@ -340,8 +340,8 @@ impl<'c> Iterator for Tokenizer<'c> {
                 return Some(result);
             }
 
-            while self.token_cursor < self.start.len()
-                && iswspace_not_nl(self.start.char_at(self.token_cursor))
+            while self.token_cursor < self.text.len()
+                && iswspace_not_nl(self.text.char_at(self.token_cursor))
             {
                 self.token_cursor += 1;
             }
@@ -351,13 +351,13 @@ impl<'c> Iterator for Tokenizer<'c> {
         self.continue_line_after_comment = false;
         let start_pos = self.token_cursor;
 
-        let this_char = self.start.char_at(self.token_cursor);
+        let this_char = self.text.char_at(self.token_cursor);
         let next_char = self
-            .start
+            .text
             .as_char_slice()
             .get(self.token_cursor + 1)
             .copied();
-        let buff = &self.start[self.token_cursor..];
+        let buff = &self.text[self.token_cursor..];
         let mut at_cmd_pos = false;
         let token = match this_char {
             '\0' => {
@@ -373,8 +373,8 @@ impl<'c> Iterator for Tokenizer<'c> {
                 // Hack: when we get a newline, swallow as many as we can. This compresses multiple
                 // subsequent newlines into a single one.
                 if !self.show_blank_lines {
-                    while self.token_cursor < self.start.len() {
-                        let c = self.start.char_at(self.token_cursor);
+                    while self.token_cursor < self.text.len() {
+                        let c = self.text.char_at(self.token_cursor);
                         if c != '\n' && c != '\r' && c != ' ' && c != '\t' {
                             break;
                         }
@@ -569,7 +569,7 @@ fn iswspace_not_nl(c: char) -> bool {
 impl<'c> Tokenizer<'c> {
     /// Returns the text of a token, as a string.
     pub fn text_of(&self, tok: &Tok) -> &wstr {
-        tok.get_source(self.start)
+        tok.get_source(self.text)
     }
 
     /// Return an error token and mark that we no longer have a next token.
@@ -646,9 +646,9 @@ impl<'c> Tokenizer<'c> {
             zelf.on_quote_toggle
                 .as_mut()
                 .map(|cb| (cb)(zelf.token_cursor));
-            if let Some(end) = quote_end(zelf.start, zelf.token_cursor, quote) {
+            if let Some(end) = quote_end(zelf.text, zelf.token_cursor, quote) {
                 let mut one_past_end = end + 1;
-                if zelf.start.char_at(end) == '$' {
+                if zelf.text.char_at(end) == '$' {
                     one_past_end = end;
                     quoted_cmdsubs.push(QuotedSubst {
                         quote_location,
@@ -660,13 +660,13 @@ impl<'c> Tokenizer<'c> {
                 Ok(())
             } else {
                 let error_loc = zelf.token_cursor;
-                zelf.token_cursor = zelf.start.len();
+                zelf.token_cursor = zelf.text.len();
                 Err(error_loc)
             }
         }
 
-        while self.token_cursor != self.start.len() {
-            let c = self.start.char_at(self.token_cursor);
+        while self.token_cursor != self.text.len() {
+            let c = self.text.char_at(self.token_cursor);
 
             if myal(c) {
                 // Early exit optimization in case the character is just a letter,
@@ -675,7 +675,7 @@ impl<'c> Tokenizer<'c> {
             // Now proceed with the evaluation of the token, first checking to see if the token
             // has been explicitly ignored (escaped).
             else if c == '\\' {
-                if self.token_cursor + 1 < self.start.len() {
+                if self.token_cursor + 1 < self.text.len() {
                     self.token_cursor += 1;
                 } else if !self.accept_unfinished {
                     return self.call_error(
@@ -687,7 +687,7 @@ impl<'c> Tokenizer<'c> {
                     );
                 }
             } else if c == '#' && is_token_begin {
-                self.token_cursor = comment_end(self.start, self.token_cursor) - 1;
+                self.token_cursor = comment_end(self.text, self.token_cursor) - 1;
             } else if c == '(' {
                 paren_offsets.push(self.token_cursor);
                 expecting.push(Expecting::Paren);
@@ -787,7 +787,7 @@ impl<'c> Tokenizer<'c> {
             } else if expecting.is_empty()
                 && !tok_is_string_character(
                     c,
-                    self.start
+                    self.text
                         .as_char_slice()
                         .get(self.token_cursor + 1)
                         .copied(),
@@ -797,7 +797,7 @@ impl<'c> Tokenizer<'c> {
             }
 
             let next = self
-                .start
+                .text
                 .as_char_slice()
                 .get(self.token_cursor + 1)
                 .copied();

@@ -521,22 +521,24 @@ impl CompleteEntryOpt {
 /// Last value used in the order field of [`CompletionEntry`].
 static COMPLETE_ORDER: AtomicUsize = AtomicUsize::new(0);
 
+#[derive(Clone)]
 struct CompletionEntry {
     /// List of all options.
-    /// Stored in an Arc so options can be read outside of the global
-    /// completion lock without copying everything. `make_mut()` is used during mtuations.
-    options: Arc<Vec<CompleteEntryOpt>>,
+    /// The most recently added options are at the end; use the iter() method to iterate in recency order.
+    options: Vec<CompleteEntryOpt>,
     /// Order for when this completion was created. This aids in outputting completions sorted by
     /// time.
     order: usize,
 }
 
+type CompletionEntryIter<'a> = std::iter::Rev<std::slice::Iter<'a, CompleteEntryOpt>>;
+
 impl CompletionEntry {
-    pub fn new() -> Self {
-        Self {
-            options: Arc::new(vec![]),
+    pub fn new() -> Arc<Self> {
+        Arc::new(Self {
+            options: vec![],
             order: COMPLETE_ORDER.fetch_add(1, atomic::Ordering::Relaxed),
-        }
+        })
     }
 
     /// Getters for option list.
@@ -544,22 +546,32 @@ impl CompletionEntry {
         &self.options
     }
 
-    /// Getter for the option list, inside an Arc.
-    pub fn get_options_arc(&self) -> Arc<Vec<CompleteEntryOpt>> {
-        Arc::clone(&self.options)
-    }
-
     /// Adds an option.
     pub fn add_option(&mut self, opt: CompleteEntryOpt) {
-        Arc::make_mut(&mut self.options).push(opt);
+        self.options.push(opt);
     }
 
     /// Remove all completion options in the specified entry that match the specified short / long
     /// option strings. Returns true if it is now empty and should be deleted, false if it's not
     /// empty.
     pub fn remove_option(&mut self, option: &wstr, typ: CompleteOptionType) -> bool {
-        Arc::make_mut(&mut self.options).retain(|opt| opt.option != option || opt.typ != typ);
+        self.options
+            .retain(|opt| opt.option != option || opt.typ != typ);
         self.options.is_empty()
+    }
+
+    // Return an iterator over the entry options from most recently added to least recent.
+    fn iter<'a>(&'a self) -> CompletionEntryIter<'a> {
+        // Reverse, so later items are returned first.
+        self.options.iter().rev()
+    }
+}
+
+impl<'a> IntoIterator for &'a CompletionEntry {
+    type Item = &'a CompleteEntryOpt;
+    type IntoIter = CompletionEntryIter<'a>;
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
     }
 }
 
@@ -569,7 +581,10 @@ struct CompletionEntryKey {
     name: WString,
     is_path: bool,
 }
-type CompletionEntryMap = BTreeMap<CompletionEntryKey, CompletionEntry>;
+
+/// CompletionEntries are stored in an Arc so options can be read outside of the global
+/// completion lock without copying everything. `make_mut()` is used during mtuations.
+type CompletionEntryMap = BTreeMap<CompletionEntryKey, Arc<CompletionEntry>>;
 static COMPLETION_MAP: Mutex<CompletionEntryMap> = Mutex::new(BTreeMap::new());
 static COMPLETION_TOMBSTONES: Mutex<BTreeSet<WString>> = Mutex::new(BTreeSet::new());
 
@@ -1028,18 +1043,14 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
     /// Return the position of the short option that may take the rest of the token as its
     /// parameter. If no such option exists, return the last valid short option in the token.
-    fn short_option_pos<'a>(
-        &mut self,
-        arg: &wstr,
-        options: impl Iterator<Item = &'a CompleteEntryOpt> + Clone,
-    ) -> Option<usize> {
+    fn short_option_pos(&mut self, arg: &wstr, options: &CompletionEntry) -> Option<usize> {
         if arg.len() <= 1 || leading_dash_count(arg) != 1 {
             return None;
         }
 
         let mut last_option_pos = None;
         for (pos, arg_char) in arg.chars().enumerate().skip(1) {
-            let matched = options.clone().find(|o| {
+            let matched = options.iter().find(|o| {
                 o.typ == CompleteOptionType::Short
                     && o.option.char_at(0) == arg_char
                     && self.conditions_test(&o.conditions)
@@ -1406,32 +1417,37 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         );
     }
 
+    // Return whether a command (which may be a command name or a full path)
+    // matches a completion entry key.
+    fn command_matches(cmd: &wstr, key: &CompletionEntryKey) -> bool {
+        if wildcard_match(cmd, &key.name, false) {
+            return true;
+        }
+        // On cygwin, if we didn't have a completion for "foo.exe",
+        // check if there is one for "foo".
+        !key.is_path
+            && strip_executable_suffix(cmd)
+                .is_some_and(|stripped| wildcard_match(stripped, &key.name, false))
+    }
+
     /// Return the available completion entry options for a given command.
     /// The command is given both as the CmdString (i.e. including path) and the name.
     fn complete_entry_options_for_command(
         cmd_string: &CmdString,
         cmd_name: &wstr,
-    ) -> Vec<Arc<Vec<CompleteEntryOpt>>> {
+    ) -> Vec<Arc<CompletionEntry>> {
         COMPLETION_MAP
             .lock()
             .unwrap()
             .iter()
             .filter_map(|(key, completion)| {
-                let r#match = if key.is_path {
+                let cmd = if key.is_path {
                     &cmd_string.path
                 } else {
                     cmd_name
                 };
-                let has_match = wildcard_match(r#match, &key.name, false)
-                    || (
-                        // On cygwin, if we didn't have a completion for "foo.exe",
-                        // check if there is one for "foo"
-                        !key.is_path
-                            && strip_executable_suffix(r#match)
-                                .is_some_and(|stripped| wildcard_match(stripped, &key.name, false))
-                    );
-                if has_match {
-                    Some(completion.get_options_arc())
+                if Self::command_matches(cmd, key) {
+                    Some(Arc::clone(completion))
                 } else {
                     None
                 }
@@ -1485,16 +1501,14 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         }
 
         // Make a list of lists of all options that we care about.
-        let all_options: Vec<Arc<Vec<CompleteEntryOpt>>> =
+        let all_options: Vec<Arc<CompletionEntry>> =
             Self::complete_entry_options_for_command(&cmd_string, cmd_name);
 
         // Now release the lock and test each option that we captured above. We have to do this outside
         // the lock because callouts (like the condition) may add or remove completions. See issue #2.
-        for options_vec in all_options {
-            // Always iterate in reverse to preserve legacy ordering (#9221).
-            // We pull out a single iterator and just clone it.
-            let options = options_vec.iter().rev();
-            let short_opt_pos = self.short_option_pos(s, options.clone());
+        for options in all_options {
+            let options = &*options;
+            let short_opt_pos = self.short_option_pos(s, options);
             // We want last_option_requires_param to default to false but distinguish between when
             // a previous completion has set it to false and when it has its default value.
             let mut last_option_requires_param = None;
@@ -1505,7 +1519,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 if s.char_at(0) == '-' {
                     // Check if we are entering a combined option and argument (like --color=auto or
                     // -I/usr/include).
-                    for o in options.clone() {
+                    for o in options {
                         let arg_offset = if o.typ == CompleteOptionType::Short {
                             let Some(short_opt_pos) = short_opt_pos else {
                                 continue;
@@ -1547,7 +1561,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     let mut old_style_match = false;
 
                     // If we are using old style long options, check for them first.
-                    for o in options.clone() {
+                    for o in options {
                         if o.typ == CompleteOptionType::SingleLong
                             && param_match(o, popt)
                             && self.conditions_test(&o.conditions)
@@ -1564,8 +1578,8 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     // No old style option matched, or we are not using old style options. We check if
                     // any short (or gnu style) options do.
                     if !old_style_match {
-                        let prev_short_opt_pos = self.short_option_pos(popt, options.clone());
-                        for o in options.clone() {
+                        let prev_short_opt_pos = self.short_option_pos(popt, options);
+                        for o in options {
                             // Gnu-style options with _optional_ arguments must be specified as a single
                             // token, so that it can be differed from a regular argument.
                             // Here we are testing the previous argument for a GNU-style match,
@@ -1604,7 +1618,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             let last_option_requires_param = last_option_requires_param.unwrap_or(false);
 
             // Now we try to complete an option itself
-            for o in options.clone() {
+            for o in options {
                 // If this entry is for the base command, check if any of the arguments match.
                 if !self.conditions_test(&o.conditions) {
                     continue;
@@ -2468,7 +2482,7 @@ pub fn complete_add(
         conditions: condition.into_boxed_slice(),
         flags,
     };
-    c.add_option(opt);
+    Arc::make_mut(c).add_option(opt);
 }
 
 /// Remove a previously defined completion.
@@ -2479,7 +2493,7 @@ pub fn complete_remove(cmd: WString, cmd_is_path: bool, option: &wstr, typ: Comp
         is_path: cmd_is_path,
     };
     if let Some(c) = completion_map.get_mut(&key) {
-        let delete_it = c.remove_option(option, typ);
+        let delete_it = Arc::make_mut(c).remove_option(option, typ);
         if delete_it {
             completion_map.remove(&key);
         }

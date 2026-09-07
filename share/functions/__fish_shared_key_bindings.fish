@@ -118,7 +118,7 @@ if not set -l index (contains --index -- -M $argv)
     bind --preset $argv alt-enter "commandline -i \n $maybe_search_field"  expand-abbr
     bind --preset $argv ")" self-insert expand-abbr  # Closing a command substitution.
     bind --preset $argv ctrl-space \'test -n "$(commandline)" && commandline -i " " \'$maybe_search_field
-     # Shift-space behaves like space because it\'s easy to mistype.
+     # Work around terminals that send shift-space by making it behave like space.
     bind --preset $argv shift-space \'commandline -i " " \'$maybe_search_field expand-abbr
 
     bind --preset $argv enter execute

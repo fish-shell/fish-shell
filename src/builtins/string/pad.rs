@@ -41,9 +41,11 @@ impl StringSubCommand<'_> for Pad {
                 };
                 self.pad_char_width = match fish_wcwidth(*pad_char) {
                     None | Some(0) => {
-                        return Err(
-                            err_fmt!("Invalid padding character of width zero '%s'", arg).into(),
-                        );
+                        return Err(err_fmt!(
+                            "Invalid padding character of width zero '\\u%02x'",
+                            u32::from(*pad_char)
+                        )
+                        .into());
                     }
                     Some(w) => w,
                 };

@@ -164,7 +164,7 @@ string pad -c ab -w4 .
 
 # nonprintable characters does not make sense
 string pad -c \u07 .
-# CHECKERR: string pad: Invalid padding character of width zero {{'\a'}}
+# CHECKERR: string pad: Invalid padding character of width zero '\u07'
 
 string pad --width=-1 foo
 # CHECKERR: string pad: Invalid width value '-1'

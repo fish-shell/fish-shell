@@ -845,7 +845,7 @@ msgid "Invalid number: %s"
 msgstr "Ungültige Zahl: %s"
 
 #, c-format
-msgid "Invalid padding character of width zero '%s'"
+msgid "Invalid padding character of width zero '\\u%02x'"
 msgstr ""
 
 #, c-format

@@ -844,8 +844,8 @@ msgid "Invalid number: %s"
 msgstr "数値が無効です: %s"
 
 #, c-format
-msgid "Invalid padding character of width zero '%s'"
-msgstr "幅がゼロのパディング文字 '%s' は無効です"
+msgid "Invalid padding character of width zero '\\u%02x'"
+msgstr "幅がゼロのパディング文字 '\\u%02x' は無効です"
 
 #, c-format
 msgid "Invalid permission '%s'"

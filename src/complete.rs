@@ -378,6 +378,10 @@ impl DerefMut for CompletionReceiver {
     }
 }
 
+// An error returned when adding a completion exceeded the max allowed completions.
+#[derive(Debug)]
+pub struct CompletionOverflow;
+
 impl CompletionReceiver {
     /// Construct as empty, with a limit.
     pub fn new(limit: usize) -> Self {
@@ -393,26 +397,24 @@ impl CompletionReceiver {
     }
 
     /// Add a completion.
-    /// Return true on success, false if this would overflow the limit.
-    #[must_use]
-    pub fn add(&mut self, comp: impl Into<Completion>) -> bool {
+    /// Returns an error if this would overflow the limit.
+    pub fn add(&mut self, comp: impl Into<Completion>) -> Result<(), CompletionOverflow> {
         if self.completions.len() >= self.limit {
-            return false;
+            return Err(CompletionOverflow);
         }
         self.completions.push(comp.into());
-        true
+        Ok(())
     }
 
-    /// Adds a completion with the given string, and default other properties. Returns `true` on
-    /// success, `false` if this would overflow the limit.
-    #[must_use]
+    /// Adds a completion with the given string, and default other properties.
+    /// Returns an error if this would overflow the limit.
     pub fn extend(
         &mut self,
         iter: impl IntoIterator<Item = Completion, IntoIter = impl ExactSizeIterator<Item = Completion>>,
-    ) -> bool {
+    ) -> Result<(), CompletionOverflow> {
         let iter = iter.into_iter();
         if iter.len() > self.limit - self.completions.len() {
-            return false;
+            return Err(CompletionOverflow);
         }
         self.completions.extend(iter);
         // this only fails if the ExactSizeIterator impl is bogus
@@ -421,7 +423,7 @@ impl CompletionReceiver {
             "ExactSizeIterator returned more items than it should"
         );
 
-        true
+        Ok(())
     }
 
     /// Clear the list of completions. This retains the storage inside `completions` which can be
@@ -1458,14 +1460,14 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
     /// Given a command, find completions in `options` for the argument `s` of command `cmd_orig`
     /// with previous option `popt`.
     ///
-    /// Returns this command's file completion policy, or None on completion overflow.
+    /// Returns this command's file completion policy, or an error on completion overflow.
     fn complete_param_for_command_from_options(
         &mut self,
         s: &wstr,
         popt: &wstr,
         options: &CompletionEntry,
         use_switches: bool,
-    ) -> Option<FileCompletionPolicy> {
+    ) -> Result<FileCompletionPolicy, CompletionOverflow> {
         let mut file_policy = FileCompletionPolicy::Inherit;
 
         let short_opt_pos = self.short_option_pos(s, options);
@@ -1569,7 +1571,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             }
 
             if token_claimed {
-                return Some(file_policy);
+                return Ok(file_policy);
             }
         }
 
@@ -1620,12 +1622,8 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 // It's a match.
                 let desc = o.desc.localize();
                 // Append a short-style option
-                if !self
-                    .completions
-                    .add(Completion::with_desc(o.option.clone(), desc.to_owned()))
-                {
-                    return None;
-                }
+                self.completions
+                    .add(Completion::with_desc(o.option.clone(), desc.to_owned()))?;
             }
 
             // Check if the long style option matches.
@@ -1665,34 +1663,30 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                 let completion = sprintf!("%s=", completion);
 
                 // Append a long-style option with a mandatory trailing equal sign
-                if !self.completions.add(Completion::new(
+                self.completions.add(Completion::new(
                     completion,
                     o.desc.localize().to_owned(),
                     r#match,
                     CompleteFlags::NO_SPACE,
-                )) {
-                    return None;
-                }
+                ))?;
             }
 
             // Append a long-style option
-            if !self.completions.add(Completion::new(
+            self.completions.add(Completion::new(
                 completion.to_owned(),
                 o.desc.localize().to_owned(),
                 r#match,
                 CompleteFlags::default(),
-            )) {
-                return None;
-            }
+            ))?;
         }
-        Some(file_policy)
+        Ok(file_policy)
     }
 
     /// complete_param: Given a command, find completions for the argument `s` of command `cmd_orig`
     /// with previous option `popt`.
     ///
     /// Returns this command's file completion policy.
-    /// On completion overflow this just returns Inherit (the default).
+    /// On completion overflow this returns an error.
     ///
     /// Examples in format (cmd, popt, str):
     ///
@@ -1706,7 +1700,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         popt: &wstr,
         s: &wstr,
         use_switches: bool,
-    ) -> FileCompletionPolicy {
+    ) -> Result<FileCompletionPolicy, CompletionOverflow> {
         let mut file_policy = FileCompletionPolicy::Inherit;
 
         let cmd_string = CmdString::new(cmd_orig, self.ctx.vars());
@@ -1740,15 +1734,12 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // Now release the lock and test each option that we captured above. We have to do this outside
         // the lock because callouts (like the condition) may add or remove completions. See issue #2.
         for options in all_options {
-            let Some(fp) =
-                self.complete_param_for_command_from_options(s, popt, &options, use_switches)
-            else {
-                return FileCompletionPolicy::Inherit;
-            };
+            let fp =
+                self.complete_param_for_command_from_options(s, popt, &options, use_switches)?;
             file_policy = file_policy.max(fp);
         }
 
-        file_policy
+        Ok(file_policy)
     }
 
     /// Perform generic (not command-specific) expansions on the specified string.
@@ -2146,12 +2137,15 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         let block = self.apply_var_assignments(ad.var_assignments);
         if !self.ctx.check_cancel() {
             // Invoke any custom completions for this command.
-            let file_policy = self.complete_param_for_command(
-                cmd,
-                &ad.previous_argument,
-                &ad.current_argument,
-                !ad.had_ddash,
-            );
+            // Ignore overflow errors.
+            let file_policy = self
+                .complete_param_for_command(
+                    cmd,
+                    &ad.previous_argument,
+                    &ad.current_argument,
+                    !ad.had_ddash,
+                )
+                .unwrap_or_default();
             // Across the wrap chain, the topmost command with an opinion wins.
             if ad.file_policy == FileCompletionPolicy::Inherit {
                 ad.file_policy = file_policy;

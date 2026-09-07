@@ -594,7 +594,7 @@ fn expand_variables(
     // last_idx may be 1 past the end of the string, but no further.
     assert!(last_idx <= instr.len(), "Invalid last_idx");
     if last_idx == 0 {
-        if !out.add(instr) {
+        if out.add(instr).is_err() {
             return append_overflow_error(errors, None);
         }
         return ExpandResult::ok();
@@ -617,7 +617,7 @@ fn expand_variables(
     }
     if varexp_char_idx == usize::MAX {
         // No variable expand char, we're done.
-        if !out.add(instr) {
+        if out.add(instr).is_err() {
             return append_overflow_error(errors, None);
         }
         return ExpandResult::ok();
@@ -795,7 +795,7 @@ fn expand_variables(
         // Normal cartesian-product expansion.
         for item in var_item_list {
             if varexp_char_idx == 0 && var_name_and_slice_stop == instr.len() {
-                if !out.add(item) {
+                if out.add(item).is_err() {
                     return append_overflow_error(errors, None);
                 }
             } else {
@@ -895,7 +895,7 @@ fn expand_braces(
                 *c = ' ';
             }
         }
-        if !out.add(input) {
+        if out.add(input).is_err() {
             return append_overflow_error(errors, None);
         }
         return ExpandResult::ok();
@@ -966,7 +966,7 @@ pub fn expand_cmdsubst(
             return ExpandResult::make_error(STATUS_EXPAND_ERROR);
         }
         Ok(None) => {
-            if !out.add(input) {
+            if out.add(input).is_err() {
                 return append_overflow_error(errors, None);
             }
             return ExpandResult::ok();
@@ -1124,7 +1124,7 @@ pub fn expand_cmdsubst(
             whole_item.push_utfstr(&sub_res_joined);
             whole_item.push(INTERNAL_SEPARATOR);
             whole_item.push_utfstr(&tail_item.completion["\"".len()..]);
-            if !out.add(whole_item) {
+            if out.add(whole_item).is_err() {
                 return append_overflow_error(errors, None);
             }
         }
@@ -1156,7 +1156,7 @@ pub fn expand_cmdsubst(
             whole_item.push_utfstr(&sub_item2);
             whole_item.push(INTERNAL_SEPARATOR);
             whole_item.push_utfstr(&tail_item.completion);
-            if !out.add(whole_item) {
+            if out.add(whole_item).is_err() {
                 return append_overflow_error(errors, None);
             }
         }
@@ -1297,7 +1297,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         );
         // Early out. If we're not completing, and there's no magic in the input, we're done.
         if !flags.for_completions && expand_is_clean(&input) {
-            if !out_completions.add(input) {
+            if out_completions.add(input).is_err() {
                 return append_overflow_error(&mut errors, None);
             }
             return ExpandResult::ok();
@@ -1357,7 +1357,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             if flags.preserve_home_tildes {
                 expand.unexpand_tildes(&input, &mut completions);
             }
-            if !out_completions.extend(completions) {
+            if out_completions.extend(completions).is_err() {
                 total_result = append_overflow_error(expand.errors, None);
             }
         }
@@ -1368,7 +1368,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
     fn stage_cmdsubst(&mut self, input: WString, out: &mut CompletionReceiver) -> ExpandResult {
         match self.flags.cmdsubst {
             CmdsubstMode::Skip => {
-                if !out.add(input) {
+                if out.add(input).is_err() {
                     return append_overflow_error(self.errors, None);
                 }
                 ExpandResult::ok()
@@ -1378,7 +1378,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                 match locate_cmdsubst_range(&input, &mut cursor, true, None, None) {
                     Err(()) => ExpandResult::make_error(STATUS_EXPAND_ERROR),
                     Ok(None) => {
-                        if !out.add(input) {
+                        if out.add(input).is_err() {
                             return append_overflow_error(self.errors, None);
                         }
                         ExpandResult::ok()
@@ -1430,7 +1430,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
                     *i = ']';
                 }
             }
-            if !out.add(next) {
+            if out.add(next).is_err() {
                 return append_overflow_error(self.errors, None);
             }
             ExpandResult::ok()
@@ -1462,7 +1462,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
         if !feature_test(FeatureFlag::RemovePercentSelf) {
             expand_percent_self(&mut input);
         }
-        if !out.add(input) {
+        if out.add(input).is_err() {
             return append_overflow_error(self.errors, None);
         }
         ExpandResult::ok()
@@ -1554,7 +1554,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
 
             let mut expanded = expanded_recv.take();
             expanded.sort_by(|a, b| wcsfilecmp_glob(&a.completion, &b.completion));
-            if !out.extend(expanded) {
+            if out.extend(expanded).is_err() {
                 result = ExpandResult::new(ExpandResultCode::Overflow);
             }
         } else {
@@ -1563,7 +1563,7 @@ impl<'a, 'b, 'c> Expander<'a, 'b, 'c> {
             // completion on the floor.
             #[allow(clippy::collapsible_if)]
             if !for_completions {
-                if !out.add(path_to_expand) {
+                if out.add(path_to_expand).is_err() {
                     return append_overflow_error(self.errors, None);
                 }
             }

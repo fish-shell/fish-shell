@@ -152,12 +152,15 @@ fn wildcard_complete_internal(
 
         // Note: out_completion may be empty if the completion really is empty, e.g. tab-completing
         // 'foo' when a file 'foo' exists.
-        if !out.add(Completion::new(
-            out_completion.to_owned(),
-            out_desc,
-            m,
-            flags,
-        )) {
+        if out
+            .add(Completion::new(
+                out_completion.to_owned(),
+                out_desc,
+                m,
+                flags,
+            ))
+            .is_err()
+        {
             return WildcardResult::Overflow;
         }
         return WildcardResult::Match;
@@ -852,7 +855,7 @@ mod expander {
             assert!(!self.flags.for_completions);
             #[allow(clippy::collapsible_if)]
             if self.completion_set.insert(result.clone()) {
-                if !self.resolved_completions.add(result) {
+                if self.resolved_completions.add(result).is_err() {
                     self.did_overflow = true;
                 }
             }

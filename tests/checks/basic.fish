@@ -569,8 +569,8 @@ echo (#"
 # Make sure we don't match up brackets within comments (#8022).
 $fish -c 'echo f[oo # not valid, no matching ]'
 # CHECKERR: fish: Unexpected end of string, square brackets do not match
-# CHECKERR: echo f[oo # not valid, no matching ]
-# CHECKERR: {{      }}^
+# CHECKERR: {{^}}echo f[oo # not valid, no matching ]
+# CHECKERR: {{^}}      ^
 
 # Should fail because $PWD is read-only.
 for PWD in foo bar

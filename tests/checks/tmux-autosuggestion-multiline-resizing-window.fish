@@ -23,14 +23,14 @@ tmux-sleep
 isolated-tmux \
     send-keys i
 tmux-sleep
-isolated-tmux capture-pane -p | string replace -r ^ ^
-# CHECK: ^prompt 0>
-# CHECK: ^prompt 0>
-# CHECK: ^prompt 0>
-# CHECK: ^prompt 0>
-# CHECK: ^prompt 0>
-# CHECK: ^prompt 0>
-# CHECK: ^prompt 0>
-# CHECK: ^prompt 0>
-# CHECK: ^prompt 0>
-# CHECK: ^prompt 0> if true…
+isolated-tmux capture-pane -p
+# CHECK: {{^}}prompt 0>
+# CHECK: {{^}}prompt 0>
+# CHECK: {{^}}prompt 0>
+# CHECK: {{^}}prompt 0>
+# CHECK: {{^}}prompt 0>
+# CHECK: {{^}}prompt 0>
+# CHECK: {{^}}prompt 0>
+# CHECK: {{^}}prompt 0>
+# CHECK: {{^}}prompt 0>
+# CHECK: {{^}}prompt 0> if true…

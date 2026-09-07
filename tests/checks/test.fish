@@ -54,8 +54,8 @@ t 5,2
 
 test -x /usr/bin/go /usr/local/bin/go
 # CHECKERR: test: unexpected argument at index 3: '/usr/local/bin/go'
-# CHECKERR: -x /usr/bin/go /usr/local/bin/go
-# CHECKERR: {{               \^}}
+# CHECKERR: {{^}}-x /usr/bin/go /usr/local/bin/go
+# CHECKERR: {{^}}               ^
 # CHECKERR: {{.*}}test.fish (line {{\d+}}):
 # CHECKERR: {{^}}test -x /usr/bin/go /usr/local/bin/go
 # CHECKERR: {{^}}^

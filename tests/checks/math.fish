@@ -156,10 +156,10 @@ not math '2 + 2 4'
 # This regex to check whitespace - the error appears between the second 2 and the 4!
 # (right after the 2)
 # CHECKERR: {{^}}      ^
-printf '<%s>\n' (math '2 + 2      4' 2>&1)
-# CHECK: <math: Error: Missing operator>
-# CHECK: <'2 + 2      4'>
-# CHECK: <      ^~~~~^>
+math '2 + 2      4'
+# CHECKERR: math: Error: Missing operator
+# CHECKERR: {{^}}'2 + 2      4'
+# CHECKERR: {{^}}      ^~~~~^
 
 not math '(1 2)'
 # CHECKERR: math: Error: Missing operator
@@ -192,18 +192,18 @@ not math 2^53 + 1
 not math -2^53 - 1
 # CHECKERR: math: Error: Result magnitude is too large
 # CHECKERR: '-2^53 - 1'
-printf '<%s>\n' (not math 1 / 0 2>&1)
-# CHECK: <math: Error: Division by zero>
-# CHECK: <'1 / 0'>
-# CHECK: <   ^>
-printf '<%s>\n' (math 1 % 0 - 5 2>&1)
-# CHECK: <math: Error: Division by zero>
-# CHECK: <'1 % 0 - 5'>
-# CHECK: <   ^>
-printf '<%s>\n' (math min 1 / 0, 5 2>&1)
-# CHECK: <math: Error: Division by zero>
-# CHECK: <'min 1 / 0, 5'>
-# CHECK: <       ^>
+math 1 / 0
+# CHECKERR: math: Error: Division by zero
+# CHECKERR: {{^}}'1 / 0'
+# CHECKERR: {{^}}   ^
+math 1 % 0 - 5
+# CHECKERR: math: Error: Division by zero
+# CHECKERR: {{^}}'1 % 0 - 5'
+# CHECKERR: {{^}}   ^
+math min 1 / 0, 5
+# CHECKERR: math: Error: Division by zero
+# CHECKERR: {{^}}'min 1 / 0, 5'
+# CHECKERR: {{^}}       ^
 
 # Validate "x" as multiplier
 math 0x2 # Hex
@@ -386,8 +386,8 @@ echo 7 + 8 | math not an expression
 
 math (string repeat -n 1000 1) 2>| string shorten -m50 --char=""
 # CHECK: math: Error: Number is too large
-# CHECK: '1111111111111111111111111111111111111111111111111
-# CHECK:  ^
+# CHECK: {{^}}'1111111111111111111111111111111111111111111111111
+# CHECK: {{^}} ^
 
 math 0x0_2.0P-0x3
 # CHECKERR: math: Error: Unknown function

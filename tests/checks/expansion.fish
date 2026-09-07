@@ -1,16 +1,16 @@
 # RUN: fish=%fish %fish %s
 
 # caret position (#5812)
-printf '<%s>\n' ($fish -c ' $f[a]' 2>&1)
+$fish -c ' $f[a]'
 
-# CHECK: <fish: Invalid index value>
-# CHECK: < $f[a]>
-# CHECK: <    ^>
+# CHECKERR: fish: Invalid index value
+# CHECKERR: {{^}} $f[a]
+# CHECKERR: {{^}}    ^
 
-printf '<%s>\n' ($fish -c 'if $f[a]; end' 2>&1)
-# CHECK: <fish: Invalid index value>
-# CHECK: <if $f[a]; end>
-# CHECK: <      ^>
+$fish -c 'if $f[a]; end'
+# CHECKERR: fish: Invalid index value
+# CHECKERR: {{^}}if $f[a]; end
+# CHECKERR: {{^}}      ^
 
 set a A
 set aa AA
@@ -328,16 +328,16 @@ $fish -c 'echo {}}'
 #CHECKERR: fish: Unexpected '}' for unopened brace
 #CHECKERR: {{^}}echo {}}
 #CHECKERR: {{^}}       ^
-printf '<%s>\n' ($fish -c 'command (asd)' 2>&1)
-#CHECK: <fish: command substitutions not allowed in command position. Try var=(your-cmd) $var ...>
-#CHECK: <command (asd)>
-#CHECK: <        ^~~~^>
+$fish -c 'command (asd)'
+#CHECKERR: fish: command substitutions not allowed in command position. Try var=(your-cmd) $var ...
+#CHECKERR: {{^}}command (asd)
+#CHECKERR: {{^}}        ^~~~^
 true
 
-printf '<%s>\n' ($fish -c 'echo "$abc["' 2>&1)
-#CHECK: <fish: Invalid index value>
-#CHECK: <echo "$abc[">
-#CHECK: <           ^>
+$fish -c 'echo "$abc["'
+#CHECKERR: fish: Invalid index value
+#CHECKERR: {{^}}echo "$abc["
+#CHECKERR: {{^}}           ^
 
 set -l pager command less
 echo foo | $pager

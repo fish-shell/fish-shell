@@ -1,6 +1,6 @@
 # RUN: fish_indent=%fish_indent %fish %s
 # Test file for fish_indent
-# Note that littlecheck ignores leading whitespace, so we have to use {{    }} to explicitly match it.
+# Note that littlecheck ignores leading whitespace, so we have to use {{^}} to explicitly match it.
 
 fish_indent --no-such-option
 #CHECKERR: fish_indent: --no-such-option: unknown option
@@ -9,9 +9,9 @@ fish_indent --check=foo
 #CHECKERR: fish_indent: --check=foo: option does not take an argument
 
 fish_indent -w
-#CHECKERR: Expected file path to read/write for -w:
-#CHECKERR: 
-#CHECKERR: {{ }}$ fish -w foo.fish
+#CHECKERR: {{^}}Expected file path to read/write for -w:
+#CHECKERR: {{^}}
+#CHECKERR: {{^}} $ fish -w foo.fish
 
 fish_indent -w nonexistent
 #CHECKERR: Opening "nonexistent" failed: No such file or directory (os error {{\d+}})
@@ -84,16 +84,16 @@ echo hi
 end | cat | cat | begin ; echo hi ; end | begin ; begin ; echo hi ; end ; end arg
 ' | $fish_indent
 
-#CHECK: begin
-#CHECK: {{    }}echo hi
-#CHECK:
-#CHECK: end | cat | cat | begin
-#CHECK: {{    }}echo hi
-#CHECK: end | begin
-#CHECK: {{    }}begin
-#CHECK: {{    }}{{    }}echo hi
-#CHECK: {{    }}end
-#CHECK: end arg
+#CHECK: {{^}}begin
+#CHECK: {{^}}    echo hi
+#CHECK: {{^}}
+#CHECK: {{^}}end | cat | cat | begin
+#CHECK: {{^}}    echo hi
+#CHECK: {{^}}end | begin
+#CHECK: {{^}}    begin
+#CHECK: {{^}}        echo hi
+#CHECK: {{^}}    end
+#CHECK: {{^}}end arg
 
 echo -n '
 switch aloha
@@ -107,13 +107,13 @@ switch aloha
 end
 ' | $fish_indent
 
-#CHECK: switch aloha
-#CHECK: {{    }}case alpha
-#CHECK: {{    }}{{    }}echo sup
-#CHECK: {{    }}case beta gamma
-#CHECK: {{    }}{{    }}echo hi
-#CHECK:
-#CHECK: end
+#CHECK: {{^}}switch aloha
+#CHECK: {{^}}    case alpha
+#CHECK: {{^}}        echo sup
+#CHECK: {{^}}    case beta gamma
+#CHECK: {{^}}        echo hi
+#CHECK: {{^}}
+#CHECK: {{^}}end
 
 echo -n '
 function hello_world
@@ -129,18 +129,18 @@ function hello_world
                   end
 ' | $fish_indent
 
-#CHECK: function hello_world
-#CHECK:
-#CHECK: {{    }}begin
-#CHECK: {{    }}{{    }}echo hi
-#CHECK: {{    }}end | cat
-#CHECK:
-#CHECK: {{    }}echo sup
-#CHECK: {{    }}echo sup
-#CHECK: {{    }}echo hello
-#CHECK:
-#CHECK: {{    }}echo hello
-#CHECK: end
+#CHECK: {{^}}function hello_world
+#CHECK: {{^}}
+#CHECK: {{^}}    begin
+#CHECK: {{^}}        echo hi
+#CHECK: {{^}}    end | cat
+#CHECK: {{^}}
+#CHECK: {{^}}    echo sup
+#CHECK: {{^}}    echo sup
+#CHECK: {{^}}    echo hello
+#CHECK: {{^}}
+#CHECK: {{^}}    echo hello
+#CHECK: {{^}}end
 
 echo -n '
 echo alpha         #comment1
@@ -160,23 +160,23 @@ qqq
    case "*"
        echo sup
 end' | $fish_indent
-#CHECK: echo alpha #comment1
-#CHECK: #comment2
-#CHECK:
-#CHECK: #comment3
-#CHECK: for i in abc #comment1
-#CHECK: {{    }}#comment2
-#CHECK: {{    }}echo hi
-#CHECK: end
-#CHECK:
-#CHECK: switch foo #abc
-#CHECK: {{    }}# bar
-#CHECK: {{    }}case bar
-#CHECK: {{    }}{{    }}echo baz\
-#CHECK: qqq
-#CHECK: {{    }}case "*"
-#CHECK: {{    }}{{    }}echo sup
-#CHECK: end
+#CHECK: {{^}}echo alpha #comment1
+#CHECK: {{^}}#comment2
+#CHECK: {{^}}
+#CHECK: {{^}}#comment3
+#CHECK: {{^}}for i in abc #comment1
+#CHECK: {{^}}    #comment2
+#CHECK: {{^}}    echo hi
+#CHECK: {{^}}end
+#CHECK: {{^}}
+#CHECK: {{^}}switch foo #abc
+#CHECK: {{^}}    # bar
+#CHECK: {{^}}    case bar
+#CHECK: {{^}}        echo baz\
+#CHECK: {{^}}qqq
+#CHECK: {{^}}    case "*"
+#CHECK: {{^}}        echo sup
+#CHECK: {{^}}end
 
 # No indent
 echo -n '
@@ -189,14 +189,14 @@ switch beta
 end
 end
 ' | $fish_indent -i
-#CHECK: if true
-#CHECK: else if false
+#CHECK: {{^}}if true
+#CHECK: {{^}}else if false
 #CHECK: {{^}}echo alpha
 #CHECK: {{^}}switch beta
 #CHECK: {{^}}case gamma
 #CHECK: {{^}}echo delta
 #CHECK: {{^}}end
-#CHECK: end
+#CHECK: {{^}}end
 
 # Test errors
 echo -n '
@@ -206,28 +206,27 @@ else
 echo bye
 end; echo alpha "
 ' | $fish_indent
-#CHECK: begin
-#CHECK: {{    }}echo hi
-#CHECK: else
-#CHECK:
+#CHECK: {{^}}begin
+#CHECK: {{^}}    echo hi
+#CHECK: {{^}}else
 #CHECK: {{^}}echo bye
-#CHECK: end; echo alpha "
+#CHECK: {{^}}end; echo alpha "
 
 # issue 1665
 echo -n '
 if begin ; false; end; echo hi ; end
 while begin ; false; end; echo hi ; end
 ' | $fish_indent
-#CHECK: if begin
-#CHECK: {{    }}{{    }}false
-#CHECK: {{    }}end
-#CHECK: {{    }}echo hi
-#CHECK: end
-#CHECK: while begin
-#CHECK: {{    }}{{    }}false
-#CHECK: {{    }}end
-#CHECK: {{    }}echo hi
-#CHECK: end
+#CHECK: {{^}}if begin
+#CHECK: {{^}}        false
+#CHECK: {{^}}    end
+#CHECK: {{^}}    echo hi
+#CHECK: {{^}}end
+#CHECK: {{^}}while begin
+#CHECK: {{^}}        false
+#CHECK: {{^}}    end
+#CHECK: {{^}}    echo hi
+#CHECK: {{^}}end
 
 # issue 2899
 echo -n '
@@ -242,7 +241,7 @@ begin
 end
 ' | $fish_indent
 #CHECK: {{^}}begin
-#CHECK: {{^    }}# comment
+#CHECK: {{^}}    # comment
 #CHECK: {{^}}end
 
 echo -n '
@@ -252,8 +251,8 @@ cmd
 end
 ' | $fish_indent
 #CHECK: {{^}}begin
-#CHECK: {{^    }}cmd
-#CHECK: {{^    }}# comment
+#CHECK: {{^}}    cmd
+#CHECK: {{^}}    # comment
 #CHECK: {{^}}end
 
 echo -n '
@@ -261,7 +260,7 @@ cmd \\
 continuation
 ' | $fish_indent
 #CHECK: {{^}}cmd \
-#CHECK: {{^    }}continuation
+#CHECK: {{^}}    continuation
 
 echo -n '
 begin
@@ -270,8 +269,8 @@ continuation
 end
 ' | $fish_indent
 #CHECK: {{^}}begin
-#CHECK: {{^    }}cmd \
-#CHECK: {{^    }}{{    }}continuation
+#CHECK: {{^}}    cmd \
+#CHECK: {{^}}        continuation
 #CHECK: {{^}}end
 
 echo -n '
@@ -305,33 +304,33 @@ echo hi |
 
 echo bye
 ' | $fish_indent
-#CHECK: i\
-#CHECK: f true
-#CHECK: {{    }}echo yes
-#CHECK: en\
-#CHECK: d
-#CHECK:
-#CHECK: while true
-#CHECK: {{    }}builtin yes
-#CHECK: end
-#CHECK:
-#CHECK: alpha | beta
-#CHECK:
-#CHECK: gamma | \
-#CHECK: # comment3
-#CHECK: delta
-#CHECK:
-#CHECK: if true
-#CHECK: {{    }}echo abc
-#CHECK: end
-#CHECK:
-#CHECK: if false # comment4
-#CHECK: {{    }}and true && false
-#CHECK: {{    }}echo abc
-#CHECK: end
-#CHECK:
-#CHECK: echo hi |
-#CHECK: {{    }}echo bye
+#CHECK: {{^}}i\
+#CHECK: {{^}}f true
+#CHECK: {{^}}    echo yes
+#CHECK: {{^}}en\
+#CHECK: {{^}}d
+#CHECK: {{^}}
+#CHECK: {{^}}while true
+#CHECK: {{^}}    builtin yes
+#CHECK: {{^}}end
+#CHECK: {{^}}
+#CHECK: {{^}}alpha | beta
+#CHECK: {{^}}
+#CHECK: {{^}}gamma | \
+#CHECK: {{^}}    # comment3
+#CHECK: {{^}}    delta
+#CHECK: {{^}}
+#CHECK: {{^}}if true
+#CHECK: {{^}}    echo abc
+#CHECK: {{^}}end
+#CHECK: {{^}}
+#CHECK: {{^}}if false # comment4
+#CHECK: {{^}}    and true && false
+#CHECK: {{^}}    echo abc
+#CHECK: {{^}}end
+#CHECK: {{^}}
+#CHECK: {{^}}echo hi |
+#CHECK: {{^}}    echo bye
 
 echo 'a;;;;;;' | $fish_indent
 #CHECK: a
@@ -356,15 +355,15 @@ echo 'foo &&
   #
 bar' | $fish_indent
 #CHECK: {{^}}foo &&
-#CHECK: {{^    }}#
-#CHECK: {{    }}bar
+#CHECK: {{^}}    #
+#CHECK: {{^}}    bar
 
 echo 'command 1 |
 command 1 cont ||
 command 2' | $fish_indent
 #CHECK: {{^}}command 1 |
-#CHECK: {{^    }}command 1 cont ||
-#CHECK: {{^    }}command 2
+#CHECK: {{^}}    command 1 cont ||
+#CHECK: {{^}}    command 2
 
 echo " foo" | $fish_indent --check
 echo $status
@@ -405,12 +404,12 @@ function hello_continuations
                   end
 ' | $fish_indent
 
-#CHECK: function hello_continuations
+#CHECK: {{^}}function hello_continuations
 #CHECK: {{^}}    echo cmd \
 #CHECK: {{^}}        echo --opt1 \
 #CHECK: {{^}}        echo --opt2 \
 #CHECK: {{^}}        echo --opt3
-#CHECK: end
+#CHECK: {{^}}end
 
 echo "\
 a=1 \\
@@ -425,13 +424,13 @@ echo $status #CHECK: 0
 
 echo 'first-word\\
  second-word' | $fish_indent
-# CHECK: first-word \
+# CHECK: {{^}}first-word \
 # CHECK: {{^}}    second-word
 
 echo 'begin
     first-indented-word\\
         second-indented-word' | $fish_indent
-# CHECK: begin
+# CHECK: {{^}}begin
 # CHECK: {{^}}    first-indented-word \
 # CHECK: {{^}}        second-indented-word
 
@@ -466,11 +465,11 @@ echo 'begin
 echo \\
 # continuation comment
 }'
-    # CHECK: {
-    # CHECK: {{^    }}echo \
-    # CHECK: {{^        }}# continuation comment
+    # CHECK: {{^}}{
+    # CHECK: {{^}}    echo \
+    # CHECK: {{^}}        # continuation comment
     # TODO: This is currently broken; so this the begin/end equivalent.
-    # CHECK: {{^    [}]}}
+    # CHECK: {{^}}    }
 
     echo '{  {  }  }'
     # CHECK: { { } }
@@ -486,44 +485,44 @@ echo \\
 
 }
 '
-    # CHECK: {{^\{$}}
-    # CHECK: {{^    \{$}}
-    # CHECK: {{^    \}$}}
-    # CHECK: {{^\}$}}
+    # CHECK: {{^}}{
+    # CHECK: {{^}}    {
+    # CHECK: {{^}}    }
+    # CHECK: {{^}}{{[}]}}
 
     echo '
 { level 1; {
 level 2 } }
 '
     # TODO Should add a line break here.
-    # CHECK: {{^{ level 1$}}
-    # CHECK: {{^    \{$}}
-    # CHECK: {{^        level 2$}}
-    # CHECK: {{^    \}$}}
-    # CHECK: {{^\}$}}
+    # CHECK: {{^}}{ level 1
+    # CHECK: {{^}}    {
+    # CHECK: {{^}}        level 2
+    # CHECK: {{^}}    }
+    # CHECK: {{^}}{{[}]}}
 } | $fish_indent
 
 echo 'test 1 -eq 1; or {
     echo a
     echo b
 }' | $fish_indent
-# CHECK: test 1 -eq 1; or {
-# CHECK: {{^    }}echo a
-# CHECK: {{^    }}echo b
+# CHECK: {{^}}test 1 -eq 1; or {
+# CHECK: {{^}}    echo a
+# CHECK: {{^}}    echo b
 # CHECK: {{^}}{{[}]}}
 
 echo 'not {
     echo hi
 }' | $fish_indent
-# CHECK: not {
-# CHECK: {{^    }}echo hi
+# CHECK: {{^}}not {
+# CHECK: {{^}}    echo hi
 # CHECK: {{^}}{{[}]}}
 
 echo 'time {
     echo hi
 }' | $fish_indent
-# CHECK: time {
-# CHECK: {{^    }}echo hi
+# CHECK: {{^}}time {
+# CHECK: {{^}}    echo hi
 # CHECK: {{^}}{{[}]}}
 
 echo 'if {
@@ -531,10 +530,10 @@ echo 'if {
 }
     echo ok
 end' | $fish_indent
-# CHECK: if {
-# CHECK: {{^        }}true
-# CHECK: {{^    }}{{[}]}}
-# CHECK: {{^    }}echo ok
+# CHECK: {{^}}if {
+# CHECK: {{^}}        true
+# CHECK: {{^}}    {{[}]}}
+# CHECK: {{^}}    echo ok
 # CHECK: {{^}}end
 
 echo 'while {
@@ -542,16 +541,16 @@ echo 'while {
 }
     echo ok
 end' | $fish_indent
-# CHECK: while {
-# CHECK: {{^        }}true
-# CHECK: {{^    }}{{[}]}}
-# CHECK: {{^    }}echo ok
+# CHECK: {{^}}while {
+# CHECK: {{^}}        true
+# CHECK: {{^}}    {{[}]}}
+# CHECK: {{^}}    echo ok
 # CHECK: {{^}}end
 
 echo 'echo x{a,
   b}y' | $fish_indent
-# CHECK: echo x{a,
-# CHECK: {{^  }}b}y
+# CHECK: {{^}}echo x{a,
+# CHECK: {{^}}  b}y
 
 echo 'multiline-\\
 -word' | $fish_indent --check
@@ -602,7 +601,7 @@ echo this file starts late
 
 echo 'foo|bar; begin
 echo' | $fish_indent --only-indent
-# CHECK: foo|bar; begin
+# CHECK: {{^}}foo|bar; begin
 # CHECK: {{^}}    echo
 
 echo 'begin

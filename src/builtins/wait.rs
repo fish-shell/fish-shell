@@ -68,7 +68,7 @@ fn find_wait_handles(
             if wait_handle_matches(query, &wh) {
                 matched = true;
                 if provide_handle {
-                    handles.push(wh.clone());
+                    handles.push(wh);
                 }
             }
         }

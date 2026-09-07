@@ -190,6 +190,7 @@ mod tests {
     use std::time::Duration;
 
     #[test]
+    #[allow(clippy::needless_range_loop)]
     fn test_debounce() {
         let pool = ThreadPool::new(1, 16);
         let event_signaller = Arc::new(FdEventSignaller::new());

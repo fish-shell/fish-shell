@@ -353,7 +353,7 @@ pub fn function(
 
     // Handle wrap targets by creating the appropriate completions.
     for wt in opts.wrap_targets {
-        complete_add_wrapper(function_name.clone(), wt.clone());
+        complete_add_wrapper(function_name.clone(), wt);
     }
 
     // Add any event handlers.

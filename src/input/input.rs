@@ -110,6 +110,7 @@ impl CharEvent {
         matches!(self, CharEvent::Readline(_) | CharEvent::Command(_))
     }
 
+    #[cfg(test)]
     pub fn get_char(&self) -> char {
         let CharEvent::Key(kevt) = self else {
             panic!("Not a char type");

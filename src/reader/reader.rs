@@ -6721,7 +6721,7 @@ pub(crate) fn get_quote(cmd_str: &wstr, len: usize) -> Option<char> {
         } else if cmd[i] == '\'' || cmd[i] == '"' {
             match quote_end(cmd_str, i, cmd[i]) {
                 Some(end) => {
-                    if end > len {
+                    if end >= len {
                         return Some(cmd[i]);
                     }
                     i = end + 1;
@@ -7455,6 +7455,39 @@ mod tests {
 
         // See #6130
         validate!(": (:^ ''", "", CompleteFlags::default(), false, ": (: ^''");
+
+        // Completion inside quotes should not escape
+        validate!(
+            "'fo^o'",
+            "bar baz",
+            CompleteFlags::NO_SPACE,
+            false,
+            "'fobar baz^o'"
+        );
+
+        // Regression test for the case where the cursor is just before the closing quote (#12981)
+        validate!(
+            "'foo^'",
+            "bar baz",
+            CompleteFlags::NO_SPACE,
+            false,
+            "'foobar baz^'"
+        );
+        validate!(
+            "\"foo^\"",
+            "bar baz",
+            CompleteFlags::NO_SPACE,
+            false,
+            "\"foobar baz^\""
+        );
+        // And a test for off-by-one in the other direction so we don't regress that way
+        validate!(
+            "'foo'^",
+            "bar baz",
+            CompleteFlags::NO_SPACE,
+            true,
+            "'foo'bar\\ baz^"
+        );
     }
 
     #[test]

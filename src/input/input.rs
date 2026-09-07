@@ -170,13 +170,15 @@ impl CharEvent {
     }
 }
 
+type Text = [char; 4];
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct KeyEvent {
     pub key: Key,
     pub(crate) explicit_modifiers: bool,
     pub shifted_codepoint: char,
     base_layout_codepoint: char,
-    pub associated_text: [char; 4],
+    pub associated_text: Text,
 }
 
 pub type CharIterator = std::iter::TakeWhile<std::array::IntoIter<char, 4>, fn(&char) -> bool>;
@@ -191,7 +193,7 @@ impl KeyEvent {
         codepoint: char,
         shifted_key: Option<char>,
         base_layout_key: Option<char>,
-        associated_text: [char; 4],
+        associated_text: Text,
     ) -> Self {
         Self {
             key: Key::new(modifiers, codepoint),
@@ -209,7 +211,7 @@ impl KeyEvent {
     }
 
     pub fn text_to_insert(&self) -> Option<CharIterator> {
-        let until_zero = |cs: [char; 4]| {
+        let until_zero = |cs: Text| {
             Some(
                 cs.into_iter()
                     .take_while((|c| *c != '\0') as fn(&char) -> bool),

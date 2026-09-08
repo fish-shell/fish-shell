@@ -183,12 +183,14 @@ complete -c rsync -d Hostname -a "
 # ... (and then a ton of lines about capabilities)
 #
 # This includes multiple spaces, the version might start with "v" depending on whether it's
-# built from a git tag or not...
+# built from a git tag or not, and it may contain a pre-release suffix or a trailing git
+# commit to it. For example, on Arch at the time of writing the version line is:
+# rsync  version 3.5.0-g471e17dc  protocol version 32
 
 set -l new_escaping # has an element if the new escaping style introduced in 3.2.4 is required
 
 set -l rsync_ver (rsync --version |
-                  string replace -rf '^rsync +version\D+([\d.]+) .*' '$1' |
+                  string replace -rf '^rsync +version\D+([\d.]+).*' '$1' |
                   string split .)
 
 if test "$rsync_ver[1]" -gt 3 2>/dev/null

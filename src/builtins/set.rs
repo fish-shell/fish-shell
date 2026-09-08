@@ -852,13 +852,13 @@ fn erase(
 fn new_var_values(
     varname: &wstr,
     opts: &Options,
-    argv: &[&wstr],
+    args: &[&wstr],
     vars: &dyn Environment,
 ) -> Vec<WString> {
     let mut result = vec![];
     if !opts.prepend && !opts.append {
         // Not prepending or appending.
-        result.extend(argv.iter().copied().map(|s| s.to_owned()));
+        result.extend(args.iter().copied().map(|s| s.to_owned()));
     } else {
         // Note: when prepending or appending, we always use default scoping when fetching existing
         // values. For example:
@@ -872,20 +872,20 @@ fn new_var_values(
         }
 
         if opts.prepend {
-            result.splice(0..0, argv.iter().copied().map(|s| s.to_owned()));
+            result.splice(0..0, args.iter().copied().map(|s| s.to_owned()));
         }
 
         if opts.append {
-            result.extend(argv.iter().copied().map(|s| s.to_owned()));
+            result.extend(args.iter().copied().map(|s| s.to_owned()));
         }
     }
     result
 }
 
 /// This handles the more difficult case of setting individual slices of a var.
-fn new_var_values_by_index(split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
+fn new_var_values_by_index(split: &SplitVar, args: &[&wstr]) -> Vec<WString> {
     assert_eq!(
-        argv.len(),
+        args.len(),
         split.indexes.len(),
         "Must have the same number of indexes as arguments"
     );
@@ -902,7 +902,7 @@ fn new_var_values_by_index(split: &SplitVar, argv: &[&wstr]) -> Vec<WString> {
 
     // For each (index, argument) pair, set the element in our `result` to the replacement string.
     // Extend the list with empty strings as needed. The indexes are 1-based.
-    for (i, arg) in argv.iter().copied().enumerate() {
+    for (i, arg) in args.iter().copied().enumerate() {
         let lidx = usize::try_from(split.indexes[i]).unwrap();
         assert!(lidx >= 1, "idx should have been verified in range already");
         // Convert from 1-based to 0-based.
@@ -922,9 +922,9 @@ fn set_internal(
     opts: &Options,
     parser: &mut Parser,
     streams: &mut IoStreams,
-    argv: &[&wstr],
+    args: &[&wstr],
 ) -> BuiltinResult {
-    if argv.is_empty() {
+    if args.is_empty() {
         err_fmt!(Error::MIN_ARG_COUNT, 1, 0)
             .cmd(cmd)
             .full_trailer(parser)
@@ -933,8 +933,8 @@ fn set_internal(
     }
 
     let set_mode = opts.set_mode;
-    let var_expr = argv[0];
-    let argv = &argv[1..];
+    let var_expr = args[0];
+    let args = &args[1..];
 
     let Some(split) = split_var_and_indexes(var_expr, set_mode.mode, parser.vars(), streams) else {
         builtin_print_error_trailer(parser, streams.err, cmd);
@@ -981,11 +981,11 @@ fn set_internal(
         }
 
         // Argument count and index count must agree.
-        if split.indexes.len() != argv.len() {
+        if split.indexes.len() != args.len() {
             err_fmt!(
                 "given %d indexes but %d values",
                 split.indexes.len(),
-                argv.len()
+                args.len()
             )
             .cmd(cmd)
             .finish(streams);
@@ -995,10 +995,10 @@ fn set_internal(
 
     let new_values = if split.indexes.is_empty() {
         // Handle the simple, common, case. Set the var to the specified values.
-        new_var_values(split.varname, opts, argv, parser.vars())
+        new_var_values(split.varname, opts, args, parser.vars())
     } else {
         // Handle the uncommon case of setting specific slices of a var.
-        new_var_values_by_index(&split, argv)
+        new_var_values_by_index(&split, args)
     };
 
     // Set the value back in the variable stack and fire any events.

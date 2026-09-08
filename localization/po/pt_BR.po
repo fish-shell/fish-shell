@@ -5206,6 +5206,9 @@ msgstr ""
 msgid "Activate debug mode"
 msgstr ""
 
+msgid "Activate input method"
+msgstr ""
+
 msgid "Activate runtime system %Log call"
 msgstr ""
 
@@ -10595,6 +10598,9 @@ msgid "Check if any passwords have been publicly leaked"
 msgstr ""
 
 msgid "Check if certain assertion type is used"
+msgstr ""
+
+msgid "Check if fcitx is running (return 1 if not)"
 msgstr ""
 
 msgid "Check if files and directories are where they should be"
@@ -29893,6 +29899,12 @@ msgstr ""
 msgid "Get current brightness of device"
 msgstr ""
 
+msgid "Get current input method group name"
+msgstr ""
+
+msgid "Get current input method name"
+msgstr ""
+
 msgid "Get dataset space consumed by each user"
 msgstr ""
 
@@ -31964,6 +31976,9 @@ msgid "In-memory cache SIZE for chunk objects"
 msgstr ""
 
 msgid "In-memory cache SIZE for dir objects"
+msgstr ""
+
+msgid "Inactivate input method"
 msgstr ""
 
 msgid "Include -git/-svn/etc packages"
@@ -45073,6 +45088,9 @@ msgstr ""
 msgid "Print copyright and version information"
 msgstr ""
 
+msgid "Print corresponding addon name for im"
+msgstr ""
+
 msgid "Print current RTC performance parameters"
 msgstr ""
 
@@ -45257,6 +45275,9 @@ msgid "Print extra information"
 msgstr ""
 
 msgid "Print family description of helper"
+msgstr ""
+
+msgid "Print fcitx's dbus address"
 msgstr ""
 
 msgid "Print file size, not disk usage"
@@ -49756,6 +49777,9 @@ msgstr ""
 msgid "Reload a frozen state from FILE at start"
 msgstr ""
 
+msgid "Reload config"
+msgstr ""
+
 msgid "Reload config and rebind specified interface"
 msgstr ""
 
@@ -51503,6 +51527,12 @@ msgid "Request distinct server name"
 msgstr ""
 
 msgid "Request dry-run of dinstall after upload"
+msgstr ""
+
+msgid "Request fcitx to exit"
+msgstr ""
+
+msgid "Request fcitx to open a new X11 connection with $DISPLAY"
 msgstr ""
 
 msgid "Request given address in DHCP DISCOVER message"
@@ -56276,6 +56306,9 @@ msgid "Set copyright holder in output"
 msgstr ""
 
 msgid "Set cpu idle state specific kernel options"
+msgstr ""
+
+msgid "Set current input method group"
 msgstr ""
 
 msgid "Set daemon connection timeout in seconds"
@@ -66394,6 +66427,9 @@ msgstr ""
 msgid "Swirl image pixels about the center [degrees]"
 msgstr ""
 
+msgid "Switch Active/Inactive"
+msgstr ""
+
 msgid "Switch between accounts."
 msgstr ""
 
@@ -66455,6 +66491,9 @@ msgid "Switch to post-copy after timeout"
 msgstr ""
 
 msgid "Switch to the given network profile"
+msgstr ""
+
+msgid "Switch to the input method"
 msgstr ""
 
 msgid "Switches bundler's defaults into deployment mode."

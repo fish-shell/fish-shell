@@ -32,7 +32,7 @@ use std::{
 
 use crate::{
     prelude::*,
-    wutil::{Error as wcstodError, wcstod::wcstod_underscores},
+    wutil::{self, wcstod::wcstod_underscores},
 };
 use fish_common::assert_sorted_by_name;
 
@@ -384,15 +384,15 @@ impl<'s> State<'s> {
             let mut consumed = 0;
             match wcstod_underscores(*next, &mut consumed) {
                 Ok(num) => Some((consumed, Some(Token::Number(num)))),
-                Err(wcstodError::InvalidChar) => {
+                Err(wutil::Error::InvalidChar) => {
                     self.set_error(ErrorKind::Unknown, Some((self.pos + consumed, 1)));
                     Some((consumed, Some(Token::Error)))
                 }
-                Err(wcstodError::Overflow) => {
+                Err(wutil::Error::Overflow) => {
                     self.set_error(ErrorKind::NumberTooLarge, Some((self.pos, consumed)));
                     Some((consumed, Some(Token::Error)))
                 }
-                Err(wcstodError::Empty) => {
+                Err(wutil::Error::Empty) => {
                     // We have a matches! above, this can't be?
                     unreachable!()
                 }

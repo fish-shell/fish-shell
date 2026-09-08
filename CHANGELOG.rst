@@ -1,5 +1,5 @@
-fish ?.?.? (released ???)
-=========================
+fish 4.9.3 (released September 08, 2026)
+========================================
 
 This release fixes another macOS issue where dead keys, for example the two-key sequence :kbd:`",space` on the US International keyboard layout would incorrectly insert space (:issue:`12979`).
 

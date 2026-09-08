@@ -187,16 +187,17 @@ complete -c rsync -d Hostname -a "
 # commit to it. For example, on Arch at the time of writing the version line is:
 # rsync  version 3.5.0-g471e17dc  protocol version 32
 
-set -l new_escaping # has an element if the new escaping style introduced in 3.2.4 is required
+# Assume new escaping style introduced in 3.2.4
+set -l new_escaping true
 
 set -l rsync_ver (rsync --version |
                   string replace -rf '^rsync +version\D+([\d.]+).*' '$1' |
                   string split .)
 
-if test "$rsync_ver[1]" -gt 3 2>/dev/null
-    or test "$rsync_ver[1]" -eq 3 -a "$rsync_ver[2]" -gt 2 2>/dev/null
-    or test "$rsync_ver[1]" -eq 3 -a "$rsync_ver[2]" -eq 2 -a "$rsync_ver[3]" -gt 3 2>/dev/null
-    set new_escaping 1
+if test "$rsync_ver[1]" -lt 3
+    or test "$rsync_ver[1]" -eq 3 -a "$rsync_ver[2]" -lt 2
+    or test "$rsync_ver[1]" -eq 3 -a "$rsync_ver[2]" -eq 2 -a "$rsync_ver[3]" -lt 4
+    set new_escaping false
 end
 
 complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" -xa "
@@ -207,6 +208,6 @@ complete -c rsync -d "Remote path" -n "commandline -ct | string match -q '*:*'" 
     # Get the list of remote files from the specified rsync server.
         rsync --list-only (__rsync_remote_target) 2>/dev/null | string replace -r '^d.*' '\$0/' |
         string replace -r '(\S+\s+){4}' '' |
-        string match --invert './' $(set -q new_escaping[1]; or echo ' | string escape -n'; echo)
+        string match --invert './' $($new_escaping; or echo ' | string escape -n'; echo)
 )
 "

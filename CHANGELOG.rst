@@ -7,9 +7,12 @@ Interactive improvements
 
 Regression fixes:
 -----------------
-- (From 4.9.0) Fixed another macOS issue where dead keys, for example the two-key sequence :kbd:`",space` on the US International keyboard layout would incorrectly insert space (:issue:`12979`).
 - (From 4.0.0) Short options are no longer offered as completions if an old-style completion matches (like `-foo`).
 
+fish 4.9.3 (released September 08, 2026)
+========================================
+
+This release fixes another macOS issue where dead keys, for example the two-key sequence :kbd:`",space` on the US International keyboard layout would incorrectly insert space (:issue:`12979`).
 
 fish 4.9.2 (released September 05, 2026)
 ========================================

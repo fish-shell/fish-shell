@@ -1,5 +1,4 @@
 use crate::common::BUILD_DIR;
-use crate::env::env_init;
 use crate::env::{EnvMode, EnvVar, EnvVarFlags, Environment};
 use crate::locale::set_libc_locales;
 use crate::parser::{CancelBehavior, Parser};
@@ -29,7 +28,6 @@ pub fn test_init() {
         crate::topic_monitor::init();
         crate::threads::init();
         proc_init();
-        env_init(None, false);
 
         // Set default signal handlers, so we can ctrl-C out of this.
         signal_reset_handlers();

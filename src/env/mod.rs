@@ -8,6 +8,8 @@ pub use r#impl::is_read_only;
 pub use var::*;
 
 use fish_widestring::ToCString;
+#[cfg(test)]
+use fish_widestring::{WString, charptr2wcstring};
 use std::sync::{Mutex, atomic::AtomicUsize};
 
 /// Limit `read` to 1 GiB (bytes, not wide chars) by default. This can be overridden with the
@@ -42,4 +44,12 @@ pub fn unsetenv_lock<S: ToCString>(name: S) {
     unsafe {
         libc::unsetenv(name.as_ptr());
     }
+}
+
+#[test]
+pub fn getenv_lock<S1: ToCString>(name: S1) -> Option<WString> {
+    let name = name.to_cstring();
+    let _lock = SETENV_LOCK.lock();
+    let value = unsafe { libc::getenv(name.as_ptr()) };
+    (!value.is_null()).then(|| unsafe { charptr2wcstring(value) })
 }

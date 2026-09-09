@@ -37,7 +37,7 @@ static USE_POSIX_SPAWN: AtomicBool = AtomicBool::new(false);
 
 const TIMEZONE_VARNAME: &wstr = L!("TZ");
 
-/// The variable dispatch table. This is set at startup and cannot be modified after.
+/// The variable dispatch table.
 static VAR_DISPATCH_TABLE: once_cell::sync::Lazy<VarDispatchTable> =
     once_cell::sync::Lazy::new(|| {
         let mut table = VarDispatchTable::default();
@@ -497,10 +497,12 @@ pub fn use_posix_spawn() -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::env::{EnvMode, EnvSetMode, EnvStack};
+    use super::{TIMEZONE_VARNAME, handle_timezone_change};
+    use crate::env::{EnvMode, EnvSetMode, EnvStack, getenv_lock, setenv_lock, unsetenv_lock};
     use crate::prelude::*;
     use crate::tests::prelude::*;
     use assert_matches::assert_matches;
+    use fish_common::ScopeGuard;
     use std::{
         mem::MaybeUninit,
         time::{SystemTime, UNIX_EPOCH},
@@ -512,10 +514,18 @@ mod tests {
         let vars = EnvStack::globals().create_child(true /* dispatches_var_changes */);
 
         vars.set_one(
-            L!("TZ"),
+            TIMEZONE_VARNAME,
             EnvSetMode::new(EnvMode::EXPORTED, false),
             timezone.to_owned(),
         );
+        let _restore_tz_envvar = {
+            let saved_value = getenv_lock(TIMEZONE_VARNAME);
+            ScopeGuard::new((), move |()| match saved_value {
+                Some(value) => setenv_lock(TIMEZONE_VARNAME, &value, true),
+                None => unsetenv_lock(TIMEZONE_VARNAME),
+            })
+        };
+        handle_timezone_change(&vars, false);
 
         #[allow(deprecated)]
         let tstamp: libc::time_t = tstamp
@@ -530,7 +540,7 @@ mod tests {
         local_time.tm_hour
     }
 
-    /// Verify that setting TZ calls tzset() in the current shell process.
+    /// Verify TZ handling.
     #[test]
     #[serial]
     fn test_timezone_env_vars() {

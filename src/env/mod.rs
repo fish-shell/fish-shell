@@ -46,7 +46,7 @@ pub fn unsetenv_lock<S: ToCString>(name: S) {
     }
 }
 
-#[test]
+#[cfg(test)]
 pub fn getenv_lock<S1: ToCString>(name: S1) -> Option<WString> {
     let name = name.to_cstring();
     let _lock = SETENV_LOCK.lock();

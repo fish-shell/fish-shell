@@ -18,6 +18,7 @@ use crate::terminal::{Outputter, is_konsole};
 use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror_nix, wcstoi};
 use fish_common::{STDIN_FD, write_loop};
+use fish_feature_flags::{FeatureFlag, feature_test};
 use fish_util::perror;
 use nix::errno::Errno;
 use nix::sys::termios::tcgetattr;
@@ -88,7 +89,9 @@ impl TtyQuirks {
             BuggyKittyKeyboardProtocol
         } else if let Some(version) = get_tmux_version(xtversion) {
             Tmux(version)
-        } else if xtversion.starts_with(L!("WezTerm ")) {
+        } else if xtversion.starts_with(L!("WezTerm "))
+            && !feature_test(FeatureFlag::OmitTermWorkarounds)
+        {
             Wezterm
         } else {
             None

@@ -494,3 +494,54 @@ fn init_locale(vars: &EnvStack) {
 pub fn use_posix_spawn() -> bool {
     USE_POSIX_SPAWN.load(Ordering::Relaxed)
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::env::{EnvMode, EnvSetMode, EnvStack};
+    use crate::prelude::*;
+    use crate::tests::prelude::*;
+    use assert_matches::assert_matches;
+    use std::{
+        mem::MaybeUninit,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+    // TODO: Add tests for the locale vars.
+
+    /// Helper for test_timezone_env_vars().
+    fn return_timezone_hour(tstamp: SystemTime, timezone: &wstr) -> libc::c_int {
+        let vars = EnvStack::globals().create_child(true /* dispatches_var_changes */);
+
+        vars.set_one(
+            L!("TZ"),
+            EnvSetMode::new(EnvMode::EXPORTED, false),
+            timezone.to_owned(),
+        );
+
+        #[allow(deprecated)]
+        let tstamp: libc::time_t = tstamp
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+            .try_into()
+            .unwrap();
+        let mut local_time = MaybeUninit::uninit();
+        unsafe { libc::localtime_r(&tstamp, local_time.as_mut_ptr()) };
+        let local_time = unsafe { local_time.assume_init() };
+        local_time.tm_hour
+    }
+
+    /// Verify that setting TZ calls tzset() in the current shell process.
+    #[test]
+    #[serial]
+    fn test_timezone_env_vars() {
+        test_init();
+
+        // Confirm changing the timezone affects fish's idea of the local time.
+        let tstamp = SystemTime::now();
+
+        let first_tstamp = return_timezone_hour(tstamp, L!("UTC-1"));
+        let second_tstamp = return_timezone_hour(tstamp, L!("UTC-2"));
+        let delta = second_tstamp - first_tstamp;
+        assert_matches!(delta, 1 | -23);
+    }
+}

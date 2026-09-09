@@ -143,7 +143,7 @@ use nix::{
 };
 use std::{
     borrow::Cow,
-    cell::UnsafeCell,
+    cell::{LazyCell, UnsafeCell},
     cmp,
     ffi::CStr,
     io::BufReader,
@@ -6800,6 +6800,8 @@ pub fn completion_apply_to_command_line(
         }
     };
 
+    let token_range = LazyCell::new(|| get_token_extent(command_line, cursor_pos).0);
+
     if flags.replaces_token() {
         if let Some((suffix_type, suffix)) = suffix_builder.as_mut() {
             if suffix_type.for_variable_name {
@@ -6808,12 +6810,12 @@ pub fn completion_apply_to_command_line(
             }
         }
         let mut move_cursor = 0;
-        let (range, _) = get_token_extent(command_line, cursor_pos);
+        let range = &token_range;
 
         let mut sb = command_line[..range.start].to_owned();
 
         if keep_variable_override {
-            let tok = &command_line[range.clone()];
+            let tok = &command_line[(*range).clone()];
             let separator_pos = variable_assignment_equals_pos(tok).unwrap();
             let key = &tok[..=separator_pos];
             sb.push_utfstr(&key);
@@ -6844,9 +6846,9 @@ pub fn completion_apply_to_command_line(
 
     let mut quote = None;
     let replaced = if let Some(mut escape_flags) = escape_flags {
-        let (tok, _) = get_token_extent(command_line, cursor_pos);
         // Find the last quote in the token to complete.
         let mut have_token = false;
+        let tok = &token_range;
         if tok.contains(&cursor_pos) || cursor_pos == tok.end {
             quote = get_quote(&command_line[tok.start..cursor_pos]);
             have_token = !tok.is_empty();
@@ -6887,8 +6889,7 @@ pub fn completion_apply_to_command_line(
         insertion_point + replaced.len() + if back_into_trailing_quote { 1 } else { 0 };
     if let Some((suffix_type, mut suffix)) = suffix_builder {
         if suffix_type.for_variable_name {
-            let (tok, _) = get_token_extent(command_line, cursor_pos);
-            maybe_add_slash(&mut suffix, &result[tok.start..new_cursor_pos]);
+            maybe_add_slash(&mut suffix, &result[token_range.start..new_cursor_pos]);
         }
         if suffix != '/' {
             if let Some(quote) = quote {

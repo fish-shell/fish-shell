@@ -286,7 +286,7 @@ pub const FISH_TERMINAL_COLOR_THEME_VAR: &wstr = L!("fish_terminal_color_theme")
 mod tests {
     use super::{EnvMode, EnvVar, EnvVarFlags};
     use crate::env::EnvSetMode;
-    use crate::env::environment::{EnvStack, Environment as _};
+    use crate::env::environment::EnvStack;
     use crate::prelude::*;
     use crate::tests::prelude::*;
     use assert_matches::assert_matches;
@@ -304,8 +304,6 @@ mod tests {
             EnvSetMode::new(EnvMode::EXPORTED, false),
             timezone.to_owned(),
         );
-
-        let _var = vars.get(L!("TZ"));
 
         #[allow(deprecated)]
         let tstamp: libc::time_t = tstamp

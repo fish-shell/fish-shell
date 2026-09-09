@@ -2,7 +2,6 @@
 use crate::flog::{FloggableDebug, flog};
 use nix::errno::Errno;
 use nix::sys::signal::{SigSet, SigmaskHow, Signal};
-use std::marker::PhantomData;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
@@ -300,8 +299,6 @@ impl ThreadPool {
 /// Only allows access from the main thread.
 pub struct MainThread<T> {
     data: T,
-    // Make type !Send and !Sync by default
-    _marker: PhantomData<*const ()>,
 }
 
 // Manually implement Send and Sync for MainThread<T> to ensure it can be shared across threads
@@ -311,10 +308,7 @@ unsafe impl<T: 'static> Sync for MainThread<T> {}
 
 impl<T> MainThread<T> {
     pub const fn new(value: T) -> Self {
-        Self {
-            data: value,
-            _marker: PhantomData,
-        }
+        Self { data: value }
     }
 
     pub fn get(&self) -> &T {

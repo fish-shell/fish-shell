@@ -13,15 +13,15 @@ jobs:
   alpine:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
     - run:
         sh -x docker/docker_run_tests.sh docker/alpine.Dockerfile
 
   freebsd:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
-    - uses: vmactions/freebsd-vm@21de0c823079bc57bd8fcf25fb60193f36887e3d # v1, build_tools/update-dependencies.sh
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
+    - uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5, build_tools/update-dependencies.sh
       with:
         # # See https://github.com/vmactions/.github/wiki/debug%E2%80%90on%E2%80%90error
         # debug-on-error: true
@@ -58,7 +58,7 @@ jobs:
   ubuntu:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported
     - name: Install deps
       uses: ./.github/actions/install-dependencies
@@ -81,7 +81,7 @@ jobs:
   ubuntu-32bit-static-pcre2:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported
       with:
         targets: "i586-unknown-linux-gnu"
@@ -118,7 +118,7 @@ jobs:
         RUSTFLAGS: "-Zsanitizer=address"
         # RUSTFLAGS: "-Zsanitizer=memory -Zsanitizer-memory-track-origins"
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
     # All -Z options require running nightly
     - uses: dtolnay/rust-toolchain@nightly
       with:
@@ -168,7 +168,7 @@ jobs:
       # of crates.io, so give this a try. It's also sometimes significantly faster on all platforms.
       CARGO_NET_GIT_FETCH_WITH_CLI: true
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported
     - name: Install deps
       run: |
@@ -195,8 +195,8 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
-    - uses: msys2/setup-msys2@e9898307ac31d1a803454791be09ab9973336e1c # v2.31.1, build_tools/update-dependencies.sh
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
+    - uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0, build_tools/update-dependencies.sh
       with:
         update: true
         msystem: MSYS

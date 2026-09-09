@@ -16,7 +16,7 @@ jobs:
     name: Pre-release checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
@@ -36,7 +36,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       tarball-name: ${{ steps.version.outputs.tarball-name }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
@@ -76,7 +76,7 @@ jobs:
     name: Build single-file fish for Linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
@@ -118,7 +118,7 @@ jobs:
     name: Create release draft
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}
@@ -130,7 +130,7 @@ jobs:
       - name: List artifacts
         run: find /tmp/artifacts -type f
       - name: Create draft release
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0, build_tools/update-dependencies.sh
+        uses: softprops/action-gh-release@e598afbe1493e6b1bafb1f389cabb956eab91231 # v3.0.3, build_tools/update-dependencies.sh
         with:
           tag_name: ${{ inputs.version }}
           name: fish ${{ inputs.version }}
@@ -146,7 +146,7 @@ jobs:
     runs-on: macos-latest
     environment: macos-codesign
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2, build_tools/update-dependencies.sh
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
         with:
           # Workaround for https://github.com/actions/checkout/issues/882
           ref: ${{ inputs.version }}

@@ -295,16 +295,15 @@ impl ThreadPool {
     }
 }
 
-/// A `Sync` and `Send` wrapper for non-`Sync`/`Send` types.
+/// A `Sync` wrapper for non-`Sync` types.
 /// Only allows access from the main thread.
 pub struct MainThread<T> {
     data: T,
 }
 
-// Manually implement Send and Sync for MainThread<T> to ensure it can be shared across threads
-// as long as T is 'static.
-unsafe impl<T: 'static> Send for MainThread<T> {}
-unsafe impl<T: 'static> Sync for MainThread<T> {}
+// Manually implement Sync for MainThread<T> to ensure it can be shared across threads as long
+// as T is 'static.
+unsafe impl<T: Send + 'static> Sync for MainThread<T> {}
 
 impl<T> MainThread<T> {
     pub const fn new(value: T) -> Self {

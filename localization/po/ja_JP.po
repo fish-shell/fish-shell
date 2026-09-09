@@ -3651,9 +3651,6 @@ msgstr "Finder で表示"
 msgid "save function(s) to disk"
 msgstr "関数をディスクに保存"
 
-msgid "search forward or move down 1 line"
-msgstr "履歴を順方向に検索するか、1行下に移動"
-
 msgid "separate output with NUL rather than newline"
 msgstr "出力を改行ではなく NUL 文字で区切る"
 

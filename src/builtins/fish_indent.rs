@@ -495,14 +495,15 @@ impl<'source, 'ast> PrettyPrinterState<'source, 'ast> {
         }
 
         // Look to see if there is an escaped newline.
-        // Emit it if either we allow it, or it comes before the first comment.
+        // Emit it if it comes before the first comment, or if there is no comment and we allow it.
         // Note we do not have to be concerned with escaped backslashes or escaped #s. This is gap
         // text - we already know it has no semantic significance.
         if let Some(escaped_nl) = gap_text.find(L!("\\\n")) {
-            let comment_idx = gap_text.find(L!("#"));
-            if flags.allow_escaped_newlines
-                || comment_idx.is_some_and(|comment_idx| escaped_nl < comment_idx)
-            {
+            let should_emit_escaped_newline = match gap_text.find(L!("#")) {
+                Some(comment_idx) => escaped_nl < comment_idx,
+                None => flags.allow_escaped_newlines,
+            };
+            if should_emit_escaped_newline {
                 // Emit a space before the escaped newline.
                 if !self.at_line_start() && !self.has_preceding_space() {
                     self.output.push_str(" ");

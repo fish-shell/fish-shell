@@ -700,3 +700,7 @@ function __fish_print_help
 end
 PATH=hello fish_indent --help
 # CHECK: Help using PATH[1]=hello
+
+printf '%s\n' '# comment \\' 'FOO= echo hi' | $fish_indent
+#CHECK: {{^}}# comment \
+#CHECK: {{^}}FOO= echo hi

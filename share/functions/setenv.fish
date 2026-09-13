@@ -42,4 +42,8 @@ function setenv
     else
         set -gx $var $val
     end
+
+    # contains leaves its exit status (1 for a non-path var) as the command status, and
+    # set does not touch it, so a successful setenv would otherwise report failure.
+    return 0
 end

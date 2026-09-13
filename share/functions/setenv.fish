@@ -38,8 +38,8 @@ function setenv
     # We need to special case some vars to be compatible with fish. In particular how they are
     # treated as arrays split on colon characters. All other var values are treated literally.
     if contains -- $var PATH CDPATH MANPATH
-        set -gx $var (string split -- ':' $val)
-    else
-        set -gx $var $val
+        set val (string split -- ':' $val)
     end
+    true
+    set -gx $var $val
 end

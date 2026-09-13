@@ -1,4 +1,4 @@
-if uniq --version >/dev/null 2>/dev/null
+if __fish_supports_version uniq
     complete -c uniq -s c -l count -d "Print number of occurrences"
     complete -c uniq -s d -l repeated -d "Only print duplicates"
     complete -c uniq -s D -l all-repeated -d "Remove non-duplicate lines" -f -x -a "

@@ -1,4 +1,4 @@
-if cat --version 2>/dev/null >/dev/null # GNU
+if __fish_supports_version cat
     complete -c cat -s A -l show-all -d "Escape all unprintables"
     complete -c cat -s b -l number-nonblank -d "Number non-blank lines"
     complete -c cat -s e -d "Escape unprintables except \\t"

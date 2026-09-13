@@ -1,5 +1,5 @@
 complete -c date -f -d "display or set date and time"
-if date --version >/dev/null 2>/dev/null
+if __fish_supports_version date
     complete -c date -s d -l date -d "Display date described by string" -x
     complete -c date -s f -l file -d "Display date for each line in file" -r
     complete -c date -s I -l iso-8601 -d "Use ISO 8601 output format" -x -a "date hours minutes seconds"

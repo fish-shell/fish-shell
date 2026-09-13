@@ -1,4 +1,4 @@
-if cut --version &>/dev/null
+if __fish_supports_version cut
     complete -c cut -s b -l bytes -x -d "Select byte positions"
     complete -c cut -s c -l characters -x -d "Select characters"
     complete -c cut -s d -l delimiter -x -d "Select field delimiter"

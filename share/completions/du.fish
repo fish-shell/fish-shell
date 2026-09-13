@@ -1,6 +1,6 @@
 # test if we are using GNU du
 set -l is_gnu
-if du --version &>/dev/null
+if __fish_supports_version du
     set is_gnu --is-gnu
 end
 

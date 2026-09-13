@@ -1,7 +1,5 @@
 set -l is_gnu false
-if env --version &>/dev/null
-    set is_gnu true
-end
+__fish_supports_version env; and set is_gnu true
 
 # Returns 0 if we're after `env` and all previous tokens have an equal sign or were switches
 function __fish_env_defining_vars

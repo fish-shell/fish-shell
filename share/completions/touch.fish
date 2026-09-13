@@ -4,7 +4,7 @@ complete touch -s a -d "change access time (atime)"
 complete touch -s m -d "change modification time (mtime)"
 complete touch -s t -d "use specified time [[CC]YY]MMDDhhmm[.SS]"
 
-if touch --version 2>/dev/null >/dev/null # GNU
+if __fish_supports_version touch
     complete touch -s B -l backward -x -d "set date back"
     complete touch -s c -l no-create -d "don't create file if it doesn't exist"
     complete touch -s d -l date -x -d "set to specified YYYY-MM-DDThh:mm:SS[.frac][tz]"

@@ -1,4 +1,4 @@
-if chmod --version &>/dev/null # gnu's not unix
+if __fish_supports_version chmod
     complete chmod -s c -l changes -d 'Like -v but report only changes'
     complete chmod -l no-preserve-root -d 'Don\'t treat / special (default)'
     complete chmod -l preserve-root -d 'Fail to operate recursively on /'

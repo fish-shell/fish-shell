@@ -1,4 +1,4 @@
-if command -q wc && command wc --version >/dev/null 2>/dev/null
+if __fish_supports_version wc
     complete -c wc -s c -l bytes -d "Print byte count"
     complete -c wc -s m -l chars -d "Print character count"
     complete -c wc -s l -l lines -d "Print number of lines"

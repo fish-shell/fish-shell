@@ -1,5 +1,5 @@
 # Checks if we are using GNU tools
-if mkdir --version >/dev/null 2>/dev/null
+if __fish_supports_version mkdir
     complete -c mkdir -l version -d 'Output version'
     complete -c mkdir -s m -l mode -d 'Set file mode (as in chmod)' -x
     complete -c mkdir -s p -l parents -d 'Make parent directories as needed'

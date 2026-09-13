@@ -1,4 +1,4 @@
-if tail --version >/dev/null 2>/dev/null
+if __fish_supports_version tail
     complete -c tail -s c -l bytes -x -d 'output the last K bytes; with +K output bytes starting with the Kth'
     complete -c tail -s f -l follow -a 'name descriptor' -d 'output appended data as the file grows'
     complete -c tail -s F -d 'same as --follow=name --retry'

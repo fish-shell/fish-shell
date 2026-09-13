@@ -1,7 +1,7 @@
 set -l uname (uname -s)
 
 ## GNU mv
-if mv --version >/dev/null 2>/dev/null
+if __fish_supports_version mv
     # --backup requires an argument, -b does not accept an argument
     complete -c mv -l backup -r -d "Backup each existing destination file" -x -ka "
         none\t'Never make backups'

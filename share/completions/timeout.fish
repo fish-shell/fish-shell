@@ -8,7 +8,7 @@ complete -c timeout -l preserve-status -d 'Exit with same status as COMMAND'
 complete -c timeout -r -a '(__fish_complete_command)' -d 'Specify which command to run'
 
 # GNU coreutils ver
-if timeout --version &>/dev/null
+if __fish_supports_version timeout
     complete -c timeout -l help -d 'Display this help and exit'
     complete -c timeout -l version -d 'Output version and exit'
     complete -c timeout -s v -l verbose -d 'Send diagnostic info to stderr'

@@ -1,4 +1,4 @@
-if chown --version &>/dev/null # gee, and you is not eunichs
+if __fish_supports_version chown
     complete chown -s c -l changes -d "Output diagnostic for changed files"
     complete chown -l dereference -d "Dereference symbolic links"
     complete chown -s h -l no-dereference -d "Do not dereference symbolic links"

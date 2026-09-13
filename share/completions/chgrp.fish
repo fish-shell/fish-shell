@@ -1,4 +1,4 @@
-if chgrp --version &>/dev/null # not unix
+if __fish_supports_version chgrp
     complete -c chgrp -s c -l changes -d "Output diagnostic for changed files"
     complete -c chgrp -l dereference -d "Dereference symlinks"
     complete -c chgrp -s h -l no-dereference -d "Don't dereference symlinks"

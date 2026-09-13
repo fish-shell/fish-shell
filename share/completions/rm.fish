@@ -1,5 +1,5 @@
 #Completions for rm
-if rm --version >/dev/null 2>/dev/null # GNU
+if __fish_supports_version rm
     complete -c rm -s d -l directory -d "Unlink directories"
     complete -c rm -s f -l force -d "Never prompt for removal"
     complete -c rm -s i -l interactive -d "Prompt for removal"

@@ -1,6 +1,6 @@
 complete id -xa "(__fish_complete_users)"
 
-if string match -eq 'GNU coreutils' (id --version 2>&1)
+if __fish_supports_version id
     complete id -s Z -l context -d "Print security context"
     complete id -s z -l zero -d "Delimit entries with NUL"
     complete id -s n -l name -d "Print name, not number"

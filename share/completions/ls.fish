@@ -18,7 +18,7 @@ complete -c ls -s u -d "Sort by access time, (-l) show atime"
 complete -c ls -s x -d "Multi-column output, horizontally listed"
 
 # Test if we are using GNU ls
-if ls --version >/dev/null 2>/dev/null
+if __fish_supports_version ls
     complete -c ls -s a -l all -d "Show hidden"
     complete -c ls -s A -l almost-all -d "Show hidden except . and .."
     complete -c ls -s b -l escape -d "Octal escapes for non-graphic characters"

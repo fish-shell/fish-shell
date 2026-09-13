@@ -1,4 +1,4 @@
-if cp --version 2>/dev/null >/dev/null # GNU cp
+if __fish_supports_version cp
     complete -c cp -s a -l archive -d "Same as -dpR"
     complete -c cp -l attributes-only -d "Copy just the attributes"
     complete -c cp -s b -l backup -d "Make backup of each existing destination file" -a "none off numbered t existing nil simple never"

@@ -26,3 +26,9 @@ setenv var hello you
 setenv setenv3 'hello you'
 setenv | grep '^setenv3=hello you'
 # CHECK: setenv3=hello you
+
+# A successful setenv should exit 0, including for a non-path var where the
+# contains check alone would leave the status at 1.
+setenv setenv4 some_value
+echo $status
+# CHECK: 0

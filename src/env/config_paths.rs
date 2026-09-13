@@ -175,6 +175,12 @@ pub fn get_fish_path() -> &'static FishPath {
 
 fn compute_fish_path() -> FishPath {
     use FishPath::*;
+
+    #[cfg(have_getexecpath)]
+    if let Some(path) = getexecpath() {
+        return Absolute(path);
+    }
+
     let Ok(mut path) = std::env::current_exe() else {
         return LookUpInPath;
     };
@@ -197,4 +203,19 @@ fn compute_fish_path() -> FishPath {
     }
 
     Absolute(path)
+}
+
+#[cfg(have_getexecpath)]
+fn getexecpath() -> Option<PathBuf> {
+    unsafe extern "C" {
+        unsafe fn getexecpath(buf: *mut libc::c_char, bufsize: libc::size_t) -> libc::c_int;
+    }
+
+    let mut buf = [0 as libc::c_char; libc::PATH_MAX as usize];
+    if unsafe { getexecpath(buf.as_mut_ptr(), buf.len()) } != 0 {
+        return None;
+    }
+
+    let path = unsafe { std::ffi::CStr::from_ptr(buf.as_ptr()) };
+    Some(PathBuf::from(OsStr::from_bytes(path.to_bytes())))
 }

@@ -23,7 +23,7 @@ use crate::fork_exec::{
         signal_safe_report_exec_error,
     },
 };
-use crate::function::{self, FunctionProperties};
+use crate::function::FunctionProperties;
 use crate::io::{
     BufferedOutputStream, FdOutputStream, IoBufferfill, IoChain, IoClose, IoMode, IoPipe,
     IoStreams, OutputStream, SeparatedBuffer, StringOutputStream,
@@ -1022,34 +1022,18 @@ fn get_performer_for_block_node(p: &Process, job: &Job, io_chain: &IoChain) -> B
     })
 }
 
-// Return a function which may be to run the given process 'p'.
-// May return None in the rare case that the to-be called fish function no longer
-// exists. This is just an artifact of the fact that we only capture the functions name, not its
-// properties, when creating the job; thus a race could delete the function before we fetch its
-// properties. Note this is user visible. An example:
-//
-//    function foo; echo hi; end
-//    foo (functions --erase foo)
-//
-fn get_performer_for_function(
-    p: &Process,
-    job: &Job,
-    io_chain: &IoChain,
-) -> Result<Box<ProcPerformer>, ()> {
+// Return a performer for the given process 'p'.
+fn get_performer_for_function(p: &Process, job: &Job, io_chain: &IoChain) -> Box<ProcPerformer> {
     assert!(p.is_function());
     // We want to capture the job group.
     let job_group = job.group.clone();
     let io_chain = io_chain.clone();
-    // This may occur if the function was erased as part of its arguments or in other strange edge cases.
-    let Some(props) = function::get_props(p.argv0().unwrap()) else {
-        flog!(
-            error,
-            wgettext_fmt!("Unknown function '%s'", p.argv0().unwrap())
-        );
-        return Err(());
+    let ProcessType::Function { props } = &p.typ else {
+        panic!();
     };
+    let props = props.as_ref().unwrap().clone();
     let argv = p.argv().clone();
-    Ok(Box::new(move |parser: &mut Parser, _out, _err| {
+    Box::new(move |parser: &mut Parser, _out, _err| {
         // Pull out the job list from the function.
         let fb = function_prepare_environment(parser, argv, &props);
         let body_node = props.func_node.child_ref(|n| &n.jobs);
@@ -1061,7 +1045,7 @@ fn get_performer_for_function(
             res = EvalRes::new(ProcStatus::from_exit_code(EXIT_SUCCESS));
         }
         res.status
-    }))
+    })
 }
 
 /// Execute a block node or function "process".
@@ -1091,8 +1075,7 @@ fn exec_block_or_func_process(
     let performer = if p.is_block_node() {
         get_performer_for_block_node(p, j, &io_chain)
     } else {
-        // Note this may fail if the function was erased.
-        get_performer_for_function(p, j, &io_chain)?
+        get_performer_for_function(p, j, &io_chain)
     };
     let status = performer(parser, None, None);
     p.status.set(status);
@@ -1345,7 +1328,7 @@ fn exec_process_in_job(
     // Execute the process.
     p.check_generations_before_launch();
     match p.typ {
-        ProcessType::Function | ProcessType::BlockNode(_) => exec_block_or_func_process(
+        ProcessType::Function { .. } | ProcessType::BlockNode(_) => exec_block_or_func_process(
             parser,
             j,
             p,

@@ -1,6 +1,12 @@
 fish ?.?.? (released ???)
 =========================
 
+Deprecations and removed features
+---------------------------------
+- A function call now captures it's functions's definition before the pipeline is started, so it is no longer affected by other commands in the pipeline erasing or redefining the function.
+  For example, ``function sus; functions --erase sus; end; sus | sus`` now runs the same function twice (:issue:`12991`).
+  This change also prevents modifications to ``$fish_function_path`` in an earlier pipeline element from invalidating later calls to autoloaded functions (:issue:`12996`).
+
 Interactive improvements
 ------------------------
 - Completion options `--no-files` and `--force-files` on a wrapping command now take precedence over such options on the commands it wraps.

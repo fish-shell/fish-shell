@@ -8,6 +8,7 @@ use crate::{
     env::Statuses,
     event::{self, Event},
     flog::{flog, flogf},
+    function::FunctionProperties,
     global_safety::RelaxedAtomicBool,
     io::IoChain,
     job_group::{JobGroup, MaybeJobId},
@@ -59,9 +60,10 @@ pub enum ProcessType {
     Builtin,
     /// A shellscript function.
     /// The function name is stored in `argv[0]`.
-    /// Note we don't capture the function body here, because the
-    /// function body may change as part of argument expansion.
-    Function,
+    Function {
+        /// Function properties, captured after argument expansion.
+        props: Option<Arc<FunctionProperties>>,
+    },
     /// A block of commands, represented as a node.
     /// This is always either block, ifs, or switchs, never boolean or decorated.
     BlockNode(NodeRef<ast::Statement>),
@@ -512,7 +514,7 @@ impl Process {
     /// Return whether this process type is internal (block, function, or builtin).
     pub fn is_internal(&self) -> bool {
         match self.typ {
-            ProcessType::Builtin | ProcessType::Function | ProcessType::BlockNode(_) => true,
+            ProcessType::Builtin | ProcessType::Function { .. } | ProcessType::BlockNode(_) => true,
             ProcessType::External | ProcessType::Exec => false,
         }
     }
@@ -522,7 +524,7 @@ impl Process {
         matches!(self.typ, ProcessType::Builtin)
     }
     pub fn is_function(&self) -> bool {
-        matches!(self.typ, ProcessType::Function)
+        matches!(self.typ, ProcessType::Function { .. })
     }
     pub fn is_block_node(&self) -> bool {
         matches!(self.typ, ProcessType::BlockNode(_))

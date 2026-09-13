@@ -10,7 +10,7 @@ use crate::{
         STATUS_ILLEGAL_CMD, STATUS_INVALID_ARGS, STATUS_NOT_EXECUTABLE, STATUS_UNMATCHED_WILDCARD,
         builtin_exists,
     },
-    common::{get_program_name, valid_var_name},
+    common::{get_program_name, valid_func_name, valid_var_name},
     complete::CompletionList,
     env::{EnvMode, EnvStackSetResult, EnvVar, Environment as _, Statuses, handle_env_return},
     err_fmt,
@@ -575,6 +575,14 @@ impl ExecutionContext {
         }
     }
 
+    fn resolve_function(cmd: &wstr, parser: &mut Parser) -> Option<ProcessType> {
+        if !valid_func_name(cmd) {
+            return None;
+        }
+        let props = function::get_props_autoload(cmd, parser)?;
+        Some(ProcessType::Function { props: Some(props) })
+    }
+
     fn process_type_for_command(
         &self,
         ctx: &mut OperationContext<'_>,
@@ -589,7 +597,7 @@ impl ExecutionContext {
             StatementDecoration::Builtin => ProcessType::Builtin,
             StatementDecoration::None => {
                 if function::exists(cmd, ctx.parser()) {
-                    ProcessType::Function
+                    ProcessType::Function { props: None }
                 } else if builtin_exists(cmd) {
                     ProcessType::Builtin
                 } else {
@@ -801,7 +809,7 @@ impl ExecutionContext {
 
             // If we have defined a wrapper around cd, use it, otherwise use the cd builtin.
             process_type = if function::exists(L!("cd"), ctx.parser()) {
-                ProcessType::Function
+                ProcessType::Function { props: None }
             } else {
                 ProcessType::Builtin
             };
@@ -833,6 +841,16 @@ impl ExecutionContext {
         }
 
         // Populate the process.
+        if let ProcessType::Function { props } = &mut process_type {
+            let Some(ProcessType::Function {
+                props: resolved_props,
+            }) = Self::resolve_function(&cmd_args[0], ctx.parser())
+            else {
+                flog!(error, wgettext_fmt!("Unknown function '%s'", &cmd_args[0]));
+                return EndExecutionReason::Error;
+            };
+            *props = resolved_props;
+        }
         proc.typ = process_type;
         proc.set_argv(cmd_args);
         proc.set_redirection_specs(redirections);

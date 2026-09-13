@@ -1,6 +1,6 @@
-set -l is_gnu
+set -l is_gnu false
 if env --version &>/dev/null
-    set is_gnu --is-gnu
+    set is_gnu true
 end
 
 # Returns 0 if we're after `env` and all previous tokens have an equal sign or were switches
@@ -63,7 +63,7 @@ end
 # Get the text after all env arguments and variables, so we can complete it as a regular command
 function __fish_env_remaining_args -V is_gnu
     set -l argv (commandline -xpc | string escape) (commandline -ct)
-    if set -q is_gnu[1]
+    if $is_gnu
         argparse -s i/ignore-environment u/unset= help version -- $argv 2>/dev/null
         or return 0
     else
@@ -108,7 +108,7 @@ complete -c env -n '__fish_env_defining_vars; and string match -eq = -- (command
 # Complete normally after we are done with `env` stuff
 complete -c env -fa "(__fish_complete_env_subcommand)"
 
-if set -q is_gnu
+if $is_gnu
     complete -c env -n __fish_env_not_yet_vars -s i -l ignore-environment -d "Start with an empty environment"
     complete -c env -n __fish_env_not_yet_vars -s u -l unset -d "Unset environment variable" -x -a "(set --names -x)"
     complete -c env -n __fish_env_not_yet_vars -l help -d "Display help and exit"

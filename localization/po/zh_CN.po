@@ -17409,6 +17409,9 @@ msgstr ""
 msgid "Discard any transparency information"
 msgstr ""
 
+msgid "Discard characters that cannot be converted"
+msgstr ""
+
 msgid "Discard comments in statements"
 msgstr ""
 
@@ -53895,6 +53898,9 @@ msgstr ""
 msgid "Run vim on <display>"
 msgstr ""
 
+msgid "Run when the load average permits"
+msgstr ""
+
 msgid "Run wicd without the tray icon."
 msgstr ""
 
@@ -64752,6 +64758,9 @@ msgstr ""
 msgid "Specify the access model for the thread local storage pointer"
 msgstr ""
 
+msgid "Specify the auth name"
+msgstr ""
+
 msgid "Specify the authentication ID for SASL bind"
 msgstr ""
 
@@ -66679,6 +66688,9 @@ msgid "Suppress warning about uncommitted changes"
 msgstr ""
 
 msgid "Suppress warnings"
+msgstr ""
+
+msgid "Suppress warnings about invalid characters"
 msgstr ""
 
 msgid "Suppress warnings/notices"

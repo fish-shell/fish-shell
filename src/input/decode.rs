@@ -30,7 +30,7 @@ enum EscapeSequenceParseState {
     Error,
 }
 #[derive(Debug)]
-struct EscapeSequenceParseResult {
+pub(crate) struct EscapeSequenceParseResult {
     state: EscapeSequenceParseState,
     unconsumed_escapes: u8,
 }
@@ -41,7 +41,7 @@ pub(super) fn on_byte_read<Queuer: InputEventQueuer + ?Sized>(queuer: &mut Queue
 
 impl<T: InputEventQueuer + ?Sized> InputEventQueuerExt for T {}
 
-trait InputEventQueuerExt: InputEventQueuer {
+pub(crate) trait InputEventQueuerExt: InputEventQueuer {
     fn on_byte_read(&mut self, read_byte: u8) {
         let mut buffer = vec![read_byte];
         let escape_sequence = if read_byte == b'\x1b' {

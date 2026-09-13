@@ -53,6 +53,7 @@ use crate::{
         History, HistoryId, HistorySearch, MemoryHistoryId, PersistenceMode, SearchDirection,
         SearchFlags, SearchType, history_id, in_private_mode,
     },
+    input::InputEventQueuerExt as _,
     input::{
         BackgroundColorQuery, CharEvent, CharInputStyle, CursorPositionQuery,
         CursorPositionQueryReason, ImplicitEvent, InputData, InputEventQueue,
@@ -1151,7 +1152,7 @@ pub fn reader_update_termsize(parser: &mut Parser) {
         return;
     };
     let mut data = Reader { parser, data };
-    data.push_front(CharEvent::Implicit(ImplicitEvent::NewWindowHeight));
+    data.enqueue_event(CharEvent::Implicit(ImplicitEvent::NewWindowHeight));
 }
 
 pub fn reader_execute_readline_cmd(parser: &mut Parser, ch: CharEvent) {

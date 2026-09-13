@@ -19869,6 +19869,9 @@ msgstr ""
 msgid "Do not follow mount points"
 msgstr ""
 
+msgid "Do not follow symbolic links in the destination"
+msgstr ""
+
 msgid "Do not follow symlinks"
 msgstr ""
 
@@ -31325,6 +31328,9 @@ msgstr ""
 
 msgid "If the standard input does not contain any nonblanks, do not run the command"
 msgstr "Om inte standard in innehåller icke-tomma tecken, utför inte kommandot"
+
+msgid "If the target is a directory, remove it so the link can be created"
+msgstr ""
 
 msgid "If you want to choose a different composer.json or config.json"
 msgstr ""
@@ -48786,6 +48792,9 @@ msgstr ""
 msgid "Read from disk (do not buffer)"
 msgstr ""
 
+msgid "Read from file"
+msgstr ""
+
 msgid "Read from stdin"
 msgstr ""
 
@@ -54083,6 +54092,9 @@ msgstr ""
 
 msgid "Same as -b -d --login -p -r -t -T -u"
 msgstr "Synonymt med -b -d --login -p -r -t -T -u"
+
+msgid "Same as -b -d -l -p -r -t -T -u"
+msgstr ""
 
 msgid "Same as -d except an analysis file is written"
 msgstr ""
@@ -73593,6 +73605,9 @@ msgstr ""
 msgid "Warn if the compiler detects that code will never be executed"
 msgstr ""
 
+msgid "Warn if the source of a hard link cannot be linked"
+msgstr ""
+
 msgid "Warn if the type of main is suspicious"
 msgstr ""
 
@@ -77398,6 +77413,9 @@ msgid "have tabs N characters apart instead of 8 (enables -a)"
 msgstr ""
 
 msgid "have tabs NUMBER characters apart, not 8"
+msgstr ""
+
+msgid "have tabs this many characters apart, or use a comma separated list of tab positions"
 msgstr ""
 
 msgid "help for ollama"

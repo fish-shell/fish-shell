@@ -19893,6 +19893,9 @@ msgstr ""
 msgid "Do not follow mount points"
 msgstr ""
 
+msgid "Do not follow symbolic links in the destination"
+msgstr ""
+
 msgid "Do not follow symlinks"
 msgstr ""
 
@@ -31348,6 +31351,9 @@ msgid "If the given signature for logging changes, clear the associated files"
 msgstr ""
 
 msgid "If the standard input does not contain any nonblanks, do not run the command"
+msgstr ""
+
+msgid "If the target is a directory, remove it so the link can be created"
 msgstr ""
 
 msgid "If you want to choose a different composer.json or config.json"
@@ -48810,6 +48816,9 @@ msgstr ""
 msgid "Read from disk (do not buffer)"
 msgstr ""
 
+msgid "Read from file"
+msgstr ""
+
 msgid "Read from stdin"
 msgstr ""
 
@@ -54106,6 +54115,9 @@ msgid "Same as -Wimplicit-int and -Wimplicit-function-declaration"
 msgstr ""
 
 msgid "Same as -b -d --login -p -r -t -T -u"
+msgstr ""
+
+msgid "Same as -b -d -l -p -r -t -T -u"
 msgstr ""
 
 msgid "Same as -d except an analysis file is written"
@@ -73617,6 +73629,9 @@ msgstr ""
 msgid "Warn if the compiler detects that code will never be executed"
 msgstr ""
 
+msgid "Warn if the source of a hard link cannot be linked"
+msgstr ""
+
 msgid "Warn if the type of main is suspicious"
 msgstr ""
 
@@ -77422,6 +77437,9 @@ msgid "have tabs N characters apart instead of 8 (enables -a)"
 msgstr ""
 
 msgid "have tabs NUMBER characters apart, not 8"
+msgstr ""
+
+msgid "have tabs this many characters apart, or use a comma separated list of tab positions"
 msgstr ""
 
 msgid "help for ollama"

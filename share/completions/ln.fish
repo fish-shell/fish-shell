@@ -1,17 +1,27 @@
-complete -c ln -l backup -d 'Make a backup of each existing destination file' -a "none off numbered t existing nil simple never"
-complete -c ln -s b -d 'Make a backup of each existing destination file'
-complete -c ln -s d -l directory -d 'Allow superuser to attempt to hard link directories'
-complete -c ln -s f -l force -d 'Remove existing destination files'
-complete -c ln -s i -l interactive -d 'Prompt whether to remove destinations'
-complete -c ln -s L -l logical -d 'Dereference TARGETs that are symbolic links'
-complete -c ln -s n -l no-dereference -d 'Treat symlink to directory as if it were a file'
-complete -c ln -s P -l physical -d 'Make hard links directly to symbolic links'
-complete -c ln -s r -l relative -d 'With -s, create links relative to link location'
-complete -c ln -s s -l symbolic -d 'Make symbolic links instead of hard links'
-complete -c ln -s S -l suffix -d 'Override the usual ~ backup suffix'
-complete -c ln -s t -l target-directory -d 'Specify the DIRECTORY in which to create the links' -a '(__fish_complete_directories)'
-complete -c ln -s T -l no-target-directory -d 'Treat LINK_NAME as a normal file'
-complete -c ln -s v -l verbose -d 'Print name of each linked file'
+set -l is_gnu
+__fish_supports_version ln; and set is_gnu --is-gnu
 
-complete -c ln -f -l help -d 'Display help and exit'
-complete -c ln -f -l version -d 'Output version information and exit'
+__fish_gnu_complete -c ln -s f -l force -d 'Remove existing destination files' $is_gnu
+__fish_gnu_complete -c ln -s i -l interactive -d 'Prompt whether to remove destinations' $is_gnu
+__fish_gnu_complete -c ln -s L -l logical -d 'Dereference TARGETs that are symbolic links' $is_gnu
+__fish_gnu_complete -c ln -s n -l no-dereference -d 'Treat symlink to directory as if it were a file' $is_gnu
+__fish_gnu_complete -c ln -s P -l physical -d 'Make hard links directly to symbolic links' $is_gnu
+__fish_gnu_complete -c ln -s s -l symbolic -d 'Make symbolic links instead of hard links' $is_gnu
+__fish_gnu_complete -c ln -s v -l verbose -d 'Print name of each linked file' $is_gnu
+
+if test -n "$is_gnu"
+    complete -c ln -l backup -d 'Make a backup of each existing destination file' -a "none off numbered t existing nil simple never"
+    complete -c ln -s b -d 'Make a backup of each existing destination file'
+    complete -c ln -s d -l directory -d 'Allow superuser to attempt to hard link directories'
+    complete -c ln -s r -l relative -d 'With -s, create links relative to link location'
+    complete -c ln -s S -l suffix -d 'Override the usual ~ backup suffix'
+    complete -c ln -s t -l target-directory -d 'Specify the DIRECTORY in which to create the links' -a '(__fish_complete_directories)'
+    complete -c ln -s T -l no-target-directory -d 'Treat LINK_NAME as a normal file'
+
+    complete -c ln -f -l help -d 'Display help and exit'
+    complete -c ln -f -l version -d 'Output version information and exit'
+else
+    complete -c ln -s F -d 'If the target is a directory, remove it so the link can be created'
+    complete -c ln -s h -d 'Do not follow symbolic links in the destination'
+    complete -c ln -s w -d 'Warn if the source of a hard link cannot be linked'
+end

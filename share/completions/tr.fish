@@ -31,7 +31,7 @@ else
     complete -c tr -s c -d 'Same as -C but complement the set of values in string1'
     complete -c tr -s d -d 'Delete characters in string1 from the input'
     complete -c tr -s s -d 'Squeeze runs of characters listed in the last operand into one'
-    complete -c tr -l u -d 'Guarantee that any output is unbuffered.'
+    complete -c tr -s u -d 'Guarantee that any output is unbuffered.'
 
     complete -c tr -a '[:alnum:]' -d 'alphanumeric characters'
     complete -c tr -a '[:alpha:]' -d 'alphabetic characters'

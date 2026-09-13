@@ -4,6 +4,7 @@ fish ?.?.? (released ???)
 Interactive improvements
 ------------------------
 - Completion options `--no-files` and `--force-files` on a wrapping command now take precedence over such options on the commands it wraps.
+- ``history clear`` empties the history file instead of deleting it, preventing future shells from reimporting bash history (:issue:`12976`).
 
 Regression fixes:
 -----------------

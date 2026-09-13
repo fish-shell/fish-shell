@@ -36,7 +36,7 @@ use crate::{
     prelude::*,
     threads::{ThreadPool, assert_is_background_thread},
     wildcard::wildcard_match,
-    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat, wunlink},
+    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat},
 };
 use fish_common::{UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{subsequence_in_string, trim_in_place};
@@ -870,7 +870,15 @@ impl HistoryImpl {
         self.first_unwritten_new_item_index = 0;
         self.file_contents = None;
         if let Ok(Some(filename)) = self.history_file_path() {
-            let _ = wunlink(&filename);
+            // Keep an empty file to prevent reimporting bash history.
+            if let Err(err) = rewrite_via_temporary_file(&filename, |_, _| {
+                Ok(PotentialUpdate {
+                    do_save: true,
+                    data: (),
+                })
+            }) {
+                flog!(history_file, "Error clearing history file:", err);
+            }
         }
         self.clear_file_state();
     }
@@ -1786,6 +1794,7 @@ mod tests {
         history::{HistoryId, Timestamps},
         prelude::*,
         tests::prelude::test_init,
+        wutil::{wstat, wunlink},
     };
     use fish_build_helper::workspace_root;
     use fish_tempfile::TempDir;
@@ -2364,6 +2373,31 @@ mod tests {
             }
         }
         everything.clear();
+    }
+
+    #[test]
+    fn test_history_clear() {
+        let test = Test::new(L!("clear"));
+        {
+            let seed = test.create_history();
+            seed.add_commandline(L!("retained").to_owned());
+            seed.save();
+        }
+        time_barrier();
+
+        let reader = test.create_history();
+        let writer = test.create_history();
+        assert_eq!(reader.item_at_index(1).unwrap().str(), L!("retained"));
+        writer.clear();
+        let path = writer.imp().history_file_path().unwrap().unwrap();
+        assert_eq!(wstat(&path).unwrap().len(), 0);
+        assert_eq!(reader.item_at_index(1).unwrap().str(), L!("retained"));
+        assert_eq!(test.create_history().size(), 0);
+
+        // Clearing history also creates an empty file if it did not exist.
+        wunlink(&path).unwrap();
+        writer.clear();
+        assert_eq!(wstat(&path).unwrap().len(), 0);
     }
 
     #[test]

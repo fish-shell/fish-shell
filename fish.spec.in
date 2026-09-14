@@ -72,9 +72,6 @@ cd %__cmake_builddir
 %endif
 make fish_run_tests
 
-%clean
-rm -rf $RPM_BUILD_ROOT
-
 %post
 # Add fish to the list of allowed shells in /etc/shells
 if ! grep %{_bindir}/fish %{_sysconfdir}/shells >/dev/null; then

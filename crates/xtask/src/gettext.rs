@@ -523,7 +523,7 @@ msgstr "Content-Type: text/plain; charset=UTF-8\n"
         static EXPLICIT_MESSAGE: LazyLock<Regex> =
             LazyLock::new(|| Regex::new(r#"\( *_ (?<message>(['"]).+?(?<!\\)\2) *\)"#).unwrap());
         static IMPLICIT_MESSAGE: LazyLock<Regex> = LazyLock::new(|| {
-            Regex::new(r#"(?:^|\n)(?:\s|and |or )*(?:complete|function).*? (?:-d|--description) (?<message>(['"]).+?(?<!\\)\2)"#).unwrap()
+            Regex::new(r#"(?:^|\n)(?:\s|and |or )*(?:complete|__fish_gnu_complete|function).*? (?:-d|--description) (?<message>(['"]).+?(?<!\\)\2)"#).unwrap()
         });
         let messages_at_tier = extracted_messages.entry(tier).or_default();
         for message in EXPLICIT_MESSAGE.captures_iter(file_content.as_bytes()) {

@@ -13326,6 +13326,9 @@ msgstr ""
 msgid "Count executions of source lines"
 msgstr ""
 
+msgid "Count hard links multiple times"
+msgstr ""
+
 msgid "Count hidden files, too"
 msgstr ""
 
@@ -19875,6 +19878,9 @@ msgstr ""
 msgid "Do not follow symlinks"
 msgstr ""
 
+msgid "Do not follow symlinks (default)"
+msgstr ""
+
 msgid "Do not follow symlinks (excluding dirs)"
 msgstr ""
 
@@ -23553,6 +23559,9 @@ msgstr ""
 msgid "Edit files in $EDITOR"
 msgstr ""
 
+msgid "Edit files in place"
+msgstr ""
+
 msgid "Edit files in-place"
 msgstr ""
 
@@ -25536,7 +25545,13 @@ msgstr ""
 msgid "Evaluate expr on nvim server specified with --server"
 msgstr ""
 
+msgid "Evaluate expression"
+msgstr ""
+
 msgid "Evaluate expression EXPR and exit"
+msgstr ""
+
+msgid "Evaluate file"
 msgstr ""
 
 msgid "Evaluate indexing information for path"
@@ -27553,6 +27568,9 @@ msgid "Follow CNAME redirects"
 msgstr ""
 
 msgid "Follow FTP links from HTML documents"
+msgstr ""
+
+msgid "Follow all symlinks"
 msgstr ""
 
 msgid "Follow all symlinks Cancels -P option"
@@ -35706,6 +35724,9 @@ msgstr ""
 msgid "List ingress zones added"
 msgstr ""
 
+msgid "List inode information"
+msgstr ""
+
 msgid "List inode usage instead of block usage"
 msgstr ""
 
@@ -35980,6 +36001,9 @@ msgid "List only installed duplicate pkgs"
 msgstr ""
 
 msgid "List only installed pkgs without a corresponding binary pkg"
+msgstr ""
+
+msgid "List only local file systems"
 msgstr ""
 
 msgid "List only non-explicit packages (dependencies)"
@@ -47634,6 +47658,9 @@ msgstr ""
 msgid "Produce filenames as this string"
 msgstr ""
 
+msgid "Produce grand total"
+msgstr ""
+
 msgid "Produce less output to the terminal"
 msgstr ""
 
@@ -49330,6 +49357,9 @@ msgid "Recurse subdirectories"
 msgstr ""
 
 msgid "Recursion (default for download)"
+msgstr ""
+
+msgid "Recursion limit"
 msgstr ""
 
 msgid "Recursive mode"
@@ -59670,6 +59700,9 @@ msgstr ""
 msgid "Show file status, use lowercase letters for files marked as fsmonitor valid"
 msgstr ""
 
+msgid "Show file systems of specified type"
+msgstr ""
+
 msgid "Show file transfer stats"
 msgstr ""
 
@@ -62284,6 +62317,9 @@ msgid "Skip missing values in simple output"
 msgstr ""
 
 msgid "Skip mount checks, repair is not possible"
+msgstr ""
+
+msgid "Skip other file systems"
 msgstr ""
 
 msgid "Skip package installation for this run"
@@ -68067,6 +68103,9 @@ msgstr ""
 msgid "Thread count, for instance 2.0C where C is core multiplied"
 msgstr ""
 
+msgid "Threshold size"
+msgstr ""
+
 msgid "Threshold the image [value]"
 msgstr ""
 
@@ -70374,6 +70413,9 @@ msgstr ""
 msgid "Use 1MB block size"
 msgstr ""
 
+msgid "Use 1kB block size"
+msgstr ""
+
 msgid "Use 32-bit \"float\""
 msgstr ""
 
@@ -70666,6 +70708,9 @@ msgid "Use POSIX basic regexp for patterns"
 msgstr ""
 
 msgid "Use POSIX extended regexp for patterns"
+msgstr ""
+
+msgid "Use POSIX format"
 msgstr ""
 
 msgid "Use POST for all HTTP requests and send the specified data in the request body"
@@ -74470,6 +74515,9 @@ msgid "Write runtime encode/decode statistics"
 msgstr ""
 
 msgid "Write selection"
+msgstr ""
+
+msgid "Write size for all files"
 msgstr ""
 
 msgid "Write special status strings to the specified file descriptor"

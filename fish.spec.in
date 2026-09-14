@@ -55,6 +55,8 @@ is simple but incompatible with other shell languages.
 export CARGO_NET_OFFLINE=true
 # CMake macros define the wrong sysconfdir arguments
 EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} -DCMAKE_INSTALL_DOCDIR=%{_docdir}/fish"
+# Look into https://www.suse.com/c/declarative-rpm-cleaning-up-your-spec-files/ once OpenSUSE 15.x
+# is out of support.
 %cmake $EXTRA_CMAKE_FLAGS
 %cmake_build
 
@@ -62,15 +64,15 @@ EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} 
 %cmake_install
 
 %check
-# OpenSUSE does out-of-tree builds and defines __builddir
 %if 0%{?__builddir:1}
+# OpenSUSE does out-of-tree builds and defines __builddir, but does not change
+# to the directory except in the main cmake macro. cmake_build calls Make/Ninja.
 cd %__builddir
+%cmake_build fish_run_tests
+%else
+# Fedora's cmake_build macro calls CMake
+%cmake_build --target fish_run_tests
 %endif
-# Fedora uses __cmake_builddir
-%if 0%{?__cmake_builddir:1}
-cd %__cmake_builddir
-%endif
-make fish_run_tests
 
 %post
 # Add fish to the list of allowed shells in /etc/shells

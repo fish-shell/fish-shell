@@ -56,18 +56,10 @@ export CARGO_NET_OFFLINE=true
 # CMake macros define the wrong sysconfdir arguments
 EXTRA_CMAKE_FLAGS="$EXTRA_CMAKE_FLAGS -DCMAKE_INSTALL_SYSCONFDIR=%{_sysconfdir} -DCMAKE_INSTALL_DOCDIR=%{_docdir}/fish"
 %cmake $EXTRA_CMAKE_FLAGS
-%if 0%{?cmake_build:1}
 %cmake_build
-%else
-make %{?_smp_mflags}
-%endif
 
 %install
-%if 0%{?cmake_install:1}
 %cmake_install
-%else
-%make_install
-%endif
 
 %check
 # OpenSUSE does out-of-tree builds and defines __builddir

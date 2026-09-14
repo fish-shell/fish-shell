@@ -26,6 +26,8 @@ pub struct ParseToken {
     pub has_dash_prefix: bool,
     /// Hackish: whether the source looks like '-h' or '--help'
     pub is_help_argument: bool,
+    /// Hackish: whether the source is exactly '--'.
+    pub is_double_dash: bool,
     /// Hackish: if `TokenType::End`, whether the source is a newline.
     pub is_newline: bool,
     // Hackish: whether this token is a string like FOO=bar
@@ -43,6 +45,7 @@ impl ParseToken {
             keyword: ParseKeyword::None,
             has_dash_prefix: false,
             is_help_argument: false,
+            is_double_dash: false,
             is_newline: false,
             may_be_variable_assignment: false,
             tok_error: TokenizerError::None,
@@ -70,6 +73,10 @@ impl ParseToken {
     /// Return whether we are a string with the dash prefix set.
     pub fn is_dash_prefix_string(&self) -> bool {
         self.typ == ParseTokenType::String && self.has_dash_prefix
+    }
+    /// Return whether we are a string that is exactly '--'.
+    pub fn is_double_dash_string(&self) -> bool {
+        self.typ == ParseTokenType::String && self.is_double_dash
     }
     /// Returns a string description of the given parse token.
     pub fn describe(&self) -> WString {

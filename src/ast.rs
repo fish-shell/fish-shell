@@ -289,6 +289,8 @@ pub enum Kind<'a> {
     CaseItem(&'a CaseItem),
     SwitchStatement(&'a SwitchStatement),
     DecoratedStatement(&'a DecoratedStatement),
+    DecoratedStatementDecorator(&'a DecoratedStatementDecorator),
+    TimeDecorator(&'a TimeDecorator),
     NotStatement(&'a NotStatement),
     JobContinuation(&'a JobContinuation),
     JobContinuationList(&'a JobContinuationList),
@@ -330,6 +332,8 @@ pub enum KindMut<'a> {
     CaseItem(&'a mut CaseItem),
     SwitchStatement(&'a mut SwitchStatement),
     DecoratedStatement(&'a mut DecoratedStatement),
+    DecoratedStatementDecorator(&'a mut DecoratedStatementDecorator),
+    TimeDecorator(&'a mut TimeDecorator),
     NotStatement(&'a mut NotStatement),
     JobContinuation(&'a mut JobContinuation),
     JobContinuationList(&'a mut JobContinuationList),
@@ -495,7 +499,7 @@ macro_rules! define_keyword_node {
 
 /// Define a node that implements the token trait.
 macro_rules! define_token_node {
-    ( $name:ident, $($allowed:ident),* $(,)? ) => {
+    ( $name:ident, $($allowed:ident),* $(,)? $(; $check:expr)? ) => {
         #[derive(Default, Debug, Leaf!)]
         pub struct $name {
             range: Option<SourceRange>,
@@ -526,7 +530,7 @@ macro_rules! define_token_node {
         impl CheckParse for $name {
             fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
                 let typ = pop.peek_type(0);
-                Self::ALLOWED_TOKENS.contains(&typ)
+                Self::ALLOWED_TOKENS.contains(&typ) $(&& $check(pop))?
             }
         }
         impl $name {
@@ -762,7 +766,7 @@ impl AcceptorMut for Statement {
 #[derive(Default, Debug, Node!, Acceptor!)]
 pub struct JobPipeline {
     /// Maybe the time keyword.
-    pub time: Option<KeywordTime>,
+    pub time: Option<TimeDecorator>,
     /// A (possibly empty) list of variable assignments.
     pub variables: VariableAssignmentList,
     /// The statement.
@@ -961,7 +965,7 @@ pub struct DecoratedStatement {
 pub struct NotStatement {
     /// Keyword, either not or exclam.
     pub kw: KeywordNot,
-    pub time: Option<KeywordTime>,
+    pub time: Option<TimeDecorator>,
     pub variables: VariableAssignmentList,
     pub contents: Statement,
 }
@@ -1090,7 +1094,7 @@ define_token_node!(TokenLeftBrace, LeftBrace);
 define_token_node!(TokenRightBrace, RightBrace);
 define_token_node!(TokenRedirection, Redirection);
 
-define_keyword_node!(DecoratedStatementDecorator, Command, Builtin, Exec);
+define_keyword_node!(KeywordDecoration, Command, Builtin, Exec);
 define_keyword_node!(JobConjunctionDecorator, And, Or);
 define_keyword_node!(KeywordBegin, Begin);
 define_keyword_node!(KeywordCase, Case);
@@ -1117,11 +1121,22 @@ impl CheckParse for JobConjunctionDecorator {
     }
 }
 
+define_token_node!(
+    TokenDoubleDash, String;
+    |pop: &mut Populator<'_>| pop.peek_token(0).is_double_dash_string());
+
+#[derive(Default, Debug, Node!, Acceptor!)]
+pub struct DecoratedStatementDecorator {
+    pub keyword: KeywordDecoration,
+    pub separator: Option<TokenDoubleDash>,
+}
+
 impl CheckParse for DecoratedStatementDecorator {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         // Here the keyword is 'command' or 'builtin' or 'exec'.
         // `command stuff` executes a command called stuff.
         // `command -n` passes the -n argument to the 'command' builtin.
+        // `command -- stuff` executes a command called stuff.
         // `command` by itself is a command.
         let keyword = pop.peek_token(0).keyword;
         if !matches!(
@@ -1131,18 +1146,35 @@ impl CheckParse for DecoratedStatementDecorator {
             return false;
         }
         let next_token = pop.peek_token(1);
+        if next_token.is_double_dash_string() {
+            return pop.peek_token(2).typ == ParseTokenType::String;
+        }
         next_token.typ == ParseTokenType::String && !next_token.is_dash_prefix_string()
     }
 }
 
-impl CheckParse for KeywordTime {
+#[derive(Default, Debug, Node!, Acceptor!)]
+pub struct TimeDecorator {
+    pub keyword: KeywordTime,
+    pub separator: Option<TokenDoubleDash>,
+}
+
+impl CheckParse for TimeDecorator {
     fn can_be_parsed(pop: &mut Populator<'_>) -> bool {
         // Time keyword is only the time builtin if the next argument doesn't have a dash.
         let keyword = pop.peek_token(0).keyword;
         if !matches!(keyword, ParseKeyword::Time) {
             return false;
         }
-        !pop.peek_token(1).is_dash_prefix_string()
+        let next_token = pop.peek_token(1);
+        if next_token.is_double_dash_string() {
+            // `time -- cmd` uses `--` as a separator, like the other decorators.
+            return matches!(
+                pop.peek_token(2).typ,
+                ParseTokenType::String | ParseTokenType::LeftBrace
+            );
+        }
+        !next_token.is_dash_prefix_string()
     }
 }
 
@@ -1152,7 +1184,7 @@ impl DecoratedStatement {
         let Some(decorator) = &self.opt_decoration else {
             return StatementDecoration::None;
         };
-        let decorator: &dyn Keyword = decorator;
+        let decorator: &dyn Keyword = &decorator.keyword;
         match decorator.keyword() {
             ParseKeyword::Command => StatementDecoration::Command,
             ParseKeyword::Builtin => StatementDecoration::Builtin,
@@ -1228,6 +1260,8 @@ pub fn ast_kind_to_string(k: Kind<'_>) -> &'static wstr {
         Kind::CaseItem(_) => L!("case_item"),
         Kind::SwitchStatement(_) => L!("switch_statement"),
         Kind::DecoratedStatement(_) => L!("decorated_statement"),
+        Kind::DecoratedStatementDecorator(_) => L!("decorated_statement_decorator"),
+        Kind::TimeDecorator(_) => L!("time_decorator"),
         Kind::NotStatement(_) => L!("not_statement"),
         Kind::JobContinuation(_) => L!("job_continuation"),
         Kind::JobContinuationList(_) => L!("job_continuation_list"),
@@ -1541,7 +1575,7 @@ struct TokenStream<'a> {
 
 impl<'a> TokenStream<'a> {
     // The maximum number of lookahead supported.
-    const MAX_LOOKAHEAD: usize = 2;
+    const MAX_LOOKAHEAD: usize = 3;
 
     fn new(src: &'a wstr, flags: ParseTreeFlags, freestanding_arguments: bool) -> Self {
         let mut flags = TokFlags::from(flags);
@@ -1616,6 +1650,7 @@ impl<'a> TokenStream<'a> {
         result.keyword = keyword_for_token(token.type_, text);
         result.has_dash_prefix = text.starts_with('-');
         result.is_help_argument = [L!("-h"), L!("--help")].contains(&text);
+        result.is_double_dash = text == "--";
         result.is_newline = result.typ == ParseTokenType::End && text == "\n";
         result.may_be_variable_assignment = variable_assignment_equals_pos(text).is_some();
         result.tok_error = token.error;
@@ -1778,6 +1813,8 @@ impl<'s> NodeVisitorMut for Populator<'s> {
             KM::CaseItem(node) => node.accept_mut(self),
             KM::SwitchStatement(node) => node.accept_mut(self),
             KM::DecoratedStatement(node) => node.accept_mut(self),
+            KM::DecoratedStatementDecorator(node) => node.accept_mut(self),
+            KM::TimeDecorator(node) => node.accept_mut(self),
             KM::NotStatement(node) => node.accept_mut(self),
             KM::JobConjunctionContinuation(node) => node.accept_mut(self),
             KM::AndorJob(node) => node.accept_mut(self),

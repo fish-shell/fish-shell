@@ -1975,6 +1975,15 @@ mod tests {
             "hello",
             StatementDecoration::Command
         );
+        validate!("command -- less", "less", "", StatementDecoration::Command);
+        validate!(
+            "command -- less -R",
+            "less",
+            "-R",
+            StatementDecoration::Command
+        );
+        validate!("builtin -- -q", "-q", "", StatementDecoration::Builtin);
+        validate!("exec -- -a", "-a", "", StatementDecoration::Exec);
         validate!(
             "builtin command hello",
             "command",
@@ -2083,6 +2092,18 @@ mod tests {
         ast::parse(L!("begin; echo '"), flags, Some(&mut errors));
         assert_eq!(errors.len(), 1);
         assert_eq!(errors[0].code, ParseErrorCode::TokenizerUnterminatedQuote);
+
+        let src = L!("time -- -q");
+        let ast = ast::parse(src, ParseTreeFlags::default(), None);
+        assert!(!ast.errored());
+        let command = Traversal::new(ast.top())
+            .filter_map(|n| match n.kind() {
+                ast::Kind::DecoratedStatement(ds) => Some(ds.command.source(src).to_owned()),
+                _ => None,
+            })
+            .next()
+            .unwrap();
+        assert_eq!(command, L!("-q"));
     }
 
     #[test]

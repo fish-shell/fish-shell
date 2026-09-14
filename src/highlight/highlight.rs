@@ -1038,7 +1038,10 @@ impl<'src, 'wd, 'ctx> Highlighter<'src, 'wd, 'ctx> {
     fn visit_decorated_statement(&mut self, stmt: &DecoratedStatement) {
         // Color any decoration.
         if let Some(decoration) = stmt.opt_decoration.as_ref() {
-            self.visit_keyword(decoration);
+            self.visit_keyword(&decoration.keyword);
+            if let Some(separator) = &decoration.separator {
+                self.color_node(separator, HighlightSpec::with_fg(HighlightRole::Option));
+            }
         }
 
         // Color the command's source code.
@@ -1179,6 +1182,12 @@ impl<'src, 'wd, 'ctx, 'a> NodeVisitor<'a> for Highlighter<'src, 'wd, 'ctx> {
             Kind::Redirection(node) => self.visit_redirection(node),
             Kind::VariableAssignment(node) => self.visit_variable_assignment(node),
             Kind::DecoratedStatement(node) => self.visit_decorated_statement(node),
+            Kind::TimeDecorator(node) => {
+                self.visit_keyword(&node.keyword);
+                if let Some(separator) = &node.separator {
+                    self.color_node(separator, HighlightSpec::with_fg(HighlightRole::Option));
+                }
+            }
             Kind::BlockStatement(node) => self.visit_block_statement(node),
             Kind::BraceStatement(node) => self.visit_brace_statement(node),
             // Default implementation is to just visit children.
@@ -1783,6 +1792,38 @@ mod tests {
                 ("echo", fg(HighlightRole::Builtin)),
                 ("--", fg(HighlightRole::Option)),
                 ("-s", fg(HighlightRole::Param)),
+            );
+
+            for decorator in ["command", "exec"] {
+                validate!(
+                    (decorator, fg(HighlightRole::Keyword)),
+                    ("--", fg(HighlightRole::Option)),
+                    ("/bin/cat", fg(HighlightRole::Command)),
+                    ("-n", fg(HighlightRole::Option)),
+                    ("--", fg(HighlightRole::Option)),
+                    ("-s", fg(HighlightRole::Param)),
+                );
+            }
+
+            for (decorator, role) in [
+                ("builtin", HighlightRole::Keyword),
+                ("time", HighlightRole::Operat),
+            ] {
+                validate!(
+                    (decorator, fg(role)),
+                    ("--", fg(HighlightRole::Option)),
+                    ("echo", fg(HighlightRole::Builtin)),
+                    ("-n", fg(HighlightRole::Option)),
+                );
+            }
+
+            validate!(
+                ("not", fg(HighlightRole::Operat)),
+                ("time", fg(HighlightRole::Operat)),
+                ("--", fg(HighlightRole::Option)),
+                ("{", fg(HighlightRole::Keyword)),
+                ("echo", fg(HighlightRole::Builtin)),
+                ("}", fg(HighlightRole::Keyword)),
             );
 
             // Overlong paths don't crash (#7837).

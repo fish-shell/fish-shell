@@ -229,6 +229,8 @@ impl Tok {
 
 struct BraceStatementParser {
     at_command_position: bool,
+    // A double dash after `time` still leaves us at a command position.
+    after_time: bool,
     unclosed_brace_statements: usize,
 }
 
@@ -285,6 +287,7 @@ impl<'c> Tokenizer<'c> {
             has_next: true,
             brace_statement_parser: (!flags.argument_list).then_some(BraceStatementParser {
                 at_command_position: true,
+                after_time: false,
                 unclosed_brace_statements: 0,
             }),
             accept_unfinished: flags.accept_unfinished,
@@ -359,6 +362,7 @@ impl<'c> Iterator for Tokenizer<'c> {
             .copied();
         let buff = &self.text[self.token_cursor..];
         let mut at_cmd_pos = false;
+        let mut after_time = false;
         let token = match this_char {
             '\0' => {
                 self.has_next = false;
@@ -533,23 +537,24 @@ impl<'c> Iterator for Tokenizer<'c> {
                     None => {
                         // Not a redirection or pipe, so just a string.
                         let s = self.read_string();
-                        at_cmd_pos = self
-                            .brace_statement_parser
-                            .as_ref()
-                            .is_some_and(|parser| parser.at_command_position)
-                            && {
-                                let text = self.text_of(&s);
-                                parser_keywords_is_subcommand(&unescape_keyword(
-                                    TokenType::String,
-                                    text,
-                                )) || variable_assignment_equals_pos(text).is_some()
-                            };
+                        at_cmd_pos = self.brace_statement_parser.as_ref().is_some_and(|parser| {
+                            if !parser.at_command_position {
+                                return false;
+                            }
+                            let text = self.text_of(&s);
+                            let keyword = unescape_keyword(TokenType::String, text);
+                            after_time = keyword.as_ref() == "time";
+                            parser_keywords_is_subcommand(&keyword)
+                                || variable_assignment_equals_pos(text).is_some()
+                                || (parser.after_time && text == "--")
+                        });
                         Some(s)
                     }
                 }
             }
         };
         if let Some(parser) = self.brace_statement_parser.as_mut() {
+            parser.after_time = after_time;
             parser.at_command_position = at_cmd_pos;
         }
         token

@@ -12,6 +12,10 @@ Interactive improvements
 - Completion options `--no-files` and `--force-files` on a wrapping command now take precedence over such options on the commands it wraps.
 - ``history clear`` empties the history file instead of deleting it, preventing future shells from reimporting bash history (:issue:`12976`).
 
+Scripting improvements
+----------------------
+- ``command``, ``builtin``, ``exec`` and ``time`` now accept a ``--`` separator between the keyword and the command name, so for example ``command -- -q`` runs a command literally called ``-q`` (:issue:`9941`).
+
 Regression fixes:
 -----------------
 - (From 4.0.0) Short options are no longer offered as completions if an old-style completion matches (like `-foo`).

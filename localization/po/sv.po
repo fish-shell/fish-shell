@@ -7839,6 +7839,12 @@ msgstr ""
 msgid "Apply changes in a prefix directory"
 msgstr ""
 
+msgid "Apply changes in given directory (chroot)"
+msgstr ""
+
+msgid "Apply changes in given directory (no chroot)"
+msgstr ""
+
 msgid "Apply changes in the PREFIX_DIR"
 msgstr ""
 
@@ -15253,9 +15259,6 @@ msgid "Define math library"
 msgstr "Definera matematikbibliotek"
 
 msgid "Define maximum period of password validity"
-msgstr ""
-
-msgid "Define minimum delay between password changes"
 msgstr ""
 
 msgid "Define new monitor"
@@ -74443,9 +74446,6 @@ msgid "Use given config file"
 msgstr ""
 
 msgid "Use given directory as the EFI System Partition root"
-msgstr ""
-
-msgid "Use given directory as working directory"
 msgstr ""
 
 msgid "Use given directory for PPC Mac install"

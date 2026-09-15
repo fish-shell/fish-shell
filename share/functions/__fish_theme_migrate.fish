@@ -5,7 +5,9 @@ function __fish_theme_migrate
     set -l migration_version 4300
 
     # Maybe migrate.
-    if not set -q __fish_initialized || test $__fish_initialized -ge $migration_version
+    if not set -q __fish_initialized ||
+            test $__fish_initialized -ge $migration_version ||
+            path is $__fish_config_dir/conf.d/fish_frozen_theme.fish $__fish_config_dir/conf.d/fish_frozen_key_bindings.fish
         return
     end
 

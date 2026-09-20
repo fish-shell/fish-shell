@@ -16,8 +16,10 @@ function __krita_complete_image_format
 end
 
 function __krita_list_workspaces
-    path basename ~/.local/share/krita/workspaces/*.kws |
-        path change-extension ''
+    for data_dir in (__fish_print_xdg_data_directories)
+        path basename $data_dir/krita/workspaces/*.kws |
+            path change-extension ''
+    end
 end
 
 complete -c krita -s h -l help -d 'show help'
@@ -39,5 +41,4 @@ complete -c krita -l workspace -d 'open with workspace' -a '(__krita_list_worksp
 complete -c krita -l file-layer -d 'open with file-layer' -r
 complete -c krita -l resource-location -d 'open with resource' -r
 
-complete -c krita -l new-image -d 'open with new image'
-complete -c krita -a '(__krita_complete_image_format)' -x
+complete -c krita -l new-image -d 'open with new image' -a '(__krita_complete_image_format)' -x

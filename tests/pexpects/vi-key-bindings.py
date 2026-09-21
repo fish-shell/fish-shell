@@ -73,3 +73,13 @@ send("3x")  # deletes 3, 4, 5
 send("p")  # pastes after 2 -> 123456
 sendline("")
 expect_re(r"\b123456\b")
+
+send("echo herro")
+send("\033")
+sleep(1)
+send("hh")
+# Changes to Insert Mode
+send("2s")
+send("p")
+sendline("")
+expect_re(r"\bhepo\b")

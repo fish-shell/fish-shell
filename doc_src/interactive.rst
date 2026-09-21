@@ -513,6 +513,10 @@ Command mode is also known as normal mode.
 
 - :kbd:`D` deletes text after the current cursor position and moves it to the :ref:`killring`.
 
+- :kbd:`x` deletes the character under the cursor and moves it to the :ref:`killring`.
+
+- :kbd:`s` deletes the character under the cursor, moves it to the :ref:`killring`, and enters :ref:`insert mode <vi-mode-insert>`.
+
 - :kbd:`p` pastes text from the :ref:`killring`.
 
 - :kbd:`u` undoes the most recent edit of the command line.

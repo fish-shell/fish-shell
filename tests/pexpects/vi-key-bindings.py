@@ -73,3 +73,11 @@ send("3x")  # deletes 3, 4, 5
 send("p")  # pastes after 2 -> 123456
 sendline("")
 expect_re(r"\b123456\b")
+
+send("echo he___o")
+send("\033")
+sleep(1)
+send("3h")
+send("3s")
+sendline("ll")
+expect_re(r"\bhello\b")

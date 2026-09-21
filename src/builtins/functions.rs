@@ -299,7 +299,16 @@ pub fn functions(
         return Ok(SUCCESS);
     }
 
-    if opts.query && args.is_empty() {
+    // Query means *any of the names exist*, matching type/command/builtin.
+    if opts.query {
+        if args.is_empty() {
+            return Err(STATUS_CMD_ERROR);
+        }
+        for arg in args {
+            if function::exists(arg, parser) {
+                return Ok(SUCCESS);
+            }
+        }
         return Err(STATUS_CMD_ERROR);
     }
 
@@ -380,9 +389,6 @@ pub fn functions(
             first = false;
             continue;
         };
-        if opts.query {
-            continue;
-        }
         if !first {
             streams.out.append(L!("\n"));
         }

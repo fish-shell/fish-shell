@@ -49,7 +49,7 @@ The following options are available:
     Lists the names of all defined functions.
 
 **-q** or **--query**
-    Tests if the specified functions exist.
+    Tests if any of the specified functions exist. If any exist, it returns 0, 1 otherwise.
 
 **-v** or **--verbose**
     Make some output more verbose.
@@ -75,8 +75,8 @@ Copying a function using ``-c`` copies only the body of the function, and does n
 
 Only one function's description can be changed in a single invocation of ``functions -d``.
 
-The exit status of ``functions`` is the number of functions specified in the argument list that do not exist, which can be used in concert with the ``-q`` option.
-
+With **-q** or **--query**, ``functions`` returns 0 if any of the named functions exist, matching :doc:`type <type>`, :doc:`command <command>` and :doc:`builtin <builtin>`.
+Without **-q**, the exit status is the number of functions specified in the argument list that do not exist.
 
 Examples
 --------

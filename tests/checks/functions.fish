@@ -115,10 +115,37 @@ type -t ls
 #CHECK: file
 
 # ==========
-# Verify that `functions --query` does not return 0 if there are 256 missing functions
+# Verify that `functions --query` returns 0 if any named function exists,
+# matching type/command/builtin. Missing extra names no longer increment status.
+functions --query f1
+echo $status
+#CHECK: 0
+
+functions --query doesnotexist-pleasedonotexist
+echo $status
+#CHECK: 1
+
+functions --query doesnotexist-pleasedonotexist f1
+echo $status
+#CHECK: 0
+
+functions --query f1 doesnotexist-pleasedonotexist
+echo $status
+#CHECK: 0
+
+functions --query doesnotexist-a doesnotexist-b doesnotexist-c
+echo $status
+#CHECK: 1
+
+# Many missing names used to overflow/wrap the missing-count status.
+# With the any-exists semantics this is simply 1.
 functions --query a(seq 1 256)
 echo $status
-#CHECK: 255
+#CHECK: 1
+
+functions --query
+echo $status
+#CHECK: 1
 
 echo "function t; echo tttt; end" | source
 functions t

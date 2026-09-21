@@ -6,6 +6,7 @@ Deprecations and removed features
 - A function call now captures it's functions's definition before the pipeline is started, so it is no longer affected by other commands in the pipeline erasing or redefining the function.
   For example, ``function sus; functions --erase sus; end; sus | sus`` now runs the same function twice (:issue:`12991`).
   This change also prevents modifications to ``$fish_function_path`` in an earlier pipeline element from invalidating later calls to autoloaded functions (:issue:`12996`).
+- ``functions --query`` now returns 0 if any of the named functions exist, matching ``type -q``, ``command -q`` and ``builtin -q``. Previously it returned the number of names that did not exist (:issue:`9855`).
 
 Interactive improvements
 ------------------------

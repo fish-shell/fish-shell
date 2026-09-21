@@ -2012,6 +2012,21 @@ complete -f -c git -n '__fish_git_using_command merge-base' -l independent -d 'P
 complete -f -c git -n '__fish_git_using_command merge-base' -l is-ancestor -d 'Check if the first commit is an ancestor of the second commit'
 complete -f -c git -n '__fish_git_using_command merge-base' -l fork-point -d 'Find the point at which a branch forked from another branch ref'
 
+### merge-tree
+complete -f -c git -n __fish_git_needs_command -a merge-tree -d 'Perform merge without touching index or working tree'
+__fish_git_add_revision_completion -n '__fish_git_using_command merge-tree'
+complete -f -c git -n '__fish_git_using_command merge-tree' -l write-tree -d 'Perform real merge instead of trivial'
+complete -f -c git -n '__fish_git_using_command merge-tree' -l trivial-merge -d 'Perform trivial merge'
+complete -f -c git -n '__fish_git_using_command merge-tree' -l stdin -d 'Perform multiple merges from standard input'
+complete -f -c git -n '__fish_git_using_command merge-tree' -s z -d 'Separate paths with the NUL character'
+complete -f -c git -n '__fish_git_using_command merge-tree' -l name-only -d 'List filenames without mode, oid, and stage'
+complete -f -c git -n '__fish_git_using_command merge-tree' -l messages -d 'Include informational and conflict messages'
+complete -f -c git -n '__fish_git_using_command merge-tree' -l no-messages -d 'Do not include informational and conflict messages'
+complete -f -c git -n '__fish_git_using_command merge-tree' -l quiet -d 'Suppress all output; only exit status'
+complete -f -c git -n '__fish_git_using_command merge-tree' -l allow-unrelated-histories -d 'Allow merging of unrelated histories'
+__fish_git_add_revision_completion -n '__fish_git_using_command merge-tree' -l merge-base -d 'Specify a merge base' -r
+complete -r -c git -n '__fish_git_using_command merge-tree' -s X -l strategy-option -d 'Pass given option to the merge strategy'
+
 ### mergetool
 
 complete -f -c git -n __fish_git_needs_command -a mergetool -d 'Run merge conflict resolution tool'
@@ -2659,6 +2674,7 @@ complete -f -c git -n '__fish_git_using_command help' -a mailsplit -d 'Simple UN
 complete -f -c git -n '__fish_git_using_command help' -a maintenance -d 'Run tasks to optimize Git repository data'
 complete -f -c git -n '__fish_git_using_command help' -a merge -d 'Join two or more development histories together'
 complete -f -c git -n '__fish_git_using_command help' -a merge-base -d 'Find as good common ancestors as possible for a merge'
+complete -f -c git -n '__fish_git_using_command help' -a merge-tree -d 'Perform merge without touching index or working tree'
 complete -f -c git -n '__fish_git_using_command help' -a mergetool -d 'Run merge conflict resolution tools to resolve merge conflicts'
 complete -f -c git -n '__fish_git_using_command help' -a mv -d 'Move or rename a file, a directory, or a symlink'
 complete -f -c git -n '__fish_git_using_command help' -a notes -d 'Add or inspect object notes'

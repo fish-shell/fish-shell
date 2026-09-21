@@ -6819,6 +6819,9 @@ msgstr ""
 msgid "Allow merging even when branches do not share a common history"
 msgstr ""
 
+msgid "Allow merging of unrelated histories"
+msgstr ""
+
 msgid "Allow missing config file"
 msgstr ""
 
@@ -20820,6 +20823,9 @@ msgstr ""
 msgid "Do not include git status output in commit message template"
 msgstr ""
 
+msgid "Do not include informational and conflict messages"
+msgstr ""
+
 msgid "Do not include refs matching given glob pattern"
 msgstr ""
 
@@ -33558,6 +33564,9 @@ msgstr ""
 msgid "Include info about the presence of a secret key in public key listings done with --with-colons"
 msgstr ""
 
+msgid "Include informational and conflict messages"
+msgstr ""
+
 msgid "Include inherited options"
 msgstr ""
 
@@ -36958,6 +36967,9 @@ msgid "List file in ls -dils format"
 msgstr ""
 
 msgid "List file in ls -dils format, write to specified file"
+msgstr ""
+
+msgid "List filenames without mode, oid, and stage"
 msgstr ""
 
 msgid "List files"
@@ -45486,6 +45498,12 @@ msgstr ""
 msgid "Perform loop versioning when doing loop vectorization on trees"
 msgstr ""
 
+msgid "Perform merge without touching index or working tree"
+msgstr ""
+
+msgid "Perform multiple merges from standard input"
+msgstr ""
+
 msgid "Perform no dependency resolution"
 msgstr ""
 
@@ -45508,6 +45526,9 @@ msgid "Perform pkg move updates for binary pkgs"
 msgstr ""
 
 msgid "Perform pkg move updates for installed and binary pkgs"
+msgstr ""
+
+msgid "Perform real merge instead of trivial"
 msgstr ""
 
 msgid "Perform sanity checks"
@@ -45553,6 +45574,9 @@ msgid "Perform the necessary tests to observe the performance"
 msgstr ""
 
 msgid "Perform the reverse operation"
+msgstr ""
+
+msgid "Perform trivial merge"
 msgstr ""
 
 msgid "Perform unit testing"
@@ -58014,6 +58038,9 @@ msgstr ""
 msgid "Separate paths with NUL instead of LF"
 msgstr ""
 
+msgid "Separate paths with the NUL character"
+msgstr ""
+
 msgid "Separate source and build directories"
 msgstr ""
 
@@ -69082,6 +69109,9 @@ msgid "Suppress all messages, except errors"
 msgstr ""
 
 msgid "Suppress all normal output"
+msgstr ""
+
+msgid "Suppress all output; only exit status"
 msgstr ""
 
 msgid "Suppress all warning messages"

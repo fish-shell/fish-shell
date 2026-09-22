@@ -1148,7 +1148,8 @@ impl Screen {
             // Note that skip_remaining is a width, not a character count.
             let mut skip_remaining = start_pos;
 
-            let previously_prompt_line = self.actual.visible_prompt_lines > i + 1;
+            let previously_prompt_line = self.actual.visible_prompt_lines > i + 1
+                || (self.actual.visible_prompt_lines == i + 1 && !is_prompt_line);
 
             let shared_prefix = if self.scrolled || previously_prompt_line {
                 0

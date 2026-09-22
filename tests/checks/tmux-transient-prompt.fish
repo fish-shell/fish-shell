@@ -87,3 +87,24 @@ isolated-tmux capture-pane -p
 # CHECK: foo bar
 # CHECK: transient prompt line
 # CHECK: 1>
+
+# Test that multi-line command indents in a transient prompt
+isolated-tmux send-keys C-u C-l '
+    function fish_prompt
+        if contains -- --final-rendering $argv
+            printf "> "
+        else
+            printf "\nXXXXXXXXXX> "
+        end
+    end
+'
+tmux-sleep
+isolated-tmux send-keys C-l 'echo one' M-Enter 'echo two' Enter
+tmux-sleep
+isolated-tmux capture-pane -p
+# CHECK: > echo one
+# CHECK:   echo two
+# CHECK: one
+# CHECK: two
+# CHECK: {{^$}}
+# CHECK: XXXXXXXXXX>

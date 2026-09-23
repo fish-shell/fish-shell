@@ -329,6 +329,7 @@ where
             let mut time = timespec::default();
             if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut time) } == 0 {
                 let times = [
+                    #[allow(clippy::field_reassign_with_default)]
                     {
                         let mut t: timespec = Default::default();
                         t.tv_nsec = libc::UTIME_OMIT; // don't change atime

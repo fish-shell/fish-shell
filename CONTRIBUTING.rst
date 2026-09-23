@@ -12,12 +12,6 @@ Whether you want to change some of the core Rust source, enhance or add a comple
 improve the documentation or translate something, this document will tell you how.
 
 
-Mailing List
-============
-
-Send patches to the public mailing list: mailto:~krobelus/fish-shell@lists.sr.ht.
-Archives are available at https://lists.sr.ht/~krobelus/fish-shell/.
-
 GitHub
 ======
 
@@ -43,6 +37,12 @@ Of course not everything is required always - if you just want to contribute som
 and if the change is very simple and obvious you can just send it in. Use your judgement!
 
 Once you have your changes, open a pull request on https://github.com/fish-shell/fish-shell/pulls.
+
+Mailing List
+============
+
+As an alternative to GitHub, send patches to the public mailing list: mailto:~krobelus/fish-shell@lists.sr.ht.
+Archives are available at https://lists.sr.ht/~krobelus/fish-shell/.
 
 Guidelines
 ==========

@@ -2642,12 +2642,6 @@ msgstr "fish_git_prompt 的輔助函式"
 msgid "Helper function to list unused options"
 msgstr "列出未使用選項的輔助函式"
 
-msgid "If commandline is empty, run nextd; else move one argument to the right"
-msgstr "若命令行空白，則執行 nextd，否則將一個引數移動至右側"
-
-msgid "If commandline is empty, run prevd; else move one argument to the left"
-msgstr "若命令行空白，則執行 prevd，否則將一個引數移動至左側"
-
 msgid "If cursor is at the command token, edit the command source file"
 msgstr "若游標在命令詞元上，則編輯命令原始碼檔"
 

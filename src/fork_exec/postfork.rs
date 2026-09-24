@@ -177,7 +177,7 @@ pub fn child_setup_process(
         unsafe {
             libc::signal(libc::SIGTTIN, libc::SIG_IGN);
             libc::signal(libc::SIGTTOU, libc::SIG_IGN);
-            let _ = libc::tcsetpgrp(libc::STDIN_FILENO, getpid().as_raw());
+            _ = libc::tcsetpgrp(libc::STDIN_FILENO, getpid().as_raw());
         }
     }
     if let Some(sigmask) = sigmask {

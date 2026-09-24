@@ -568,7 +568,7 @@ pub fn abbr(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) ->
                     return Err(STATUS_INVALID_ARGS);
                 }
                 // The default set-cursor indicator is '%'.
-                let _ = opts
+                _ = opts
                     .set_cursor_marker
                     .insert(w.woptarg.unwrap_or(L!("%")).to_owned());
             }

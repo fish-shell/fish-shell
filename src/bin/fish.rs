@@ -157,7 +157,7 @@ fn source_config_in_directory(parser: &mut Parser, dir: &wstr) -> bool {
     let cmd: WString = L!("builtin source ").to_owned() + escaped_pathname.as_utfstr();
 
     parser.libdata_mut().within_fish_init = true;
-    let _ = parser.eval(&cmd, &IoChain::new());
+    _ = parser.eval(&cmd, &IoChain::new());
     parser.libdata_mut().within_fish_init = false;
     true
 }
@@ -198,7 +198,7 @@ fn run_command_list(parser: &mut Parser, cmds: &[OsString]) -> Result<(), libc::
         if !errored {
             // Construct a parsed source ref.
             let ps = Arc::new(ParsedSource::new(cmd_wcs, ast));
-            let _ = parser.eval_parsed_source(&ps, &IoChain::new(), None, BlockType::Top);
+            _ = parser.eval_parsed_source(&ps, &IoChain::new(), None, BlockType::Top);
             retval = Ok(());
         } else {
             let backtrace = parser.get_backtrace(&cmd_wcs, &errors);
@@ -492,7 +492,7 @@ fn throwing_main() -> i32 {
             L!("fish_default_key_bindings").to_owned(),
         );
         if function::exists(L!("fish_default_key_bindings"), parser) {
-            let _ = run_command_list(parser, &[OsString::from("fish_default_key_bindings")]);
+            _ = run_command_list(parser, &[OsString::from("fish_default_key_bindings")]);
         }
     }
 

@@ -191,7 +191,7 @@ pub fn gettext(args: GettextArgs) -> Result<()> {
             ];
             for line in lines {
                 use std::fmt::Write as _;
-                let _ = writeln!(header, "{line_prefix}{line}");
+                _ = writeln!(header, "{line_prefix}{line}");
             }
             new_po_file
                 .write_all(header.as_bytes())

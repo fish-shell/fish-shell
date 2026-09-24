@@ -109,7 +109,7 @@ fn make_bundle(language: Language<'static>) -> Bundle {
         Err((_resource, errors)) => {
             let mut error_string = format!("Errors parsing FTL file for {language}:\n");
             for error in errors {
-                let _ = writeln!(error_string, "{error}");
+                _ = writeln!(error_string, "{error}");
             }
             panic!("{error_string}");
         }
@@ -173,7 +173,7 @@ pub fn format_localized(id: &str, args: &FluentArgs) -> LocalizedMessage {
                 bundle.locales[0].language
             );
             for error in errors {
-                let _ = writeln!(error_message, "{error}");
+                _ = writeln!(error_message, "{error}");
             }
             panic!("{error_message}");
         }

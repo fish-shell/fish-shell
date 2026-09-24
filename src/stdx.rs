@@ -14,6 +14,6 @@ mod tests {
             fcntl(&file, FcntlArg::F_GETFD).unwrap() & libc::FD_CLOEXEC,
             libc::FD_CLOEXEC
         );
-        let _ = std::fs::remove_file("test_file_for_fd_cloexec");
+        _ = std::fs::remove_file("test_file_for_fd_cloexec");
     }
 }

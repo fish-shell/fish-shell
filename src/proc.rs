@@ -1630,7 +1630,7 @@ fn process_clean_after_marking(parser: &mut Parser, interactive: bool) -> bool {
     }
 
     if printed {
-        let _ = std::io::stdout().flush();
+        _ = std::io::stdout().flush();
     }
 
     printed

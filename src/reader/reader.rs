@@ -1183,7 +1183,7 @@ pub fn reader_execute_readline_cmd(parser: &mut Parser, ch: CharEvent) {
         data.rls = Some(ReadlineLoopState::new());
     }
     data.save_screen_state();
-    let _ = data.handle_char_event(Some(ch));
+    _ = data.handle_char_event(Some(ch));
 }
 
 pub fn reader_jump(direction: JumpDirection, precision: JumpPrecision, target: char) -> bool {
@@ -2647,13 +2647,13 @@ impl<'a> Reader<'a> {
         // Emit a newline so that the output is on the line after the command.
         // But do not emit a newline if the cursor has wrapped onto a new line all its own - see #6826.
         if !self.screen.cursor_is_wrapped_to_own_line() {
-            let _ = unistd::write(STDOUT_FD, b"\n");
+            _ = unistd::write(STDOUT_FD, b"\n");
         }
 
         // HACK: If stdin isn't the same terminal as stdout, we just moved the cursor.
         // For now, just reset it to the beginning of the line.
         if self.conf.inputfd != STDIN_FILENO {
-            let _ = write_loop(&STDOUT_FILENO, b"\r");
+            _ = write_loop(&STDOUT_FILENO, b"\r");
         }
 
         // Ensure we have no pager contents when we exit.
@@ -4875,7 +4875,7 @@ pub fn set_shell_modes_temporarily(inputfd: RawFd) -> Option<Termios> {
     // It may happen that a command we ran when job control was disabled nevertheless stole the tty
     // from us. In that case when we read from our fd, it will trigger SIGTTIN. So just
     // unconditionally reclaim the tty. See #9181.
-    let _ = tcsetpgrp(unsafe { BorrowedFd::borrow_raw(inputfd) }, getpgrp());
+    _ = tcsetpgrp(unsafe { BorrowedFd::borrow_raw(inputfd) }, getpgrp());
 
     // Get the current terminal modes. These will be restored when the function returns.
     let old_modes = tcgetattr(unsafe { BorrowedFd::borrow_raw(inputfd) }).ok();
@@ -4914,7 +4914,7 @@ fn acquire_tty_or_exit(shell_pgid: NullablePid) {
     {
         let shell_pid = getpid();
         if owner == Ok(shell_pid) {
-            let _ = setpgid(shell_pid, shell_pid);
+            _ = setpgid(shell_pid, shell_pid);
             return;
         }
     }
@@ -4945,7 +4945,7 @@ fn acquire_tty_or_exit(shell_pgid: NullablePid) {
         // of the terminal has gone back to the kernel (i.e. it's not owned) or if it is
         // just an "invalid" pid for all intents and purposes.
         if owner == Ok(NullablePid::from_raw(0)) {
-            let _ = tcsetpgrp(STDIN_FD, shell_pgid);
+            _ = tcsetpgrp(STDIN_FD, shell_pgid);
             // Since we expect the above to work, call `tcgetpgrp()` immediately to
             // avoid a second pass through this loop.
             owner = tcgetpgrp(STDIN_FD);
@@ -5092,7 +5092,7 @@ pub fn reader_write_title(
             return false;
         };
         let mut title_buffer = vec![];
-        let _ = exec_subshell(
+        _ = exec_subshell(
             title_command,
             parser,
             Some(&mut title_buffer),
@@ -5145,7 +5145,7 @@ fn exec_prompt_cmd(parser: &mut Parser, prompt_cmd: &wstr, final_prompt: bool) -
     } else {
         Cow::Borrowed(prompt_cmd)
     };
-    let _ = exec_subshell(&prompt_cmd, parser, Some(&mut output), false);
+    _ = exec_subshell(&prompt_cmd, parser, Some(&mut output), false);
     output
 }
 

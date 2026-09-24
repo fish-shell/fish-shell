@@ -2599,14 +2599,14 @@ impl<'s> Populator<'s> {
     // Return the resulting Node.
     fn allocate_visit<T: NodeMut + Default>(&mut self) -> T {
         let mut result = T::default();
-        let _ = self.visit_mut(&mut result);
+        _ = self.visit_mut(&mut result);
         result
     }
 
     // Like allocate_visit, but returns the value as a Box.
     fn allocate_boxed_visit<T: NodeMut + Default>(&mut self) -> Box<T> {
         let mut result = Box::<T>::default();
-        let _ = self.visit_mut(&mut *result);
+        _ = self.visit_mut(&mut *result);
         result
     }
 

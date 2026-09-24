@@ -1185,7 +1185,7 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
 
     // In doing this test do not allow incomplete strings. Hence the "false" argument.
     let mut errors = Vec::new();
-    let _ = detect_parse_errors(line, Some(&mut errors), false);
+    _ = detect_parse_errors(line, Some(&mut errors), false);
     errors.is_empty()
 }
 

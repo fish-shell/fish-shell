@@ -87,7 +87,7 @@ pub fn wgetcwd() -> WString {
 
 /// Wide character version of readlink().
 pub fn wreadlink(file_name: &wstr) -> Option<WString> {
-    let _ = lwstat(file_name).ok()?;
+    _ = lwstat(file_name).ok()?;
     match fs::read_link(wcs2osstring(file_name)) {
         Ok(target) => Some(osstr2wcstring(target)),
         Err(e) => {

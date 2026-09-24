@@ -845,10 +845,10 @@ fn handle_builtin_output(
 
     // Some historical behavior.
     if !outbuff.is_empty() {
-        let _ = std::io::stdout().flush();
+        _ = std::io::stdout().flush();
     }
     if !errbuff.is_empty() {
-        let _ = std::io::stderr().flush();
+        _ = std::io::stderr().flush();
     }
 
     // Construct and run our background process.
@@ -884,7 +884,7 @@ fn exec_external_command(
 
     // Ensure that stdin is blocking before we hand it off (see issue #176).
     // Note this will also affect stdout and stderr if they refer to the same tty.
-    let _ = make_fd_blocking(STDIN_FILENO);
+    _ = make_fd_blocking(STDIN_FILENO);
 
     let envv = parser.vars().export_array();
 
@@ -928,7 +928,7 @@ fn exec_external_command(
             // In glibc, posix_spawn uses fork() and the pgid group is set on the child side;
             // therefore the parent may not have seen it be set yet.
             // Ensure it gets set. See #4715, also https://github.com/Microsoft/WSL/issues/2997.
-            let _ = execute_setpgid(pid.as_pid_t(), pid.as_pid_t(), true /* is parent */);
+            _ = execute_setpgid(pid.as_pid_t(), pid.as_pid_t(), true /* is parent */);
         }
         return Ok(());
     }

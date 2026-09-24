@@ -362,7 +362,7 @@ mod tests {
     fn test_term16_color_for_rgb() {
         for c in 0..=u8::MAX {
             let color = Color::Rgb(Color24 { r: c, g: c, b: c });
-            let _ = color.to_name_index();
+            _ = color.to_name_index();
         }
     }
 

@@ -321,10 +321,10 @@ impl Screen {
         if is_dumb() {
             let prompt_narrow = wcs2bytes(left_prompt);
 
-            let _ = write_loop(&STDOUT_FILENO, b"\r");
-            let _ = write_loop(&STDOUT_FILENO, &prompt_narrow);
-            let _ = write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_before_suggestion));
-            let _ = write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_after_suggestion));
+            _ = write_loop(&STDOUT_FILENO, b"\r");
+            _ = write_loop(&STDOUT_FILENO, &prompt_narrow);
+            _ = write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_before_suggestion));
+            _ = write_loop(&STDOUT_FILENO, &wcs2bytes(explicit_after_suggestion));
 
             return;
         }
@@ -551,7 +551,7 @@ impl Screen {
         self.need_clear_lines = true;
 
         // This should prevent resetting the cursor position during the next repaint.
-        let _ = write_loop(&STDOUT_FILENO, b"\r");
+        _ = write_loop(&STDOUT_FILENO, b"\r");
         self.actual.cursor.x = 0;
 
         self.save_status();
@@ -671,7 +671,7 @@ impl Screen {
         self.actual_left_prompt = None;
         self.need_clear_lines = true;
 
-        let _ = write_loop(&STDOUT_FILENO, &abandon_line_string(screen_width));
+        _ = write_loop(&STDOUT_FILENO, &abandon_line_string(screen_width));
         self.actual.cursor.x = 0;
 
         self.save_status();
@@ -830,8 +830,8 @@ impl Screen {
     /// Stat stdout and stderr and compare result to previous result in reader_save_status. Repaint
     /// if modification time has changed.
     fn check_status(&mut self) {
-        let _ = std::io::stdout().flush();
-        let _ = std::io::stderr().flush();
+        _ = std::io::stdout().flush();
+        _ = std::io::stderr().flush();
         if !has_working_tty_timestamps() {
             // We can't reliably determine if the terminal has been written to behind our back so we
             // just assume that hasn't happened and hope for the best. This is important for multi-line

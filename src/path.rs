@@ -742,11 +742,11 @@ static CONFIG_DIRECTORY: LazyLock<BaseDirectory> = LazyLock::new(|| {
         let mut path = PathBuf::from(wcs2osstring(&config_dir.path));
         for basename in ["completions", "conf.d", "functions"] {
             path.push(basename);
-            let _ = create_dir(&path, 0o700, false);
+            _ = create_dir(&path, 0o700, false);
             path.pop();
         }
         path.push("config.fish");
-        let _ = std::fs::write(
+        _ = std::fs::write(
             path,
             br#"
 if status is-interactive

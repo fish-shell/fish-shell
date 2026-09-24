@@ -136,7 +136,7 @@ fn lowercase_impl<ToLowercase: Iterator<Item = char>>(
                 current: chars.next().map_or_else(
                     || {
                         let mut empty = to_lowercase('a');
-                        let _ = empty.next();
+                        _ = empty.next();
                         debug_assert!(empty.next().is_none());
                         empty
                     },

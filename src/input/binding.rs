@@ -889,7 +889,7 @@ impl<'a> Reader<'a> {
         }
 
         flog!(reader, "no generic found, ignoring char...");
-        let _ = peeker.next();
+        _ = peeker.next();
         peeker.consume();
     }
 

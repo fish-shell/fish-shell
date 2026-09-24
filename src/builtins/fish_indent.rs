@@ -1168,7 +1168,7 @@ fn do_indent(
                 if output_wtext != src {
                     match fs::File::create(OsStr::from_bytes(&wcs2bytes(output_location))) {
                         Ok(mut file) => {
-                            let _ = file.write_all(&wcs2bytes(&output_wtext));
+                            _ = file.write_all(&wcs2bytes(&output_wtext));
                         }
                         Err(err) => {
                             err_fmt!(

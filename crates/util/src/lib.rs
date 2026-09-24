@@ -249,14 +249,14 @@ pub fn perror(s: &str) {
     let e = Errno::last_raw();
     let mut stderr = std::io::stderr().lock();
     if !s.is_empty() {
-        let _ = write!(stderr, "{s}: ");
+        _ = write!(stderr, "{s}: ");
     }
     let slice = unsafe {
         let msg = libc::strerror(e);
         CStr::from_ptr(msg).to_bytes()
     };
-    let _ = stderr.write_all(slice);
-    let _ = stderr.write_all(b"\n");
+    _ = stderr.write_all(slice);
+    _ = stderr.write_all(b"\n");
 }
 
 #[cfg(test)]

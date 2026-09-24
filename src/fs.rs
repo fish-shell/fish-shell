@@ -484,7 +484,7 @@ where
             .as_ref()
             .is_ok_and(|(_file_id, potential_update)| !potential_update.do_save)
     {
-        let _ = wunlink(&tmp_name);
+        _ = wunlink(&tmp_name);
     }
     result
 }

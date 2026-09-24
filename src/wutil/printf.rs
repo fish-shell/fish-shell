@@ -15,7 +15,7 @@ macro_rules! sprintf {
     //
     (=> $target:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {
         {
-            let _ = fish_printf::sprintf!(=> $target, $fmt, $($arg),*);
+            _ = fish_printf::sprintf!(=> $target, $fmt, $($arg),*);
         }
     };
 }

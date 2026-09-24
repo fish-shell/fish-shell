@@ -231,7 +231,7 @@ pub fn signal_set_handlers(interactive: bool) {
         // The workaround is to send ourselves a SIGCHLD signal now, to force the allocation to happen.
         // As no child is associated with this signal, it is OK if it is dropped, so long as the
         // allocation happens.
-        let _ = kill(getpid(), nix::sys::signal::Signal::SIGCHLD);
+        _ = kill(getpid(), nix::sys::signal::Signal::SIGCHLD);
     }
 }
 

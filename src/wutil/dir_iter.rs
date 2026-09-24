@@ -195,7 +195,7 @@ impl DirFd {
 impl Drop for DirFd {
     fn drop(&mut self) {
         unsafe {
-            let _ = libc::closedir(self.dir());
+            _ = libc::closedir(self.dir());
         }
     }
 }

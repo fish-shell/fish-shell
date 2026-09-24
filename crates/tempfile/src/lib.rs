@@ -29,7 +29,7 @@ impl TempFile {
 
 impl Drop for TempFile {
     fn drop(&mut self) {
-        let _ = std::fs::remove_file(&self.path);
+        _ = std::fs::remove_file(&self.path);
     }
 }
 
@@ -46,7 +46,7 @@ impl TempDir {
 
 impl Drop for TempDir {
     fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.path);
+        _ = std::fs::remove_dir_all(&self.path);
     }
 }
 
@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn create_tempfile() {
-        let _ = super::new_file().unwrap();
+        _ = super::new_file().unwrap();
     }
 
     #[test]
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn create_tempdir() {
-        let _ = super::new_dir().unwrap();
+        _ = super::new_dir().unwrap();
     }
 
     #[test]

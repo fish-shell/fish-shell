@@ -65,7 +65,7 @@ pub fn slice_length(input: &wstr) -> Option<usize> {
             }
             '\\' => {
                 // Escape sequence, skip the next char
-                let _ = chars.next();
+                _ = chars.next();
             }
             _ => {}
         }

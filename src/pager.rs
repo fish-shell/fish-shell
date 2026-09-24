@@ -340,7 +340,7 @@ impl Pager {
             false,
             search_field,
         );
-        let _ = search_field_remaining;
+        _ = search_field_remaining;
         true
     }
 
@@ -638,7 +638,7 @@ impl Pager {
                 false,
                 &mut line_data,
             );
-            let _ = desc_remaining;
+            _ = desc_remaining;
         } else {
             // No description, or it won't fit. Just add spaces.
             print_max(

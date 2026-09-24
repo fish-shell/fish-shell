@@ -1300,7 +1300,7 @@ fn user_presentable_path(path: &wstr, vars: &dyn Environment) -> WString {
 /// Print profiling information to the specified stream.
 fn print_profile(items: &[ProfileItem], out: &mut File) {
     let col_width = 10;
-    let _ = out.write_all(
+    _ = out.write_all(
         format!(
             "{:^col_width$} {:^col_width$} Command\n",
             "Time (μs)", "Sum (μs)",
@@ -1334,7 +1334,7 @@ fn print_profile(items: &[ProfileItem], out: &mut File) {
         }
 
         let level = item.level.unsigned_abs().saturating_add(1);
-        let _ = out.write_all(
+        _ = out.write_all(
             format!(
                 "{:>col_width$} {:>col_width$} {:->level$} ",
                 self_time, total_time, '>'
@@ -1346,8 +1346,8 @@ fn print_profile(items: &[ProfileItem], out: &mut File) {
             L!("\n"),
             &(WString::from("\n") + &wstr::repeat(L!(" "), indentation_level)[..]),
         );
-        let _ = out.write_all(&wcs2bytes(&indented_cmd));
-        let _ = out.write_all(b"\n");
+        _ = out.write_all(&wcs2bytes(&indented_cmd));
+        _ = out.write_all(b"\n");
     }
 }
 
@@ -2443,7 +2443,7 @@ mod tests {
                 decorated_statement = Some(node);
             } else if node.as_token().map(|t| t.token_type()) == Some(ParseTokenType::End) {
                 // should panic as the decorated_statement is not on the stack.
-                let _ = traversal.parent(decorated_statement.unwrap());
+                _ = traversal.parent(decorated_statement.unwrap());
             }
         }
     }

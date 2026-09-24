@@ -1206,7 +1206,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         );
 
         let mut list = vec![];
-        let _ = exec_subshell(
+        _ = exec_subshell(
             &lookup_cmd,
             parser,
             Some(&mut list),
@@ -1294,7 +1294,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
         // We don't really care if this succeeds or fails. If it succeeds this->completions will be
         // updated with choices for the user.
-        let _ = {
+        _ = {
             // Append all matching directories
             let expand_flags = ExpandFlags {
                 path_filter: Some(PathFilter::Directory {
@@ -1844,7 +1844,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             comp.prepend_token_prefix(prefix_with_sep);
             comp.r#match.from_separator = true;
         }
-        let _ = self.completions.extend(local_completions);
+        _ = self.completions.extend(local_completions);
     }
 
     /// Complete the specified string as an environment variable.
@@ -1902,7 +1902,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
             // Append matching environment variables
             // TODO: need to propagate overflow here.
-            let _ = self
+            _ = self
                 .completions
                 .add(Completion::new(comp, desc, r#match, flags));
 
@@ -2032,7 +2032,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
                     if r#match.requires_full_replacement() {
                         flags.wants_escaping = WantsEscaping::No;
                     }
-                    let _ = self.completions.add(Completion::new(
+                    _ = self.completions.add(Completion::new(
                         if r#match.requires_full_replacement() {
                             sprintf!("~%s", &pw_name)
                         } else {
@@ -2896,7 +2896,7 @@ mod tests {
         assert_eq!(completions[1].completion, L!("$Foo1"));
         assert_eq!(completions[2].completion, L!("$gamma1"));
 
-        let _ = std::fs::remove_dir_all("test/complete_test");
+        _ = std::fs::remove_dir_all("test/complete_test");
         std::fs::create_dir_all("test/complete_test").unwrap();
         std::fs::write("test/complete_test/has space", []).unwrap();
         std::fs::write("test/complete_test/bracket[abc]", []).unwrap();
@@ -3388,7 +3388,7 @@ mod tests {
         #[cfg(not(cygwin))]
         {
             std::fs::create_dir_all("test/autosuggest_test/has_loop/loopy").unwrap();
-            let _ = std::fs::remove_file("test/autosuggest_test/has_loop/loopy/loop");
+            _ = std::fs::remove_file("test/autosuggest_test/has_loop/loopy/loop");
             std::os::unix::fs::symlink("../loopy", "test/autosuggest_test/has_loop/loopy/loop")
                 .unwrap();
         }

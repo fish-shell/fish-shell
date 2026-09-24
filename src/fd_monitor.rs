@@ -225,7 +225,7 @@ const _: () = {
     // It is sufficient to declare the generic function pointers; calling them too would require
     // using `const fn` with Send/Sync constraints which wasn't stabilized until rustc 1.61.0
     fn assert_sync<T: Sync>() {}
-    let _ = assert_sync::<FdMonitor>;
+    _ = assert_sync::<FdMonitor>;
 };
 
 /// Data shared between the `FdMonitor` instance and its associated `BackgroundFdMonitor`.

@@ -214,7 +214,7 @@ pub fn flog_impl(s: &[u8]) {
     if fd < 0 {
         return;
     }
-    let _ = unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, s);
+    _ = unistd::write(unsafe { BorrowedFd::borrow_raw(fd) }, s);
 }
 
 /// The entry point for flogging.

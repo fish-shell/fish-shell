@@ -52,7 +52,7 @@ impl Attr {
 impl Drop for Attr {
     fn drop(&mut self) {
         unsafe {
-            let _ = libc::posix_spawnattr_destroy(&mut self.0);
+            _ = libc::posix_spawnattr_destroy(&mut self.0);
         }
     }
 }
@@ -87,7 +87,7 @@ impl FileActions {
 impl Drop for FileActions {
     fn drop(&mut self) {
         unsafe {
-            let _ = libc::posix_spawn_file_actions_destroy(&mut self.0);
+            _ = libc::posix_spawn_file_actions_destroy(&mut self.0);
         }
     }
 }

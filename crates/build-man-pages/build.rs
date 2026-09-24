@@ -6,7 +6,7 @@ fn main() {
     let sec1_dir = fish_doc_dir().join("man").join("man1");
     // Running `cargo clippy` on a clean build directory panics, because when rust-embed
     // tries to embed a directory which does not exist it will panic.
-    let _ = std::fs::create_dir_all(&sec1_dir);
+    _ = std::fs::create_dir_all(&sec1_dir);
     if !cfg!(clippy) {
         build_man(&sec1_dir);
     }

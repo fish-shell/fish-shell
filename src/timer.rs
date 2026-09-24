@@ -147,8 +147,8 @@ impl Drop for PrintElapsedOnDrop {
         let mut stderr = std::io::stderr().lock();
         // There is no bubbling up of errors in a Drop implementation, and it's absolutely forbidden
         // to panic.
-        let _ = stderr.write_all(output.as_bytes());
-        let _ = stderr.write_all(b"\n");
+        _ = stderr.write_all(output.as_bytes());
+        _ = stderr.write_all(b"\n");
     }
 }
 

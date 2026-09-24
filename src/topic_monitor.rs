@@ -146,7 +146,7 @@ impl BinarySemaphore {
         // we'll never receive SIGCHLD and so deadlock. So if tsan is enabled, we mark our fd as
         // non-blocking (so reads will never block) and use select() to poll it.
         if cfg!(feature = "tsan") {
-            let _ = make_fd_nonblocking(pipes.read.as_raw_fd());
+            _ = make_fd_nonblocking(pipes.read.as_raw_fd());
         }
 
         Self::Pipes(pipes)
@@ -200,7 +200,7 @@ impl BinarySemaphore {
                     // call until data is available (that is, fish would use 100% cpu while waiting for
                     // processes). This call prevents that.
                     if cfg!(feature = "tsan") {
-                        let _ = FdReadableSet::is_fd_readable(fd, Timeout::Forever);
+                        _ = FdReadableSet::is_fd_readable(fd, Timeout::Forever);
                     }
                     let mut ignored: u8 = 0;
                     match unistd::read(&pipes.read, std::slice::from_mut(&mut ignored)) {

@@ -131,7 +131,7 @@ pub fn fg(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
     // Note if tty transfer fails, we still try running the job.
     parser.job_promote_at(job_pos);
     let mut handoff = TtyHandoff::new(reader_save_screen_state);
-    let _ = make_fd_blocking(STDIN_FILENO);
+    _ = make_fd_blocking(STDIN_FILENO);
     {
         let job_group = job.group();
         job_group.set_is_foreground(true);

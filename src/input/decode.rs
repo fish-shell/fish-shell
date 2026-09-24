@@ -353,15 +353,15 @@ pub(crate) trait InputEventQueuerExt: InputEventQueuer {
             b't' => {
                 flog!(reader, "mouse event");
                 // VT200 button released in mouse highlighting mode at valid text location. 5 chars.
-                let _ = next_char(self);
-                let _ = next_char(self);
+                _ = next_char(self);
+                _ = next_char(self);
                 return None;
             }
             b'T' => {
                 flog!(reader, "mouse event");
                 // VT200 button released in mouse highlighting mode past end-of-line. 9 characters.
                 for _ in 0..6 {
-                    let _ = next_char(self);
+                    _ = next_char(self);
                 }
                 return None;
             }

@@ -206,7 +206,7 @@ pub fn echo(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) ->
             // that was consumed by the `while` loop).
             // TODO: `Iterator::advance_by()`: https://github.com/rust-lang/rust/issues/77404
             for _ in 0..consumed {
-                let _ = chars.next();
+                _ = chars.next();
             }
 
             out.push(escaped);

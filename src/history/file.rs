@@ -95,7 +95,7 @@ impl DerefMut for MmapRegion {
 
 impl Drop for MmapRegion {
     fn drop(&mut self) {
-        let _ = unsafe { nix::sys::mman::munmap(self.ptr.cast(), self.len.get()) };
+        _ = unsafe { nix::sys::mman::munmap(self.ptr.cast(), self.len.get()) };
     }
 }
 

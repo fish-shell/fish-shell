@@ -31,7 +31,7 @@ if test -z "$CI" || [ "$(git -C "$workspace_root" tag | wc -l)" -gt 1 ]; then {
     if $add_stats; then {
         ExtractCommitters() {
             git log "$1" --format="%aN"
-            trailers='Co-authored-by|Signed-off-by'
+            trailers='Co-authored-by|Signed-off-by|Helped-by'
             git log "$1" --format="%b" | sed -En "/^($trailers):\s*/{s///;s/\s*<.*//;p}"
         }
         ListCommitters() {

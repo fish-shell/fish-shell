@@ -30,8 +30,6 @@ use nix::unistd;
 use std::os::fd::AsRawFd as _;
 use std::sync::atomic::{AtomicPtr, AtomicU8, Ordering};
 use std::sync::{Condvar, Mutex, MutexGuard};
-#[cfg(target_os = "linux")]
-use std::{cell::UnsafeCell, pin::Pin};
 
 /// The list of topics which may be observed.
 #[repr(u8)]
@@ -113,13 +111,69 @@ impl GenerationsList {
 /// A simple binary semaphore.
 /// On systems that do not support unnamed semaphores (macOS in particular) this is built on top of
 /// a self-pipe. Note that post() must be async-signal safe.
-pub enum BinarySemaphore {
+enum BinarySemaphore {
     /// Initialized semaphore.
-    /// This is Box'd so it has a stable address.
     #[cfg(target_os = "linux")]
-    Semaphore(Pin<Box<UnsafeCell<libc::sem_t>>>),
+    Semaphore(Semaphore),
     /// Pipes used to emulate a semaphore, if not initialized.
     Pipes(AutoClosePipes),
+}
+
+#[cfg(target_os = "linux")]
+use unnamed_semaphore::Semaphore;
+#[cfg(target_os = "linux")]
+mod unnamed_semaphore {
+    use super::die;
+    use nix::errno::Errno;
+    use std::{cell::UnsafeCell, pin::Pin};
+
+    /// This is Box'd so it has a stable address.
+    pub(super) struct Semaphore(Pin<Box<UnsafeCell<libc::sem_t>>>);
+
+    impl Semaphore {
+        pub(super) fn new() -> Option<Self> {
+            use std::mem::MaybeUninit;
+            let mut sem: Box<MaybeUninit<UnsafeCell<libc::sem_t>>> = Box::new_uninit();
+            (unsafe { libc::sem_init(sem.as_mut_ptr().cast(), 0, 0) } == 0).then(|| {
+                // SAFETY: `sem_init` succeeded.
+                let boxed = unsafe { sem.assume_init() };
+                Self(Box::into_pin(boxed))
+            })
+        }
+
+        pub(super) fn post(&self) {
+            // SAFETY: `sem_init` succeeded and `sem` is pinned.
+            let res = unsafe { libc::sem_post(self.0.get()) };
+            // sem_post is non-interruptible.
+            if res < 0 {
+                die("sem_post");
+            }
+        }
+
+        pub(super) fn wait(&self) {
+            loop {
+                // SAFETY: `sem_init` succeeded and `sem` is pinned.
+                match unsafe { libc::sem_wait(self.0.get()) } {
+                    0.. => break,
+                    _ if Errno::last() == Errno::EINTR => continue,
+                    // Other errors here are very unexpected.
+                    _ => die("sem_wait"),
+                }
+            }
+        }
+    }
+
+    impl Drop for Semaphore {
+        fn drop(&mut self) {
+            // SAFETY: `sem_init` succeeded and `sem` is pinned.
+            _ = unsafe { libc::sem_destroy(self.0.get()) };
+        }
+    }
+}
+
+fn die(msg: &str) {
+    perror(msg);
+    panic!("die");
 }
 
 impl BinarySemaphore {
@@ -128,14 +182,8 @@ impl BinarySemaphore {
         // On BSD sem_init uses a file descriptor under the hood which doesn't get CLOEXEC (see #7304).
         // So use fast semaphores on Linux only.
         #[cfg(target_os = "linux")]
-        {
-            use std::mem::MaybeUninit;
-            let mut sem: Box<MaybeUninit<UnsafeCell<libc::sem_t>>> = Box::new_uninit();
-            if unsafe { libc::sem_init(sem.as_mut_ptr().cast(), 0, 0) } == 0 {
-                // SAFETY: `sem_init` succeeded.
-                let boxed = unsafe { sem.assume_init() };
-                return Self::Semaphore(Box::into_pin(boxed));
-            }
+        if let Some(sem) = Semaphore::new() {
+            return Self::Semaphore(sem);
         }
 
         let pipes = fds::make_autoclose_pipes().expect("Failed to make pubsub pipes");
@@ -157,20 +205,13 @@ impl BinarySemaphore {
         // Beware, we are in a signal handler.
         match self {
             #[cfg(target_os = "linux")]
-            Self::Semaphore(sem) => {
-                // SAFETY: `sem_init` succeeded and `sem` is pinned.
-                let res = unsafe { libc::sem_post(sem.get()) };
-                // sem_post is non-interruptible.
-                if res < 0 {
-                    self.die("sem_post");
-                }
-            }
+            Self::Semaphore(sem) => sem.post(),
             Self::Pipes(pipes) => {
                 // Write exactly one byte.
                 loop {
                     match unistd::write(&pipes.write, &[0]) {
                         Err(Errno::EINTR) => continue,
-                        Err(_) => self.die("write"),
+                        Err(_) => die("write"),
                         Ok(_) => break,
                     }
                 }
@@ -183,17 +224,7 @@ impl BinarySemaphore {
     pub fn wait(&self) {
         match self {
             #[cfg(target_os = "linux")]
-            Self::Semaphore(sem) => {
-                loop {
-                    // SAFETY: `sem_init` succeeded and `sem` is pinned.
-                    match unsafe { libc::sem_wait(sem.get()) } {
-                        0.. => break,
-                        _ if Errno::last() == Errno::EINTR => continue,
-                        // Other errors here are very unexpected.
-                        _ => self.die("sem_wait"),
-                    }
-                }
-            }
+            Self::Semaphore(sem) => sem.wait(),
             Self::Pipes(pipes) => {
                 let fd = pipes.read.as_raw_fd();
                 // We must read exactly one byte.
@@ -210,25 +241,10 @@ impl BinarySemaphore {
                         Ok(_) => continue,
                         // EAGAIN should only be possible if TSAN workarounds have been applied
                         Err(Errno::EINTR) | Err(Errno::EAGAIN) => continue,
-                        Err(_) => self.die("read"),
+                        Err(_) => die("read"),
                     }
                 }
             }
-        }
-    }
-
-    pub fn die(&self, msg: &str) {
-        perror(msg);
-        panic!("die");
-    }
-}
-
-#[cfg(target_os = "linux")]
-impl Drop for BinarySemaphore {
-    fn drop(&mut self) {
-        if let Self::Semaphore(sem) = self {
-            // SAFETY: `sem_init` succeeded and `sem` is pinned.
-            _ = unsafe { libc::sem_destroy(sem.get()) };
         }
     }
 }

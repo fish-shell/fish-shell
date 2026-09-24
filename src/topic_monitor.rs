@@ -27,8 +27,6 @@ use fish_util::perror;
 use fish_widestring::WString;
 use nix::errno::Errno;
 use nix::unistd;
-#[cfg(target_os = "linux")]
-use std::mem::MaybeUninit;
 use std::os::fd::AsRawFd as _;
 use std::sync::atomic::{AtomicPtr, AtomicU8, Ordering};
 use std::sync::{Condvar, Mutex, MutexGuard};
@@ -130,12 +128,14 @@ impl BinarySemaphore {
         // On BSD sem_init uses a file descriptor under the hood which doesn't get CLOEXEC (see #7304).
         // So use fast semaphores on Linux only.
         #[cfg(target_os = "linux")]
-        if let Some(sem) = {
-            let mut sem = MaybeUninit::uninit();
-            let res = unsafe { libc::sem_init(sem.as_mut_ptr(), 0, 0) };
-            (res == 0).then_some(unsafe { sem.assume_init() })
-        } {
-            return Self::Semaphore(Box::pin(UnsafeCell::new(sem)));
+        {
+            use std::mem::MaybeUninit;
+            let mut sem: Box<MaybeUninit<UnsafeCell<libc::sem_t>>> = Box::new_uninit();
+            if unsafe { libc::sem_init(sem.as_mut_ptr().cast(), 0, 0) } == 0 {
+                // SAFETY: `sem_init` succeeded.
+                let boxed = unsafe { sem.assume_init() };
+                return Self::Semaphore(Box::into_pin(boxed));
+            }
         }
 
         let pipes = fds::make_autoclose_pipes().expect("Failed to make pubsub pipes");
@@ -158,6 +158,7 @@ impl BinarySemaphore {
         match self {
             #[cfg(target_os = "linux")]
             Self::Semaphore(sem) => {
+                // SAFETY: `sem_init` succeeded and `sem` is pinned.
                 let res = unsafe { libc::sem_post(sem.get()) };
                 // sem_post is non-interruptible.
                 if res < 0 {
@@ -184,6 +185,7 @@ impl BinarySemaphore {
             #[cfg(target_os = "linux")]
             Self::Semaphore(sem) => {
                 loop {
+                    // SAFETY: `sem_init` succeeded and `sem` is pinned.
                     match unsafe { libc::sem_wait(sem.get()) } {
                         0.. => break,
                         _ if Errno::last() == Errno::EINTR => continue,
@@ -225,6 +227,7 @@ impl BinarySemaphore {
 impl Drop for BinarySemaphore {
     fn drop(&mut self) {
         if let Self::Semaphore(sem) = self {
+            // SAFETY: `sem_init` succeeded and `sem` is pinned.
             _ = unsafe { libc::sem_destroy(sem.get()) };
         }
     }

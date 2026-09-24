@@ -2,7 +2,7 @@
 
 use crate::{
     ast::{
-        self, BlockStatementHeader, Keyword as _, Leaf as _, Node, Statement, Token as _,
+        self, BlockStatementHeader, Keyword as _, Leaf as _, Node as _, Statement, Token as _,
         unescape_keyword,
     },
     builtins::{
@@ -127,7 +127,7 @@ impl ExecutionContext {
         }
     }
 
-    pub fn pstree(&self) -> &ParsedSourceRef {
+    fn pstree(&self) -> &ParsedSourceRef {
         &self.pstree
     }
 
@@ -135,22 +135,9 @@ impl ExecutionContext {
         self.cancel_signal
     }
 
-    pub fn eval_node(
-        &mut self,
-        ctx: &mut OperationContext<'_>,
-        node: &dyn Node,
-        associated_block: Option<BlockId>,
-    ) -> EndExecutionReason {
-        match node.kind() {
-            ast::Kind::Statement(node) => self.eval_statement(ctx, node, associated_block),
-            ast::Kind::JobList(node) => self.eval_job_list(ctx, node, associated_block.unwrap()),
-            _ => unreachable!(),
-        }
-    }
-
     /// Start executing at the given node. Returns 0 if there was no error, 1 if there was an
     /// error.
-    fn eval_statement(
+    pub(crate) fn eval_statement(
         &mut self,
         ctx: &mut OperationContext<'_>,
         statement: &ast::Statement,
@@ -168,7 +155,7 @@ impl ExecutionContext {
         }
     }
 
-    fn eval_job_list(
+    pub(crate) fn eval_job_list(
         &mut self,
         ctx: &mut OperationContext<'_>,
         job_list: &ast::JobList,

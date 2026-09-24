@@ -689,8 +689,7 @@ impl Parser {
         op_ctx.cancel_checker = cancel_checker;
 
         // Create a new execution context.
-        let mut execution_context =
-            ExecutionContext::new(node.parsed_source_ref(), block_io.clone());
+        let mut execution_ctx = ExecutionContext::new(node.parsed_source_ref(), block_io.clone());
 
         // Check the exec count so we know if anything got executed.
         let exec_counts = |ctx: &mut OperationContext<'_>| {
@@ -698,7 +697,14 @@ impl Parser {
             (ld.exec_count, ld.status_count)
         };
         let (prev_exec_count, prev_status_count) = exec_counts(op_ctx);
-        let reason = execution_context.eval_node(op_ctx, &**node, Some(scope_block));
+        let reason = {
+            use ast::Kind::{JobList, Statement};
+            match node.kind() {
+                Statement(node) => execution_ctx.eval_statement(op_ctx, node, Some(scope_block)),
+                JobList(node) => execution_ctx.eval_job_list(op_ctx, node, scope_block),
+                _ => unreachable!(),
+            }
+        };
         let (new_exec_count, new_status_count) = exec_counts(op_ctx);
 
         drop(restore_current_node);
@@ -709,7 +715,7 @@ impl Parser {
         let sig = signal_check_cancel();
         if sig != 0 {
             EvalRes::new(ProcStatus::from_signal(RawSignal::new(sig)))
-        } else if let Some(sig) = execution_context.cancel_signal() {
+        } else if let Some(sig) = execution_ctx.cancel_signal() {
             EvalRes::new(ProcStatus::from_signal(sig))
         } else {
             let status = ProcStatus::from_exit_code(self.last_status());

@@ -23,6 +23,7 @@ set. This is the real power of topics: you can wait for a sigchld signal OR a th
 use crate::fd_readable_set::{FdReadableSet, Timeout};
 use crate::fds::{self, AutoClosePipes, make_fd_nonblocking};
 use crate::flog::{FloggableDebug, flog};
+use fish_common::assert_sync;
 use fish_util::perror;
 use fish_widestring::WString;
 use nix::errno::Errno;
@@ -169,6 +170,10 @@ mod unnamed_semaphore {
             _ = unsafe { libc::sem_destroy(self.0.get()) };
         }
     }
+
+    // SAFETY: The sem_t is never moved because it's pinned. All of sem_post,
+    // sem_wait, sem_destroy are MT-Safe.
+    unsafe impl Sync for Semaphore {}
 }
 
 fn die(msg: &str) {
@@ -312,9 +317,7 @@ pub struct TopicMonitor {
     sema_: BinarySemaphore,
 }
 
-// safety: this is only needed for tests
-#[cfg(test)]
-unsafe impl Sync for TopicMonitor {}
+const _: () = assert_sync::<TopicMonitor>();
 
 /// The principal topic monitor. This will be accessed from a signal handler.
 static PRINCIPAL: AtomicPtr<TopicMonitor> = AtomicPtr::new(std::ptr::null_mut());

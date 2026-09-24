@@ -49,7 +49,7 @@ libc = "0.2.183"
 # disabling default features uses the stdlib instead, but it doubles the time to rewrite the history
 # files as of 22 April 2024.
 lru = "0.18.0"
-nix = { version = "0.31.1", default-features = false, features = [
+nix = { git = "https://github.com/nix-rust/nix", rev = "90c3b73392e221425b29a0aa6bf41364b9e164c4", default-features = false, features = [
   "event",
   "fs",
   "hostname",

@@ -3,7 +3,6 @@ use crate::prelude::*;
 use crate::proc::{JobGroupRef, Pid};
 use crate::signal::RawSignal;
 use nix::sys::termios::Termios;
-use std::cell::RefCell;
 use std::num::NonZeroU32;
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
@@ -60,7 +59,7 @@ impl<'a> fish_printf::ToArg<'a> for MaybeJobId {
 pub struct JobGroup {
     /// If set, the saved terminal modes of this job. This needs to be saved so that we can restore
     /// the terminal to the same state when resuming a stopped job.
-    pub tmodes: RefCell<Option<Termios>>,
+    pub tmodes: Mutex<Option<Termios>>,
     /// Whether job control is enabled in this `JobGroup` or not.
     ///
     /// If this is set, then the first process in the root job must be external, as it will become
@@ -83,10 +82,6 @@ pub struct JobGroup {
     /// Not using an `Option<Signal>` to be able to atomically load/store to this field.
     signal: AtomicI32,
 }
-
-// safety: all fields without interior mutabillity are only written to once
-unsafe impl Send for JobGroup {}
-unsafe impl Sync for JobGroup {}
 
 impl JobGroup {
     /// Whether this job wants job control.
@@ -216,7 +211,7 @@ impl JobGroup {
             job_control,
             wants_term,
             command,
-            tmodes: RefCell::default(),
+            tmodes: Mutex::default(),
             signal: 0.into(),
             is_foreground: RelaxedAtomicBool::new(false),
             pgid: OnceLock::new(),

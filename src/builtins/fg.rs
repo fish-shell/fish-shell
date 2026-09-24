@@ -138,7 +138,7 @@ pub fn fg(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) -> B
         if job.entitled_to_terminal() {
             handoff.disable_tty_protocols();
         }
-        let tmodes = job_group.tmodes.borrow();
+        let tmodes = job_group.tmodes.lock().unwrap();
         if job_group.wants_terminal() && tmodes.is_some() {
             let tmodes = tmodes.as_ref().unwrap();
             if tcsetattr(STDIN_FD, termios::SetArg::TCSADRAIN, tmodes).is_err() {

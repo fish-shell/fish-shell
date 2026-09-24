@@ -412,7 +412,7 @@ impl TtyHandoff {
         };
         match tcgetattr(STDIN_FD) {
             Ok(modes) => {
-                owner.tmodes.replace(Some(modes));
+                *owner.tmodes.lock().unwrap() = Some(modes);
             }
             Err(err) => {
                 if err != nix::Error::ENOTTY {

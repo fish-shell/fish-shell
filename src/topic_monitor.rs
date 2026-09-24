@@ -30,7 +30,7 @@ use nix::unistd;
 #[cfg(target_os = "linux")]
 use std::mem::MaybeUninit;
 use std::os::fd::AsRawFd as _;
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::atomic::{AtomicPtr, AtomicU8, Ordering};
 use std::sync::{Condvar, Mutex, MutexGuard};
 #[cfg(target_os = "linux")]
 use std::{cell::UnsafeCell, pin::Pin};
@@ -297,23 +297,10 @@ pub struct TopicMonitor {
 #[cfg(test)]
 unsafe impl Sync for TopicMonitor {}
 
-/// The principal topic monitor.
-/// Do not attempt to move this into a lazy_static, it must be accessed from a signal handler.
-static mut PRINCIPAL: *const TopicMonitor = std::ptr::null();
+/// The principal topic monitor. This will be accessed from a signal handler.
+static PRINCIPAL: AtomicPtr<TopicMonitor> = AtomicPtr::new(std::ptr::null_mut());
 
 impl TopicMonitor {
-    /// Initialize the principal monitor, and return it.
-    /// This should be called only on the main thread.
-    pub fn initialize() -> &'static Self {
-        unsafe {
-            if PRINCIPAL.is_null() {
-                // We simply leak.
-                PRINCIPAL = Box::into_raw(Box::default());
-            }
-            &*PRINCIPAL
-        }
-    }
-
     pub fn post(&self, topic: Topic) {
         // Beware, we may be in a signal handler!
         // Atomically update the pending topics.
@@ -577,18 +564,27 @@ fn bump_gen(mine: &mut Generation, theirs: Generation) -> bool {
     }
 }
 
+/// Initialize the principal monitor.
+/// Call before installing signal handlers that use the monitor.
 pub fn init() {
-    TopicMonitor::initialize();
+    PRINCIPAL
+        .compare_exchange(
+            std::ptr::null_mut(),
+            Box::into_raw(Box::default()),
+            Ordering::Release,
+            Ordering::Relaxed,
+        )
+        .unwrap();
 }
 
 pub fn principal() -> &'static TopicMonitor {
-    unsafe {
-        assert!(
-            !PRINCIPAL.is_null(),
-            "Principal topic monitor not initialized"
-        );
-        &*PRINCIPAL
-    }
+    let principal = PRINCIPAL.load(Ordering::Acquire);
+    assert!(
+        !principal.is_null(),
+        "Principal topic monitor not initialized"
+    );
+    // SAFETY: This has been initialized with release ordering.
+    unsafe { &*principal }
 }
 
 #[cfg(test)]

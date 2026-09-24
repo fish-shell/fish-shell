@@ -81735,6 +81735,9 @@ msgstr ""
 msgid "name to show in web pages (default: working directory)"
 msgstr ""
 
+msgid "natural sort of (version) numbers within text"
+msgstr ""
+
 msgid "navigation URL path"
 msgstr ""
 

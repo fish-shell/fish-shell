@@ -158,7 +158,8 @@ impl ParsedSource {
 
     // Return the top NodeRef for the parse tree, which is of type JobList.
     pub fn top_job_list(self: &Arc<Self>) -> NodeRef<JobList> {
-        NodeRef::new(Arc::clone(self), self.ast.top())
+        // SAFETY: The top node is owned by this parsed source.
+        unsafe { NodeRef::new(Arc::clone(self), self.ast.top()) }
     }
 }
 
@@ -175,7 +176,9 @@ pub struct NodeRef<NodeType: Node> {
 }
 
 impl<NodeType: Node> NodeRef<NodeType> {
-    pub fn new(parsed_source: ParsedSourceRef, node: *const NodeType) -> Self {
+    /// # Safety
+    /// `node` must reference a node owned by `parsed_source`.
+    pub unsafe fn new(parsed_source: ParsedSourceRef, node: &NodeType) -> Self {
         NodeRef {
             parsed_source: Pin::new(parsed_source),
             node,

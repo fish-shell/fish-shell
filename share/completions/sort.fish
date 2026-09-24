@@ -18,6 +18,7 @@ complete -c sort -s S -l buffer-size -r -d "Set memory buffer size"
 complete -c sort -s t -l field-separator -d "Field separator"
 complete -c sort -s T -l temporary-directory -r -d "Set temporary directory"
 complete -c sort -s u -l unique -d "Output only first of equal lines"
+complete -c sort -s V -l version-sort 'natural sort of (version) numbers within text'
 complete -c sort -s z -l zero-terminated -d "Lines end with 0 byte"
 complete -c sort -l help -d "Display help and exit"
 complete -c sort -l version -d "Display version and exit"

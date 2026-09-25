@@ -406,32 +406,31 @@ impl EnvUniversal {
     ) -> Option<PotentialUpdate<UniversalReadUpdate>> {
         if current_file_id == self.last_read_file_id {
             flog!(uvar_file, "universal log sync elided based on fstat()");
-            None
-        } else {
-            // Read a variables table from the file.
-            let mut new_vars = VarTable::new();
-            let format = Self::read_message_internal(file, &mut new_vars);
-
-            // Hacky: if the read format is in the future, avoid overwriting the file: never try to
-            // save.
-            let do_save = format != UvarFormat::Future;
-
-            // Announce changes and update our exports generation.
-            let (export_generation_increment, callbacks) =
-                self.generate_callbacks_and_update_exports(&new_vars);
-
-            // Acquire the new variables.
-            self.acquire_variables(&mut new_vars);
-            Some(PotentialUpdate {
-                do_save,
-                data: UniversalReadUpdate {
-                    export_generation_increment,
-                    new_vars,
-                    callbacks,
-                    ok_to_save: do_save,
-                },
-            })
+            return None;
         }
+        // Read a variables table from the file.
+        let mut new_vars = VarTable::new();
+        let format = Self::read_message_internal(file, &mut new_vars);
+
+        // Hacky: if the read format is in the future, avoid overwriting the file: never try to
+        // save.
+        let do_save = format != UvarFormat::Future;
+
+        // Announce changes and update our exports generation.
+        let (export_generation_increment, callbacks) =
+            self.generate_callbacks_and_update_exports(&new_vars);
+
+        // Acquire the new variables.
+        self.acquire_variables(&mut new_vars);
+        Some(PotentialUpdate {
+            do_save,
+            data: UniversalReadUpdate {
+                export_generation_increment,
+                new_vars,
+                callbacks,
+                ok_to_save: do_save,
+            },
+        })
     }
 
     /// Given a variable table, generate callbacks representing the difference between our vars and

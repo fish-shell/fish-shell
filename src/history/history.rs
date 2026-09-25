@@ -868,7 +868,7 @@ impl HistoryImpl {
         self.new_items.clear();
         self.deleted_items.clear();
         self.first_unwritten_new_item_index = 0;
-        self.file_contents = None;
+        self.clear_file_state();
         if let Ok(Some(filename)) = self.history_file_path() {
             // Keep an empty file to prevent reimporting bash history.
             if let Err(err) = rewrite_via_temporary_file(&filename, |_, _| {
@@ -880,7 +880,6 @@ impl HistoryImpl {
                 flog!(history_file, "Error clearing history file:", err);
             }
         }
-        self.clear_file_state();
     }
 
     /// Clears only session.

@@ -3,7 +3,7 @@ use crate::{
     flog, flogf,
     path::{DirRemoteness, path_remoteness},
     prelude::*,
-    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path, wdirname, wunlink},
+    wutil::{FileId, file_id_for_file, file_id_for_path, wdirname, wunlink},
 };
 use fish_tempfile::random_filename;
 use fish_widestring::{osstr2wcstring, wcs2bytes, wcs2osstring};
@@ -194,9 +194,12 @@ pub fn fsync(file: &File) -> std::io::Result<()> {
 /// until it manages a run without the file being modified in the meantime, or until the maximum
 /// number of allowed attempts is reached.
 /// If the file does not exist this function will return an error.
-pub fn lock_and_load<F, UserData>(path: &wstr, load: F) -> std::io::Result<(FileId, UserData)>
+pub fn lock_and_load<F, UserData>(
+    path: &wstr,
+    load: F,
+) -> std::io::Result<(Option<FileId>, UserData)>
 where
-    F: Fn(&File, FileId) -> std::io::Result<UserData>,
+    F: Fn(&File, Option<FileId>) -> std::io::Result<UserData>,
 {
     match LockedFile::new(LockingMode::Shared, path) {
         Ok(locked_file) => {
@@ -286,7 +289,7 @@ pub struct PotentialUpdate<UserData> {
 pub fn rewrite_via_temporary_file<F, UserData>(
     path: &wstr,
     rewrite: F,
-) -> std::io::Result<(FileId, PotentialUpdate<UserData>)>
+) -> std::io::Result<(Option<FileId>, PotentialUpdate<UserData>)>
 where
     F: Fn(&File, &mut File) -> std::io::Result<PotentialUpdate<UserData>>,
 {
@@ -367,7 +370,7 @@ where
         rewrite: F,
         tmp_name: &wstr,
         mut tmp_file: File,
-    ) -> std::io::Result<(FileId, PotentialUpdate<UserData>)>
+    ) -> std::io::Result<(Option<FileId>, PotentialUpdate<UserData>)>
     where
         F: Fn(&File, &mut File) -> std::io::Result<PotentialUpdate<UserData>>,
     {
@@ -428,7 +431,7 @@ where
             // so just return immediately.
             let old_file = wopen_cloexec(path, OFlag::O_RDONLY | OFlag::O_CREAT, LOCKED_FILE_MODE)?;
             let opened_file_id = file_id_for_file(&old_file);
-            if initial_file_id != INVALID_FILE_ID && initial_file_id != opened_file_id {
+            if initial_file_id.is_some() && initial_file_id != opened_file_id {
                 // File ID changed (and not just because the file was created by us).
                 continue;
             }

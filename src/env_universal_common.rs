@@ -4,7 +4,7 @@ use crate::flog::{flog, flogf};
 use crate::fs::{PotentialUpdate, lock_and_load, rewrite_via_temporary_file};
 use crate::path::{ValidatedPath, path_get_config};
 use crate::prelude::*;
-use crate::wutil::{FileId, INVALID_FILE_ID, file_id_for_file, file_id_for_path_narrow, wrealpath};
+use crate::wutil::{FileId, file_id_for_file, file_id_for_path_narrow, wrealpath};
 use fish_common::{UnescapeFlags, UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{LineIterator, join_strings};
 use fish_widestring::{decode_byte_from_char, wcs2zstring};
@@ -60,7 +60,7 @@ pub struct EnvUniversal {
 
     // File id from which we last read.
     // Only update if ok_to_save is updated as well.
-    last_read_file_id: FileId,
+    last_read_file_id: Option<FileId>,
 }
 
 struct UniversalReadUpdate {
@@ -80,7 +80,7 @@ impl EnvUniversal {
             modified: Default::default(),
             export_generation: 1,
             ok_to_save: true,
-            last_read_file_id: INVALID_FILE_ID,
+            last_read_file_id: None,
         }
     }
     // Get the value of the variable with the specified name.
@@ -353,7 +353,7 @@ impl EnvUniversal {
     fn load_from_path_narrow(&mut self) -> Option<CallbackDataList> {
         // Check to see if the file is unchanged. We do this again in load_from_file, but this avoids
         // opening the file unnecessarily.
-        if self.last_read_file_id != INVALID_FILE_ID
+        if self.last_read_file_id.is_some()
             && file_id_for_path_narrow(&self.narrow_vars_path) == self.last_read_file_id
         {
             flog!(uvar_file, "universal log sync elided based on fast stat()");
@@ -402,7 +402,7 @@ impl EnvUniversal {
     fn load_from_file(
         &self,
         file: &File,
-        current_file_id: FileId,
+        current_file_id: Option<FileId>,
     ) -> Option<PotentialUpdate<UniversalReadUpdate>> {
         if current_file_id == self.last_read_file_id {
             flog!(uvar_file, "universal log sync elided based on fstat()");
@@ -804,7 +804,7 @@ mod tests {
         env_universal_common::{EnvUniversal, UvarFormat},
         prelude::*,
         tests::prelude::*,
-        wutil::{INVALID_FILE_ID, file_id_for_path},
+        wutil::file_id_for_path,
     };
     use fish_tempfile::TempDir;
     use fish_widestring::{ENCODE_DIRECT_BASE, char_offset, osstr2wcstring, wcs2osstring};
@@ -1149,8 +1149,7 @@ mod tests {
         let contents = b"# VERSION: 99999.99\n";
         std::fs::write(wcs2osstring(&test_path), contents).unwrap();
 
-        let before_id = file_id_for_path(&test_path);
-        assert_ne!(before_id, INVALID_FILE_ID, "test_path should be readable");
+        let before_id = file_id_for_path(&test_path).unwrap();
 
         let mut uvars = EnvUniversal::new();
         uvars
@@ -1165,7 +1164,7 @@ mod tests {
         );
 
         // Ensure file is same.
-        let after_id = file_id_for_path(&test_path);
+        let after_id = file_id_for_path(&test_path).unwrap();
         assert_eq!(before_id, after_id, "test_path should not have changed",);
     }
 }

@@ -10,6 +10,7 @@ mod test_expressions {
     use crate::builtins;
     use crate::err_raw;
     use crate::nix::isatty;
+    use crate::wutil::FileId;
     use crate::wutil::{
         self, file_id_for_path, lwstat, waccess, wcstod::wcstod, wcstoi, wcstoi_opts, wstat,
     };
@@ -866,6 +867,18 @@ mod test_expressions {
         }
     }
 
+    /// Return true if \param rhs has higher mtime seconds than this file_id_t.
+    /// If identical, nanoseconds are compared.
+    fn older_than(lhs: Option<&FileId>, rhs: Option<&FileId>) -> bool {
+        fn mod_time(file_id: Option<&FileId>) -> (i64, i64) {
+            match file_id {
+                Some(file_id) => (file_id.mod_seconds, file_id.mod_nanoseconds),
+                None => (i64::MIN, i64::MIN),
+            }
+        }
+        mod_time(lhs).cmp(&mod_time(rhs)).is_lt()
+    }
+
     fn binary_primary_evaluate(
         token: BinaryToken,
         left: &wstr,
@@ -879,8 +892,8 @@ mod test_expressions {
                 let left = file_id_for_path(left);
                 let right = file_id_for_path(right);
                 match comparison {
-                    FileComparison::Newer => right.older_than(&left),
-                    FileComparison::Older => left.older_than(&right),
+                    FileComparison::Newer => older_than(right.as_ref(), left.as_ref()),
+                    FileComparison::Older => older_than(left.as_ref(), right.as_ref()),
                     FileComparison::Same => left == right,
                 }
             }

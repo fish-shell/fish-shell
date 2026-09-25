@@ -8,8 +8,7 @@ use std::time::SystemTime;
 use super::prelude::*;
 use crate::path::path_apply_working_directory;
 use crate::wutil::{
-    INVALID_FILE_ID, file_id_for_path, lwstat, normalize_path, waccess, wbasename, wdirname,
-    wrealpath, wstat,
+    file_id_for_path, lwstat, normalize_path, waccess, wbasename, wdirname, wrealpath, wstat,
 };
 use fish_util::wcsfilecmp_glob;
 use fish_wcstringutil::split_string_tok;
@@ -479,9 +478,7 @@ fn path_mtime(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         false => SplitBehavior::InferNull,
     });
     for InputValue { arg, .. } in arguments {
-        let ret = file_id_for_path(&arg);
-
-        if ret != INVALID_FILE_ID {
+        if let Some(ret) = file_id_for_path(&arg) {
             if opts.quiet {
                 return Ok(SUCCESS);
             }

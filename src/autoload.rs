@@ -5,7 +5,7 @@ use crate::{
     flogf,
     io::IoChain,
     parser::Parser,
-    wutil::{FileId, INVALID_FILE_ID, file_id_for_path},
+    wutil::{FileId, file_id_for_path},
 };
 use fish_common::{ScopeGuard, escape};
 use fish_widestring::{L, WExt as _, WString, wcs2bytes, wstr};
@@ -28,7 +28,7 @@ pub struct Autoload {
     env_var_name: &'static wstr,
 
     /// A map from command to the files we have autoloaded.
-    autoloaded_files: HashMap<WString, FileId>,
+    autoloaded_files: HashMap<WString, Option<FileId>>,
 
     /// The list of commands that we are currently autoloading.
     current_autoloading: HashSet<WString>,
@@ -219,13 +219,13 @@ impl Autoload {
         };
 
         let file_id = match &file {
-            AutoloadableFileInfo::OnDisk { file_id, .. } => file_id,
-            AutoloadableFileInfo::Embedded { .. } => &INVALID_FILE_ID,
+            AutoloadableFileInfo::OnDisk { file_id, .. } => Some(file_id),
+            AutoloadableFileInfo::Embedded { .. } => None,
         };
 
         // Is this file the same as what we previously autoloaded?
         if let Some(loaded_file) = self.autoloaded_files.get(cmd) {
-            if *loaded_file == *file_id {
+            if loaded_file.as_ref() == file_id {
                 // The file has been autoloaded and is unchanged.
                 return AutoloadResult::Loaded;
             }
@@ -234,7 +234,7 @@ impl Autoload {
         // We're going to (tell our caller to) autoload this command.
         self.current_autoloading.insert(cmd.to_owned());
         self.autoloaded_files
-            .insert(cmd.to_owned(), file_id.clone());
+            .insert(cmd.to_owned(), file_id.cloned());
         AutoloadResult::Path(match file {
             AutoloadableFileInfo::OnDisk { path, .. } => AutoloadPath::OnDisk(path),
             AutoloadableFileInfo::Embedded { path } => AutoloadPath::Embedded(path),
@@ -420,8 +420,7 @@ impl AutoloadFileCache {
             path.push_utfstr(cmd);
             path.push_str(".fish");
 
-            let file_id = file_id_for_path(&path);
-            if file_id != INVALID_FILE_ID {
+            if let Some(file_id) = file_id_for_path(&path) {
                 // Found it.
                 return Some(AutoloadableFileInfo::OnDisk { path, file_id });
             }

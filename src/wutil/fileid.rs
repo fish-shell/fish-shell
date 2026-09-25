@@ -44,43 +44,19 @@ impl FileId {
             mod_nanoseconds: buf.mtime_nsec().into(),
         }
     }
-
-    /// Return true if \param rhs has higher mtime seconds than this file_id_t.
-    /// If identical, nanoseconds are compared.
-    pub fn older_than(&self, rhs: &FileId) -> bool {
-        let lhs = (self.mod_seconds, self.mod_nanoseconds);
-        let rhs = (rhs.mod_seconds, rhs.mod_nanoseconds);
-        lhs.cmp(&rhs).is_lt()
-    }
 }
 
-pub const INVALID_FILE_ID: FileId = FileId {
-    dev_inode: DevInode {
-        device: u64::MAX,
-        inode: u64::MAX,
-    },
-    size: u64::MAX,
-    change_seconds: i64::MIN,
-    change_nanoseconds: i64::MIN,
-    mod_seconds: i64::MIN,
-    mod_nanoseconds: i64::MIN,
-};
-
-/// Get a FileId corresponding to a `file`, or `INVALID_FILE_ID` if it fails.
-pub fn file_id_for_file(file: &File) -> FileId {
-    file.metadata()
-        .as_ref()
-        .map_or(INVALID_FILE_ID, FileId::from_md)
+/// Get a FileId corresponding to a `file`, or `None` if it fails.
+pub fn file_id_for_file(file: &File) -> Option<FileId> {
+    file.metadata().ok().as_ref().map(FileId::from_md)
 }
 
-/// Get a FileId corresponding to a `path`, or `INVALID_FILE_ID` if it fails.
-pub fn file_id_for_path(path: &wstr) -> FileId {
+/// Get a FileId corresponding to a `path`, or `None` if it fails.
+pub fn file_id_for_path(path: &wstr) -> Option<FileId> {
     file_id_for_path_narrow(&wcs2zstring(path))
 }
 
-pub fn file_id_for_path_narrow(path: &CStr) -> FileId {
+pub fn file_id_for_path_narrow(path: &CStr) -> Option<FileId> {
     let path = OsStr::from_bytes(path.to_bytes());
-    fs::metadata(path)
-        .as_ref()
-        .map_or(INVALID_FILE_ID, FileId::from_md)
+    fs::metadata(path).ok().as_ref().map(FileId::from_md)
 }

@@ -36,7 +36,7 @@ use crate::{
     prelude::*,
     threads::{ThreadPool, assert_is_background_thread},
     wildcard::wildcard_match,
-    wutil::{FileId, INVALID_FILE_ID, file_id_for_file, wrealpath, wstat},
+    wutil::{FileId, file_id_for_file, wrealpath, wstat},
 };
 use fish_common::{UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{subsequence_in_string, trim_in_place};
@@ -335,7 +335,7 @@ struct HistoryImpl {
     /// The history file contents.
     file_contents: Option<HistoryFile>,
     /// The file ID of the history file.
-    history_file_id: FileId, // INVALID_FILE_ID
+    history_file_id: Option<FileId>,
     /// The boundary timestamp distinguishes old items from new items. Items whose timestamps are <=
     /// the boundary are considered "old". Items whose timestamps are > the boundary are new, and are
     /// ignored by this instance (unless they came from this instance). The timestamp may be adjusted
@@ -784,7 +784,7 @@ impl HistoryImpl {
             disable_automatic_save_counter: 0,
             deleted_items: HashMap::new(),
             file_contents: None,
-            history_file_id: INVALID_FILE_ID,
+            history_file_id: None,
             boundary_timestamp: SystemTime::now(),
             countdown_to_vacuum: None,
             // Up to 8 threads, no soft min.

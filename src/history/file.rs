@@ -106,9 +106,9 @@ pub struct RawHistoryFile {
 
 impl RawHistoryFile {
     /// Construct a history file contents from a [`File`] reference and its file id.
-    pub fn create(history_file: &File, file_id: FileId) -> std::io::Result<Self> {
+    pub fn create(history_file: &File, file_id: Option<FileId>) -> std::io::Result<Self> {
         // Check the file size.
-        let len: usize = match file_id.size.try_into() {
+        let len: usize = match file_id.map_or(u64::MAX, |file_id| file_id.size).try_into() {
             Ok(len) => len,
             Err(err) => {
                 return Err(std::io::Error::new(

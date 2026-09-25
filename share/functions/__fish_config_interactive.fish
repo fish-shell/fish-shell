@@ -119,7 +119,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
         # Konsole reflows since version 21.04. Konsole added XTVERSION
         # in v22.03.80~7.
         # TODO(term-workaround)
-        if string match -rq -- '^(?:VTE\b|Konsole |WezTerm )' (status terminal)
+        if string match -rq -- '^(?:VTE\b|Konsole |WezTerm |Zellij\()' (status terminal)
             or begin
                 set -q KONSOLE_VERSION
                 and test "$KONSOLE_VERSION" -ge 210400 2>/dev/null

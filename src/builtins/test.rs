@@ -889,8 +889,8 @@ mod test_expressions {
             BinaryToken::String(StringComparison::Equal) => left == right,
             BinaryToken::String(StringComparison::NotEqual) => left != right,
             BinaryToken::FileId(comparison) => {
-                let left = file_id_for_path(left);
-                let right = file_id_for_path(right);
+                let left = file_id_for_path(left).ok();
+                let right = file_id_for_path(right).ok();
                 match comparison {
                     FileComparison::Newer => older_than(right.as_ref(), left.as_ref()),
                     FileComparison::Older => older_than(left.as_ref(), right.as_ref()),

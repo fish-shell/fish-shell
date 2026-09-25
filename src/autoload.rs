@@ -420,7 +420,7 @@ impl AutoloadFileCache {
             path.push_utfstr(cmd);
             path.push_str(".fish");
 
-            if let Some(file_id) = file_id_for_path(&path) {
+            if let Ok(file_id) = file_id_for_path(&path) {
                 // Found it.
                 return Some(AutoloadableFileInfo::OnDisk { path, file_id });
             }

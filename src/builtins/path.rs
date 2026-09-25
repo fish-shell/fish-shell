@@ -478,7 +478,7 @@ fn path_mtime(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         false => SplitBehavior::InferNull,
     });
     for InputValue { arg, .. } in arguments {
-        if let Some(ret) = file_id_for_path(&arg) {
+        if let Ok(ret) = file_id_for_path(&arg) {
             if opts.quiet {
                 return Ok(SUCCESS);
             }

@@ -177,7 +177,7 @@ impl EnvUniversal {
         let rewrite = |old_file: &File,
                        tmp_file: &mut File|
          -> std::io::Result<PotentialUpdate<Option<UniversalReadUpdate>>> {
-            match self.load_from_file(old_file, file_id_for_file(old_file)) {
+            match self.load_from_file(old_file, file_id_for_file(old_file)?) {
                 Some(potential_update) => {
                     if potential_update.do_save {
                         let contents = Self::serialize_with_vars(&potential_update.data.new_vars);
@@ -204,7 +204,7 @@ impl EnvUniversal {
         let real_path = wrealpath(&self.vars_path).unwrap_or_else(|_| self.vars_path.clone());
         match rewrite_via_temporary_file(&real_path, rewrite) {
             Ok((file_id, potential_update)) => {
-                self.last_read_file_id = file_id;
+                self.last_read_file_id = Some(file_id);
                 self.ok_to_save = potential_update.do_save;
                 self.modified.clear();
                 match potential_update.data {
@@ -353,11 +353,19 @@ impl EnvUniversal {
     fn load_from_path_narrow(&mut self) -> Option<CallbackDataList> {
         // Check to see if the file is unchanged. We do this again in load_from_file, but this avoids
         // opening the file unnecessarily.
-        if self.last_read_file_id.is_some()
-            && file_id_for_path_narrow(&self.narrow_vars_path) == self.last_read_file_id
-        {
-            flog!(uvar_file, "universal log sync elided based on fast stat()");
-            return None;
+        if self.last_read_file_id.is_some() {
+            match file_id_for_path_narrow(&self.narrow_vars_path) {
+                Ok(file_id) => {
+                    if Some(file_id) == self.last_read_file_id {
+                        flog!(uvar_file, "universal log sync elided based on fast stat()");
+                        return None;
+                    }
+                }
+                Err(e) => {
+                    flog!(uvar_file, "failed to stat() universal variable file:", e);
+                    return None;
+                }
+            }
         }
 
         flog!(uvar_file, "universal log reading from file");
@@ -376,7 +384,7 @@ impl EnvUniversal {
                 self.export_generation += export_generation_increment;
                 self.vars = new_vars;
                 self.ok_to_save = ok_to_save;
-                self.last_read_file_id = file_id;
+                self.last_read_file_id = Some(file_id);
                 Some(callbacks)
             }
             Ok((_, None)) => {
@@ -402,9 +410,9 @@ impl EnvUniversal {
     fn load_from_file(
         &self,
         file: &File,
-        current_file_id: Option<FileId>,
+        current_file_id: FileId,
     ) -> Option<PotentialUpdate<UniversalReadUpdate>> {
-        if current_file_id == self.last_read_file_id {
+        if Some(current_file_id) == self.last_read_file_id {
             flog!(uvar_file, "universal log sync elided based on fstat()");
             return None;
         }

@@ -47,16 +47,16 @@ impl FileId {
 }
 
 /// Get a FileId corresponding to a `file`, or `None` if it fails.
-pub fn file_id_for_file(file: &File) -> Option<FileId> {
-    file.metadata().ok().as_ref().map(FileId::from_md)
+pub fn file_id_for_file(file: &File) -> std::io::Result<FileId> {
+    file.metadata().map(|md| FileId::from_md(&md))
 }
 
 /// Get a FileId corresponding to a `path`, or `None` if it fails.
-pub fn file_id_for_path(path: &wstr) -> Option<FileId> {
+pub fn file_id_for_path(path: &wstr) -> std::io::Result<FileId> {
     file_id_for_path_narrow(&wcs2zstring(path))
 }
 
-pub fn file_id_for_path_narrow(path: &CStr) -> Option<FileId> {
+pub fn file_id_for_path_narrow(path: &CStr) -> std::io::Result<FileId> {
     let path = OsStr::from_bytes(path.to_bytes());
-    fs::metadata(path).ok().as_ref().map(FileId::from_md)
+    fs::metadata(path).map(|md| FileId::from_md(&md))
 }

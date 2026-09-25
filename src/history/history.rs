@@ -457,7 +457,7 @@ impl HistoryImpl {
         let _profiler = TimeProfiler::new("load_old");
         let file_contents = match lock_and_load(&history_path, RawHistoryFile::create) {
             Ok((file_id, history_file)) => {
-                self.history_file_id = file_id;
+                self.history_file_id = Some(file_id);
                 let _profiler = TimeProfiler::new("populate_from_file_contents");
                 let file_contents = history_file.decode(Some(self.boundary_timestamp));
                 flogf!(
@@ -535,7 +535,7 @@ impl HistoryImpl {
 
         // Read in existing items (which may have changed out from underneath us, so don't trust our
         // old file contents).
-        let file_id = file_id_for_file(existing_file);
+        let file_id = file_id_for_file(existing_file)?;
         if let Ok(local_file) = RawHistoryFile::create(existing_file, file_id) {
             for offset in local_file.offsets(None) {
                 // Try decoding an old item.
@@ -614,7 +614,7 @@ impl HistoryImpl {
             };
 
         let (file_id, _) = rewrite_via_temporary_file(history_path, rewrite)?;
-        self.history_file_id = file_id;
+        self.history_file_id = Some(file_id);
 
         // We've saved everything, so we have no more unsaved items.
         self.first_unwritten_new_item_index = self.new_items.len();
@@ -644,7 +644,7 @@ impl HistoryImpl {
 
         // Check if the file was modified since it was last read.
         // If someone has replaced the file, forget our file state.
-        if file_id_for_file(locked_history_file.get()) != self.history_file_id {
+        if Some(file_id_for_file(locked_history_file.get())?) != self.history_file_id {
             self.clear_file_state();
         }
 
@@ -687,7 +687,7 @@ impl HistoryImpl {
         // write.
         // We don't update `self.file_contents` since we only appended to the file, and everything we
         // appended remains in our new_items
-        self.history_file_id = file_id_for_file(locked_history_file.get());
+        self.history_file_id = Some(file_id_for_file(locked_history_file.get())?);
 
         Ok(())
     }

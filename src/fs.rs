@@ -194,16 +194,13 @@ pub fn fsync(file: &File) -> std::io::Result<()> {
 /// until it manages a run without the file being modified in the meantime, or until the maximum
 /// number of allowed attempts is reached.
 /// If the file does not exist this function will return an error.
-pub fn lock_and_load<F, UserData>(
-    path: &wstr,
-    load: F,
-) -> std::io::Result<(Option<FileId>, UserData)>
+pub fn lock_and_load<F, UserData>(path: &wstr, load: F) -> std::io::Result<(FileId, UserData)>
 where
-    F: Fn(&File, Option<FileId>) -> std::io::Result<UserData>,
+    F: Fn(&File, FileId) -> std::io::Result<UserData>,
 {
     match LockedFile::new(LockingMode::Shared, path) {
         Ok(locked_file) => {
-            let file_id = file_id_for_file(locked_file.get());
+            let file_id = file_id_for_file(locked_file.get())?;
             let user_data = load(locked_file.get(), file_id.clone())?;
             return Ok((file_id, user_data));
         }
@@ -234,7 +231,7 @@ where
         // If we cannot open the file, there is nothing we can do,
         // so just return immediately.
         let file = wopen_cloexec(path, OFlag::O_RDONLY, Mode::empty())?;
-        let initial_file_id = file_id_for_file(&file);
+        let initial_file_id = file_id_for_file(&file)?;
         let loaded_data = match load(&file, initial_file_id.clone()) {
             Ok(update_data) => update_data,
             Err(_) => {
@@ -244,7 +241,7 @@ where
             }
         };
 
-        let final_file_id = file_id_for_path(path);
+        let final_file_id = file_id_for_path(path)?;
         if initial_file_id != final_file_id {
             continue;
         }
@@ -289,7 +286,7 @@ pub struct PotentialUpdate<UserData> {
 pub fn rewrite_via_temporary_file<F, UserData>(
     path: &wstr,
     rewrite: F,
-) -> std::io::Result<(Option<FileId>, PotentialUpdate<UserData>)>
+) -> std::io::Result<(FileId, PotentialUpdate<UserData>)>
 where
     F: Fn(&File, &mut File) -> std::io::Result<PotentialUpdate<UserData>>,
 {
@@ -370,7 +367,7 @@ where
         rewrite: F,
         tmp_name: &wstr,
         mut tmp_file: File,
-    ) -> std::io::Result<(Option<FileId>, PotentialUpdate<UserData>)>
+    ) -> std::io::Result<(FileId, PotentialUpdate<UserData>)>
     where
         F: Fn(&File, &mut File) -> std::io::Result<PotentialUpdate<UserData>>,
     {
@@ -393,7 +390,7 @@ where
                     _lock_file = Some(locked_file.fsync_close_and_keep_lock()?);
                     rename(tmp_name, path)?;
                 }
-                return Ok((file_id_for_path(path), potential_update));
+                return Ok((file_id_for_path(path)?, potential_update));
             }
             Err(e) => {
                 flogf!(
@@ -425,13 +422,17 @@ where
                 .truncate(true)
                 .open(wcs2osstring(tmp_name))?;
 
-            // If the file does not exist yet, this will be `INVALID_FILE_ID`.
-            let initial_file_id = file_id_for_path(path);
+            // The file may not exist yet.
+            let initial_file_id = match file_id_for_path(path) {
+                Ok(file_id) => Some(file_id),
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
+                Err(e) => return Err(e),
+            };
             // If we cannot open the file, there is nothing we can do,
             // so just return immediately.
             let old_file = wopen_cloexec(path, OFlag::O_RDONLY | OFlag::O_CREAT, LOCKED_FILE_MODE)?;
-            let opened_file_id = file_id_for_file(&old_file);
-            if initial_file_id.is_some() && initial_file_id != opened_file_id {
+            let opened_file_id = file_id_for_file(&old_file)?;
+            if initial_file_id.is_some() && initial_file_id.as_ref() != Some(&opened_file_id) {
                 // File ID changed (and not just because the file was created by us).
                 continue;
             }
@@ -449,7 +450,7 @@ where
                 std::mem::drop(tmp_file);
             }
 
-            let mut final_file_id = file_id_for_path(path);
+            let mut final_file_id = file_id_for_path(path)?;
             if opened_file_id != final_file_id {
                 continue;
             }
@@ -463,7 +464,7 @@ where
             if potential_update.do_save {
                 // Do not retry on rename failures, as it is unlikely that these will disappear if we retry.
                 rename(tmp_name, path)?;
-                final_file_id = file_id_for_path(path);
+                final_file_id = file_id_for_path(path)?;
             }
             // Note that this might not match the version of the file we just wrote.
             // (If we did write.)

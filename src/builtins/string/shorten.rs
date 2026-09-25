@@ -192,6 +192,9 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                 // This is somewhat easier.
                 while max <= ourmax && pos < line.len() {
                     pos += skip_escapes(&line, pos);
+                    if pos >= line.len() {
+                        break;
+                    }
                     let w = fish_wcwidth_visible(line.char_at(pos));
                     if w <= 0 || max + w as usize + ell_width <= ourmax {
                         // If it still fits, even if it is the last, we add it.
@@ -203,6 +206,9 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
                         let mut pos2 = pos + 1;
                         while pos2 < line.len() {
                             pos2 += skip_escapes(&line, pos2);
+                            if pos2 >= line.len() {
+                                break;
+                            }
                             let w = fish_wcwidth_visible(line.char_at(pos2));
                             max2 = max2.saturating_add_signed(w);
                             pos2 += 1;

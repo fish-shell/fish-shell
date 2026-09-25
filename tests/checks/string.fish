@@ -1180,6 +1180,10 @@ string shorten -c (set_color blue)s(set_color red)t(set_color --bold brwhite)rin
 # Renders like "abstring" in colors
 # CHECK: ab\e\[34ms\e\[31mt\e\[97\;1mrin\e\[31mg
 
+# See that escapes at the end are skipped, no ellipsis
+string shorten -m 10 (set_color blue)foo(set_color normal) | string escape
+# CHECK: \e\[34mfoo\e\[m
+
 set -l str (set_color blue)s(set_color red)t(set_color --bold brwhite)rin(set_color red)g(set_color yellow)-shorten
 for i in (seq 1 (string length -V -- $str))
     set -l len (string shorten -m$i -- $str | string length -V)

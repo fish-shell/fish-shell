@@ -14,6 +14,7 @@ Interactive improvements
 - ``history clear`` empties the history file instead of deleting it, preventing future shells from reimporting bash history (:issue:`12976`).
 - Fixed a glitch in the initial prompt when the terminal is resized during early startup (:issue:`12995`).
 - Fixed indentation when displaying a multiline command in a transient prompt (:issue:`13012`).
+- Fixed prompt repaint when resizing Zellij windows/panes
 
 Scripting improvements
 ----------------------

@@ -123,6 +123,7 @@ function __fish_config_interactive -d "Initializations that should be performed 
                 'Konsole ' \
                 'VTE(' \
                 'WezTerm ' \
+                'Zellij(' \
             | string join '|')
         if string match -rq -- "^(?:$re)" (status terminal)
             or begin

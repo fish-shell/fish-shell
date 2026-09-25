@@ -19,6 +19,18 @@ expect_prompt()
 sendline("bind ! 'echo -n \"<$(commandline --current-selection)>\"'")
 expect_prompt()
 
+# The default bindings clear the selection on plain cursor movement, so bind the movement
+# keys used below to the bare movement functions, which extend an active selection. This
+# keeps the test focused on the cursor_selection_mode machinery.
+sendline("bind ctrl-a beginning-of-line")
+expect_prompt()
+sendline("bind ctrl-e end-of-line")
+expect_prompt()
+sendline("bind ctrl-b backward-char")
+expect_prompt()
+sendline("bind ctrl-f forward-char")
+expect_prompt()
+
 # Test inclusive mode
 
 sendline("set fish_cursor_selection_mode inclusive")

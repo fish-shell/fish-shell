@@ -3230,9 +3230,6 @@ msgstr "儲存函式"
 msgid "Save the current definition of all specified functions to file"
 msgstr "將所有指定的函式目前定義儲存到檔案"
 
-msgid "Search back or move cursor up 1 line"
-msgstr "向前搜尋或將游標上移一行"
-
 msgid "Select current selection"
 msgstr "選擇目前選中區域"
 

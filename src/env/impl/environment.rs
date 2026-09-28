@@ -12,14 +12,16 @@ use crate::threads::is_forked_child;
 use crate::wutil::fish_wcstol_radix;
 use fish_widestring::wcs2zstring;
 use nix::sys::stat::{Mode, umask};
-use std::cell::{RefCell, UnsafeCell};
+use std::cell::UnsafeCell;
 use std::collections::HashSet;
 use std::ffi::CString;
 use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::sync::LazyLock;
-use std::sync::{Arc, Mutex, MutexGuard, atomic::Ordering};
+use std::sync::{
+    Arc, Mutex, MutexGuard, RwLock, RwLockReadGuard, RwLockWriteGuard, atomic::Ordering,
+};
 
 /// Getter for universal variables.
 /// This is typically initialized in env_init(), and is considered empty before then.
@@ -172,42 +174,27 @@ impl EnvNode {
     }
 }
 
-// RefCell except we promise it can be used as Sync.
-// Safety: in order to do anything with this, the caller must be holding ENV_LOCK.
-struct EnvNodeSyncCell(RefCell<EnvNode>);
-
-impl EnvNodeSyncCell {
-    fn new(node: EnvNode) -> Self {
-        Self(RefCell::new(node))
-    }
-}
-
-unsafe impl Sync for EnvNodeSyncCell {}
-
 /// EnvNodeRef is a reference to an EnvNode. It may be shared between different environments.
-/// All accesses to the EnvNode are protected by a global lock.
+/// A per-node lock protects access; ENV_LOCK serializes environment operations.
 #[derive(Clone)]
-struct EnvNodeRef(Arc<EnvNodeSyncCell>);
-
-impl Deref for EnvNodeRef {
-    type Target = RefCell<EnvNode>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0.0
-    }
-}
+struct EnvNodeRef(Arc<RwLock<EnvNode>>);
 
 impl EnvNodeRef {
     fn new(is_new_scope: bool, next: Option<EnvNodeRef>) -> EnvNodeRef {
-        // Accesses are protected by the global lock.
-        #[allow(unknown_lints)]
-        #[allow(clippy::arc_with_non_send_sync)]
-        EnvNodeRef(Arc::new(EnvNodeSyncCell::new(EnvNode {
+        EnvNodeRef(Arc::new(RwLock::new(EnvNode {
             env: VarTable::new(),
             new_scope: is_new_scope,
             export_gen: 0,
             next,
         })))
+    }
+
+    fn borrow(&self) -> RwLockReadGuard<'_, EnvNode> {
+        self.0.read().unwrap()
+    }
+
+    fn borrow_mut(&self) -> RwLockWriteGuard<'_, EnvNode> {
+        self.0.write().unwrap()
     }
 
     /// Return whether this points at the same value as another node.
@@ -268,9 +255,7 @@ fn copy_node_chain(node: &EnvNodeRef) -> EnvNodeRef {
         new_scope: node.new_scope,
         next,
     };
-    #[allow(unknown_lints)]
-    #[allow(clippy::arc_with_non_send_sync)]
-    EnvNodeRef(Arc::new(EnvNodeSyncCell::new(new_node)))
+    EnvNodeRef(Arc::new(RwLock::new(new_node)))
 }
 
 /// A struct wrapping up parser-local variables. These are conceptually variables that differ in
@@ -1051,6 +1036,34 @@ unsafe impl<T: Send> Send for EnvMutex<T> {}
 mod tests {
     use super::colon_split;
     use crate::prelude::*;
+
+    #[test]
+    fn test_data_race_env_node_sync_cell() {
+        use super::EnvNodeRef;
+        use std::thread;
+
+        let node_ref = EnvNodeRef::new(false, None);
+        let node_ref_clone = node_ref.clone();
+
+        let handle1 = thread::spawn(move || {
+            for _ in 0..10_000 {
+                let mut guard = node_ref_clone.borrow_mut();
+                guard.export_gen = guard.export_gen.wrapping_add(1);
+            }
+        });
+
+        let node_ref_clone = node_ref.clone();
+        let handle2 = thread::spawn(move || {
+            for _ in 0..10_000 {
+                let mut guard = node_ref_clone.borrow_mut();
+                guard.export_gen = guard.export_gen.wrapping_add(1);
+            }
+        });
+
+        handle1.join().unwrap();
+        handle2.join().unwrap();
+        assert_eq!(node_ref.borrow().export_gen, 20_000);
+    }
 
     #[test]
     fn test_colon_split() {

@@ -1,6 +1,5 @@
 use super::r#impl::environment::{
-    EnvMutex, EnvMutexGuard, EnvScopedImpl, EnvStackImpl, ModResult, UVAR_SCOPE_IS_GLOBAL,
-    colon_split, uvars,
+    EnvMutex, EnvScopedImpl, EnvStackImpl, ModResult, UVAR_SCOPE_IS_GLOBAL, colon_split, uvars,
 };
 use crate::{
     abbrs::{Abbreviation, Position, abbrs_get_set},
@@ -201,10 +200,6 @@ impl EnvScoped {
     fn from_impl(inner: EnvMutex<EnvScopedImpl>) -> EnvScoped {
         EnvScoped { inner }
     }
-
-    fn lock(&self) -> EnvMutexGuard<'_, EnvScopedImpl> {
-        self.inner.lock()
-    }
 }
 
 /// A mutable environment which allows scopes to be pushed and popped.
@@ -229,7 +224,7 @@ impl EnvStack {
     // This shares all nodes (variable scopes) with the parent stack.
     // can_push_pop is always set.
     pub fn create_child(&self, dispatches_var_changes: bool) -> EnvStack {
-        let inner = EnvMutex::new(self.inner.lock().clone());
+        let inner = EnvMutex::new(self.inner.with_lock(|imp, _| imp.clone()));
         EnvStack {
             inner,
             can_push_pop: true,
@@ -237,22 +232,21 @@ impl EnvStack {
         }
     }
 
-    fn lock(&self) -> EnvMutexGuard<'_, EnvStackImpl> {
-        self.inner.lock()
-    }
-
     /// Helpers to get and set the proc statuses.
     /// These correspond to $status and $pipestatus.
     pub fn last_statuses(&self) -> Statuses {
-        self.lock().base.last_statuses().clone()
+        self.inner
+            .with_lock(|imp, _| imp.base.last_statuses().clone())
     }
 
     pub fn last_status(&self) -> c_int {
-        self.lock().base.last_statuses().status
+        self.inner
+            .with_lock(|imp, _| imp.base.last_statuses().status)
     }
 
     pub fn set_last_statuses(&self, statuses: Statuses) {
-        self.lock().base.set_last_statuses(statuses);
+        self.inner
+            .with_lock(|imp, _| imp.base.set_last_statuses(statuses));
     }
 
     /// Sets the variable with the specified name to the given values.
@@ -277,7 +271,9 @@ impl EnvStack {
             vals = munged_vals;
         }
 
-        let ret: ModResult = self.lock().set(key, mode, vals);
+        let ret: ModResult = self
+            .inner
+            .with_lock(|imp, lock| imp.set(lock, key, mode, vals));
         if ret.status == EnvStackSetResult::Ok {
             // Dispatch changes if we modified the global state or have 'dispatches_var_changes' set.
             // Important to not hold the lock here.
@@ -332,7 +328,9 @@ impl EnvStack {
     ///
     /// Return the set result.
     pub fn remove(&self, key: &wstr, mode: EnvSetMode) -> EnvStackSetResult {
-        let ret = self.lock().remove(key, mode);
+        let ret = self
+            .inner
+            .with_lock(|imp, lock| imp.remove(lock, key, mode));
         #[allow(clippy::collapsible_if)]
         if ret.status == EnvStackSetResult::Ok {
             if ret.global_modified || self.dispatches_var_changes {
@@ -356,18 +354,19 @@ impl EnvStack {
     /// Push the variable stack. Used for implementing local variables for functions and for-loops.
     pub fn push(&self, new_scope: bool) {
         assert!(self.can_push_pop, "push/pop not allowed on global stack");
-        let mut imp = self.lock();
-        if new_scope {
-            imp.push_shadowing();
-        } else {
-            imp.push_nonshadowing();
-        }
+        self.inner.with_lock(|imp, lock| {
+            if new_scope {
+                imp.push_shadowing(lock);
+            } else {
+                imp.push_nonshadowing();
+            }
+        });
     }
 
     /// Pop the variable stack. Used for implementing local variables for functions and for-loops.
     pub fn pop(&self, is_repainting: bool) {
         assert!(self.can_push_pop, "push/pop not allowed on global stack");
-        let popped = self.lock().pop();
+        let popped = self.inner.with_lock(|imp, lock| imp.pop(lock));
         if self.dispatches_var_changes {
             // TODO: we would like to coalesce locale changes, so that we only re-initialize
             // once.
@@ -386,13 +385,15 @@ impl EnvStack {
 
     /// Returns an array containing all exported variables in a format suitable for execv.
     pub fn export_array(&self) -> Arc<OwningNullTerminatedArray> {
-        self.lock().base.export_array()
+        self.inner
+            .with_lock(|imp, lock| imp.base.export_array(lock))
     }
 
     /// Snapshot this environment. This means returning a read-only copy. Local variables are copied
     /// but globals are shared (i.e. changes to global will be visible to this snapshot).
     pub fn snapshot(&self) -> EnvDyn {
-        let scoped = EnvScoped::from_impl(self.lock().base.snapshot());
+        let scoped =
+            EnvScoped::from_impl(self.inner.with_lock(|imp, lock| imp.base.snapshot(lock)));
         EnvDyn::new(Box::new(scoped) as Box<dyn Environment + Send + Sync>)
     }
 
@@ -461,15 +462,15 @@ impl EnvStack {
 
 impl Environment for EnvScoped {
     fn getf(&self, key: &wstr, mode: EnvMode) -> Option<EnvVar> {
-        self.lock().getf(key, mode)
+        self.inner.with_lock(|imp, lock| imp.getf(lock, key, mode))
     }
 
     fn get_names(&self, flags: EnvMode) -> Vec<WString> {
-        self.lock().get_names(flags)
+        self.inner.with_lock(|imp, lock| imp.get_names(lock, flags))
     }
 
     fn get_pwd_slash(&self) -> WString {
-        self.lock().get_pwd_slash()
+        self.inner.with_lock(|imp, _| imp.get_pwd_slash())
     }
 }
 
@@ -479,15 +480,15 @@ unsafe impl Send for EnvStack {}
 
 impl Environment for EnvStack {
     fn getf(&self, key: &wstr, mode: EnvMode) -> Option<EnvVar> {
-        self.lock().getf(key, mode)
+        self.inner.with_lock(|imp, lock| imp.getf(lock, key, mode))
     }
 
     fn get_names(&self, flags: EnvMode) -> Vec<WString> {
-        self.lock().get_names(flags)
+        self.inner.with_lock(|imp, lock| imp.get_names(lock, flags))
     }
 
     fn get_pwd_slash(&self) -> WString {
-        self.lock().get_pwd_slash()
+        self.inner.with_lock(|imp, _| imp.get_pwd_slash())
     }
 }
 

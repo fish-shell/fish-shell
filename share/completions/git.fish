@@ -780,7 +780,7 @@ function __fish_git_stash_not_using_subcommand
     set cmd $cmd[(contains -i -- "stash" $cmd)..-1]
     set -q cmd[2]
     or return 0
-    contains -- $cmd[2] list show pop apply clear drop create save branch push
+    contains -- $cmd[2] list show pop apply clear drop create save branch push import export
     and return 1
     return 0
 end
@@ -2486,6 +2486,8 @@ complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_u
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a save -d 'Save a new stash'
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a branch -d 'Create a new branch from a stash'
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a push -d 'Create a new stash with given files'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a export -d 'Export stashes to a chain of commits'
+complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_not_using_subcommand -a import -d 'Import stashes from an exported commit'
 
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -a '(__fish_git_files modified deleted modified-staged-deleted)'
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -s a -l all -d 'Stash ignored and untracked files'
@@ -2496,7 +2498,10 @@ complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_pu
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -s S -l staged -d 'Stash only staged changes'
 complete -f -c git -n '__fish_git_using_command stash' -n __fish_git_stash_is_push -s u -l include-untracked -d 'Stash untracked files'
 
-complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command apply branch drop pop show' -ka '(__fish_git_complete_stashes)'
+complete -f -c git -n '__fish_git_stash_using_command export' -l print -d 'Print the exported stash chain object ID'
+complete -x -c git -n '__fish_git_stash_using_command export' -l to-ref -a '(__fish_git_refs)' -d 'Store the exported stash chain at the given ref'
+__fish_git_add_revision_completion -n '__fish_git_stash_using_command import'
+complete -f -c git -n '__fish_git_using_command stash' -n '__fish_git_stash_using_command apply branch drop pop show export' -ka '(__fish_git_complete_stashes)'
 
 ### config
 complete -f -c git -n __fish_git_needs_command -a config -d 'Set and read git configuration variables'

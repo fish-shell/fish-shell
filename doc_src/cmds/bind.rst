@@ -415,10 +415,10 @@ The following special input functions are available:
     go to the other end of the highlighted text without changing the selection
 
 ``transpose-chars``
-    transpose the two characters surrounding the cursor (left and right)
+    swap the current character with the previous one
 
 ``transpose-words``
-    transpose the two words surrounding the cursor (left and right)
+    swap the current word with the previous one
 
 ``togglecase-char``
     toggle the capitalisation (case) of the character under the cursor

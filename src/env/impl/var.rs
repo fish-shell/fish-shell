@@ -1,4 +1,7 @@
-use crate::env::{EnvVar, r#impl::environment::EnvScopedImpl};
+use crate::env::{
+    EnvVar,
+    r#impl::environment::{EnvLockGuard, EnvScopedImpl},
+};
 use fish_widestring::wstr;
 
 pub fn is_electric_var(name: &wstr) -> bool {
@@ -10,7 +13,7 @@ pub fn is_read_only(name: &wstr) -> bool {
     ElectricVar::for_name(name).is_some_and(|var| var.readonly())
 }
 
-type Getter = fn(&EnvScopedImpl) -> EnvVar;
+type Getter = fn(&EnvScopedImpl, &EnvLockGuard) -> EnvVar;
 
 pub(super) enum ElectricValue {
     Regular,
@@ -37,11 +40,11 @@ impl ElectricVar {
         self.readonly
     }
 
-    pub(super) fn compute(&self, env: &EnvScopedImpl) -> Option<EnvVar> {
+    pub(super) fn compute(&self, env: &EnvScopedImpl, lock: &EnvLockGuard) -> Option<EnvVar> {
         use ElectricValue::*;
         match self.value {
             Regular => None,
-            Computed(getter) => Some(getter(env)),
+            Computed(getter) => Some(getter(env, lock)),
         }
     }
 
@@ -133,7 +136,7 @@ pub(super) mod electric_values {
     ];
     assert_sorted_by_name!(ELECTRIC_VARIABLES);
 
-    const GET_PWD: Getter = |env| {
+    const GET_PWD: Getter = |env, _lock| {
         EnvVar::new(
             env.perproc_data.pwd.clone(),
             EnvVarFlags {
@@ -142,27 +145,27 @@ pub(super) mod electric_values {
             },
         )
     };
-    const GET_FISH_KILL_SIGNAL: Getter = |env| {
+    const GET_FISH_KILL_SIGNAL: Getter = |env, _lock| {
         let js = &env.perproc_data.statuses;
         let signal = js.kill_signal.map_or(0, |ks| ks.code());
         EnvVar::new_from_name(L!("fish_kill_signal"), signal.to_wstring())
     };
     const GET_FISH_KILLRING: Getter =
-        |_env| EnvVar::new_from_name_vec(L!("fish_killring"), kill_entries());
-    const GET_HISTORY: Getter = |env| {
+        |_env, _lock| EnvVar::new_from_name_vec(L!("fish_killring"), kill_entries());
+    const GET_HISTORY: Getter = |env, lock| {
         // Big hack. We only allow getting the history on the main thread. Note that history_t
         // may ask for an environment variable, so don't take the lock here (we don't need it).
         if !is_main_thread() {
             return EnvVar::new_from_name_vec(L!("history"), vec![]);
         }
         let history = commandline_get_state(true).history.unwrap_or_else(|| {
-            let fish_history_var = env.getf(L!("fish_history"), EnvMode::default());
+            let fish_history_var = env.getf(lock, L!("fish_history"), EnvMode::default());
             let history_id = history_id_from_var(fish_history_var);
             History::new(history_id)
         });
         EnvVar::new_from_name_vec(L!("history"), history.get_history())
     };
-    const GET_PIPESTATUS: Getter = |env| {
+    const GET_PIPESTATUS: Getter = |env, _lock| {
         let js = &env.perproc_data.statuses;
         let mut result = Vec::with_capacity(js.pipestatus.len());
         for i in &js.pipestatus {
@@ -170,13 +173,14 @@ pub(super) mod electric_values {
         }
         EnvVar::new_from_name_vec(L!("pipestatus"), result)
     };
-    const GET_STATUS: Getter = |env| {
+    const GET_STATUS: Getter = |env, _lock| {
         let js = &env.perproc_data.statuses;
         EnvVar::new_from_name(L!("status"), js.status.to_wstring())
     };
-    const GET_STATUS_GENERATION: Getter =
-        |_env| EnvVar::new_from_name(L!("status_generation"), reader_status_count().to_wstring());
-    const GET_UMASK: Getter = |_env| {
+    const GET_STATUS_GENERATION: Getter = |_env, _lock| {
+        EnvVar::new_from_name(L!("status_generation"), reader_status_count().to_wstring())
+    };
+    const GET_UMASK: Getter = |_env, _lock| {
         // note umask() is an absurd API: you call it to set the value and it returns the old
         // value. Thus we have to call it twice, to reset the value. The env_lock protects
         // against races. Guess what the umask is; if we guess right we don't need to reset it.

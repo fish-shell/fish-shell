@@ -27492,6 +27492,9 @@ msgstr ""
 msgid "Export sources from CVS, similar to checkout"
 msgstr "Exporter les sources depuis le dépôt, similaire à « checkout »"
 
+msgid "Export stashes to a chain of commits"
+msgstr ""
+
 msgid "Export system trust settings"
 msgstr ""
 
@@ -33305,6 +33308,9 @@ msgstr ""
 
 msgid "Import sources into CVS, using vendor branches"
 msgstr "Importer les sources dans le CVS, en utilisant les branches du vendeur"
+
+msgid "Import stashes from an exported commit"
+msgstr ""
 
 msgid "Import template"
 msgstr ""
@@ -48628,6 +48634,9 @@ msgid "Print the execution stack trace of the traced processes after each system
 msgstr ""
 
 msgid "Print the exit reason of kvm vcpu"
+msgstr ""
+
+msgid "Print the exported stash chain object ID"
 msgstr ""
 
 msgid "Print the filename for each match"
@@ -68887,6 +68896,9 @@ msgid "Store symbolic links as links"
 msgstr "Stocker tels quels les liens symboliques"
 
 msgid "Store the address of the caller’s frame as backchain pointer into callee’s stack frame"
+msgstr ""
+
+msgid "Store the exported stash chain at the given ref"
 msgstr ""
 
 msgid "Store the maven core version in a property maven.version"

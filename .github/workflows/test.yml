@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
-    - uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5, build_tools/update-dependencies.sh
+    - uses: vmactions/freebsd-vm@a2f9a41fa97f6848b8c3b791087dfcdaa5b473ff # v1.5.8, build_tools/update-dependencies.sh
       with:
         # # See https://github.com/vmactions/.github/wiki/debug%E2%80%90on%E2%80%90error
         # debug-on-error: true
@@ -196,7 +196,7 @@ jobs:
         shell: msys2 {0}
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
-    - uses: msys2/setup-msys2@66cd2cce69caa17b53920067426061ca1de3a884 # v2.32.0, build_tools/update-dependencies.sh
+    - uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2.33.0, build_tools/update-dependencies.sh
       with:
         update: true
         msystem: MSYS

@@ -215,7 +215,7 @@
                         prompt below:</div>
                     <div class="prompt_choices_scrollview">
                         <div class="prompt_choices_list">
-                            <template x-for="p in samplePrompts" :key="p.name">
+                            <template x-for="p in samplePrompts" :key="$id(p)">
                                 <div>
                                     <div class="prompt_demo_choice_label" x-text="p.name"></div>
                                     <template x-if="p.right">

@@ -770,9 +770,9 @@ fn validate_and_store_implicit_int<'args>(
 
 /// Delete the most recently matched flag, is_long_flag should be true if the flag was given with a
 /// long flag name (even if it was given with a single - and not two). The returned value is the
-/// deleted flag and its value (unless the value was given as a seperate argument)
+/// deleted flag and its value (unless the value was given as a separate argument)
 fn delete_flag<'args>(w: &mut WGetopter<'_, 'args, '_>, is_long_flag: bool) -> Cow<'args, wstr> {
-    // Does the option have a value that was a seperate argument to the option name itself? (e.g.
+    // Does the option have a value that was a separate argument to the option name itself? (e.g.
     // w.argv_opts ends in --<long_flag> <value> or -<other-short-options>...<short_flag> <value>)
     let separate_value = w
         .woptarg
@@ -1035,7 +1035,7 @@ fn argparse_parse_flags<'args>(
                     } else {
                         assert_eq!(opts.unknown_handling, UnknownHandling::Move);
                         // w.argv_opts will already contain the option and its value, unless the
-                        // value was given as a seperate argument
+                        // value was given as a separate argument
                         if let Some(value) = separate_value {
                             w.argv_opts.push(Cow::Borrowed(value));
                         }

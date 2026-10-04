@@ -63,7 +63,7 @@ complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a mask 
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a mount-image -d 'Mount an image into the mount namespace of a unit'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a preset -d 'Enable/disable a unit depending on preset configuration'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a preset-all -d 'Enable/disable all units depending on preset configuration'
-complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a reenable -d 'Disable the enable one or more units'
+complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a reenable -d 'Disable then enable one or more units'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a reload -d 'Request a unit reload its configuration'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a reload-or-restart -d 'Reload units if supported or restart them'
 complete -f -c systemctl -n "not __fish_seen_subcommand_from $commands" -a rescue -d 'Enter and isolate rescue mode'

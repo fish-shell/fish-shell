@@ -17560,9 +17560,6 @@ msgstr ""
 msgid "Disable the docs title"
 msgstr ""
 
-msgid "Disable the enable one or more units"
-msgstr ""
-
 msgid "Disable the eval extension"
 msgstr ""
 
@@ -17645,6 +17642,9 @@ msgid "Disable the use of the single instruction repeat instruction RPTS"
 msgstr ""
 
 msgid "Disable the warning about missing dependencies"
+msgstr ""
+
+msgid "Disable then enable one or more units"
 msgstr ""
 
 msgid "Disable this command"

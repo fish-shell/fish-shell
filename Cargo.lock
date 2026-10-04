@@ -348,7 +348,7 @@ dependencies = [
  "fish-wgetopt",
  "fish-widecharwidth",
  "fish-widestring",
- "fluent",
+ "fluent 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "itertools",
  "libc",
  "lru",
@@ -432,7 +432,7 @@ dependencies = [
  "fish-build-helper",
  "fish-fluent-extraction",
  "fish-localization",
- "fluent",
+ "fluent 0.17.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fluent-ftl-tools",
  "rust-embed",
  "unic-langid",
@@ -445,7 +445,7 @@ version = "0.0.0"
 dependencies = [
  "fish-tempfile",
  "fluent-ftl-tools",
- "fluent-syntax",
+ "fluent-syntax 0.12.0 (git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda)",
  "proc-macro2",
  "rsconf",
  "syn",
@@ -557,20 +557,46 @@ dependencies = [
 [[package]]
 name = "fluent"
 version = "0.17.0"
-source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8137a6d5a2c50d6b0ebfcb9aaa91a28154e0a70605f112d30cb0cd4a78670477"
 dependencies = [
- "fluent-bundle",
+ "fluent-bundle 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent"
+version = "0.17.0"
+source = "git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda#0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda"
+dependencies = [
+ "fluent-bundle 0.16.0 (git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda)",
  "unic-langid",
 ]
 
 [[package]]
 name = "fluent-bundle"
 version = "0.16.0"
-source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01203cb8918f5711e73891b347816d932046f95f54207710bda99beaeb423bf4"
 dependencies = [
  "fluent-langneg",
- "fluent-syntax",
- "intl-memoizer",
+ "fluent-syntax 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "intl-memoizer 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "intl_pluralrules",
+ "rustc-hash",
+ "self_cell",
+ "smallvec",
+ "unic-langid",
+]
+
+[[package]]
+name = "fluent-bundle"
+version = "0.16.0"
+source = "git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda#0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda"
+dependencies = [
+ "fluent-langneg",
+ "fluent-syntax 0.12.0 (git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda)",
+ "intl-memoizer 0.5.3 (git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda)",
  "intl_pluralrules",
  "rustc-hash",
  "self_cell",
@@ -581,11 +607,11 @@ dependencies = [
 [[package]]
 name = "fluent-ftl-tools"
 version = "0.1.0"
-source = "git+https://codeberg.org/danielrainer/fluent-ftl-tools?rev=5917664c8f2e4928ef1e480ff5c13bbe1e226066#5917664c8f2e4928ef1e480ff5c13bbe1e226066"
+source = "git+https://codeberg.org/danielrainer/fluent-ftl-tools?rev=17be1e678558d776f2bde068eacedf5fa79bf6fb#17be1e678558d776f2bde068eacedf5fa79bf6fb"
 dependencies = [
  "anyhow",
- "fluent",
- "fluent-syntax",
+ "fluent 0.17.0 (git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda)",
+ "fluent-syntax 0.12.0 (git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda)",
  "gettext-po-file-parser",
  "nix 0.30.1",
  "unic-langid",
@@ -603,7 +629,17 @@ dependencies = [
 [[package]]
 name = "fluent-syntax"
 version = "0.12.0"
-source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "54f0d287c53ffd184d04d8677f590f4ac5379785529e5e08b1c8083acdd5c198"
+dependencies = [
+ "memchr",
+ "thiserror",
+]
+
+[[package]]
+name = "fluent-syntax"
+version = "0.12.0"
+source = "git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda#0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda"
 dependencies = [
  "memchr",
  "thiserror",
@@ -671,7 +707,7 @@ dependencies = [
 [[package]]
 name = "gettext-po-file-parser"
 version = "0.0.0"
-source = "git+https://codeberg.org/danielrainer/fluent-ftl-tools?rev=5917664c8f2e4928ef1e480ff5c13bbe1e226066#5917664c8f2e4928ef1e480ff5c13bbe1e226066"
+source = "git+https://codeberg.org/danielrainer/fluent-ftl-tools?rev=17be1e678558d776f2bde068eacedf5fa79bf6fb#17be1e678558d776f2bde068eacedf5fa79bf6fb"
 dependencies = [
  "anyhow",
 ]
@@ -752,7 +788,17 @@ dependencies = [
 [[package]]
 name = "intl-memoizer"
 version = "0.5.3"
-source = "git+https://github.com/danielrainer/fluent-rs?rev=cf712bced280b217b6307edabc2089b3e57204ab#cf712bced280b217b6307edabc2089b3e57204ab"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "310da2e345f5eb861e7a07ee182262e94975051db9e4223e909ba90f392f163f"
+dependencies = [
+ "type-map",
+ "unic-langid",
+]
+
+[[package]]
+name = "intl-memoizer"
+version = "0.5.3"
+source = "git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda#0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda"
 dependencies = [
  "type-map",
  "unic-langid",
@@ -1752,7 +1798,7 @@ dependencies = [
  "fish-tempfile",
  "fish-widestring",
  "fluent-ftl-tools",
- "fluent-syntax",
+ "fluent-syntax 0.12.0 (git+https://github.com/projectfluent/fluent-rs?rev=0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda)",
  "ignore",
  "pcre2",
  "walkdir",

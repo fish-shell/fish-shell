@@ -230,3 +230,11 @@ end
 
 $fish -c 'complete -C "git -C ./.gi"'
 # CHECK: ./.git/	Directory
+
+# Regression test: `git push <remote> <branch>` completes local branches
+# even when the remote has no remote-tracking refs (leave it unfetched).
+git -c user.email=a@b -c user.name=a commit --allow-empty -m commit >/dev/null 2>&1
+git checkout -b pushbranch >/dev/null 2>&1
+git remote add pushremote ./.git
+complete -C'git push pushremote push'
+#CHECK: pushbranch	Local Branch

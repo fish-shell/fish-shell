@@ -839,7 +839,10 @@ function __fish_git_branch_for_remote
     end
     set -q remote[1]
     or return 1
+    # The exit status doubles as a gate ("a remote was named"), so mask the
+    # status of `string replace -f` (1 if no branch has the remote prefix).
     __fish_git_branches | string replace -f -- "$remote/" ''
+    return 0
 end
 
 # Return 0 if the current token is a possible commit-hash with at least 3 characters

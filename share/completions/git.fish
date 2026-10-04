@@ -840,6 +840,7 @@ function __fish_git_branch_for_remote
     set -q remote[1]
     or return 1
     __fish_git_branches | string replace -f -- "$remote/" ''
+    true
 end
 
 # Return 0 if the current token is a possible commit-hash with at least 3 characters

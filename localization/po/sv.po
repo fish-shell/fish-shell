@@ -53,6 +53,10 @@ msgid "$status is not valid as a command. See `help %s`"
 msgstr ""
 
 #, c-format
+msgid "%d: step argument counts in opposite direction"
+msgstr ""
+
+#, c-format
 msgid "%s"
 msgstr ""
 
@@ -158,6 +162,18 @@ msgstr ""
 
 #, c-format
 msgid "%s: function name required"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid --from value"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid --step value"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid --to value"
 msgstr ""
 
 #, c-format
@@ -314,6 +330,15 @@ msgid "--query and --names are mutually exclusive"
 msgstr ""
 
 msgid "--set-cursor argument cannot be empty"
+msgstr ""
+
+msgid "--step argument must not be 0"
+msgstr ""
+
+msgid "--to and --from must be specified if --step is used"
+msgstr ""
+
+msgid "--to is required"
 msgstr ""
 
 msgid "--tokens options are mutually exclusive"

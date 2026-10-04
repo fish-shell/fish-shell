@@ -56,6 +56,10 @@ msgid "$status is not valid as a command. See `help %s`"
 msgstr "$status no es un comando válido. Vea `help %s`"
 
 #, c-format
+msgid "%d: step argument counts in opposite direction"
+msgstr ""
+
+#, c-format
 msgid "%s"
 msgstr ""
 
@@ -162,6 +166,18 @@ msgstr "%s: se esperaba un valor numérico"
 #, c-format
 msgid "%s: function name required"
 msgstr "%s: se requiere un nombre de función"
+
+#, c-format
+msgid "%s: invalid --from value"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid --step value"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid --to value"
+msgstr ""
 
 #, c-format
 msgid "%s: invalid base value"
@@ -318,6 +334,15 @@ msgstr "--query y --names son mutuamente excluyentes"
 
 msgid "--set-cursor argument cannot be empty"
 msgstr "el argumento --set-cursor no puede estar vacío"
+
+msgid "--step argument must not be 0"
+msgstr ""
+
+msgid "--to and --from must be specified if --step is used"
+msgstr ""
+
+msgid "--to is required"
+msgstr ""
 
 msgid "--tokens options are mutually exclusive"
 msgstr "las opciones --tokens son mutuamente excluyentes"

@@ -50,6 +50,10 @@ msgid "$status is not valid as a command. See `help %s`"
 msgstr "$status 不是有效的命令。參見「help %s」"
 
 #, c-format
+msgid "%d: step argument counts in opposite direction"
+msgstr ""
+
+#, c-format
 msgid "%s"
 msgstr "%s"
 
@@ -156,6 +160,18 @@ msgstr "%s：預期一個數字"
 #, c-format
 msgid "%s: function name required"
 msgstr "%s：需要函式名稱"
+
+#, c-format
+msgid "%s: invalid --from value"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid --step value"
+msgstr ""
+
+#, c-format
+msgid "%s: invalid --to value"
+msgstr ""
 
 #, c-format
 msgid "%s: invalid base value"
@@ -312,6 +328,15 @@ msgstr "--query 和 --names 不能同時使用"
 
 msgid "--set-cursor argument cannot be empty"
 msgstr "--set-cursor 的引數不能空白"
+
+msgid "--step argument must not be 0"
+msgstr ""
+
+msgid "--to and --from must be specified if --step is used"
+msgstr ""
+
+msgid "--to is required"
+msgstr ""
 
 msgid "--tokens options are mutually exclusive"
 msgstr "--tokens 選項不能同時使用"

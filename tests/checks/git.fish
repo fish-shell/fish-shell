@@ -208,6 +208,18 @@ set -e __fish_git_prompt_status_order
 set -e ___fish_git_prompt_char_stashstate
 set -e ___fish_git_prompt_char_cleanstate
 
+# range-diff takes two ranges: a ref completes to "<ref>..".
+# "." gets no trailing space, so a second tab completes the other end.
+git checkout -qb range-a >/dev/null 2>&1
+git checkout -qb range-b >/dev/null 2>&1
+complete -C'git range-diff range-a'
+# CHECK: range-a..{{.*}}
+complete -C'git range-diff range-a..range-b'
+# CHECK: range-a..range-b{{.*}}
+# Other commands still complete plain refs.
+complete -C'git log range-a'
+# CHECK: range-a{{(?!\.).*}}Local Branch
+
 # Turn on everything and verify we correctly ignore sus config files.
 set -g __fish_git_prompt_status_order stagedstate invalidstate dirtystate untrackedfiles stashstate
 set -g __fish_git_prompt_showdirtystate 1

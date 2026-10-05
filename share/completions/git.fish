@@ -2798,7 +2798,7 @@ complete -f -c git -n '__fish_git_using_command send-email' -l smtp-server-port 
 complete -f -c git -n '__fish_git_using_command send-email' -l smtp-server-option -r
 complete -c git -n '__fish_git_using_command send-email' -l smtp-ssl-cert-path -r
 complete -f -c git -n '__fish_git_using_command send-email' -l smtp-user -r
-complete -f -c git -n '__fish_git_using_command send-email' -l smt-debug -ra '0 1' -d 'SMTP debug output'
+complete -f -c git -n '__fish_git_using_command send-email' -l smtp-debug -ra '0 1' -d 'SMTP debug output'
 complete -f -c git -n '__fish_git_using_command send-email' -l batch-size -r -d 'Reconnect after sending this many messages'
 complete -f -c git -n '__fish_git_using_command send-email' -l relogin-dleay -r -d 'Seconds to wait before reconnecting'
 complete -f -c git -n '__fish_git_using_command send-email' -l no-to -d 'Clear To:'

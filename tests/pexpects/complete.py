@@ -90,3 +90,13 @@ send("source foo/b/baz.fish")
 send(control("b") * 9 + "\t")
 expect_str("source foo/bar/baz.fish")
 send(control("u"))
+
+# A completion ending in a period gets no trailing space.
+sendline("complete -c gitrd -x -a 'main..'")
+send("gitrd m")
+sleep(0.1)
+send("\t")
+sleep(0.1)
+send("Z")
+expect_str("gitrd main..Z")  # no space
+send("\b" * 64)

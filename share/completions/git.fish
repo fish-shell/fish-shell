@@ -568,7 +568,14 @@ function __fish_git_needs_rev_files
     __fish_git_using_command show; and string match -r "^[^-].*:" -- (commandline -xt)
 end
 
+# Complete revision ranges like "main..next" or "main...next".
+# With --require-range, complete a ref to "<ref>..", relying on "." suppressing
+# the trailing space so a second tab completes the other end.
 function __fish_git_ranges
+    set -l require_range
+    if test "$argv[1]" = --require-range
+        set require_range 1
+    end
     set -l both (commandline -xt | string replace -r '\.{2,3}' \n\$0\n)
     set -l from $both[1]
     set -l dots $both[2]
@@ -578,6 +585,8 @@ function __fish_git_ranges
         if commandline -ct | string match -q '*..*'
             # The cursor is right of a .. range operator, make sure to include them first.
             __fish_git_refs | string replace -r '' "$dots"
+        else if test -n "$require_range"
+            __fish_git_refs | string replace -r '^([^\t]+)' '$1..'
         else
             __fish_git_refs | string replace \t "$dots"\t
         end
@@ -2142,7 +2151,7 @@ complete -f -c git -n '__fish_git_using_command pull' -s 6 -l ipv6 -d 'Use IPv6 
 
 ### range-diff
 complete -f -c git -n __fish_git_needs_command -a range-diff -d 'Compare two commit ranges'
-complete -f -c git -n '__fish_git_using_command range-diff' -ka '(__fish_git_ranges)'
+complete -f -c git -n '__fish_git_using_command range-diff' -ka '(__fish_git_ranges --require-range)'
 complete -f -c git -n '__fish_git_using_command range-diff' -l creation-factor -d 'Percentage by which creation is weighted'
 complete -f -c git -n '__fish_git_using_command range-diff' -l no-dual-color -d 'Use simple diff colors'
 

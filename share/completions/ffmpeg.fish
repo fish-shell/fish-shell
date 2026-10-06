@@ -123,11 +123,11 @@ function __fish_ffmpeg_formats
     ffmpeg -hide_banner -loglevel quiet -formats | string replace -rf '^ [DE.]{2} ([a-z0-9_]+) +(\S.+)$' '$1\t$2'
 end
 
-complete -c ffmpeg -s i -d "Specify input file"
+complete -c ffmpeg -o i -d "Specify input file"
 
 # Print help / information / capabilities
-complete -c ffmpeg -s L -d "Show license"
-complete -x -c ffmpeg -s h -s "?" -o help -l help -a "(__fish_ffmpeg_help_type)" -d "Show help"
+complete -c ffmpeg -o L -d "Show license"
+complete -x -c ffmpeg -o h -o "?" -o help -l help -a "(__fish_ffmpeg_help_type)" -d "Show help"
 complete -c ffmpeg -o version -d "Show version"
 complete -c ffmpeg -o buildconf -d "Show build configuration"
 complete -c ffmpeg -o formats -d "Show available formats"
@@ -149,12 +149,12 @@ complete -c ffmpeg -o sinks -d "List sinks of the output device"
 complete -c ffmpeg -o hwaccels -d "Show available HW acceleration methods"
 
 # Global options
-complete -x -c ffmpeg -o loglevel -s v \
+complete -x -c ffmpeg -o loglevel -o v \
     -a "quiet panic fatal error warning info verbose debug trace" -d "Set logging level"
 complete -c ffmpeg -o report -d "Generate a report"
 complete -c ffmpeg -o max_alloc -d "Set maximum size of a single allocated block"
-complete -c ffmpeg -s y -d "Overwrite output files"
-complete -c ffmpeg -s n -d "Never overwrite output files"
+complete -c ffmpeg -o y -d "Overwrite output files"
+complete -c ffmpeg -o n -d "Never overwrite output files"
 complete -c ffmpeg -o ignore_unknown -d "Ignore unknown stream types"
 complete -c ffmpeg -o filter_threads -d "Number of non-complex filter threads"
 complete -c ffmpeg -o filter_complex_threads -d "Number of threads for -filter_complex"
@@ -164,10 +164,10 @@ complete -c ffmpeg -o bits_per_raw_sample -d "Set the number of bits per raw sam
 complete -c ffmpeg -o vol -d "Change audio volume"
 
 # Per-file main options
-complete -c ffmpeg -s f -d "Force format" -xa "(__fish_ffmpeg_formats)"
-complete -c ffmpeg -s c -o codec -d "Codec name" -xa "(__fish_ffmpeg_codec_list all)"
+complete -c ffmpeg -o f -d "Force format" -xa "(__fish_ffmpeg_formats)"
+complete -c ffmpeg -o c -o codec -d "Codec name" -xa "(__fish_ffmpeg_codec_list all)"
 complete -c ffmpeg -o map_metadata -d "Set metadata information of outfile from infile"
-complete -c ffmpeg -s t -d "Record or transcode \"duration\" seconds of audio/video"
+complete -c ffmpeg -o t -d "Record or transcode \"duration\" seconds of audio/video"
 complete -c ffmpeg -o to -d "Record or transcode stop time"
 complete -c ffmpeg -o fs -d "Set the limit file size in bytes"
 complete -c ffmpeg -o ss -d "Set the start time offset"
@@ -188,8 +188,8 @@ complete -c ffmpeg -o disposition -d Disposition
 
 # Video options
 complete -c ffmpeg -o vframes -d "Set the number of video frames to output"
-complete -c ffmpeg -s r -d "Set frame rate"
-complete -c ffmpeg -s s -d "Set frame size"
+complete -c ffmpeg -o r -d "Set frame rate"
+complete -c ffmpeg -o s -d "Set frame size"
 complete -c ffmpeg -o aspect -d "Set aspect ratio"
 complete -c ffmpeg -o bits_per_raw_sample -d "Set the number of bits per raw sample"
 complete -c ffmpeg -o vn -d "Disable video"
@@ -200,7 +200,7 @@ complete -c ffmpeg -o timecode -d "Set initial TimeCode value"
 complete -x -c ffmpeg -o pass -a "1 2 3" -d "Select the pass number"
 complete -c ffmpeg -o vf -d "Set video filters"
 complete -c ffmpeg -o ab -o "b:a" -d "Audio bitrate"
-complete -c ffmpeg -s b -o "b:v" -d "Video bitrate"
+complete -c ffmpeg -o b -o "b:v" -d "Video bitrate"
 complete -c ffmpeg -o dn -d "Disable data"
 # Advanced video options
 complete -c ffmpeg -o pix_fmt
@@ -218,7 +218,7 @@ complete -c ffmpeg -o vol -d "Change audio volume"
 complete -c ffmpeg -o af -d "Set audio filters"
 
 # Subtitle options
-complete -c ffmpeg -s s -d "Set frame size"
+complete -c ffmpeg -o s -d "Set frame size"
 complete -c ffmpeg -o sn -d "Disable subtitle"
 complete -c ffmpeg -o scodec -o "codec:s" -o "c:s"
 __fish_ffmpeg_complete_regex '-(scodec|c(odec)?:s)(:\d+)?' "(__fish_ffmpeg_codec_list subtitle)"

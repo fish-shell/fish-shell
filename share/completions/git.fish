@@ -569,13 +569,7 @@ function __fish_git_needs_rev_files
 end
 
 # Complete revision ranges like "main..next" or "main...next".
-# With --require-range, complete a ref to "<ref>..", relying on "." suppressing
-# the trailing space so a second tab completes the other end.
 function __fish_git_ranges
-    set -l require_range false
-    if test "$argv[1]" = --require-range
-        set require_range true
-    end
     set -l both (commandline -xt | string replace -r '\.{2,3}' \n\$0\n)
     set -l from $both[1]
     set -l dots $both[2]
@@ -585,8 +579,6 @@ function __fish_git_ranges
         if commandline -ct | string match -q '*..*'
             # The cursor is right of a .. range operator, make sure to include them first.
             __fish_git_refs | string replace -r '' "$dots"
-        else if $require_range
-            __fish_git_refs | string replace -r '^([^\t]+)' '$1..'
         else
             __fish_git_refs | string replace \t "$dots"\t
         end
@@ -607,6 +599,46 @@ function __fish_git_ranges
         for to_ref in (__fish_git_refs | string match "*$to*") # if $to is empty, this correctly matches everything
             printf "%s%s%s\n" $from_ref $dots $to_ref
         end
+    end
+end
+
+# Complete the revisions of `git range-diff`, which takes one of
+#
+#   git range-diff <old-base>..<old-tip> <new-base>..<new-tip>
+#   git range-diff <old-tip>...<new-tip>
+#   git range-diff <base> <old-tip> <new-tip>
+#
+# so a range is followed by another range, while a bare revision can be
+# followed by either.
+function __fish_git_range_diff_ranges
+    if commandline -ct | string match -q -- '*..*'
+        # The cursor is inside a range, complete its other end as usual.
+        __fish_git_ranges
+        return
+    end
+
+    set -l cmd (commandline -xpc)
+    set -e cmd[1] # Drop "git".
+    # Everything before the subcommand is a global option and its value.
+    argparse -s -u (__fish_git_global_optspecs) -- $cmd 2>/dev/null
+    or return 1
+    set -e argv[1] # Drop the "range-diff" subcommand.
+    # Options are not revisions. Only these take a separate value; argparse
+    # moves the others, including unknown ones, out of $argv.
+    argparse -u creation-factor= max-memory= diff-merges= -- $argv 2>/dev/null
+    or return 1
+
+    if not set -q argv[1]
+        # Nothing typed yet, so all three forms are still possible.
+        set -l refs (__fish_git_refs)
+        string replace -r '^([^\t]+)' '$1..' $refs
+        string replace -r '^([^\t]+)' '$1...' $refs
+        printf '%s\n' $refs
+    else if string match -q -- '*..*' $argv[-1]
+        # A range is complete, so only a second range can follow.
+        __fish_git_refs | string replace -r '^([^\t]+)' '$1..'
+    else
+        __fish_git_refs
     end
 end
 
@@ -2152,7 +2184,7 @@ complete -f -c git -n '__fish_git_using_command pull' -s 6 -l ipv6 -d 'Use IPv6 
 
 ### range-diff
 complete -f -c git -n __fish_git_needs_command -a range-diff -d 'Compare two commit ranges'
-complete -f -c git -n '__fish_git_using_command range-diff' -ka '(__fish_git_ranges --require-range)'
+complete -f -c git -n '__fish_git_using_command range-diff' -ka '(__fish_git_range_diff_ranges)'
 complete -f -c git -n '__fish_git_using_command range-diff' -l creation-factor -d 'Percentage by which creation is weighted'
 complete -f -c git -n '__fish_git_using_command range-diff' -l no-dual-color -d 'Use simple diff colors'
 

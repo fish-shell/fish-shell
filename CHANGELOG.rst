@@ -14,7 +14,7 @@ Interactive improvements
 - ``history clear`` empties the history file instead of deleting it, preventing future shells from reimporting bash history (:issue:`12976`).
 - Fixed a glitch in the initial prompt when the terminal is resized during early startup (:issue:`12995`).
 - Fixed indentation when displaying a multiline command in a transient prompt (:issue:`13012`).
-- Completing a ref for ``git range-diff`` now appends the ``..`` range operator, so pressing :kbd:`Tab` again completes the other end of the range.
+- Completing a ref for ``git range-diff`` now appends ``..``, ``...``, or nothing, whichever of its three argument forms can still follow, so the next revision or range can be completed as well.
 
 Scripting improvements
 ----------------------

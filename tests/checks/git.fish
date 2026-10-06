@@ -208,14 +208,36 @@ set -e __fish_git_prompt_status_order
 set -e ___fish_git_prompt_char_stashstate
 set -e ___fish_git_prompt_char_cleanstate
 
-# range-diff takes two ranges: a ref completes to "<ref>..".
+# A ref completes to "<ref>.." ranged, "<ref>..." for the standalone
+# <old-tip>...<new-tip> form, or stays bare for "<base> <old-tip> <new-tip>".
 # "." gets no trailing space, so a second tab completes the other end.
 git checkout -qb range-a >/dev/null 2>&1
 git checkout -qb range-b >/dev/null 2>&1
 complete -C'git range-diff range-a'
 # CHECK: range-a..{{.*}}
+# CHECK: range-a...{{.*}}
+# CHECK: range-a{{(?!\.).*}}Local Branch
 complete -C'git range-diff range-a..range-b'
 # CHECK: range-a..range-b{{.*}}
+complete -C'git range-diff range-a range-b'
+# CHECK: range-b{{(?!\.).*}}Local Branch
+complete -C'git range-diff range-a range-b range-a'
+# CHECK: range-a{{(?!\.).*}}Local Branch
+# A partially typed tip stays bare and never grows "..".
+complete -C'git range-diff range-a range-'
+# CHECK: range-a{{(?!\.).*}}Local Branch
+# CHECK: range-b{{(?!\.).*}}Local Branch
+# Option values and global options are not positional arguments.
+complete -C'git range-diff --creation-factor 50 range-a'
+# CHECK: range-a..{{.*}}
+# CHECK: range-a...{{.*}}
+# CHECK: range-a{{(?!\.).*}}Local Branch
+complete -C'git -C . range-diff range-b'
+# CHECK: range-b..{{.*}}
+# CHECK: range-b...{{.*}}
+# CHECK: range-b{{(?!\.).*}}Local Branch
+complete -C'git range-diff range-a..range-b range-b'
+# CHECK: range-b..{{.*}}
 # Other commands still complete plain refs.
 complete -C'git log range-a'
 # CHECK: range-a{{(?!\.).*}}Local Branch

@@ -568,9 +568,47 @@ function __fish_git_needs_rev_files
     __fish_git_using_command show; and string match -r "^[^-].*:" -- (commandline -xt)
 end
 
+# What range-diff can accept at the cursor. It takes:
+#
+#   - <old-base>..<old-tip> <new-base>..<new-tip>
+#   - <old-tip>...<new-tip>
+#   - <base> <old-tip> <new-tip>
+function __fish_git_range_diff_mode
+    set -l positionals
+    set -l skip_value false
+    for tok in (commandline -cx)
+        if $skip_value
+            set skip_value false
+            continue
+        end
+        switch $tok
+            case git
+                continue
+            case range-diff
+                # Everything before the subcommand is global options and their values.
+                set -e positionals
+            case '-*'
+                # Only --creation-factor is known to take a separate value.
+                string match -q -- --creation-factor $tok
+                and set skip_value true
+            case '*'
+                set -a positionals $tok
+        end
+    end
+
+    if not set -q positionals[1]
+        echo range-or-rev
+    else if string match -q -- '*..*' $positionals[-1]
+        echo require-range
+    else
+        echo require-rev
+    end
+end
+
 # Complete revision ranges like "main..next" or "main...next".
-# With --require-range, complete a ref to "<ref>..", relying on "." suppressing
-# the trailing space so a second tab completes the other end.
+# With --require-range, a ref completes to "<ref>.."; "." suppresses the
+# trailing space, so a second tab completes the other end. What is offered
+# also depends on the positionals, see __fish_git_range_diff_mode.
 function __fish_git_ranges
     set -l require_range false
     if test "$argv[1]" = --require-range
@@ -586,7 +624,18 @@ function __fish_git_ranges
             # The cursor is right of a .. range operator, make sure to include them first.
             __fish_git_refs | string replace -r '' "$dots"
         else if $require_range
-            __fish_git_refs | string replace -r '^([^\t]+)' '$1..'
+            switch (__fish_git_range_diff_mode)
+                case require-range
+                    __fish_git_refs | string replace -r '^([^\t]+)' '$1..'
+                case require-rev
+                    __fish_git_refs
+                case '*'
+                    # No positionals yet, so any range-diff form is possible.
+                    set -l refs (__fish_git_refs)
+                    string replace -r '^([^\t]+)' '$1..' $refs
+                    string replace -r '^([^\t]+)' '$1...' $refs
+                    printf '%s\n' $refs
+            end
         else
             __fish_git_refs | string replace \t "$dots"\t
         end

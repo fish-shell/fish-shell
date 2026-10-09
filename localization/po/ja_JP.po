@@ -3237,9 +3237,6 @@ msgstr "関数を保存"
 msgid "Save the current definition of all specified functions to file"
 msgstr "指定された全ての関数定義をファイルに保存"
 
-msgid "Search back or move cursor up 1 line"
-msgstr "履歴を逆方向に検索するか、カーソルを1行上に移動"
-
 msgid "Select current selection"
 msgstr "現在の選択範囲を選択"
 

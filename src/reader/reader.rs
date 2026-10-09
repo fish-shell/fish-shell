@@ -5479,7 +5479,7 @@ fn get_autosuggestion_performer(
         let complete_flags = CompletionRequestOptions::Autosuggestion;
         let mut would_be_cursor = line_range.end;
         let (mut completions, needs_load) =
-            complete(&command_line[..would_be_cursor], complete_flags, ctx);
+            complete(&command_line[..would_be_cursor], complete_flags, false, ctx);
 
         let suggestion = if completions.is_empty() {
             // If there are no completions to suggest, fall back to icase history.
@@ -7001,7 +7001,7 @@ impl<'a> Reader<'a> {
         let complete_options = CompletionRequestOptions::default();
         let (mut comp, _needs_load) = {
             let cmdsub = &self.data.command_line.text()[cmdsub_range.start..token_range.end];
-            complete(cmdsub, complete_options, &mut self.parser.context())
+            complete(cmdsub, complete_options, false, &mut self.parser.context())
         };
 
         let el = &self.command_line;

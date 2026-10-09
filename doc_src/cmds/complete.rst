@@ -7,7 +7,7 @@ Synopsis
 .. synopsis::
 
     complete ((-c | --command) | (-p | --path)) COMMAND [OPTIONS] [--color WHEN]
-    complete (-C | --do-complete) [--escape] STRING
+    complete (-C | --do-complete) [--escape] [--literal-token] STRING
 
 Description
 -----------
@@ -73,6 +73,9 @@ The following options are available:
 
 **--escape**
     When used with ``-C``, escape special characters in completions.
+
+**--literal-token**
+    When used with ``-C``, treat the token being completed as literal text instead of splitting it at unescaped ``=`` or ``:`` characters. This is useful for completion helpers that receive a plain path prefix (like ``__fish_complete_path``), which cannot know whether the prefix contains option-assignment syntax or is part of a filename.
 
 **--color** *WHEN*
     Controls when to use syntax highlighting colors when printing completions.

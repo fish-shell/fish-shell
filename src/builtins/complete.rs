@@ -239,6 +239,7 @@ fn builtin_complete_print(
 
 /// Values used for long-only options.
 const OPT_ESCAPE: char = '\x01';
+const OPT_LITERAL_TOKEN: char = '\x02';
 
 /// The complete builtin. Used for specifying programmable tab-completions. Calls the functions in
 /// complete.rs for any heavy lifting.
@@ -264,6 +265,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
     let mut wrap_targets = vec![];
     let mut preserve_order = false;
     let mut unescape_output = true;
+    let mut literal_token = false;
     let mut color = ColorEnabled::default();
 
     let short_options: &wstr = L!("a:c:p:s:l:o:d:fFrxeuAn:C::w:hk");
@@ -288,6 +290,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
         wopt(L!("help"), ArgType::NoArgument, 'h'),
         wopt(L!("keep-order"), ArgType::NoArgument, 'k'),
         wopt(L!("escape"), ArgType::NoArgument, OPT_ESCAPE),
+        wopt(L!("literal-token"), ArgType::NoArgument, OPT_LITERAL_TOKEN),
         wopt(L!("color"), ArgType::RequiredArgument, COLOR_OPTION_CHAR),
     ];
 
@@ -384,6 +387,9 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
             }
             OPT_ESCAPE => {
                 unescape_output = false;
+            }
+            OPT_LITERAL_TOKEN => {
+                literal_token = true;
             }
             'h' => {
                 builtin_print_help(parser, streams, cmd);
@@ -522,6 +528,7 @@ pub fn complete(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]
             let (mut comp, _needs_load) = crate::complete::complete(
                 &do_complete_param,
                 complete_options,
+                literal_token,
                 &mut parser.context(),
             );
 

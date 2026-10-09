@@ -11,7 +11,11 @@ function __fish_complete_path --description "Complete using path"
             set target "$argv[1]"
             set description "$argv[2]"
     end
-    set -l targets (complete -C"'' $target")
+    # --literal-token: complete the target as a literal path prefix. Without it the
+    # completion engine would split the target at an unescaped `=` and complete the
+    # part after it, returning unrelated files for targets like `--foo=` (#12971).
+    # This works whether the caller passes the token raw or escaped.
+    set -l targets (complete --literal-token -C"'' $target")
     if set -q targets[1]
         printf "%s\n" $targets\t"$description"
     end

@@ -15,6 +15,7 @@ Interactive improvements
 - Fixed a glitch in the initial prompt when the terminal is resized during early startup (:issue:`12995`).
 - Fixed indentation when displaying a multiline command in a transient prompt (:issue:`13012`).
 - Completing a ref for ``git range-diff`` now appends the ``..`` range operator, so pressing :kbd:`Tab` again completes the other end of the range.
+- ``complete --literal-token`` makes ``complete -C`` treat the token being completed as literal text instead of splitting it at an unescaped ``=`` or ``:``. ``__fish_complete_path`` uses this so prefixes like ``--foo=`` no longer complete unrelated files (:issue:`12971`).
 
 Scripting improvements
 ----------------------

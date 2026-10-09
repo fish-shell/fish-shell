@@ -517,7 +517,7 @@ complete -C"cmd_with_fancy_completion </dev/null >/dev/null 2>>/dev/null >?/dev/
 # CHECK: 1
 
 complete -C 'get_file=get-file status $get_file ' |
-string match completions/..fish
+    string match completions/..fish
 # CHECK: completions/..fish
 complete -C 'version=123 get_file=get-file status $get_file ' | string match 'is-block*'
 # CHECK: is-block	Test if a code block is currently evaluated
@@ -770,3 +770,29 @@ if string match -rq -- '^[a-z]+$' $USER
     string match -rq -- "$USER\t.*" (complete -C "echo ~$first_letter_wrong_case")
     or echo "`complete -C'echo ~$first_letter_wrong_case'` did not yield $USER"
 end
+
+# --literal-token: the token being completed is taken literally instead of
+# being split at an unescaped '=' or ':' (#12971).
+set -l dir (mktemp -d)
+cd $dir
+touch foo
+touch -- --bar --bar=baz
+complete -C"'' --bar="
+# CHECK: --bar=foo
+# CHECK: --bar=--bar
+# CHECK: --bar=--bar=baz
+complete --literal-token -C"'' --bar="
+# CHECK: --bar=baz
+complete --literal-token -C"'' --bar\\="
+# CHECK: --bar=baz
+complete --literal-token -C"'' --bar"
+# CHECK: --bar
+# CHECK: --bar=baz
+# The colon separator is likewise ignored in literal mode.
+touch -- -d:foo
+complete -C"'' -d:foo"
+# CHECK: -d:foo
+complete --literal-token -C"'' -d:foo"
+# CHECK: -d:foo
+cd -
+rm -r $dir

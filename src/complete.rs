@@ -750,6 +750,11 @@ struct Completer<'ctx, 'parser> {
     /// Table of completions conditions that have already been tested and the corresponding test
     /// results.
     condition_cache: HashMap<WString, bool>,
+    /// If true, do not treat unescaped ``=`` or ``:`` in the token being completed as
+    /// option-argument separators; the token is matched literally instead.
+    /// Requested by `complete --literal-token` for helpers that receive a path prefix
+    /// (like `__fish_complete_path`), see #12971.
+    literal_token: bool,
 }
 
 static COMPLETION_AUTOLOADER: LazyLock<Mutex<Autoload>> =
@@ -764,6 +769,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
             completions: CompletionReceiver::new(expansion_limit),
             needs_load: vec![],
             condition_cache: HashMap::new(),
+            literal_token: false,
         }
     }
 
@@ -1783,7 +1789,9 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
         // foo=bar => expand the whole thing, and also just bar
         //
         // We also support colon separator (#2178). If there's more than one, prefer the last one.
-        let sep_index = if get_quote(s).is_some() {
+        // In literal-token mode the token is taken at face value instead (#12971): callers that
+        // receive an already-plain path prefix cannot tell an option-assignment from a filename.
+        let sep_index = if self.literal_token || get_quote(s).is_some() {
             None
         } else {
             let mut end = s.len();
@@ -2533,12 +2541,14 @@ pub fn complete_remove_all(cmd: WString, cmd_is_path: bool, explicit: bool) {
 pub fn complete(
     cmd_with_subcmds: &wstr,
     flags: CompletionRequestOptions,
+    literal_token: bool,
     ctx: &mut OperationContext<'_>,
 ) -> (Vec<Completion>, Vec<WString>) {
     // Determine the innermost subcommand.
     let cmdsubst = get_cmdsubst_extent(cmd_with_subcmds, cmd_with_subcmds.len());
     let cmd = cmd_with_subcmds[cmdsubst].to_owned();
     let mut completer = Completer::new(ctx, flags);
+    completer.literal_token = literal_token;
     completer.perform_for_commandline(cmd);
 
     (
@@ -2850,7 +2860,7 @@ mod tests {
         let do_complete = |ctx: &mut OperationContext<'_>,
                            cmd: &wstr,
                            flags: CompletionRequestOptions|
-         -> Vec<Completion> { complete(cmd, flags, ctx).0 };
+         -> Vec<Completion> { complete(cmd, flags, false, ctx).0 };
 
         let plain = CompletionRequestOptions::default();
         let autosuggest = CompletionRequestOptions::Autosuggestion;
@@ -3219,7 +3229,7 @@ mod tests {
             ));
         });
 
-        let completions = complete(L!("testabbrsonetwothree"), plain, ctx).0;
+        let completions = complete(L!("testabbrsonetwothree"), plain, false, ctx).0;
         assert_eq!(completions.len(), 2);
         // Abbreviations should not have a space after them.
         assert_eq!(completions[0].completion, L!("zero"));
@@ -3318,6 +3328,7 @@ mod tests {
                 let mut comps = complete(
                     L!($command),
                     CompletionRequestOptions::Autosuggestion,
+                    false,
                     &mut OperationContext::background($vars, EXPANSION_LIMIT_BACKGROUND),
                 )
                 .0;
@@ -3338,6 +3349,7 @@ mod tests {
                 let mut comps = complete(
                     L!($command),
                     CompletionRequestOptions::default(),
+                    false,
                     &mut OperationContext::foreground(
                         parser,
                         Box::new(no_cancel),
@@ -3498,6 +3510,7 @@ mod tests {
                 let comps = complete(
                     L!($command),
                     CompletionRequestOptions::Autosuggestion,
+                    false,
                     &mut OperationContext::empty(),
                 )
                 .0;

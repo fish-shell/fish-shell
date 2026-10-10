@@ -398,9 +398,12 @@ pub fn functions(
             // TODO: This is duplicated in type.
             // Extract this into a helper.
             match props.definition_file() {
-                Some(path) if path == "-" => {
-                    comment.push_utfstr(&wgettext!("Defined via `source`"));
-                }
+                Some(path) if path == "-" => match props.source_definition_command() {
+                    Some(source_cmd) => {
+                        comment.push_str(&function::localize_defined_via_source(&source_cmd));
+                    }
+                    None => comment.push_utfstr(&wgettext!("Defined via `source`")),
+                },
                 Some(path) => {
                     comment.push_utfstr(&wgettext_fmt!(
                         "Defined in %s @ line %d",

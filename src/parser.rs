@@ -56,6 +56,8 @@ pub enum BlockData {
     Source {
         /// The sourced file
         file: Arc<WString>,
+        /// Arguments passed to the sourced file
+        args: Vec<WString>,
     },
 }
 
@@ -157,9 +159,9 @@ impl Block {
         b.data = Some(Box::new(BlockData::Function { name, args }));
         b
     }
-    pub fn source_block(src: FilenameRef) -> Block {
+    pub fn source_block(src: FilenameRef, args: Vec<WString>) -> Block {
         let mut b = Block::new(BlockType::Source);
-        b.data = Some(Box::new(BlockData::Source { file: src }));
+        b.data = Some(Box::new(BlockData::Source { file: src, args }));
         b
     }
     pub fn for_block() -> Block {
@@ -615,7 +617,7 @@ impl Parser {
         job_group: Option<&JobGroupRef>,
     ) -> Result<EvalRes, WString> {
         let _interactive_push = self.push_scope(|s| s.is_interactive = false);
-        let sb = self.push_block(Block::source_block(filename.clone()));
+        let sb = self.push_block(Block::source_block(filename.clone(), vec![]));
         let _filename_push = self.current_filename.scoped_replace(Some(filename));
 
         let ret = self.eval_wstr(src, io, job_group, BlockType::Top);

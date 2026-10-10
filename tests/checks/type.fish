@@ -135,6 +135,23 @@ type -p other-test-type3
 type -s other-test-type3
 # CHECK: other-test-type3 is a function (Defined via `source`, copied via `source`)
 
+set -l tmpdir (mktemp -d)
+echo "alias test-type-alias 'echo this is a type test'" >$tmpdir/aliases.fish
+source $tmpdir/aliases.fish arg1 'arg 2'
+type test-type-alias
+# CHECK: test-type-alias is a function with definition
+# CHECK: # Defined via `source {{.*}}/aliases.fish arg1 'arg 2'`
+# CHECK: function test-type-alias --wraps='echo this is a type test' --description 'alias test-type-alias echo this is a type test'
+# CHECK: echo this is a type test $argv
+# CHECK: end
+
+type -s test-type-alias
+# CHECK: test-type-alias is a function (Defined via `source {{.*}}/aliases.fish arg1 'arg 2'`)
+
+type -p test-type-alias
+# CHECK: -
+rm -r $tmpdir
+
 if cygwin_noacl ./
     # In `noacl` mounts, Cygwin relies on the file content to set the `x` bit
     # and ignores `chmod`

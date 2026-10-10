@@ -15,6 +15,7 @@ Interactive improvements
 - Fixed a glitch in the initial prompt when the terminal is resized during early startup (:issue:`12995`).
 - Fixed indentation when displaying a multiline command in a transient prompt (:issue:`13012`).
 - Completing a ref for ``git range-diff`` now appends the ``..`` range operator, so pressing :kbd:`Tab` again completes the other end of the range.
+- ``funced`` no longer saves a function copied interactively with ``functions --copy`` to the file of the original function (:issue:`12305`).
 
 Scripting improvements
 ----------------------

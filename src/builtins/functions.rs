@@ -231,7 +231,7 @@ pub fn functions(
 
         if opts.verbose {
             let copy_place = match props.as_ref() {
-                Some(p) if p.copy_definition_file.is_some() => {
+                Some(p) if p.is_copy => {
                     if let Some(df) = &p.definition_file {
                         df.as_ref().to_owned()
                     } else {

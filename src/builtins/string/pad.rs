@@ -113,3 +113,38 @@ impl StringSubCommand<'_> for Pad {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::{STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn direction() {
+        test_init();
+        validate!(["string", "pad", "-w", "6", "abc"], STATUS_CMD_OK, "   abc\n");
+        validate!(["string", "pad", "-w", "6", "-r", "abc"], STATUS_CMD_OK, "abc   \n");
+        validate!(["string", "pad", "-w", "7", "-C", "abc"], STATUS_CMD_OK, "  abc  \n");
+        validate!(["string", "pad", "-w", "2", "abc"], STATUS_CMD_OK, "abc\n");
+    }
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn char() {
+        test_init();
+        validate!(["string", "pad", "-w", "6", "-c", ".", "abc"], STATUS_CMD_OK, "...abc\n");
+    }
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn invalid_args() {
+        test_init();
+        validate!(["string", "pad", "-w", "-1", "abc"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "pad", "-c", "ab", "-w", "5", "x"], STATUS_INVALID_ARGS, "");
+    }
+}

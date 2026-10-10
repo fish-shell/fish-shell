@@ -182,3 +182,52 @@ impl StringSubCommand<'_> for Repeat {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn count() {
+        test_init();
+        validate!(["string", "repeat", "-n", "3", "ab"], STATUS_CMD_OK, "ababab\n");
+        validate!(["string", "repeat", "-n", "0", "ab"], STATUS_CMD_ERROR, "");
+    }
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn max() {
+        test_init();
+        validate!(["string", "repeat", "-n", "3", "-m", "5", "ab"], STATUS_CMD_OK, "ababa\n");
+    }
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn no_newline() {
+        test_init();
+        validate!(["string", "repeat", "-n", "3", "-N", "ab"], STATUS_CMD_OK, "ababab");
+    }
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn quiet() {
+        test_init();
+        validate!(["string", "repeat", "-n", "3", "-q", "ab"], STATUS_CMD_OK, "");
+    }
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn invalid_count() {
+        test_init();
+        validate!(["string", "repeat", "-n", "-1", "ab"], STATUS_INVALID_ARGS, "");
+        validate!(["string", "repeat", "-n", "abc", "ab"], STATUS_INVALID_ARGS, "");
+    }
+}

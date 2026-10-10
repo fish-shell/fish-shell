@@ -252,3 +252,35 @@ impl<'args> StringSubCommand<'args> for Shorten<'args> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::builtins::{STATUS_CMD_ERROR, STATUS_CMD_OK, STATUS_INVALID_ARGS};
+    use crate::tests::prelude::*;
+    use crate::validate;
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn max() {
+        test_init();
+        validate!(["string", "shorten", "-m", "5", "-c", "...", "hello world"], STATUS_CMD_OK, "he...\n");
+        validate!(["string", "shorten", "-m", "20", "hello world"], STATUS_CMD_ERROR, "hello world\n");
+    }
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn left() {
+        test_init();
+        validate!(["string", "shorten", "-m", "5", "-l", "-c", "...", "hello world"], STATUS_CMD_OK, "...ld\n");
+    }
+
+    #[test]
+    #[serial]
+    #[rustfmt::skip]
+    fn invalid_max() {
+        test_init();
+        validate!(["string", "shorten", "-m", "abc", "hello"], STATUS_INVALID_ARGS, "");
+    }
+}

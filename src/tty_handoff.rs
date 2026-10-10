@@ -8,13 +8,13 @@ use crate::global_safety::RelaxedAtomicBool;
 use crate::job_group::JobGroup;
 use crate::prelude::*;
 use crate::proc::JobGroupRef;
+use crate::terminal::Outputter;
 use crate::terminal::TerminalCommand::{
     self, ApplicationKeypadModeDisable, ApplicationKeypadModeEnable, DecrstBracketedPaste,
     DecrstColorThemeReporting, DecrstFocusReporting, DecsetBracketedPaste,
     DecsetColorThemeReporting, DecsetFocusReporting, KittyKeyboardProgressiveEnhancementsDisable,
     KittyKeyboardProgressiveEnhancementsEnable, ModifyOtherKeysDisable, ModifyOtherKeysEnable,
 };
-use crate::terminal::{Outputter, is_konsole};
 use crate::threads::assert_is_main_thread;
 use crate::wutil::{perror_nix, wcstoi};
 use fish_common::{STDIN_FD, write_loop};
@@ -83,8 +83,8 @@ impl TtyQuirks {
             && vars.get(L!("__mc_kitty_keyboard")).is_none()
         {
             PreCsiUMidnightCommander
-        } else if get_iterm2_version(xtversion).is_some_and(|v| v < (3, 5, 12))
-            || is_konsole(xtversion)
+        } else if patch_version(L!("iTerm2 "), xtversion).is_some_and(|v| v < (3, 5, 12))
+            || konsole_version(xtversion).is_some_and(|v| (v.0, v.1) <= (26, 8))
         {
             BuggyKittyKeyboardProtocol
         } else if let Some(version) = get_tmux_version(xtversion) {
@@ -592,14 +592,13 @@ impl Drop for TtyHandoff {
     }
 }
 
+pub(crate) fn konsole_version(xtversion: &wstr) -> Option<(u32, u32, u32)> {
+    patch_version(L!("Konsole "), xtversion)
+}
+
 // If we are running under iTerm2, get the version as a tuple of (major, minor, patch).
-fn get_iterm2_version(xtversion: &wstr) -> Option<(u32, u32, u32)> {
-    // TODO split_once
-    let mut xtversion = xtversion.split(' ');
-    if xtversion.next().unwrap() != "iTerm2" {
-        return None;
-    }
-    let mut version = xtversion.next()?.split('.');
+fn patch_version(prefix: &wstr, xtversion: &wstr) -> Option<(u32, u32, u32)> {
+    let mut version = xtversion.strip_prefix(prefix)?.split('.');
     Some((
         wcstoi(version.next()?).ok()?,
         wcstoi(version.next()?).ok()?,

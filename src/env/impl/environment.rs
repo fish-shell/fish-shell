@@ -15,7 +15,6 @@ use nix::sys::stat::{Mode, umask};
 use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashSet;
 use std::ffi::CString;
-use std::marker::PhantomData;
 use std::mem;
 use std::ops::{Deref, DerefMut};
 use std::sync::LazyLock;
@@ -1000,22 +999,19 @@ static ENV_LOCK: Mutex<()> = Mutex::new(());
 /// Like MutexGuard but for our global lock.
 pub struct EnvMutexGuard<'a, T: 'a> {
     _guard: MutexGuard<'static, ()>,
-    value: *mut T,
-    _phantom: PhantomData<&'a T>,
+    value: &'a mut T,
 }
 
 impl<'a, T: 'a> Deref for EnvMutexGuard<'a, T> {
     type Target = T;
-    fn deref(&self) -> &'a T {
-        // Safety: we hold the global lock.
-        unsafe { &*self.value }
+    fn deref(&self) -> &T {
+        self.value
     }
 }
 
 impl<'a, T: 'a> DerefMut for EnvMutexGuard<'a, T> {
-    fn deref_mut(&mut self) -> &'a mut T {
-        // Safety: we hold the global lock.
-        unsafe { &mut *self.value }
+    fn deref_mut(&mut self) -> &mut T {
+        self.value
     }
 }
 
@@ -1038,14 +1034,12 @@ impl<T> EnvMutex<T> {
         EnvMutexGuard {
             _guard: guard,
             value,
-            _phantom: PhantomData,
         }
     }
 }
 
 // Safety: we use a global lock.
 unsafe impl<T: Send> Sync for EnvMutex<T> {}
-unsafe impl<T: Send> Send for EnvMutex<T> {}
 
 #[cfg(test)]
 mod tests {

@@ -371,26 +371,29 @@ impl<'s> State<'s> {
             )
     }
 
-    /// Tries to get the next token from the input. If the input does not contain enough data for
-    /// another token, `None` is returned. Otherwise, the number of consumed characters is returned
-    /// along with either the token, or `None` in case of ignored (whitespace) input.
-    fn get_token(&mut self) -> Option<(usize, Option<Token>)> {
+    /// Get the next token from the input.
+    /// Leading whitespaces must have been pre-filtered.
+    fn get_token(&mut self) -> (usize, Token) {
         debug_assert!(!matches!(self.current, Token::Error));
 
-        let next = &self.start.as_char_slice().get(self.pos..)?;
+        let next = &self.start.as_char_slice().get(self.pos..).unwrap_or(&[]);
+        if next.is_empty() {
+            return (0, Token::End);
+        }
+        let next_char = next[0];
 
         // Try reading a number.
-        if matches!(next.first(), Some('0'..='9') | Some('.')) {
+        if matches!(next_char, '0'..='9' | '.') {
             let mut consumed = 0;
             match wcstod_underscores(*next, &mut consumed) {
-                Ok(num) => Some((consumed, Some(Token::Number(num)))),
+                Ok(num) => (consumed, Token::Number(num)),
                 Err(wutil::Error::InvalidChar) => {
                     self.set_error(ErrorKind::Unknown, Some((self.pos + consumed, 1)));
-                    Some((consumed, Some(Token::Error)))
+                    (consumed, Token::Error)
                 }
                 Err(wutil::Error::Overflow) => {
                     self.set_error(ErrorKind::NumberTooLarge, Some((self.pos, consumed)));
-                    Some((consumed, Some(Token::Error)))
+                    (consumed, Token::Error)
                 }
                 Err(wutil::Error::Empty) => {
                     // We have a matches! above, this can't be?
@@ -403,8 +406,8 @@ impl<'s> State<'s> {
             // - that's the alternative multiplication operator.
             // We look for alphabetic here even tho all our function names are ASCII,
             // in order to give a nicer error.
-            if next.first()?.is_alphabetic()
-                && !(*next.first()? == 'x' && next.len() > 1 && next[1].is_whitespace())
+            if next_char.is_alphabetic()
+                && !(next_char == 'x' && next.len() > 1 && next[1].is_whitespace())
             {
                 let ident_len = next
                     .iter()
@@ -413,16 +416,16 @@ impl<'s> State<'s> {
 
                 let ident = &next[..ident_len];
                 if let Some(var) = find_builtin(wstr::from_char_slice(ident)) {
-                    return Some((ident_len, Some(Token::Function(var))));
+                    return (ident_len, Token::Function(var));
                 } else if self.no_specific_error() {
                     // Our error is more specific, so it takes precedence.
                     self.set_error(ErrorKind::UnknownFunction, Some((self.pos, ident_len)));
                 }
 
-                Some((ident_len, Some(Token::Error)))
+                (ident_len, Token::Error)
             } else {
                 // Look for an operator or special character.
-                let tok = match next.first()? {
+                let tok = match next_char {
                     '+' => Token::Infix(Operator::Add),
                     '-' => Token::Infix(Operator::Sub),
                     'x' | '*' => Token::Infix(Operator::Mul),
@@ -432,7 +435,7 @@ impl<'s> State<'s> {
                     '(' => Token::Open,
                     ')' => Token::Close,
                     ',' => Token::Sep,
-                    ' ' | '\t' | '\n' | '\r' => return Some((1, None)),
+                    ' ' | '\t' | '\n' | '\r' => unreachable!(),
                     '=' | '>' | '<' | '&' | '|' | '!' => {
                         self.set_error(ErrorKind::LogicalOperator, None);
                         Token::Error
@@ -443,22 +446,25 @@ impl<'s> State<'s> {
                     }
                 };
 
-                Some((1, Some(tok)))
+                (1, tok)
             }
         }
     }
 
     fn next_token(&mut self) {
-        self.current = loop {
-            let Some((consumed, token)) = self.get_token() else {
-                break Token::End;
-            };
+        // Consume whitespaces before next token
+        let first_char_pos = self
+            .start
+            .as_char_slice()
+            .iter()
+            .skip(self.pos)
+            .take_while(|c| [' ', '\t', '\n', '\r'].contains(*c))
+            .count();
+        self.pos += first_char_pos;
 
-            self.pos += consumed;
-            if let Some(token) = token {
-                break token;
-            }
-        };
+        let (consumed, token) = self.get_token();
+        self.pos += consumed;
+        self.current = token;
     }
 
     /// ```text

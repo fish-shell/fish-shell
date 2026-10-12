@@ -29,7 +29,7 @@ use crate::{
     universal_notifier::default_notifier,
     wutil::{fish_wcstol, wgetcwd},
 };
-use fish_common::{UnescapeStringStyle, unescape_string};
+use fish_common::{UnescapeStringStyle, assert_send, unescape_string};
 use fish_wcstringutil::join_strings;
 use fish_widestring::{cstr2wcstring, osstr2wcstring, str2wcstring};
 use libc::c_int;
@@ -474,8 +474,7 @@ impl Environment for EnvScoped {
 }
 
 /// Necessary for [`Arc<EnvStack>`] to be sync.
-/// Safety: again, the global lock.
-unsafe impl Send for EnvStack {}
+const _: () = assert_send::<EnvStack>();
 
 impl Environment for EnvStack {
     fn getf(&self, key: &wstr, mode: EnvMode) -> Option<EnvVar> {

@@ -452,6 +452,8 @@ impl EnvScopedImpl {
 
     /// Return whether the current export array is empty or out-of-date.
     fn export_array_needs_regeneration(&self) -> bool {
+        // The idea here is to determine if the set of exported variables (our export_array)
+        // may have changed since the last time we checked. Every node in the stack contributes.
         // Check if our export array is stale. If we don't have one, it's obviously stale. Otherwise,
         // compare our cached generations with the current generations. If they don't match exactly then
         // our generation list is stale.
@@ -533,6 +535,7 @@ impl EnvScopedImpl {
 
             // Have to pull this into a local to satisfy the borrow checker.
             let mut generations = std::mem::take(&mut self.export_array_generations);
+            generations.clear();
             self.enumerate_generations(|r#gen| generations.push(r#gen));
             self.export_array_generations = generations;
         }

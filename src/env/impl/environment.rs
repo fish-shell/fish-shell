@@ -225,33 +225,8 @@ impl EnvNodeRef {
     }
 
     /// Helper to get an iterator over the chain of EnvNodeRefs.
-    fn iter(&self) -> EnvNodeIter {
-        EnvNodeIter::new(self.clone())
-    }
-}
-
-/// Helper to iterate over a chain of EnvNodeRefs.
-struct EnvNodeIter {
-    current: Option<EnvNodeRef>,
-}
-
-impl EnvNodeIter {
-    fn new(start: EnvNodeRef) -> EnvNodeIter {
-        EnvNodeIter {
-            current: Some(start),
-        }
-    }
-}
-
-impl Iterator for EnvNodeIter {
-    type Item = EnvNodeRef;
-
-    fn next(&mut self) -> Option<EnvNodeRef> {
-        let current: Option<EnvNodeRef> = self.current.take();
-        if let Some(ref current) = current {
-            self.current = current.next();
-        }
-        current
+    fn iter(&self) -> impl Iterator<Item = EnvNodeRef> {
+        std::iter::successors(Some(self.clone()), EnvNodeRef::next)
     }
 }
 

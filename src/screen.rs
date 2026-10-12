@@ -1224,7 +1224,10 @@ impl Screen {
                 // wrapping.
                 if should_clear_screen_this_line
                     && !has_cleared_screen
-                    && (done || Some(j + 1) == screen_width)
+                    && (done
+                        || screen_width.is_some_and(|sw| {
+                            current_width + wcwidth_rendered_min_0(o_line(self, i).char_at(j)) >= sw
+                        }))
                 {
                     set_color(self, HighlightSpec::new());
                     self.r#move(current_width, i);

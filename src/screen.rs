@@ -1222,9 +1222,15 @@ impl Screen {
                 // the screen after we output into the last column, it can erase the last character due
                 // to the sticky right cursor. If we clear the screen too early, we can defeat soft
                 // wrapping.
+                // Note that j is a character index, not a column: a wide character fills the last
+                // column even when j + 1 != screen_width, so account for its width here (#13041).
+                let fills_last_column = !done
+                    && screen_width.is_some_and(|sw| {
+                        current_width + wcwidth_rendered_min_0(o_line(self, i).char_at(j)) >= sw
+                    });
                 if should_clear_screen_this_line
                     && !has_cleared_screen
-                    && (done || Some(j + 1) == screen_width)
+                    && (done || fills_last_column)
                 {
                     set_color(self, HighlightSpec::new());
                     self.r#move(current_width, i);

@@ -12,7 +12,7 @@ Synopsis
 Description
 -----------
 
-``fish_vi_key_bindings`` sets the vi key bindings for ``fish`` shell.
+``fish_vi_key_bindings`` enables vi-style key bindings.
 
 If a valid *INIT_MODE* is provided (insert, default, visual), then that mode will become the default
 . If no *INIT_MODE* is given, the mode defaults to insert mode.
@@ -22,7 +22,7 @@ The following parameters are available:
 **--no-erase**
     Does not clear previous set bindings
 
-Further information on how to use :ref:`vi mode <vi-mode>`.
+See also :ref:`vi mode <vi-mode>` and :doc:`fish_hybrid_key_bindings <fish_hybrid_key_bindings>`.
 
 Differences from Vim
 --------------------

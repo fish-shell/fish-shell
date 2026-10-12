@@ -437,21 +437,7 @@ Vi mode commands
 
 Vi mode allows for the use of vi-like commands at the prompt. Initially, :ref:`insert mode <vi-mode-insert>` is active. :kbd:`escape` enters :ref:`command mode <vi-mode-command>`. The commands available in command, insert and visual mode are described below. Vi mode shares :ref:`some bindings <shared-binds>` with :ref:`Emacs mode <emacs-mode>`.
 
-To enable vi mode, use :doc:`fish_vi_key_bindings <cmds/fish_vi_key_bindings>`.
-It is also possible to add all Emacs mode bindings to vi mode by using something like::
-
-
-    function fish_user_key_bindings
-        # Execute this once per mode that emacs bindings should be used in
-        fish_default_key_bindings -M insert
-
-        # Then execute the vi-bindings so they take precedence when there's a conflict.
-        # Without --no-erase fish_vi_key_bindings will default to
-        # resetting all bindings.
-        # The argument specifies the initial mode (insert, "default" or visual).
-        fish_vi_key_bindings --no-erase insert
-    end
-
+To enable vi mode, use :doc:`fish_vi_key_bindings <cmds/fish_vi_key_bindings>` or :doc:`fish_hybrid_key_bindings <cmds/fish_hybrid_key_bindings>` - the latter keeps emacs-style bindings that don't conflict, while the former is a pure vi-style experience.
 
 When in vi mode, the :doc:`fish_mode_prompt <cmds/fish_mode_prompt>` function will display a mode indicator to the left of the prompt. To disable this feature, override it with an empty function. To display the mode elsewhere (like in your right prompt), use the output of the ``fish_default_mode_prompt`` function.
 

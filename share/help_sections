@@ -45,6 +45,7 @@ cmds/fish_delta
 cmds/fish_git_prompt
 cmds/fish_greeting
 cmds/fish_hg_prompt
+cmds/fish_hybrid_key_bindings
 cmds/fish_indent
 cmds/fish_is_root_user
 cmds/fish_key_reader
@@ -58,6 +59,7 @@ cmds/fish_svn_prompt
 cmds/fish_tab_title
 cmds/fish_title
 cmds/fish_update_completions
+cmds/fish_user_key_bindings
 cmds/fish_vcs_prompt
 cmds/fish_vi_key_bindings
 cmds/for

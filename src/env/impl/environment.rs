@@ -162,6 +162,7 @@ impl EnvNode {
         self.env.get(key).cloned()
     }
 
+    /// Return whether this node has ever exported or unexported a variable.
     fn exports(&self) -> bool {
         self.export_gen > 0
     }
@@ -432,22 +433,21 @@ impl EnvScopedImpl {
 
 /// Export array implementations.
 impl EnvScopedImpl {
-    /// Invoke a function on the current (nonzero) export generations, in order.
-    fn enumerate_generations<F>(&self, mut func: F)
-    where
-        F: FnMut(u64),
-    {
+    /// Return the export generations, in order.
+    /// Nodes which do not export are skipped.
+    fn iter_generations(&self) -> impl Iterator<Item = u64> {
         // Our uvars generation count doesn't come from next_export_generation(), so always supply
-        // it even if it's 0.
-        func(uvars().get_export_generation());
-        if self.globals.borrow().exports() {
-            func(self.globals.borrow().export_gen);
-        }
-        for node in self.locals.iter() {
-            if node.borrow().exports() {
-                func(node.borrow().export_gen);
-            }
-        }
+        // it even if 0.
+        let uvar_gen = std::iter::once(uvars().get_export_generation());
+
+        // Next the nodes.
+        let nodes = std::iter::once(self.globals.clone()).chain(self.locals.iter());
+        let node_gens = nodes.filter_map(|node| {
+            let node = node.borrow();
+            node.exports().then_some(node.export_gen)
+        });
+
+        uvar_gen.chain(node_gens)
     }
 
     /// Return whether the current export array is empty or out-of-date.
@@ -460,18 +460,12 @@ impl EnvScopedImpl {
         if self.export_array.is_none() {
             return true;
         }
-
-        let mut cursor = self.export_array_generations.iter().fuse();
-        let mut mismatch = false;
-        self.enumerate_generations(|r#gen| {
-            if cursor.next().copied() != Some(r#gen) {
-                mismatch = true;
-            }
-        });
-        if cursor.next().is_some() {
-            mismatch = true;
-        }
-        mismatch
+        let matches = self
+            .export_array_generations
+            .iter()
+            .copied()
+            .eq(self.iter_generations());
+        !matches
     }
 
     /// Get the exported variables into a variable table.
@@ -536,7 +530,7 @@ impl EnvScopedImpl {
             // Have to pull this into a local to satisfy the borrow checker.
             let mut generations = std::mem::take(&mut self.export_array_generations);
             generations.clear();
-            self.enumerate_generations(|r#gen| generations.push(r#gen));
+            generations.extend(self.iter_generations());
             self.export_array_generations = generations;
         }
         self.export_array.as_ref().unwrap().clone()

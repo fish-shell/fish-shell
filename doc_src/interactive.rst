@@ -585,6 +585,8 @@ Visual mode
 
 - :kbd:`",*,y` copies the selection to the clipboard, and enters :ref:`command mode <vi-mode-command>`.
 
+.. _custom-bindings:
+
 Custom bindings
 ^^^^^^^^^^^^^^^
 
@@ -593,7 +595,7 @@ In addition to the standard bindings listed here, you can also define your own w
   # Prints ``^C`` and a new prompt
   bind ctrl-c cancel-commandline
 
-Put ``bind`` statements into :ref:`config.fish <configuration>` or a function called ``fish_user_key_bindings``.
+Put ``bind`` statements into :ref:`config.fish <configuration>`. If you put them in a function called :doc:`fish_user_key_bindings <cmds/fish_user_key_bindings>`, that will be called automatically, for easier organization.
 
 If you change your mind on a binding and want to go back to fish's default, you can erase it again::
 

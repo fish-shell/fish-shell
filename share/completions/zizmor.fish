@@ -1,0 +1,1 @@
+zizmor --completions fish | source

@@ -546,7 +546,7 @@ impl<'s> State<'s> {
                     i += 1;
                 }
 
-                if f.arity().is_none() || f.arity() == Some(i + 1) {
+                if f.arity().is_none_or(|l| l == (i + 1)) {
                     if !have_open {
                         return f.call(&parameters);
                     }

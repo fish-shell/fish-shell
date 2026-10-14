@@ -420,14 +420,14 @@ impl<'s> State<'s> {
                     .unwrap_or(next.len());
 
                 let ident = &next[..ident_len];
-                if let Some(var) = find_builtin(wstr::from_char_slice(ident)) {
-                    return (ident_len, Token::Function(var));
-                } else if self.no_specific_error() {
-                    // Our error is more specific, so it takes precedence.
+                let token = if let Some(var) = find_builtin(wstr::from_char_slice(ident)) {
+                    Token::Function(var)
+                } else {
                     self.set_error(ErrorKind::UnknownFunction, Some((self.pos, ident_len)));
+                    self.current
                 };
 
-                (ident_len, self.current)
+                (ident_len, token)
             } else {
                 // Look for an operator or special character.
                 let tok = match next_char {

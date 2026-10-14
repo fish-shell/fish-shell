@@ -340,14 +340,11 @@ impl<'s> State<'s> {
         state
     }
 
-    pub fn error(&self) -> Result<(), Error> {
+    pub fn eval(&mut self) -> Result<f64, Error> {
+        let val = self.expr()?;
         if self.current == Token::End {
-            Ok(())
-        } else if let Token::Error(error) = self.current {
-            Err(error)
+            Ok(val)
         } else {
-            // If we're not at the end but there's no error, then that means we have a
-            // superfluous token that we have no idea what to do with.
             Err(Error {
                 kind: ErrorKind::TooManyArgs,
                 position: self.pos,
@@ -356,24 +353,34 @@ impl<'s> State<'s> {
         }
     }
 
-    pub fn eval(&mut self) -> f64 {
-        self.expr()
-    }
-
-    fn set_error(&mut self, kind: ErrorKind, pos_len: Option<(usize, usize)>) {
+    fn build_error(&self, kind: ErrorKind, pos_len: Option<(usize, usize)>) -> Error {
         let (position, len) = pos_len.unwrap_or((self.pos, 0));
-        self.current = Token::Error(Error {
+        Error {
             kind,
             position,
             len,
-        });
+        }
     }
 
-    fn no_specific_error(&self) -> bool {
-        let Token::Error(Error { kind, .. }) = self.current else {
-            return true;
+    fn build_error_token(&self, kind: ErrorKind, pos_len: Option<(usize, usize)>) -> Token {
+        Token::Error(self.build_error(kind, pos_len))
+    }
+
+    fn set_error(&mut self, kind: ErrorKind, pos_len: Option<(usize, usize)>) -> Error {
+        let error = self.build_error(kind, pos_len);
+        self.current = Token::Error(error);
+        error
+    }
+
+    fn specific_error(&self) -> Option<Error> {
+        let Token::Error(error) = self.current else {
+            return None;
         };
-        kind == ErrorKind::Unknown
+        if error.kind == ErrorKind::Unknown {
+            None
+        } else {
+            Some(error)
+        }
     }
 
     /// Get the next token from the input.
@@ -390,21 +397,20 @@ impl<'s> State<'s> {
         // Try reading a number.
         if matches!(next_char, '0'..='9' | '.') {
             let mut consumed = 0;
-            match wcstod_underscores(*next, &mut consumed) {
-                Ok(num) => (consumed, Token::Number(num)),
+            let token = match wcstod_underscores(*next, &mut consumed) {
+                Ok(num) => Token::Number(num),
                 Err(wutil::Error::InvalidChar) => {
-                    self.set_error(ErrorKind::Unknown, Some((self.pos + consumed, 1)));
-                    (consumed, self.current)
+                    self.build_error_token(ErrorKind::Unknown, Some((self.pos + consumed, 1)))
                 }
                 Err(wutil::Error::Overflow) => {
-                    self.set_error(ErrorKind::NumberTooLarge, Some((self.pos, consumed)));
-                    (consumed, self.current)
+                    self.build_error_token(ErrorKind::NumberTooLarge, Some((self.pos, consumed)))
                 }
                 Err(wutil::Error::Empty) => {
                     // We have a matches! above, this can't be?
                     unreachable!()
                 }
-            }
+            };
+            (consumed, token)
         } else {
             // Look for a function call.
             // But not when it's an "x" followed by whitespace
@@ -423,8 +429,7 @@ impl<'s> State<'s> {
                 let token = if let Some(var) = find_builtin(wstr::from_char_slice(ident)) {
                     Token::Function(var)
                 } else {
-                    self.set_error(ErrorKind::UnknownFunction, Some((self.pos, ident_len)));
-                    self.current
+                    self.build_error_token(ErrorKind::UnknownFunction, Some((self.pos, ident_len)))
                 };
 
                 (ident_len, token)
@@ -442,13 +447,9 @@ impl<'s> State<'s> {
                     ',' => Token::Sep,
                     ' ' | '\t' | '\n' | '\r' => unreachable!(),
                     '=' | '>' | '<' | '&' | '|' | '!' => {
-                        self.set_error(ErrorKind::LogicalOperator, None);
-                        self.current
+                        self.build_error_token(ErrorKind::LogicalOperator, None)
                     }
-                    _ => {
-                        self.set_error(ErrorKind::MissingOperator, None);
-                        self.current
-                    }
+                    _ => self.build_error_token(ErrorKind::MissingOperator, None),
                 };
 
                 (1, tok)
@@ -479,32 +480,34 @@ impl<'s> State<'s> {
     ///            <function-X> "(" <expr> {"," <expr>} ")" |
     ///            "(" <list> ")"
     /// ```
-    fn base(&mut self) -> f64 {
+    fn base(&mut self) -> Result<f64, Error> {
         match self.current {
             Token::Number(n) => {
                 let after_first = self.pos;
 
                 self.next_token();
-                if matches!(self.current, Token::Number(_) | Token::Function(_)) {
-                    // Two numbers after each other:
-                    // math '5 2'
-                    // math '3 pi'
-                    // (of course 3 pi could also be interpreted as 3 x pi)
+                match self.current {
+                    Token::Error(err) => Err(err),
+                    Token::Number(_) | Token::Function(_) => {
+                        // Two numbers after each other:
+                        // math '5 2'
+                        // math '3 pi'
+                        // (of course 3 pi could also be interpreted as 3 x pi)
 
-                    // The error should be given *between*
-                    // the last two tokens.
-                    let num_whitespace = self.start[after_first..]
-                        .chars()
-                        .take_while(|&c| " \t\n\r".contains(c))
-                        .count();
+                        // The error should be given *between*
+                        // the last two tokens.
+                        let num_whitespace = self.start[after_first..]
+                            .chars()
+                            .take_while(|&c| " \t\n\r".contains(c))
+                            .count();
 
-                    self.set_error(
-                        ErrorKind::MissingOperator,
-                        Some((after_first, num_whitespace)),
-                    );
+                        Err(self.set_error(
+                            ErrorKind::MissingOperator,
+                            Some((after_first, num_whitespace)),
+                        ))
+                    }
+                    _ => Ok(n),
                 }
-
-                n
             }
             Token::Function(f) => {
                 self.next_token();
@@ -520,13 +523,13 @@ impl<'s> State<'s> {
                     if have_open {
                         if self.current == Token::Close {
                             self.next_token();
-                        } else if self.no_specific_error() {
-                            self.set_error(ErrorKind::MissingClosingParen, None);
+                        } else if self.specific_error().is_none() {
+                            return Err(self.set_error(ErrorKind::MissingClosingParen, None));
                         }
                     }
 
                     return match f {
-                        Function::Constant(n) => n,
+                        Function::Constant(n) => Ok(n),
                         _ => unreachable!("unhandled function type with arity 0"),
                     };
                 }
@@ -538,7 +541,10 @@ impl<'s> State<'s> {
                     if f.arity() == Some(j) {
                         first_err = Some(self.pos - 1);
                     }
-                    parameters.push(self.expr());
+                    let Ok(expr) = self.expr() else {
+                        break;
+                    };
+                    parameters.push(expr);
                     if self.current != Token::Sep {
                         break;
                     }
@@ -546,30 +552,38 @@ impl<'s> State<'s> {
                     i += 1;
                 }
 
-                if f.arity().is_none_or(|l| l == (i + 1)) {
+                if !matches!(self.current, Token::Error(_))
+                    && (f.arity().is_none_or(|l| l == (i + 1)))
+                {
                     if !have_open {
-                        return f.call(&parameters);
+                        return Ok(f.call(&parameters));
                     }
                     if self.current == Token::Close {
                         // We have an opening and a closing paren, consume the closing one and done.
                         self.next_token();
-                        return f.call(&parameters);
+                        return Ok(f.call(&parameters));
                     }
                     if !matches!(self.current, Token::Error(_)) {
                         // If we had the right number of arguments, we're missing a closing paren.
-                        self.set_error(ErrorKind::MissingClosingParen, None);
+                        return Err(self.set_error(ErrorKind::MissingClosingParen, None));
                     }
                 }
 
                 // TODO(MSRV>=1.88): feature(let_chains)
-                // Improve readability with a `if let Token:Error([...]) && kind != [...] { // propagate existing error } else { [...]}
-                if !matches!(
+                // Improve readability with:
+                //      if let Token::Error(error) = self.current && error.kind != ErrorKind::UnexpectedToken { error } else...
+                let error = if matches!(
                     self.current,
                     Token::Error(Error {
                         kind,
                         ..
                     }) if kind != ErrorKind::UnexpectedToken
                 ) {
+                    let Token::Error(error) = self.current else {
+                        unreachable!();
+                    };
+                    error
+                } else {
                     // Otherwise we complain about the number of arguments *first*,
                     // a closing parenthesis should be more obvious.
                     //
@@ -595,26 +609,28 @@ impl<'s> State<'s> {
                         err_pos_len = Some((first_err, len));
                     }
 
-                    self.set_error(err, err_pos_len);
-                }
+                    self.set_error(err, err_pos_len)
+                };
 
-                f64::NAN
+                Err(error)
             }
             Token::Open => {
                 self.next_token();
-                let ret = self.expr();
+                let ret = self.expr()?;
                 if self.current == Token::Close {
                     self.next_token();
-                    return ret;
+                    return Ok(ret);
                 }
 
-                if !matches!(self.current, Token::End | Token::Error(_)) {
-                    self.set_error(ErrorKind::TooManyArgs, None);
-                } else if self.no_specific_error() {
-                    self.set_error(ErrorKind::MissingClosingParen, None);
-                }
+                let error = if !matches!(self.current, Token::End | Token::Error(_)) {
+                    self.set_error(ErrorKind::TooManyArgs, None)
+                } else if let Some(error) = self.specific_error() {
+                    error
+                } else {
+                    self.set_error(ErrorKind::MissingClosingParen, None)
+                };
 
-                f64::NAN
+                Err(error)
             }
             Token::End => {
                 // The expression ended before we expected it.
@@ -622,23 +638,22 @@ impl<'s> State<'s> {
                 // This means we have too few things.
                 // Instead of introducing another error, just call it
                 // "too few args".
-                self.set_error(ErrorKind::TooFewArgs, None);
-
-                f64::NAN
+                Err(self.set_error(ErrorKind::TooFewArgs, None))
             }
 
-            Token::Error(_) | Token::Sep | Token::Close | Token::Op(_) => {
-                if self.no_specific_error() {
-                    self.set_error(ErrorKind::UnexpectedToken, None);
-                }
-
-                f64::NAN
-            }
+            Token::Sep
+            | Token::Close
+            | Token::Op(_)
+            | Token::Error(Error {
+                kind: ErrorKind::Unknown,
+                ..
+            }) => Err(self.set_error(ErrorKind::UnexpectedToken, None)),
+            Token::Error(err) => Err(err),
         }
     }
 
     /// \<power\>  = {("-" | "+")} \<base\>
-    fn power(&mut self) -> f64 {
+    fn power(&mut self) -> Result<f64, Error> {
         let mut sign = 1.0;
         while let Token::Op(op) = self.current {
             if op == Operator::Sub {
@@ -651,57 +666,53 @@ impl<'s> State<'s> {
             }
         }
 
-        sign * self.base()
+        Ok(sign * self.base()?)
     }
 
     /// \<factor\> = \<power\> {"^" \<power\>}
-    fn factor(&mut self) -> f64 {
-        let mut ret = self.power();
+    fn factor(&mut self) -> Result<f64, Error> {
+        let mut ret = self.power()?;
 
         if let Token::Op(Operator::Pow) = self.current {
             self.next_token();
-            ret = ret.powf(self.factor());
+            ret = ret.powf(self.factor()?);
         }
 
-        ret
+        Ok(ret)
     }
 
     /// \<term\>   = \<factor\> {("*" | "/" | "%") \<factor\>}
-    fn term(&mut self) -> f64 {
-        let mut ret = self.factor();
+    fn term(&mut self) -> Result<f64, Error> {
+        let mut ret = self.factor()?;
         while let Token::Op(op @ (Operator::Mul | Operator::Div | Operator::Rem)) = self.current {
             let op_pos = self.pos - 1;
             self.next_token();
-            let ret2 = self.factor();
+            let ret2 = self.factor()?;
             if ret2 == 0.0 && [Operator::Div, Operator::Rem].contains(&op) {
                 // Division by zero (also for modulo)
                 // Error position is the "/" or "%" sign for now
-                self.set_error(ErrorKind::DivByZero, Some((op_pos, 1)));
+                let err = self.set_error(ErrorKind::DivByZero, Some((op_pos, 1)));
+                return Err(err);
             }
             ret = op.eval(ret, ret2);
         }
 
-        ret
+        Ok(ret)
     }
 
     /// \<expr\>   = \<term\> {("+" | "-") \<term\>}
-    fn expr(&mut self) -> f64 {
-        let mut ret = self.term();
+    fn expr(&mut self) -> Result<f64, Error> {
+        let mut ret = self.term()?;
         while let Token::Op(op @ (Operator::Add | Operator::Sub)) = self.current {
             self.next_token();
-            ret = op.eval(ret, self.term());
+            ret = op.eval(ret, self.term()?);
         }
 
-        ret
+        Ok(ret)
     }
 }
 
 pub fn te_interp(expression: &wstr) -> Result<f64, Error> {
     let mut s = State::new(expression);
-    let ret = s.eval();
-
-    match s.error() {
-        Ok(()) => Ok(ret),
-        Err(e) => Err(e),
-    }
+    s.eval()
 }

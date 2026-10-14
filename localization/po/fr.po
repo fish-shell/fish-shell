@@ -5676,7 +5676,13 @@ msgstr "Lier une plage d’UID à l’utilisateur"
 msgid "Add a registry user account"
 msgstr ""
 
+msgid "Add a repository"
+msgstr ""
+
 msgid "Add a repository for the system"
+msgstr ""
+
+msgid "Add a repository from URL or file"
 msgstr ""
 
 msgid "Add a rule to chain in table"
@@ -6753,6 +6759,9 @@ msgstr ""
 msgid "Allow accessing UMD globals from modules"
 msgstr ""
 
+msgid "Allow adding or replacing a repository in existing file"
+msgstr ""
+
 msgid "Allow adding otherwise ignored files"
 msgstr "Autoriser l’ajout de fichiers normalement ignorés"
 
@@ -6838,6 +6847,9 @@ msgid "Allow connections"
 msgstr ""
 
 msgid "Allow connections from file"
+msgstr ""
+
+msgid "Allow creating missing directories"
 msgstr ""
 
 msgid "Allow darcs to modify any file or directory (unsafe)"
@@ -6988,6 +7000,9 @@ msgid "Allow overriding site-wide default per repository configuration"
 msgstr ""
 
 msgid "Allow overwrite files that already exist"
+msgstr ""
+
+msgid "Allow overwriting existing repository file"
 msgstr ""
 
 msgid "Allow overwriting existing theme files"
@@ -17508,6 +17523,9 @@ msgstr "Désactiver la détection des renommages"
 msgid "Disable repeat block sequences using the RPTB instruction for zero overhead looping"
 msgstr ""
 
+msgid "Disable repositories"
+msgstr ""
+
 msgid "Disable repository"
 msgstr "Désactiver un dépôt"
 
@@ -24075,6 +24093,9 @@ msgstr "Télécharger les fichiers de paquets parés pour l’installation parmi
 msgid "Download packages without performing any transaction"
 msgstr ""
 
+msgid "Download repository configuration file"
+msgstr ""
+
 msgid "Download rpms specified on the commandline to a local directory"
 msgstr ""
 
@@ -25690,6 +25711,9 @@ msgid "Enable repo based on its ID"
 msgstr ""
 
 msgid "Enable repo by id"
+msgstr ""
+
+msgid "Enable repositories"
 msgstr ""
 
 msgid "Enable repository"
@@ -39702,6 +39726,9 @@ msgstr ""
 msgid "Manage command extensions"
 msgstr ""
 
+msgid "Manage configuration and repositories"
+msgstr ""
+
 msgid "Manage configuration for yadm"
 msgstr ""
 
@@ -41251,6 +41278,9 @@ msgid "Name of the launch profile to use"
 msgstr ""
 
 msgid "Name of the new patch"
+msgstr ""
+
+msgid "Name of the new repository file"
 msgstr ""
 
 msgid "Name of the new user's login shell"
@@ -47859,6 +47889,9 @@ msgstr "Afficher le nom de la machine"
 msgid "Print machine-parsable verbose information"
 msgstr "Afficher les informations détaillées dans un format utilisable par un programme"
 
+msgid "Print main configuration"
+msgstr ""
+
 msgid "Print major:minor of device containing FILE"
 msgstr ""
 
@@ -49027,6 +49060,9 @@ msgid "Print variable in decimal format values"
 msgstr ""
 
 msgid "Print variable specified by --name"
+msgstr ""
+
+msgid "Print variable values"
 msgstr ""
 
 msgid "Print various information about a libc binary"
@@ -56649,6 +56685,9 @@ msgstr "Sauvegarder tout ou partie des modifications"
 msgid "Save state in a temporary file"
 msgstr ""
 
+msgid "Save the current options"
+msgstr ""
+
 msgid "Save the current switch state to a file"
 msgstr ""
 
@@ -58872,6 +58911,9 @@ msgstr "Paramétrer l’interface de configuration"
 msgid "Set configuration option"
 msgstr "Paramétrer une option de configuration"
 
+msgid "Set configuration or repository options"
+msgstr ""
+
 msgid "Set configuration value"
 msgstr "Paramétrer une valeur de configuration"
 
@@ -59161,6 +59203,9 @@ msgid "Set home"
 msgstr "Paramétrer la variable d’environnement HOME"
 
 msgid "Set host key to values obtained using --detecthostkey"
+msgstr ""
+
+msgid "Set id of the new repository"
 msgstr ""
 
 msgid "Set idle minutes until computer sleeps (or Never/Off)"
@@ -59482,6 +59527,9 @@ msgid "Set on all NUMA cells"
 msgstr ""
 
 msgid "Set one option"
+msgstr ""
+
+msgid "Set option in the new repository"
 msgstr ""
 
 msgid "Set options and reconfigure the project"
@@ -60883,6 +60931,9 @@ msgid "Set variable to the JSON contents of the file"
 msgstr ""
 
 msgid "Set variable to the contents of the file"
+msgstr ""
+
+msgid "Set variables"
 msgstr ""
 
 msgid "Set variables for closer MATLAB compatibility"
@@ -72723,6 +72774,9 @@ msgstr ""
 msgid "Unsafe mode"
 msgstr ""
 
+msgid "Unset configuration or repository options"
+msgstr ""
+
 msgid "Unset current default Java environment"
 msgstr ""
 
@@ -72745,6 +72799,9 @@ msgid "Unset the \"fsmonitor valid\" bit"
 msgstr ""
 
 msgid "Unset the given setting-key"
+msgstr ""
+
+msgid "Unset variables"
 msgstr ""
 
 msgid "Unsets the specified environment variables for all services within the domain"

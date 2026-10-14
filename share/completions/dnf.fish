@@ -58,6 +58,15 @@ function __fish_dnf_list_available_packages
     string join \n $results
 end
 
+function __fish_dnf_list_repos
+    # $argv[1] is --all, --enabled or --disabled
+    if __fish_dnf_is_dnf5
+        dnf repo list $argv[1] 2>/dev/null
+    else
+        dnf repolist $argv[1] 2>/dev/null
+    end | string match -rv -- '^repo id\s' | string replace -rf -- '^(\S+)\s+(.*?)\s*(?:enabled|disabled)?$' '$1\t$2'
+end
+
 function __fish_dnf_list_transactions
     if not __fish_dnf_is_dnf5 && type -q sqlite3
         sqlite3 /var/lib/dnf/history.sqlite "SELECT id, cmdline FROM trans" 2>/dev/null | string replace "|" \t
@@ -99,6 +108,34 @@ complete -c dnf -n "__fish_seen_subcommand_from clean" -xa expire-cache -d "Mark
 complete -c dnf -n "__fish_seen_subcommand_from clean" -xa metadata -d "Removes repository metadata"
 complete -c dnf -n "__fish_seen_subcommand_from clean" -xa packages -d "Removes any cached packages"
 complete -c dnf -n "__fish_seen_subcommand_from clean" -xa all -d "Removes all cache"
+
+# Config-manager
+set -l cmcommands addrepo setopt unsetopt setvar unsetvar enable disable
+complete -c dnf -n __fish_use_subcommand -xa config-manager -d "Manage configuration and repositories"
+# dnf5
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_dnf_is_dnf5; and not __fish_seen_subcommand_from $cmcommands" -xa addrepo -d "Add a repository"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_dnf_is_dnf5; and not __fish_seen_subcommand_from $cmcommands" -xa setopt -d "Set configuration or repository options"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_dnf_is_dnf5; and not __fish_seen_subcommand_from $cmcommands" -xa unsetopt -d "Unset configuration or repository options"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_dnf_is_dnf5; and not __fish_seen_subcommand_from $cmcommands" -xa setvar -d "Set variables"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_dnf_is_dnf5; and not __fish_seen_subcommand_from $cmcommands" -xa unsetvar -d "Unset variables"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_dnf_is_dnf5; and not __fish_seen_subcommand_from $cmcommands" -xa enable -d "Enable repositories"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_dnf_is_dnf5; and not __fish_seen_subcommand_from $cmcommands" -xa disable -d "Disable repositories"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_seen_subcommand_from addrepo" -l from-repofile -rF -d "Download repository configuration file"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_seen_subcommand_from addrepo" -l id -x -d "Set id of the new repository"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_seen_subcommand_from addrepo" -l set -x -d "Set option in the new repository"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_seen_subcommand_from addrepo" -l add-or-replace -d "Allow adding or replacing a repository in existing file"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_seen_subcommand_from addrepo" -l overwrite -d "Allow overwriting existing repository file"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_seen_subcommand_from addrepo" -l save-filename -x -d "Name of the new repository file"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_seen_subcommand_from addrepo setopt setvar enable disable" -l create-missing-dir -d "Allow creating missing directories"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_seen_subcommand_from setopt unsetopt setvar unsetvar" -x
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_seen_subcommand_from enable" -xa "(__fish_dnf_list_repos --disabled)"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and __fish_seen_subcommand_from disable" -xa "(__fish_dnf_list_repos --enabled)"
+# dnf4
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and not __fish_dnf_is_dnf5" -l add-repo -rF -d "Add a repository from URL or file"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and not __fish_dnf_is_dnf5" -l dump -d "Print main configuration"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and not __fish_dnf_is_dnf5" -l dump-variables -d "Print variable values"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and not __fish_dnf_is_dnf5" -l save -d "Save the current options"
+complete -c dnf -n "__fish_seen_subcommand_from config-manager; and not __fish_dnf_is_dnf5" -xa "(__fish_dnf_list_repos --all)"
 
 # Copr
 set -l coprcommands list enable disable remove debug

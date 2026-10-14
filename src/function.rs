@@ -18,6 +18,7 @@ use crate::{
     wutil::dir_iter::DirIter,
 };
 use fish_common::{FilenameRef, assert_sync, escape};
+use fish_fluent::localize_fn;
 use fish_widestring::wcs2bytes;
 use std::{
     collections::{HashMap, HashSet},
@@ -58,6 +59,10 @@ pub struct FunctionProperties {
 
     /// The 1-based line number where the specified function was copied.
     pub copy_definition_lineno: Option<NonZeroU32>,
+
+    /// If the function was created by `source` reading from stdin (for example via `alias`), the
+    /// file and arguments of the closest enclosing `source` of a file, or None if there is none.
+    pub source_definition: Option<(FilenameRef, Vec<WString>)>,
 }
 
 /// FunctionProperties are safe to share between threads.
@@ -366,6 +371,12 @@ pub fn invalidate_path() {
     funcset.autoloader.clear();
 }
 
+localize_fn! {
+    pub localize_defined_via_source,
+    "function-defined-via-source" = "Defined via `{ $source_command }`",
+    source_command,
+}
+
 impl FunctionProperties {
     /// Return true if this function is a copy.
     pub fn is_copy(&self) -> bool {
@@ -410,6 +421,20 @@ impl FunctionProperties {
     /// If this function is a copy, return the original 1-based line number. Otherwise, return 0.
     pub fn copy_definition_lineno(&self) -> u32 {
         self.copy_definition_lineno.map_or(0, |val| val.get())
+    }
+
+    /// If this function was created by `source` reading from stdin, return the `source` command
+    /// of the closest enclosing file, e.g. "source ~/.config/fish/config.fish". Otherwise, return
+    /// None.
+    pub fn source_definition_command(&self) -> Option<WString> {
+        let (file, args) = self.source_definition.as_ref()?;
+        let mut out = L!("source ").to_owned();
+        out.push_utfstr(&escape(file));
+        for arg in args {
+            out.push(' ');
+            out.push_utfstr(&escape(arg));
+        }
+        Some(out)
     }
 
     /// Return a definition of the function, annotated with properties like event handlers and wrap

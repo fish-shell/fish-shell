@@ -159,6 +159,18 @@ functions --no-details t
 # CHECK: echo tttt;
 # CHECK: end
 
+set -l tmpdir (mktemp -d)
+echo 'echo "function t-sourced; echo tttt; end" | source' >$tmpdir/define-t.fish
+source $tmpdir/define-t.fish
+functions t-sourced
+# CHECK: # Defined via `source {{.*}}/define-t.fish`
+# CHECK: function t-sourced
+# CHECK: echo tttt;
+# CHECK: end
+functions -D t-sourced
+# CHECK: -
+rm -r $tmpdir
+
 functions -c t t2
 functions t2
 # CHECK: # Defined via `source`, copied in {{.*}}checks/functions.fish @ line {{\d+}}

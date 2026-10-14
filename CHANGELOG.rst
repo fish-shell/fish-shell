@@ -15,6 +15,7 @@ Interactive improvements
 - Fixed a glitch in the initial prompt when the terminal is resized during early startup (:issue:`12995`).
 - Fixed indentation when displaying a multiline command in a transient prompt (:issue:`13012`).
 - Completing a ref for ``git range-diff`` now appends the ``..`` range operator, so pressing :kbd:`Tab` again completes the other end of the range.
+- ``type`` and ``functions`` now show which file a function created via ``source`` from standard input (for example by ``alias``) was defined in, including the arguments to ``source`` (:issue:`12480`).
 
 Scripting improvements
 ----------------------

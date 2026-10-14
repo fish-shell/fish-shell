@@ -8,6 +8,7 @@ use crate::event::{self, EventDescription, EventHandler};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::parse_execution::varname_error;
 use crate::parse_tree::NodeRef;
+use crate::parser::BlockData;
 use crate::parser_keywords::parser_keywords_is_reserved;
 use crate::proc::{InternalJobId, Pid};
 use crate::signal::RawSignal;
@@ -319,6 +320,22 @@ pub fn function(
     // Extract the current filename.
     let definition_file = parser.current_filename.borrow().clone();
 
+    // If we are being sourced from stdin (e.g. by `alias`), remember the closest enclosing
+    // `source` of an actual file, so we can tell the user where the function came from.
+    let source_definition = if definition_file
+        .as_ref()
+        .is_some_and(|file| file.as_utfstr() == "-")
+    {
+        parser.blocks_iter_rev().find_map(|b| match b.data() {
+            Some(BlockData::Source { file, args }) if file.as_utfstr() != "-" => {
+                Some((file.clone(), args.clone()))
+            }
+            _ => None,
+        })
+    } else {
+        None
+    };
+
     // Ensure inherit_vars is unique and then populate it.
     opts.inherit_vars.sort_unstable();
     opts.inherit_vars.dedup();
@@ -346,6 +363,7 @@ pub fn function(
         is_copy: false,
         copy_definition_file: None,
         copy_definition_lineno: None,
+        source_definition,
     };
 
     // Add the function itself.

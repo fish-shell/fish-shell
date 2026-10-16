@@ -40,7 +40,8 @@ fish-wgetopt = { path = "crates/wgetopt" }
 fish-widecharwidth = { path = "crates/widecharwidth" }
 fish-widestring = { path = "crates/widestring" }
 fluent = { git = "https://github.com/projectfluent/fluent-rs", rev = "0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda" }
-fluent-ftl-tools = { git = "https://codeberg.org/danielrainer/fluent-ftl-tools", rev = "17be1e678558d776f2bde068eacedf5fa79bf6fb" }
+# https://codeberg.org/danielrainer/fluent-ftl-tools
+fluent-ftl-tools = { git = "https://github.com/danielrainer/fluent-ftl-tools", rev = "17be1e678558d776f2bde068eacedf5fa79bf6fb" }
 fluent-syntax = { git = "https://github.com/projectfluent/fluent-rs", rev = "0f87afbbc3fe7d20c61a3fc75cb5d0e123aefdda" }
 ignore = "0.4.25"
 itertools = "0.14.0"

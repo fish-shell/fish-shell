@@ -893,7 +893,6 @@ fn exec_external_command(
     #[cfg(have_posix_spawn)]
     // Prefer to use posix_spawn, since it's faster on some systems like OS X.
     if can_use_posix_spawn_for_job(j, &dup2s) {
-        let file = parser.current_filename.borrow();
         let count = FORK_COUNT.fetch_add(1, Ordering::Relaxed) + 1; // spawn counts as a fork+exec
 
         let pid = PosixSpawner::new(j, pgroup_policy, &dup2s).and_then(|mut spawner| {
@@ -914,7 +913,9 @@ fn exec_external_command(
             count,
             pid,
             p.actual_cmd,
-            file.as_ref()
+            parser
+                .current_filename()
+                .as_ref()
                 .map(|s| s.as_utfstr())
                 .unwrap_or(L!("<no file>"))
         );

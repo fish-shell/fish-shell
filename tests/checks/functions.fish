@@ -345,3 +345,13 @@ functions -d desc unknown_function
 # CHECKERR: {{^}}functions -d desc unknown_function
 # CHECKERR: {{^}}^
 # CHECKERR: (Type 'help functions' for related documentation)
+
+functions --details fish_config
+# CHECK: embedded:functions/fish_config.fish
+
+echo >defun.fish 'function defun; function foo; end; end'
+source defun.fish
+echo >use-defun.fish 'defun'
+source use-defun.fish
+functions --details foo
+# CHECK: defun.fish

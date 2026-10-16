@@ -80,7 +80,7 @@ type -p test-type
 functions -c test-type test-type2
 type test-type2
 # CHECK: test-type2 is a function with definition
-# CHECK: # Defined in {{.*}}/type.fish @ line {{\d+}}, copied in {{.*}}/type.fish @ line {{\d+}}
+# CHECK: # Defined in {{.*}}/type.fish @ line {{\d+}}
 # CHECK: function test-type2
 # CHECK: echo this is a type test
 # CHECK: end
@@ -89,12 +89,12 @@ type -p test-type2
 # CHECK: {{.*}}/type.fish
 
 type -s test-type2
-# CHECK: test-type2 is a function (Defined in {{.*}}/type.fish @ line {{\d+}}, copied in {{.*}}/type.fish @ line {{\d+}})
+# CHECK: test-type2 is a function (Defined in {{.*}}/type.fish @ line {{\d+}})
 
 echo "functions -c test-type test-type3" | source
 type test-type3
 # CHECK: test-type3 is a function with definition
-# CHECK: # Defined in {{.*}}/type.fish @ line {{\d+}}, copied via `source`
+# CHECK: # Defined via `source`
 # CHECK: function test-type3
 # CHECK: echo this is a type test
 # CHECK: end
@@ -103,14 +103,14 @@ type -p test-type3
 # CHECK: -
 
 type -s test-type3
-# CHECK: test-type3 is a function (Defined in {{.*}}/type.fish @ line {{\d+}}, copied via `source`)
+# CHECK: test-type3 is a function (Defined via `source`)
 
 echo "function other-test-type; echo this is a type test; end" | source
 
 functions -c other-test-type other-test-type2
 type other-test-type2
 # CHECK: other-test-type2 is a function with definition
-# CHECK: # Defined via `source`, copied in {{.*}}/type.fish @ line {{\d+}}
+# CHECK: # Defined in {{.*}}/type.fish @ line {{\d+}}
 # CHECK: function other-test-type2
 # CHECK: echo this is a type test;
 # CHECK: end
@@ -119,12 +119,12 @@ type -p other-test-type2
 # CHECK: {{.*}}/type.fish
 
 type -s other-test-type2
-# CHECK: other-test-type2 is a function (Defined via `source`, copied in {{.*}}/type.fish @ line {{\d+}})
+# CHECK: other-test-type2 is a function (Defined in {{.*}}/type.fish @ line {{\d+}})
 
 echo "functions -c other-test-type other-test-type3" | source
 type other-test-type3
 # CHECK: other-test-type3 is a function with definition
-# CHECK: # Defined via `source`, copied via `source`
+# CHECK: # Defined via `source`
 # CHECK: function other-test-type3
 # CHECK: echo this is a type test;
 # CHECK: end
@@ -133,7 +133,7 @@ type -p other-test-type3
 # CHECK: -
 
 type -s other-test-type3
-# CHECK: other-test-type3 is a function (Defined via `source`, copied via `source`)
+# CHECK: other-test-type3 is a function (Defined via `source`)
 
 if cygwin_noacl ./
     # In `noacl` mounts, Cygwin relies on the file content to set the `x` bit

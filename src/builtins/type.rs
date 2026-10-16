@@ -128,23 +128,8 @@ pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
                         ));
                     }
 
-                    if props.is_copy() {
-                        let path = props.copy_definition_file().unwrap_or(L!(""));
-                        if path.is_empty() {
-                            comment.push_utfstr(&wgettext!(", copied interactively"));
-                        } else if path == "-" {
-                            comment.push_utfstr(&wgettext!(", copied via `source`"));
-                        } else {
-                            let lineno = props.copy_definition_lineno();
-                            comment.push_utfstr(&wgettext_fmt!(
-                                ", copied in %s @ line %d",
-                                path,
-                                lineno
-                            ));
-                        }
-                    }
                     if opts.path {
-                        if let Some(orig_path) = props.copy_definition_file() {
+                        if let Some(orig_path) = props.definition_file() {
                             streams.out.appendln(orig_path);
                         } else {
                             streams.out.appendln(path);

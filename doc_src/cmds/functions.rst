@@ -35,7 +35,7 @@ The following options are available:
     Reports the path name where the specified function is defined or could be autoloaded, ``stdin`` if the function was defined interactively or on the command line or by reading standard input, **-** if the function was created via :doc:`source <source>`, and ``n/a`` if the function isn't available. (Functions created via :doc:`alias <alias>` will return **-**, because ``alias`` uses ``source`` internally. Copied functions will return where the function was copied.) If the **--verbose** option is also specified then five lines are written:
 
     - the path name as already described,
-    - if the function was copied, the path name to where the function was originally defined, otherwise ``autoloaded``, ``not-autoloaded`` or ``n/a``,
+    - some unspecified text. Exists for backwards compatibility
     - the line number within the file or zero if not applicable,
     - ``scope-shadowing`` if the function shadows the vars in the calling function (the normal case if it wasn't defined with **--no-scope-shadowing**), else ``no-scope-shadowing``, or ``n/a`` if the function isn't defined,
     - the function description minimally escaped so it is a single line, or ``n/a`` if the function isn't defined or has no description.

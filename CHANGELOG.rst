@@ -7,6 +7,7 @@ Deprecations and removed features
   For example, ``function sus; functions --erase sus; end; sus | sus`` now runs the same function twice (:issue:`12991`).
   This change also prevents modifications to ``$fish_function_path`` in an earlier pipeline element from invalidating later calls to autoloaded functions (:issue:`12996`).
 - ``functions --query`` now returns 0 if any of the named functions exist, matching ``type -q``, ``command -q`` and ``builtin -q``. Previously it returned the number of names that did not exist (:issue:`9855`).
+- For functions that have been copied with ``functions --copy``, ``functions`` and ``type`` no longer show the filename of the original function, only the filename where ``functions --copy`` was called.
 
 Interactive improvements
 ------------------------
@@ -16,6 +17,7 @@ Interactive improvements
 - Fixed indentation when displaying a multiline command in a transient prompt (:issue:`13012`).
 - In :envvar:`fish_color_valid_path`, the ``--reset`` option can be given to completely override :envvar:`fish_color_param` rather than merging (:issue:`13042`).
 - When setting :envvar:`fish_complete_path`, fish no longer forgets completions that ship with fish and that fish happened to load earlier (:issue:`13049`).
+- ``funced`` no longer saves a function copied interactively with ``functions --copy`` to the file of the original function (:issue:`12305`).
 
 Scripting improvements
 ----------------------

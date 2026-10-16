@@ -110,13 +110,13 @@ string join \n -- $name1[1..2]
 #CHECK: # Defined in {{(?:(?!, copied).)*}}
 #CHECK: function name1 --argument-names arg1 arg2
 string join \n -- $name1a[1..2]
-#CHECK: # Defined in {{.*}}, copied in {{.*}}
+#CHECK: # Defined in {{.*}}
 #CHECK: function name1a --argument-names arg1 arg2
 string join \n -- $name3[1..2]
-#CHECK: # Defined in {{(?:(?!, copied).)*}}
+#CHECK: # Defined in {{.*}}
 #CHECK: function name3 --argument-names arg1 arg2
 string join \n -- $name3a[1..2]
-#CHECK: # Defined in {{.*}}, copied in {{.*}}
+#CHECK: # Defined in {{.*}}
 #CHECK: function name3a --argument-names arg1 arg2
 
 function test

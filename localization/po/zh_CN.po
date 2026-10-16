@@ -306,16 +306,6 @@ msgstr "(无匹配)"
 msgid "(read-only)"
 msgstr "(只读)"
 
-#, c-format
-msgid ", copied in %s @ line %d"
-msgstr "，复制到 %s @ line %d"
-
-msgid ", copied interactively"
-msgstr "，交互时复制"
-
-msgid ", copied via `source`"
-msgstr "，通过 `source` 复制"
-
 msgid "--allow-empty is only valid with --fields"
 msgstr "--allow-empty 只对 --fields 有效"
 

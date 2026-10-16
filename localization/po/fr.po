@@ -414,16 +414,6 @@ msgstr "(pas d’occurrence)"
 msgid "(read-only)"
 msgstr "(lecture seule)"
 
-#, c-format
-msgid ", copied in %s @ line %d"
-msgstr ""
-
-msgid ", copied interactively"
-msgstr ""
-
-msgid ", copied via `source`"
-msgstr ""
-
 msgid "--allow-empty is only valid with --fields"
 msgstr ""
 

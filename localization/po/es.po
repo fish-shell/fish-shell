@@ -285,16 +285,6 @@ msgstr "(sin coincidencias)"
 msgid "(read-only)"
 msgstr "(solo lectura)"
 
-#, c-format
-msgid ", copied in %s @ line %d"
-msgstr ", copiado en %s @ línea %d"
-
-msgid ", copied interactively"
-msgstr ", copiado de forma interactiva"
-
-msgid ", copied via `source`"
-msgstr ", copiado mediante `source`"
-
 msgid "--allow-empty is only valid with --fields"
 msgstr "--allow-empty solo es válido con --fields"
 

@@ -40,7 +40,7 @@ end
 set x (functions -v -D vared)
 if test (count $x) -ne 5
     or not string match -rq '.*functions/vared\.fish' $x[1]
-    or test $x[2] != autoloaded
+    or test $x[2] != n/a
     or test $x[3] != 7
     or test $x[4] != scope-shadowing
     or test $x[5] != 'Edit variable value'
@@ -66,7 +66,7 @@ functions -D f1a
 #CHECK: {{.*}}checks/functions.fish
 functions -Dv f1a
 #CHECK: {{.*}}checks/functions.fish
-#CHECK: {{.*}}checks/functions.fish
+#CHECK: n/a
 #CHECK: {{\d+}}
 #CHECK: scope-shadowing
 #CHECK:
@@ -75,7 +75,7 @@ functions -D f1b
 #CHECK: -
 functions -Dv f1b
 #CHECK: -
-#CHECK: {{.*}}checks/functions.fish
+#CHECK: n/a
 #CHECK: {{\d+}}
 #CHECK: scope-shadowing
 #CHECK:
@@ -161,7 +161,7 @@ functions --no-details t
 
 functions -c t t2
 functions t2
-# CHECK: # Defined via `source`, copied in {{.*}}checks/functions.fish @ line {{\d+}}
+# CHECK: # Defined in {{.*}}checks/functions.fish @ line {{\d+}}
 # CHECK: function t2
 # CHECK: echo tttt;
 # CHECK: end
@@ -169,7 +169,7 @@ functions -D t2
 #CHECK: {{.*}}checks/functions.fish
 functions -Dv t2
 #CHECK: {{.*}}checks/functions.fish
-#CHECK: -
+#CHECK: n/a
 #CHECK: {{\d+}}
 #CHECK: scope-shadowing
 #CHECK:
@@ -220,7 +220,7 @@ functions -c -- to_copy to_copy
 
 echo "functions -c t t3" | source
 functions t3
-# CHECK: # Defined via `source`, copied via `source`
+# CHECK: # Defined via `source`
 # CHECK: function t3
 # CHECK: echo tttt;
 # CHECK: end
@@ -228,7 +228,7 @@ functions -D t3
 #CHECK: -
 functions -Dv t3
 #CHECK: -
-#CHECK: -
+#CHECK: n/a
 #CHECK: {{\d+}}
 #CHECK: scope-shadowing
 #CHECK:

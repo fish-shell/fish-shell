@@ -284,16 +284,6 @@ msgstr "(一致なし)"
 msgid "(read-only)"
 msgstr "(読み取り専用)"
 
-#, c-format
-msgid ", copied in %s @ line %d"
-msgstr "、 %s の %d 行目でコピーされました"
-
-msgid ", copied interactively"
-msgstr "、 対話的にコピーされました"
-
-msgid ", copied via `source`"
-msgstr "、 `source` 経由でコピーされました"
-
 msgid "--allow-empty is only valid with --fields"
 msgstr "--allow-empty は --fields と組み合わせる場合にのみ有効です"
 

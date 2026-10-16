@@ -343,8 +343,6 @@ pub fn function(
         shadow_scope: opts.shadow_scope,
         is_autoload: RelaxedAtomicBool::new(false),
         definition_file,
-        is_copy: false,
-        copy_definition_file: None,
         copy_definition_lineno: None,
     };
 

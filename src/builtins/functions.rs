@@ -217,10 +217,8 @@ pub fn functions(
         }
         let props = function::get_props_autoload(args[0], parser);
         let def_file = if let Some(p) = props.as_ref() {
-            if let Some(cpf) = &p.copy_definition_file {
-                cpf.as_ref().to_owned()
-            } else if let Some(df) = &p.definition_file {
-                df.as_ref().to_owned()
+            if let Some(df) = p.definition_file() {
+                df.to_owned()
             } else {
                 L!("stdin").to_owned()
             }
@@ -230,19 +228,7 @@ pub fn functions(
         streams.out.appendln(&def_file);
 
         if opts.verbose {
-            let copy_place = match props.as_ref() {
-                Some(p) if p.copy_definition_file.is_some() => {
-                    if let Some(df) = &p.definition_file {
-                        df.as_ref().to_owned()
-                    } else {
-                        L!("stdin").to_owned()
-                    }
-                }
-                Some(p) if p.is_autoload.load() => L!("autoloaded").to_owned(),
-                Some(p) if !p.is_autoload.load() => L!("not-autoloaded").to_owned(),
-                _ => L!("n/a").to_owned(),
-            };
-            streams.out.appendln(&copy_place);
+            streams.out.appendln(L!("n/a")); // "copy_place", historical
             let line = if let Some(p) = props.as_ref() {
                 p.definition_lineno()
             } else {
@@ -409,22 +395,6 @@ pub fn functions(
                     ));
                 }
                 None => comment.push_utfstr(&wgettext!("Defined interactively")),
-            }
-
-            if props.is_copy() {
-                match props.copy_definition_file() {
-                    Some(path) if path == "-" => {
-                        comment.push_utfstr(&wgettext!(", copied via `source`"));
-                    }
-                    Some(path) => {
-                        comment.push_utfstr(&wgettext_fmt!(
-                            ", copied in %s @ line %d",
-                            path,
-                            props.copy_definition_lineno()
-                        ));
-                    }
-                    None => comment.push_utfstr(&wgettext!(", copied interactively")),
-                }
             }
         }
 

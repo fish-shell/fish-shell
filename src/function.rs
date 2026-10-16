@@ -50,13 +50,8 @@ pub struct FunctionProperties {
     /// The file from which the function was created, or None if not from a file.
     pub definition_file: Option<FilenameRef>,
 
-    /// Whether the function was copied.
-    pub is_copy: bool,
-
-    /// The file from which the function was copied, or None if not from a file.
-    pub copy_definition_file: Option<FilenameRef>,
-
-    /// The 1-based line number where the specified function was copied.
+    /// If the function was created by copying an existing function node, the 1-based line number
+    // of the copy statement.
     pub copy_definition_lineno: Option<NonZeroU32>,
 }
 
@@ -306,9 +301,6 @@ pub(crate) fn set_desc(name: &wstr, desc: WString, parser: &mut Parser) {
 /// Creates a new function using the same definition as the specified function. Returns true if copy
 /// is successful.
 pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
-    let filename = parser.current_filename();
-    let lineno = parser.lineno();
-
     let mut funcset = FUNCTION_SET.lock().unwrap();
     let Some(props) = funcset.get_props(name) else {
         // No such function.
@@ -317,9 +309,8 @@ pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
     // Copy the function's props.
     let mut new_props = props.as_ref().clone();
     new_props.is_autoload.store(false);
-    new_props.is_copy = true;
-    new_props.copy_definition_file = filename;
-    new_props.copy_definition_lineno = lineno;
+    new_props.definition_file = parser.current_filename();
+    new_props.copy_definition_lineno = parser.lineno();
 
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.
@@ -367,11 +358,6 @@ pub fn invalidate_path() {
 }
 
 impl FunctionProperties {
-    /// Return true if this function is a copy.
-    pub fn is_copy(&self) -> bool {
-        self.is_copy
-    }
-
     /// Return a reference to the function's definition file, or None if it was defined interactively or copied.
     pub fn definition_file(&self) -> Option<&wstr> {
         self.definition_file.as_ref().map(|f| f.as_utfstr())
@@ -382,13 +368,11 @@ impl FunctionProperties {
         &self.inherit_vars
     }
 
-    /// If this function is a copy, return a reference to the original definition file, or None if it was defined interactively or copied.
-    pub fn copy_definition_file(&self) -> Option<&wstr> {
-        self.copy_definition_file.as_ref().map(|f| f.as_utfstr())
-    }
-
     /// Return the 1-based line number of the function's definition.
     pub fn definition_lineno(&self) -> i32 {
+        if let Some(captured_lineno) = self.copy_definition_lineno {
+            return i32::try_from(captured_lineno.get()).unwrap();
+        }
         // Return one plus the number of newlines at offsets less than the start of our function's
         // statement (which includes the header).
         let Some(source_range) = self.func_node.try_source_range() else {
@@ -405,11 +389,6 @@ impl FunctionProperties {
             .chars()
             .filter(|&c| c == '\n')
             .count() as i32
-    }
-
-    /// If this function is a copy, return the original 1-based line number. Otherwise, return 0.
-    pub fn copy_definition_lineno(&self) -> u32 {
-        self.copy_definition_lineno.map_or(0, |val| val.get())
     }
 
     /// Return a definition of the function, annotated with properties like event handlers and wrap

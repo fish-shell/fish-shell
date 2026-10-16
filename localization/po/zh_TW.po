@@ -279,16 +279,6 @@ msgstr "（無匹配）"
 msgid "(read-only)"
 msgstr "（唯讀）"
 
-#, c-format
-msgid ", copied in %s @ line %d"
-msgstr "，從 %s 第 %d 行複製"
-
-msgid ", copied interactively"
-msgstr "，互動地複製"
-
-msgid ", copied via `source`"
-msgstr "，透過「source」複製"
-
 msgid "--allow-empty is only valid with --fields"
 msgstr "--allow-empty 只在與 --fields 使用時有效"
 

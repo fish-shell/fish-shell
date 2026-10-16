@@ -52125,6 +52125,9 @@ msgstr ""
 msgid "Remove a child qgroup SRC from DST."
 msgstr ""
 
+msgid "Remove a commit from the history"
+msgstr ""
+
 msgid "Remove a device from a filesystem"
 msgstr ""
 

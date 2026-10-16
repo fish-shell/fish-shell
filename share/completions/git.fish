@@ -1689,17 +1689,18 @@ complete -f -c git -n '__fish_git_using_command grep' -l no-index -d 'Search fil
 complete -f -c git -n '__fish_git_using_command grep' -l recurse-submodules -d 'Recursively search in each submodule'
 
 ### history
-set -l git_history_commands fixup reword split
+set -l git_history_commands drop fixup reword split
 complete -f -c git -n __fish_git_needs_command -a history -d 'Rewrite history'
+complete -f -c git -n "__fish_git_using_command history" -n "not __fish_seen_subcommand_from $git_history_commands" -a drop -d 'Remove a commit from the history'
 complete -f -c git -n "__fish_git_using_command history" -n "not __fish_seen_subcommand_from $git_history_commands" -a fixup -d 'Fixup a commit'
 complete -f -c git -n "__fish_git_using_command history" -n "not __fish_seen_subcommand_from $git_history_commands" -a reword -d 'Rewrite a commit message'
 complete -f -c git -n "__fish_git_using_command history" -n "not __fish_seen_subcommand_from $git_history_commands" -a split -d 'Split up a commit'
 
-complete -f -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from fixup reword split' -l dry-run -d 'Do not update references'
-complete -x -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from fixup reword split' -l update-refs -a 'branches head'
-complete -x -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from fixup reword' -ka '(__fish_git_recent_commits)'
+complete -f -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from drop fixup reword split' -l dry-run -d 'Do not update references'
+complete -x -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from drop fixup reword split' -l update-refs -a 'branches head'
+complete -x -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from drop fixup reword' -ka '(__fish_git_recent_commits)'
 complete -f -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from fixup' -l reedit-message -d 'Open editor to modify commit message'
-complete -x -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from fixup' -l empty -a 'drop keep abort'
+complete -x -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from drop fixup' -l empty -a 'drop keep abort'
 complete -x -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from split' -n 'not contains -- -- (commandline -xpc)' -ka '(__fish_git_recent_commits)'
 complete -F -c git -n '__fish_git_using_command history' -n '__fish_seen_subcommand_from split' -n 'contains -- -- (commandline -xpc)'
 

@@ -63,7 +63,7 @@ complete -c tmux -x
 # them with better-documented completions and custom completions for some
 # arguments, e.g. for target panes, but only have partial coverage.
 function __fish_tmux_parse_lscm_usage
-    set -l lscm (tmux list-commands -F "#{command_list_name} #{command_list_alias}"\t"#{command_list_usage}" 2>/dev/null)
+    set -l lscm (tmux -u list-commands -F "#{command_list_name} #{command_list_alias}"\t"#{command_list_usage}" 2>/dev/null)
     or return
 
     for cmd_tab_usage in $lscm

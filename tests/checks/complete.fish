@@ -770,3 +770,13 @@ if string match -rq -- '^[a-z]+$' $USER
     string match -rq -- "$USER\t.*" (complete -C "echo ~$first_letter_wrong_case")
     or echo "`complete -C'echo ~$first_letter_wrong_case'` did not yield $USER"
 end
+
+{
+    set -l tmp $fish_complete_path
+    complete -C "status " | sed 1q
+    # CHECK: basename{{\t.*}}
+    set fish_complete_path
+    complete -C "status " | sed 1q
+    # CHECK: basename{{\t.*}}
+    set fish_complete_path $tmp
+}

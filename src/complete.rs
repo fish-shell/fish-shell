@@ -2723,13 +2723,12 @@ pub fn complete_invalidate_path() {
     // unload any completions that the user may specified on the command line. We should in
     // principle track those completions loaded by the autoloader alone.
 
-    let cmds = COMPLETION_AUTOLOADER
-        .lock()
-        .expect("mutex poisoned")
-        .get_autoloaded_commands();
+    let mut autoload = COMPLETION_AUTOLOADER.lock().expect("mutex poisoned");
+    let cmds = autoload.get_autoloaded_commands();
     for cmd in cmds {
         complete_remove_all(cmd, /*cmd_is_path=*/ false, /*explicit=*/ false);
     }
+    autoload.clear();
 }
 
 /// Adds a "wrap target." A wrap target is a command that completes like another command.

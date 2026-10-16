@@ -15,6 +15,7 @@ Interactive improvements
 - Fixed a glitch in the initial prompt when the terminal is resized during early startup (:issue:`12995`).
 - Fixed indentation when displaying a multiline command in a transient prompt (:issue:`13012`).
 - In :envvar:`fish_color_valid_path`, the ``--reset`` option can be given to completely override :envvar:`fish_color_param` rather than merging (:issue:`13042`).
+- When setting :envvar:`fish_complete_path`, fish no longer forgets completions that ship with fish and that fish happened to load earlier (:issue:`13049`).
 
 Scripting improvements
 ----------------------

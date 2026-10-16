@@ -188,6 +188,9 @@ impl HighlightColorResolver {
         if highlight.valid_path {
             if let Some(valid_path_var) = vars.get(L!("fish_color_valid_path")) {
                 let valid_path_face = parse_text_face(valid_path_var.as_list());
+                if valid_path_face.reset {
+                    face = TextFace::terminal_default();
+                }
                 if let Some(fg) = valid_path_face.fg {
                     face.fg = fg;
                 }

@@ -162,8 +162,7 @@ fish usually tries ``$fish_color_normal``, except for:
 - ``$fish_color_builtin`` and ``$fish_color_function``, where they try ``$fish_color_command`` first.
 - ``$fish_color_keyword``, where it tries ``$fish_color_command`` first.
 - ``$fish_color_option``, where it tries ``$fish_color_param`` first.
-- For ``$fish_color_valid_path``, if that doesn't have a color, but only modifiers, it adds those to the color that would otherwise be used,
-  like ``$fish_color_param``. But if valid paths have a color, it uses that and adds in modifiers from the other color.
+- ``$fish_color_valid_path`` where the effective color is the union of ``$fish_color_param`` and ``$fish_color_valid_path``.
 
 Pager color variables
 ^^^^^^^^^^^^^^^^^^^^^^^

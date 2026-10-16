@@ -9815,6 +9815,9 @@ msgstr ""
 msgid "Build from sources(AUR or ABS)"
 msgstr ""
 
+msgid "Build handlers markdown documentation"
+msgstr ""
+
 msgid "Build in debug mode instead of release mode"
 msgstr ""
 
@@ -10329,6 +10332,9 @@ msgid "Card Authentication (PIN never checked)"
 msgstr ""
 
 msgid "Cargo features to enable"
+msgstr ""
+
+msgid "Carve directory name is source file + this suffix"
 msgstr ""
 
 msgid "Case insensitive comparison"
@@ -11820,6 +11826,9 @@ msgid "Clear the sequencer state after a failed revert"
 msgstr ""
 
 msgid "Clear the tree log. Usable if it's corrupted and prevents mount."
+msgstr ""
+
+msgid "Clear unblob's own skip magic list"
 msgstr ""
 
 msgid "Clear/List local NuGet resources"
@@ -15809,6 +15818,9 @@ msgstr ""
 msgid "Delete from archive"
 msgstr "Supprimer du contenu de l’archive"
 
+msgid "Delete fully extracted intermediate files"
+msgstr ""
+
 msgid "Delete incomplete (garbled) backups"
 msgstr ""
 
@@ -16839,6 +16851,9 @@ msgid "Disable Internet sharing"
 msgstr ""
 
 msgid "Disable LCD font rendering"
+msgstr ""
+
+msgid "Disable Landlock sandboxing"
 msgstr ""
 
 msgid "Disable NX for an ELF binary"
@@ -26435,6 +26450,9 @@ msgstr "Spécifier une date qui doit précéder les entrées"
 msgid "Entries on or older than DATE"
 msgstr "Spécifier une date que les entrées ne doivent pas dépasser"
 
+msgid "Entropy calculation depth"
+msgstr ""
+
 msgid "Enumerate and register all devices"
 msgstr ""
 
@@ -27638,6 +27656,9 @@ msgstr ""
 msgid "Extract the embedded certificate chain to files (prefix)"
 msgstr ""
 
+msgid "Extract the files to this directory"
+msgstr ""
+
 msgid "Extract timecodes of a track as timecode v2 file"
 msgstr ""
 
@@ -27654,6 +27675,9 @@ msgid "Extract with full paths"
 msgstr ""
 
 msgid "Extract/list versions in N [4] digit directories"
+msgstr ""
+
+msgid "Extraction directory name is source file + this suffix"
 msgstr ""
 
 msgid "Extracts i18n"
@@ -28004,7 +28028,13 @@ msgstr ""
 msgid "File to read configs"
 msgstr ""
 
+msgid "File to save logs"
+msgstr ""
+
 msgid "File to set-up a loop device for"
+msgstr ""
+
+msgid "File to store metadata generated during the extraction process"
 msgstr ""
 
 msgid "File to write PID into"
@@ -29142,6 +29172,9 @@ msgid "Force execution of server"
 msgstr ""
 
 msgid "Force exit processes don't exit cleanly"
+msgstr ""
+
+msgid "Force extraction even if outputs already exist"
 msgstr ""
 
 msgid "Force fallback for those subprojects"
@@ -35177,6 +35210,9 @@ msgstr "Conserver le paquet téléchargé"
 msgid "Keep existing theme files"
 msgstr ""
 
+msgid "Keep extracted chunks"
+msgstr ""
+
 msgid "Keep files fetched using HTTP"
 msgstr "Conserver les fichiers récupérés par HTTP"
 
@@ -38687,6 +38723,9 @@ msgstr ""
 msgid "Load partitions via the root table"
 msgstr ""
 
+msgid "Load plugins from the provided path"
+msgstr ""
+
 msgid "Load profile"
 msgstr "Charger le profil"
 
@@ -42008,6 +42047,9 @@ msgstr "Nombre de meilleurs serveurs"
 msgid "Number of uploads to fill out to with optimistic unchokes"
 msgstr ""
 
+msgid "Number of worker processes to process files parallelly"
+msgstr ""
+
 msgid "Number of worker threads"
 msgstr ""
 
@@ -42291,6 +42333,9 @@ msgid "Only build the database, don't download metadata"
 msgstr ""
 
 msgid "Only capture the main monitor (undefined if -i is set)"
+msgstr ""
+
+msgid "Only carve chunks and skip further extraction"
 msgstr ""
 
 msgid "Only check if sorted"
@@ -51535,6 +51580,9 @@ msgstr ""
 
 msgid "Recursion (default for download)"
 msgstr "Opérer récursivement (par défaut lors des téléchargements)"
+
+msgid "Recursion depth"
+msgstr ""
 
 msgid "Recursion limit"
 msgstr ""
@@ -64478,6 +64526,9 @@ msgstr ""
 msgid "Shows coalescing information"
 msgstr ""
 
+msgid "Shows commands needs to be available for unblob to work properly"
+msgstr ""
+
 msgid "Shows cpufreq statistics if available"
 msgstr ""
 
@@ -65103,6 +65154,12 @@ msgid "Skip previous image query for first build"
 msgstr ""
 
 msgid "Skip processes without a controlling terminal"
+msgstr ""
+
+msgid "Skip processing files with given extension"
+msgstr ""
+
+msgid "Skip processing files with given magic prefix"
 msgstr ""
 
 msgid "Skip refreshing all module indexes or a specific ecosystem"
@@ -76128,6 +76185,9 @@ msgid "Verbosely list archive (technical)"
 msgstr "Lister verbeusement le contenu de l’archive (version technique)"
 
 msgid "Verbosity level"
+msgstr ""
+
+msgid "Verbosity level (-v, -vv, -vvv)"
 msgstr ""
 
 msgid "Verbosity level (default)"

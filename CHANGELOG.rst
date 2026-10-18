@@ -23,6 +23,7 @@ Scripting improvements
 ----------------------
 - ``command``, ``builtin``, ``exec`` and ``time`` now accept a ``--`` separator between the keyword and the command name, so for example ``command -- -q`` runs a command literally called ``-q`` (:issue:`9941`).
 - Command substitutions are now allowed in command position, for example ``$(echo echo) hello world`` (:issue:`12829`).`
+- Adjacent expansions in a slice now combine like in a regular argument, so ``$foo[$tens$ones]`` and ``$foo[1$ones]`` select the combined indices instead of each part separately (:issue:`12892`).
 
 Regression fixes:
 -----------------

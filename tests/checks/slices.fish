@@ -86,11 +86,29 @@ echo $foo[$foo[$foo[$foo[1 5]]]]
 echo $foo[1 (echo $foo[2 3]) 4]
 #CHECK: 2 4 5 5
 echo $foo[1(echo $foo[2 3])4]
-#CHECK: 2 4 5 5
+#CHECK: 14 45
 echo $foo[1 $foo[2 3] 4]
 #CHECK: 2 4 5 2 5 5
 echo $foo[1$foo[2 3]4]
-#CHECK: 2 35 2 45
+#CHECK: 135 145
+
+# adjacent expansions combine like in a regular argument
+set -l letters a b c d e f g h i j k l m n o p q r s t u v w x y z
+set -l tens 1 2
+set -l ones 3 4
+echo $letters[$tens$ones]
+#CHECK: m w n x
+set -l combined $tens$ones
+echo $letters[$combined]
+#CHECK: m w n x
+echo $letters[1$ones]
+#CHECK: m n
+echo $letters[$tens"1"]
+#CHECK: k u
+echo $letters[-$tens]
+#CHECK: z y
+echo $letters[$tens $ones]
+#CHECK: a c b c a d b d
 
 # escaped slice operator
 set foo abc def ghi

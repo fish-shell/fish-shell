@@ -472,18 +472,28 @@ enum ParseSliceError {
 /// Parse an array slicing specification Returns 0 on success. If a parse error occurs, returns the
 /// index of the bad token. Note that 0 can never be a bad index because the string always starts
 /// with [.
+/// Internal separators are dropped like in a regular argument, so adjacent expansions combine into
+/// one index instead of separating indices (#12892).
 fn parse_slice(
     input: &wstr,
     idx: &mut Vec<i64>,
     array_size: usize,
     unescaped: bool,
 ) -> Result<usize, (usize, ParseSliceError)> {
+    let source_len = input.len();
+    let (input, source_positions): (WString, Vec<usize>) = input
+        .chars()
+        .enumerate()
+        .filter(|&(_, c)| c != INTERNAL_SEPARATOR)
+        .map(|(i, c)| (c, i))
+        .unzip();
+    let source_position = |pos: usize| source_positions.get(pos).copied().unwrap_or(source_len);
     let size = i64::try_from(array_size).unwrap();
     let mut pos = 1; // skip past the opening square bracket
     let end_char = if unescaped { SLICE_END } else { ']' };
 
     loop {
-        while input.char_at(pos).is_whitespace() || input.char_at(pos) == INTERNAL_SEPARATOR {
+        while input.char_at(pos).is_whitespace() {
             pos += 1;
         }
         if input.char_at(pos) == end_char {
@@ -504,7 +514,7 @@ fn parse_slice(
                         // not we're going to show an error if the index ultimately evaluates
                         // to zero. This will help newcomers to fish avoid a common off-by-one
                         // error. See #4862.
-                        return Err((pos, ParseSliceError::ZeroIndex));
+                        return Err((source_position(pos), ParseSliceError::ZeroIndex));
                     }
                     pos += consumed;
                     // Skip trailing whitespace.
@@ -518,20 +528,14 @@ fn parse_slice(
                     // We don't test `*end` as is typically done because we expect it to not
                     // be the null char. Ignore the case of errno==-1 because it means the end
                     // char wasn't the null char.
-                    return Err((pos, ParseSliceError::InvalidIndex));
+                    return Err((source_position(pos), ParseSliceError::InvalidIndex));
                 }
             }
         };
 
         let mut i1 = if tmp > -1 { tmp } else { size + tmp + 1 };
-        while input.char_at(pos) == INTERNAL_SEPARATOR {
-            pos += 1;
-        }
         if input.char_at(pos) == '.' && input.char_at(pos + 1) == '.' {
             pos += 2;
-            while input.char_at(pos) == INTERNAL_SEPARATOR {
-                pos += 1;
-            }
             while input.char_at(pos).is_whitespace() {
                 pos += 1; // Allow the space in "[.. ]".
             }
@@ -545,7 +549,7 @@ fn parse_slice(
                 match wcstoi_partial(&input[pos..], wcstoi::Options::default(), &mut consumed) {
                     Ok(tmp) => {
                         if tmp == 0 {
-                            return Err((pos, ParseSliceError::ZeroIndex));
+                            return Err((source_position(pos), ParseSliceError::ZeroIndex));
                         }
                         pos += consumed;
                         // Skip trailing whitespace.
@@ -556,7 +560,7 @@ fn parse_slice(
                         tmp
                     }
                     Err(_error) => {
-                        return Err((pos, ParseSliceError::InvalidIndex));
+                        return Err((source_position(pos), ParseSliceError::InvalidIndex));
                     }
                 }
             };
@@ -590,7 +594,7 @@ fn parse_slice(
         idx.push(i1);
     }
 
-    Ok(pos)
+    Ok(source_positions[pos - 1] + 1)
 }
 
 /// Expand all environment variables in the string *ptr.

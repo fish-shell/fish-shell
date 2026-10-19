@@ -511,20 +511,23 @@ impl<'s> State<'s> {
             }
             Token::Function(f) => {
                 self.next_token();
-                let have_open = self.current == Token::Open;
-                if have_open {
+                let have_open = (self.current == Token::Open).then(|| {
+                    let pos = self.pos;
                     // If we *have* an opening parenthesis,
                     // we need to consume it and
                     // expect a closing one.
                     self.next_token();
-                }
+                    pos - 1
+                });
 
                 if f.arity() == Some(0) {
-                    if have_open {
+                    if let Some(open_pos) = have_open {
                         if self.current == Token::Close {
                             self.next_token();
                         } else if self.specific_error().is_none() {
-                            return Err(self.set_error(ErrorKind::MissingClosingParen, None));
+                            return Err(
+                                self.set_error(ErrorKind::MissingClosingParen, Some((open_pos, 0)))
+                            );
                         }
                     }
 
@@ -553,9 +556,9 @@ impl<'s> State<'s> {
                 if !matches!(self.current, Token::Error(_))
                     && (f.arity().is_none_or(|l| l == parameters.len()))
                 {
-                    if !have_open {
+                    let Some(open_pos) = have_open else {
                         return Ok(f.call(&parameters));
-                    }
+                    };
                     if self.current == Token::Close {
                         // We have an opening and a closing paren, consume the closing one and done.
                         self.next_token();
@@ -563,7 +566,9 @@ impl<'s> State<'s> {
                     }
                     if !matches!(self.current, Token::Error(_)) {
                         // If we had the right number of arguments, we're missing a closing paren.
-                        return Err(self.set_error(ErrorKind::MissingClosingParen, None));
+                        return Err(
+                            self.set_error(ErrorKind::MissingClosingParen, Some((open_pos, 0)))
+                        );
                     }
                 }
 
@@ -616,6 +621,7 @@ impl<'s> State<'s> {
                 Err(error)
             }
             Token::Open => {
+                let open_pos = self.pos - 1;
                 self.next_token();
                 let ret = self.expr()?;
                 if self.current == Token::Close {
@@ -628,7 +634,7 @@ impl<'s> State<'s> {
                 } else if let Some(error) = self.specific_error() {
                     error
                 } else {
-                    self.set_error(ErrorKind::MissingClosingParen, None)
+                    self.set_error(ErrorKind::MissingClosingParen, Some((open_pos, 0)))
                 };
 
                 Err(error)

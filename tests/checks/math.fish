@@ -244,12 +244,17 @@ math 'log 16'
 math 'log(16'
 # CHECKERR: math: Error: Missing closing parenthesis
 # CHECKERR: {{^}}'log(16'
-# CHECKERR: {{^}}       ^
+# CHECKERR: {{^}}    ^
 
-math '(2'
+math 'pi('
 # CHECKERR: math: Error: Missing closing parenthesis
-# CHECKERR: {{^}}'(2'
+# CHECKERR: {{^}}'pi('
 # CHECKERR: {{^}}   ^
+
+math '6 / ( 2 * (3 + 2) - 5  '
+# CHECKERR: math: Error: Missing closing parenthesis
+# CHECKERR: {{^}}'6 / ( 2 * (3 + 2) - 5  '
+# CHECKERR: {{^}}     ^
 
 math --base=16 255 / 15
 # CHECK: 0x11

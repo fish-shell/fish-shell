@@ -302,12 +302,12 @@ math sin cos 2 x pi
 math pow sin 3, 5
 # CHECKERR: math: Error: Too many arguments
 # CHECKERR: {{^}}'pow sin 3, 5'
-# CHECKERR: {{^}}            ^
+# CHECKERR: {{^}}          ^
 
 math pow sin 3, 5 + 2
 # CHECKERR: math: Error: Too many arguments
 # CHECKERR: {{^}}'pow sin 3, 5 + 2'
-# CHECKERR: {{^}}            ^~~~^
+# CHECKERR: {{^}}          ^
 
 math sin pow 3, 5
 # CHECK: {{-0\.890009|-0.890\d*}}
@@ -343,7 +343,7 @@ math min 2, 3, 4, 5, -10, 1
 math 'min 5, 4, 3, ncr 2, 1, 5'
 # CHECKERR: math: Error: Too many arguments
 # CHECKERR: {{^}}'min 5, 4, 3, ncr 2, 1, 5'
-# CHECKERR: {{^}}                        ^
+# CHECKERR: {{^}}                      ^
 math 'min 5, 4, 3, ncr(2, 1), 5'
 # CHECK: 2
 math 'min 5, 4, 3, 5, ncr 2, 1'

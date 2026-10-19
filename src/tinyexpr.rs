@@ -520,6 +520,9 @@ impl<'s> State<'s> {
                     pos - 1
                 });
 
+                // Handle arity 0 separately since, unlike other functions, they don't bind
+                // with the remaining parameters ("ncr pi, 1" is equivalent to "ncr(pi(),1)",
+                // not "ncr(pi(,1))")
                 if f.arity() == Some(0) {
                     if let Some(open_pos) = have_open {
                         if self.current == Token::Close {
@@ -537,88 +540,44 @@ impl<'s> State<'s> {
                     };
                 }
 
+                // Special case for `)` in `()` since this is a valid parameter list while `expr()`
+                // in the loop below would return an `UnexpectedToken` error instead.
+                // For the function format without paren, the existing code already works because
+                // `expr()` already returns `TooFewArgs` when there is no further input
+                if have_open.is_some() && self.current == Token::Close {
+                    return Err(self.set_error(ErrorKind::TooFewArgs, None));
+                }
+
                 let mut parameters = vec![];
-                let mut first_err = None;
-                for j in 0.. {
-                    if f.arity() == Some(j) {
-                        first_err = Some(self.pos - 1);
-                    }
-                    let Ok(expr) = self.expr() else {
-                        break;
-                    };
-                    parameters.push(expr);
+                loop {
+                    parameters.push(self.expr()?);
                     if self.current != Token::Sep {
                         break;
+                    }
+                    if f.arity().is_some_and(|l| l == parameters.len()) {
+                        return Err(self.set_error(ErrorKind::TooManyArgs, Some((self.pos - 1, 0))));
                     }
                     self.next_token();
                 }
 
-                if !matches!(self.current, Token::Error(_))
-                    && (f.arity().is_none_or(|l| l == parameters.len()))
-                {
-                    let Some(open_pos) = have_open else {
-                        return Ok(f.call(&parameters));
-                    };
-                    if self.current == Token::Close {
-                        // We have an opening and a closing paren, consume the closing one and done.
-                        self.next_token();
-                        return Ok(f.call(&parameters));
-                    }
-                    if !matches!(self.current, Token::Error(_)) {
-                        // If we had the right number of arguments, we're missing a closing paren.
+                if let Some(open_pos) = have_open {
+                    if self.current != Token::Close {
                         return Err(
                             self.set_error(ErrorKind::MissingClosingParen, Some((open_pos, 0)))
                         );
+                    } else {
+                        self.next_token();
                     }
                 }
 
-                // TODO(MSRV>=1.88): feature(let_chains)
-                // Improve readability with:
-                //      if let Token::Error(error) = self.current && error.kind != ErrorKind::UnexpectedToken { error } else...
-                let error = if matches!(
-                    self.current,
-                    Token::Error(Error {
-                        kind,
-                        ..
-                    }) if kind != ErrorKind::UnexpectedToken
-                ) {
-                    let Token::Error(error) = self.current else {
-                        unreachable!();
-                    };
-                    error
+                if let Token::Error(error) = self.current {
+                    Err(error)
+                } else if f.arity().is_some_and(|l| l != parameters.len()) {
+                    // `TooManyArgs` is already handled in the loop
+                    Err(self.set_error(ErrorKind::TooFewArgs, None))
                 } else {
-                    // Otherwise we complain about the number of arguments *first*,
-                    // a closing parenthesis should be more obvious.
-                    //
-                    // Vararg functions need at least one argument.
-                    let err = if f
-                        .arity()
-                        .map_or(parameters.len() == 0, |arity| parameters.len() < arity)
-                    {
-                        ErrorKind::TooFewArgs
-                    } else {
-                        ErrorKind::TooManyArgs
-                    };
-
-                    let mut err_pos_len = None;
-                    if let Some(first_err) = first_err {
-                        let mut len = self.pos - first_err;
-                        if self.current != Token::Close {
-                            // TODO: Rationalize where we put the cursor exactly.
-                            // If we have a closing paren it's on it, if we don't it's before the number.
-                            len += 1;
-                        }
-                        if self.current == Token::End {
-                            // Don't place a caret after the end of string
-                            len -= 1;
-                        }
-                        err_pos_len = Some((first_err, len));
-                    }
-
-                    self.set_error(err, err_pos_len)
-                };
-
-                Err(error)
+                    Ok(f.call(&parameters))
+                }
             }
             Token::Open => {
                 let open_pos = self.pos - 1;

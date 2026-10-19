@@ -535,7 +535,6 @@ impl<'s> State<'s> {
                 }
 
                 let mut parameters = vec![];
-                let mut i = 0;
                 let mut first_err = None;
                 for j in 0.. {
                     if f.arity() == Some(j) {
@@ -549,11 +548,10 @@ impl<'s> State<'s> {
                         break;
                     }
                     self.next_token();
-                    i += 1;
                 }
 
                 if !matches!(self.current, Token::Error(_))
-                    && (f.arity().is_none_or(|l| l == (i + 1)))
+                    && (f.arity().is_none_or(|l| l == parameters.len()))
                 {
                     if !have_open {
                         return Ok(f.call(&parameters));
@@ -588,7 +586,10 @@ impl<'s> State<'s> {
                     // a closing parenthesis should be more obvious.
                     //
                     // Vararg functions need at least one argument.
-                    let err = if f.arity().map_or(i == 0, |arity| i < arity) {
+                    let err = if f
+                        .arity()
+                        .map_or(parameters.len() == 0, |arity| parameters.len() < arity)
+                    {
                         ErrorKind::TooFewArgs
                     } else {
                         ErrorKind::TooManyArgs

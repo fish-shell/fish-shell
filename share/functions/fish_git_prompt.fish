@@ -369,8 +369,8 @@ function fish_git_prompt --description "Prompt function for Git"
 
     set branch (string replace refs/heads/ '' -- $branch)
     # Strip control characters before display.
-    set branch (string replace -ra '[[:cntrl:]]' '' -- $branch)
-    set operation (string replace -ra '[[:cntrl:]]' '' -- $operation)
+    set branch (__fish_strip_control_characters $branch)
+    set operation (__fish_strip_control_characters $operation)
     if string match -qr '^\d+$' "$__fish_git_prompt_shorten_branch_len"
         set -q __fish_git_prompt_shorten_branch_char_suffix
         and set -l char -c "$__fish_git_prompt_shorten_branch_char_suffix"

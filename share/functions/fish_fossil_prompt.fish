@@ -48,7 +48,7 @@ function fish_fossil_prompt --description 'Write out the fossil prompt'
 
     echo -n ' ('
     set_color magenta
-    echo -n "$branch" | string replace -ra '[[:cntrl:]]' ''
+    echo -n (__fish_strip_control_characters "$branch")
     set_color --reset
     echo -n '|'
     #set -l repo_status (fossil changes --differ 2>/dev/null | string match -rv '\w:|^\s' | string split " " -f1 | sort -u)

@@ -53,7 +53,7 @@ function fish_hg_prompt --description 'Write out the hg prompt'
     end
 
     # Strip control characters for display.
-    set branch (string replace -ra '[[:cntrl:]]' '' -- $branch)
+    set branch (__fish_strip_control_characters $branch)
 
     if not set -q fish_prompt_hg_show_informative_status
         set_color --reset

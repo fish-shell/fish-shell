@@ -168,7 +168,7 @@ enum Token {
 struct State<'s> {
     start: &'s wstr,
     pos: usize,
-    current: Token,
+    token: Token,
 }
 
 fn bitwise_op(a: f64, b: f64, f: fn(u64, u64) -> u64) -> f64 {
@@ -334,7 +334,7 @@ impl<'s> State<'s> {
         let mut state = Self {
             start: input,
             pos: 0,
-            current: Token::End,
+            token: Token::End,
         };
         state.next_token();
         state
@@ -342,7 +342,7 @@ impl<'s> State<'s> {
 
     pub fn eval(&mut self) -> Result<f64, Error> {
         let val = self.expr()?;
-        if self.current == Token::End {
+        if self.token == Token::End {
             Ok(val)
         } else {
             Err(Error {
@@ -368,12 +368,12 @@ impl<'s> State<'s> {
 
     fn set_error(&mut self, kind: ErrorKind, pos_len: Option<(usize, usize)>) -> Error {
         let error = self.build_error(kind, pos_len);
-        self.current = Token::Error(error);
+        self.token = Token::Error(error);
         error
     }
 
     fn specific_error(&self) -> Option<Error> {
-        let Token::Error(error) = self.current else {
+        let Token::Error(error) = self.token else {
             return None;
         };
         if error.kind == ErrorKind::Unknown {
@@ -386,7 +386,7 @@ impl<'s> State<'s> {
     /// Get the next token from the input.
     /// Leading whitespaces must have been pre-filtered.
     fn get_token(&mut self) -> (usize, Token) {
-        debug_assert!(!matches!(self.current, Token::Error(_)));
+        debug_assert!(!matches!(self.token, Token::Error(_)));
 
         let next = &self.start.as_char_slice().get(self.pos..).unwrap_or(&[]);
         if next.is_empty() {
@@ -470,7 +470,7 @@ impl<'s> State<'s> {
 
         let (consumed, token) = self.get_token();
         self.pos += consumed;
-        self.current = token;
+        self.token = token;
     }
 
     /// ```text
@@ -481,12 +481,12 @@ impl<'s> State<'s> {
     ///            "(" <list> ")"
     /// ```
     fn base(&mut self) -> Result<f64, Error> {
-        match self.current {
+        match self.token {
             Token::Number(n) => {
                 let after_first = self.pos;
 
                 self.next_token();
-                match self.current {
+                match self.token {
                     Token::Error(err) => Err(err),
                     Token::Number(_) | Token::Function(_) => {
                         // Two numbers after each other:
@@ -511,7 +511,7 @@ impl<'s> State<'s> {
             }
             Token::Function(f) => {
                 self.next_token();
-                let have_open = (self.current == Token::Open).then(|| {
+                let have_open = (self.token == Token::Open).then(|| {
                     let pos = self.pos;
                     // If we *have* an opening parenthesis,
                     // we need to consume it and
@@ -525,7 +525,7 @@ impl<'s> State<'s> {
                 // not "ncr(pi(,1))")
                 if f.arity() == Some(0) {
                     if let Some(open_pos) = have_open {
-                        if self.current == Token::Close {
+                        if self.token == Token::Close {
                             self.next_token();
                         } else if self.specific_error().is_none() {
                             return Err(
@@ -544,14 +544,14 @@ impl<'s> State<'s> {
                 // in the loop below would return an `UnexpectedToken` error instead.
                 // For the function format without paren, the existing code already works because
                 // `expr()` already returns `TooFewArgs` when there is no further input
-                if have_open.is_some() && self.current == Token::Close {
+                if have_open.is_some() && self.token == Token::Close {
                     return Err(self.set_error(ErrorKind::TooFewArgs, None));
                 }
 
                 let mut parameters = vec![];
                 loop {
                     parameters.push(self.expr()?);
-                    if self.current != Token::Sep {
+                    if self.token != Token::Sep {
                         break;
                     }
                     if f.arity().is_some_and(|l| l == parameters.len()) {
@@ -561,7 +561,7 @@ impl<'s> State<'s> {
                 }
 
                 if let Some(open_pos) = have_open {
-                    if self.current != Token::Close {
+                    if self.token != Token::Close {
                         return Err(
                             self.set_error(ErrorKind::MissingClosingParen, Some((open_pos, 0)))
                         );
@@ -570,7 +570,7 @@ impl<'s> State<'s> {
                     }
                 }
 
-                if let Token::Error(error) = self.current {
+                if let Token::Error(error) = self.token {
                     Err(error)
                 } else if f.arity().is_some_and(|l| l != parameters.len()) {
                     // `TooManyArgs` is already handled in the loop
@@ -583,12 +583,12 @@ impl<'s> State<'s> {
                 let open_pos = self.pos - 1;
                 self.next_token();
                 let ret = self.expr()?;
-                if self.current == Token::Close {
+                if self.token == Token::Close {
                     self.next_token();
                     return Ok(ret);
                 }
 
-                let error = if !matches!(self.current, Token::End | Token::Error(_)) {
+                let error = if !matches!(self.token, Token::End | Token::Error(_)) {
                     self.set_error(ErrorKind::TooManyArgs, None)
                 } else if let Some(error) = self.specific_error() {
                     error
@@ -621,7 +621,7 @@ impl<'s> State<'s> {
     /// \<power\>  = {("-" | "+")} \<base\>
     fn power(&mut self) -> Result<f64, Error> {
         let mut sign = 1.0;
-        while let Token::Op(op) = self.current {
+        while let Token::Op(op) = self.token {
             if op == Operator::Sub {
                 sign = -sign;
                 self.next_token();
@@ -639,7 +639,7 @@ impl<'s> State<'s> {
     fn factor(&mut self) -> Result<f64, Error> {
         let mut ret = self.power()?;
 
-        if let Token::Op(Operator::Pow) = self.current {
+        if let Token::Op(Operator::Pow) = self.token {
             self.next_token();
             ret = ret.powf(self.factor()?);
         }
@@ -650,7 +650,7 @@ impl<'s> State<'s> {
     /// \<term\>   = \<factor\> {("*" | "/" | "%") \<factor\>}
     fn term(&mut self) -> Result<f64, Error> {
         let mut ret = self.factor()?;
-        while let Token::Op(op @ (Operator::Mul | Operator::Div | Operator::Rem)) = self.current {
+        while let Token::Op(op @ (Operator::Mul | Operator::Div | Operator::Rem)) = self.token {
             let op_pos = self.pos - 1;
             self.next_token();
             let ret2 = self.factor()?;
@@ -669,7 +669,7 @@ impl<'s> State<'s> {
     /// \<expr\>   = \<term\> {("+" | "-") \<term\>}
     fn expr(&mut self) -> Result<f64, Error> {
         let mut ret = self.term()?;
-        while let Token::Op(op @ (Operator::Add | Operator::Sub)) = self.current {
+        while let Token::Op(op @ (Operator::Add | Operator::Sub)) = self.token {
             self.next_token();
             ret = op.eval(ret, self.term()?);
         }

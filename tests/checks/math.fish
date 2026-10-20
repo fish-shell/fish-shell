@@ -443,3 +443,13 @@ math -s 6 --scale-mode=ceiling "2 / 3 - 1"
 
 math -s 6 --scale-mode=random "2 / 3 - 1"
 # CHECKERR: math: random: invalid mode
+
+math 'min(1, *)'
+# CHECKERR: math: Error: Unexpected token
+# CHECKERR: {{^}}'min(1, *)'
+# CHECKERR: {{^}}        ^
+
+math '(1 (2))'
+# CHECKERR: math: Error: Too many arguments
+# CHECKERR: {{^}}'(1 (2))'
+# CHECKERR: {{^}}    ^

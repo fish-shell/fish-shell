@@ -169,6 +169,7 @@ struct State<'s> {
     start: &'s wstr,
     pos: usize,
     token: Token,
+    token_start: usize,
 }
 
 fn bitwise_op(a: f64, b: f64, f: fn(u64, u64) -> u64) -> f64 {
@@ -335,6 +336,7 @@ impl<'s> State<'s> {
             start: input,
             pos: 0,
             token: Token::End,
+            token_start: 0,
         };
         state.next_token();
         state
@@ -469,8 +471,9 @@ impl<'s> State<'s> {
         self.pos += first_char_pos;
 
         let (consumed, token) = self.get_token();
-        self.pos += consumed;
         self.token = token;
+        self.token_start = self.pos;
+        self.pos += consumed;
     }
 
     /// ```text
@@ -496,14 +499,9 @@ impl<'s> State<'s> {
 
                         // The error should be given *between*
                         // the last two tokens.
-                        let num_whitespace = self.start[after_first..]
-                            .chars()
-                            .take_while(|&c| " \t\n\r".contains(c))
-                            .count();
-
                         Err(self.set_error(
                             ErrorKind::MissingOperator,
-                            Some((after_first, num_whitespace)),
+                            Some((after_first, self.token_start - after_first)),
                         ))
                     }
                     _ => Ok(n),
@@ -512,12 +510,12 @@ impl<'s> State<'s> {
             Token::Function(f) => {
                 self.next_token();
                 let have_open = (self.token == Token::Open).then(|| {
-                    let pos = self.pos;
+                    let pos = self.token_start;
                     // If we *have* an opening parenthesis,
                     // we need to consume it and
                     // expect a closing one.
                     self.next_token();
-                    pos - 1
+                    pos
                 });
 
                 // Handle arity 0 separately since, unlike other functions, they don't bind
@@ -555,7 +553,9 @@ impl<'s> State<'s> {
                         break;
                     }
                     if f.arity().is_some_and(|l| l == parameters.len()) {
-                        return Err(self.set_error(ErrorKind::TooManyArgs, Some((self.pos - 1, 0))));
+                        return Err(
+                            self.set_error(ErrorKind::TooManyArgs, Some((self.token_start, 0)))
+                        );
                     }
                     self.next_token();
                 }
@@ -580,7 +580,7 @@ impl<'s> State<'s> {
                 }
             }
             Token::Open => {
-                let open_pos = self.pos - 1;
+                let open_pos = self.token_start;
                 self.next_token();
                 let ret = self.expr()?;
                 if self.token == Token::Close {
@@ -589,7 +589,7 @@ impl<'s> State<'s> {
                 }
 
                 let error = if !matches!(self.token, Token::End | Token::Error(_)) {
-                    self.set_error(ErrorKind::TooManyArgs, None)
+                    self.set_error(ErrorKind::TooManyArgs, Some((self.token_start, 0)))
                 } else if let Some(error) = self.specific_error() {
                     error
                 } else {
@@ -613,7 +613,10 @@ impl<'s> State<'s> {
             | Token::Error(Error {
                 kind: ErrorKind::Unknown,
                 ..
-            }) => Err(self.set_error(ErrorKind::UnexpectedToken, None)),
+            }) => Err(self.set_error(
+                ErrorKind::UnexpectedToken,
+                Some((self.token_start, self.pos - self.token_start)),
+            )),
             Token::Error(err) => Err(err),
         }
     }
@@ -651,7 +654,7 @@ impl<'s> State<'s> {
     fn term(&mut self) -> Result<f64, Error> {
         let mut ret = self.factor()?;
         while let Token::Op(op @ (Operator::Mul | Operator::Div | Operator::Rem)) = self.token {
-            let op_pos = self.pos - 1;
+            let op_pos = self.token_start;
             self.next_token();
             let ret2 = self.factor()?;
             if ret2 == 0.0 && [Operator::Div, Operator::Rem].contains(&op) {

@@ -23,6 +23,7 @@ complete pre-commit -n __fish_use_subcommand -a autoupdate -d "Auto-update confi
 complete pre-commit -n "__fish_seen_subcommand_from autoupdate" -l bleeding-edge -d "Update to the bleeding edge of `HEAD`"
 complete pre-commit -n "__fish_seen_subcommand_from autoupdate" -l freeze -d "Store frozen hashes in `rev`"
 complete pre-commit -n "__fish_seen_subcommand_from autoupdate" -l repo -xa "(__fish_pre_commit_config_print repo)" -d "Only update this repository"
+complete pre-commit -n "__fish_seen_subcommand_from autoupdate" -s j -l jobs -x -d "Number of threads to use"
 
 # clean
 complete pre-commit -n __fish_use_subcommand -a clean -d "Clean out files"

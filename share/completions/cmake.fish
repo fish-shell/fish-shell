@@ -20,6 +20,12 @@ function __fish_cmake_has_subcommand --argument-names subcommand
     and string match -q -- "--$subcommand" $first
 end
 
+function __fish_cmake_subcommand_dir_position
+    # The directory must come right after subcommand,
+    # e.g. `cmake --build <dir>`.
+    test (count (commandline -xpc)) -eq 2
+end
+
 function __fish_cmake_configs
     printf '%s\n' Debug Release RelWithDebInfo MinSizeRel
 end
@@ -160,10 +166,9 @@ complete -c cmake -n "__fish_is_first_arg" -l install -rF -d "Install a CMake-ge
 complete -c cmake -n "__fish_is_first_arg" -l open -rfa "(__fish_complete_directories)" -d "Open generated project in the associated application"
 complete -c cmake -n "__fish_is_first_arg" -l workflow -d "Run a workflow preset"
 
-# TODO: consider preset.
-# # TODO: consider -- ?
-complete -c cmake -n "__fish_cmake_has_subcommand build; and __fish_is_nth_token 1" -rfa "(__fish_complete_directories)"
-complete -c cmake -n "__fish_cmake_has_subcommand build; and not __fish_is_nth_token 1" -f
+# TODO: consider -- ?
+complete -c cmake -n "__fish_cmake_has_subcommand build; and __fish_cmake_subcommand_dir_position" -rfa "(__fish_complete_directories)"
+complete -c cmake -n "__fish_cmake_has_subcommand build; and not __fish_cmake_subcommand_dir_position" -f
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l preset -rf -d "Specify a build preset"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l presets-file -rF -d "Specify the path to a presets file"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l list-presets -d "List available presets"
@@ -174,8 +179,8 @@ complete -c cmake -n "__fish_cmake_has_subcommand build" -l clean-first -d "Buil
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l resolve-package-references -rf -a "on only off" -d "Restore/resolve package references during build."
 complete -c cmake -n "__fish_cmake_has_subcommand build" -s v -l verbose -d "Enable verbose output, if supported"
 
-complete -c cmake -n "__fish_cmake_has_subcommand install; and __fish_is_nth_token 1" -rfa "(__fish_complete_directories)"
-complete -c cmake -n "__fish_cmake_has_subcommand install; and not __fish_is_nth_token 1" -f
+complete -c cmake -n "__fish_cmake_has_subcommand install; and __fish_cmake_subcommand_dir_position" -rfa "(__fish_complete_directories)"
+complete -c cmake -n "__fish_cmake_has_subcommand install; and not __fish_cmake_subcommand_dir_position" -f
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l config -rf -a "(__fish_cmake_configs)" -d "For multi-configuration tools, choose <cfg>"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l component -rf -d "Component-based install. Only install <comp>"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l default-directory-permissions -rf -d "Default install permission"
@@ -183,8 +188,9 @@ complete -c cmake -n "__fish_cmake_has_subcommand install" -l prefix -rfa "(__fi
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l strip -d "Performing install/strip"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -s v -l verbose -d "Enable verbose output"
 
-complete -c cmake -n "__fish_cmake_has_subcommand open; and __fish_is_nth_token 1" -rfa "(__fish_complete_directories)"
-complete -c cmake -n "__fish_cmake_has_subcommand open; and not __fish_is_nth_token 1" -f
+# `--open` doesn't have options, keeping dir position check just for consistency.
+complete -c cmake -n "__fish_cmake_has_subcommand open; and __fish_cmake_subcommand_dir_position" -rfa "(__fish_complete_directories)"
+complete -c cmake -n "__fish_cmake_has_subcommand open; and not __fish_cmake_subcommand_dir_position" -f
 
 complete -c cmake -n "__fish_cmake_has_subcommand workflow" -f
 complete -c cmake -n "__fish_cmake_has_subcommand workflow" -l preset -rf -d "Workflow preset to execute"

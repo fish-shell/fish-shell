@@ -51,6 +51,10 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s B -rF -d "Explicit
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s G -rf -a "(__fish_cmake_generators)" -d "Specify a build system generator"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s T -rf -d "Specify toolset name if supported by generator"
 
+# `--help` and `--version` commands also have an optional <file> argument,
+# we don't complete it as it's rarely used and better to keep things simple.
+# `--version` also has `/V` and `/version` options - ignore them as unneeded alternatives.
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l version -f -a json-v1 -d "Print version number and exit"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s h -l help -rf -a "(__fish_cmake_help_keywords)" -d "Print help for one keyword and exit"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l help-full -d "Print all help manuals and exit"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l help-manual -rf -a "(cmake --help-manual-list | string replace -r '\(\d+\)\$' '')" -d "Print one help manual and exit"

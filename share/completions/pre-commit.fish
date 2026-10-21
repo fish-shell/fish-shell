@@ -78,6 +78,10 @@ complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -s s -l source
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -s o -l origin -l to-ref -xa '(__fish_git_refs)' -d "Destination ref"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -s v -l verbose -d Verbose
 complete pre-commit -n "__fish_seen_subcommand_from run" -a "(__fish_pre_commit_config_print id)" -d "Hook id"
+# `try-repo` has second pos argument `hook`, but it's different targetting `<repo>` from first pos argument,
+# instead of the current repo - so it's not the same as `__fish_pre_commit_config_print id`.
+# Skipping it as it's rarely used interactively.
+complete pre-commit -n "__fish_seen_subcommand_from try-repo; and __fish_is_nth_token 2" -fa "(__fish_complete_directories)"
 complete pre-commit -n "__fish_seen_subcommand_from try-repo" -l ref -l rev -xa '(__fish_git_refs)' -d "Ref to run against"
 
 # sample-config

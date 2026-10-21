@@ -4,7 +4,7 @@
 # cmake --build ?
 # cmake --install ?
 
-set -l subcommands "--build" "--install" "--open"
+set -l subcommands "--build" "--install" "--open" "-E"
 
 function __fish_cmake_has_any_subcommand -V subcommands
     set -l first (commandline -xpc)[2]
@@ -51,6 +51,9 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s B -rF -d "Explicit
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s G -rf -a "(__fish_cmake_generators)" -d "Specify a build system generator"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s T -rf -d "Specify toolset name if supported by generator"
 
+# No way to retrieve the machine-readable format with the list of commands and parsing `cmake -E` output might be unreliable,
+# so leaving it without suggestions.
+complete -c cmake -n "__fish_is_first_arg" -s E -d "CMake command mode"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -o L -d "List non-advanced cached variables"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -o LA -d "List all cached variables"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -o LH -d "List non-advanced cached variables with help"

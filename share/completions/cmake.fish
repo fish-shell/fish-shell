@@ -24,6 +24,12 @@ function __fish_cmake_configs
     printf '%s\n' Debug Release RelWithDebInfo MinSizeRel
 end
 
+function __fish_cmake_cache_entries
+    # Adding just 2 the most common options used in cmake.
+    printf '%s\n' CMAKE_BUILD_TYPE=(__fish_cmake_configs)
+    printf '%s\n' BUILD_SHARED_LIBS=ON BUILD_SHARED_LIBS=OFF
+end
+
 function __fish_cmake_generators
     # Rely on `-E capabilities` instead of `--help` for stability.
     # Only provide generators if we have a way to parse JSON.
@@ -72,6 +78,7 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand; and not __fish_is_nth
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s S -rF -d "Explicitly specify a source directory"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s B -rF -d "Explicitly specify a build directory"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s C -rF -d "Pre-load a script to populate the cache"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s D -rf -a "(__fish_cmake_cache_entries)" -d "Create or update a cmake cache entry"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s U -rf -d "Remove matching entries from CMake cache"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s G -rf -a "(__fish_cmake_generators)" -d "Specify a build system generator"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s T -rf -d "Specify toolset name if supported by generator"

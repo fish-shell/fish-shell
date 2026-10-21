@@ -1,4 +1,10 @@
-set -l commands status show set-time set-timezone list-timezones set-local-rtc set-ntp timesync-status show-timesync
+# Based on version 259.
+
+function __fish_timedatectl_properties
+    string match -rg -- "^([^=]+)=" (timedatectl show --all)
+end
+
+set -l commands status show set-time set-timezone list-timezones set-local-rtc set-ntp timesync-status show-timesync ntp-servers revert
 
 complete -c timedatectl -f
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a status -d 'Show current time settings'
@@ -13,15 +19,18 @@ complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a set-nt
 complete -c timedatectl -n "__fish_seen_subcommand_from set-ntp" -a 'true false'
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a timesync-status -d 'Show status of systemd-timesyncd'
 complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a show-timesync -d 'Show properties of systemd-timesyncd'
+complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a ntp-servers -d 'Set the interface specific NTP servers'
+complete -c timedatectl -n "not __fish_seen_subcommand_from $commands" -a revert -d 'Revert the interface specific NTP servers'
 
 complete -c timedatectl -s h -l help -d 'Show this help message'
 complete -c timedatectl -l version -d 'Show package version'
 complete -c timedatectl -l no-pager -d 'Do not pipe output into a pager'
 complete -c timedatectl -l no-ask-password -d 'Do not prompt for password'
-complete -c timedatectl -s H -l host -r -d 'Operate on remote HOST'
-complete -c timedatectl -s M -l machine -r -d 'Operate on local CONTAINER'
+complete -c timedatectl -s H -l host -rfa "(__fish_print_hostnames)" -d 'Operate on remote HOST'
+complete -c timedatectl -s M -l machine -rfa "(__fish_systemd_machines)" -d 'Operate on local CONTAINER'
 complete -c timedatectl -l adjust-system-clock -d 'Adjust system clock when changing local RTC mode'
 complete -c timedatectl -l monitor -d 'Monitor status of systemd-timesyncd'
-complete -c timedatectl -s p -l property -r -d 'Show only properties by this NAME'
+complete -c timedatectl -s p -l property -rfa "(__fish_timedatectl_properties)" -d 'Show only properties by this NAME'
 complete -c timedatectl -s a -l all -d 'Show all properties'
 complete -c timedatectl -l value -d 'Only show properties with values'
+complete -c timedatectl -s P -rfa "(__fish_timedatectl_properties)" -d 'Equivalent to --value --property=NAME'

@@ -60,6 +60,7 @@ complete pre-commit -n __fish_use_subcommand -a try-repo -d "Try the hooks in a 
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l checkout-type -xa "0 1" -d "Indicate either branch or file checkout"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l commit-msg-filename -r -d "Filename to check when running during `commit-msg`"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l commit-object-name -d "Commit object name"
+complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l fail-fast -d "Stop after the first failing hook"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l files -r -d "Filenames to run hooks on"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l hook-stage -xa "$hook_stages" -d "The stage during which the hook is fired"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l is-squash-merge -d "Whether the merge was a squash merge"

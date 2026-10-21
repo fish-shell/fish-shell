@@ -1,7 +1,7 @@
 set -l commands autoupdate clean gc init-templatedir install install-hooks migrate-config run sample-config try-repo uninstall validate-config validate-manifest
 set -l commands_with_config autoupdate init-templatedir install install-hooks migrate-config run try-repo uninstall
-set -l hook_stages commit merge-commit prepare-commit-msg commit-msg post-commit manual post-checkout push post-merge post-rewrite
-set -l hook_types pre-commit pre-merge-commit pre-push prepare-commit-msg commit-msg post-commit post-checkout post-merge post-rewrite
+set -l hook_stages commit-msg post-checkout post-commit post-merge post-rewrite pre-commit pre-merge-commit pre-push pre-rebase prepare-commit-msg manual
+set -l hook_types commit-msg post-checkout post-commit post-merge post-rewrite pre-commit pre-merge-commit pre-push pre-rebase prepare-commit-msg
 
 functions -q __fish_git || complete -C"git " &>/dev/null
 

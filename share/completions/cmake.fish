@@ -51,6 +51,31 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s B -rF -d "Explicit
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s G -rf -a "(__fish_cmake_generators)" -d "Specify a build system generator"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s T -rf -d "Specify toolset name if supported by generator"
 
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l fresh -d "Configure a fresh build tree, removing any existing cache file"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s N -d "View mode only"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s P -rF -d "Process script mode"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l find-package -d "Legacy pkg-config like mode. Do not use"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l graphviz -rF -d "Generate graphviz of dependencies"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l system-information -rF -d "Dump information about this system"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l print-config-dir -d "Print CMake config directory for user-wide FileAPI queries"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l log-level -rf -a "ERROR WARNING NOTICE STATUS VERBOSE DEBUG TRACE" -d "Set the verbosity of messages from CMake files"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l log-context -d "Prepend log messages with context, if given"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l debug-trycompile -d "Do not delete the try_compile build tree"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l debug-output -d "Put cmake in a debug mode"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l debug-find -d "Put cmake find in a debug mode"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l debug-find-pkg -rf -d "Limit cmake debug-find to the comma-separated list of packages"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l debug-find-var -rf -d "Limit cmake debug-find to the comma-separated list of result variables"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l trace -d "Put cmake in trace mode"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l trace-expand -d "Put cmake in trace mode with variable expansion"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l trace-format -rf -a "human json-v1" -d "Set the output format of the trace"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l trace-source -rF -d "Trace only this CMake file/module"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l trace-redirect -rF -d "Redirect trace output to a file instead of stderr"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l check-system-vars -d "Find problems with variable usage in system files"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l compile-no-warning-as-error -d "Ignore COMPILE_WARNING_AS_ERROR property and variable"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l link-no-warning-as-error -d "Ignore LINK_WARNING_AS_ERROR property and variable"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l profiling-format -rf -a google-trace -d "Output data for profiling CMake scripts"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l profiling-output -rF -d "Select an output path for the profiling data"
+
 # `--help` and `--version` commands also have an optional <file> argument,
 # we don't complete it as it's rarely used and better to keep things simple.
 # `--version` also has `/V` and `/version` options - ignore them as unneeded alternatives.
@@ -80,6 +105,7 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l help-variables -d 
 
 complete -c cmake -n "__fish_is_first_arg" -l build -rF -d "Build a CMake-generated project binary tree"
 complete -c cmake -n "__fish_is_first_arg" -l install -rF -d "Install a CMake-generated project binary tree"
+complete -c cmake -n "__fish_is_first_arg" -l open -rfa "(__fish_complete_directories)" -d "Open generated project in the associated application"
 
 # TODO: consider preset.
 # # TODO: consider -- ?

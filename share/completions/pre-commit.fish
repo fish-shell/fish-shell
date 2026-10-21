@@ -1,4 +1,5 @@
 set -l commands autoupdate clean gc init-templatedir install install-hooks migrate-config run sample-config try-repo uninstall validate-config validate-manifest
+set -l commands_with_config autoupdate init-templatedir install install-hooks migrate-config run try-repo uninstall
 set -l hook_stages commit merge-commit prepare-commit-msg commit-msg post-commit manual post-checkout push post-merge post-rewrite
 set -l hook_types pre-commit pre-merge-commit pre-push prepare-commit-msg commit-msg post-commit post-checkout post-merge post-rewrite
 
@@ -14,7 +15,7 @@ complete pre-commit -f
 complete pre-commit -n __fish_use_subcommand -s h -l help -d "Show help message and exit"
 complete pre-commit -n __fish_use_subcommand -s V -l version -d "Show version number and exit"
 complete pre-commit -n "__fish_seen_subcommand_from $commands" -l color -xa "auto always never" -d "Whether to use color in output"
-complete pre-commit -n "__fish_seen_subcommand_from $commands" -s c -l config -r -d "Path to alternate config file"
+complete pre-commit -n "__fish_seen_subcommand_from $commands_with_config" -s c -l config -r -d "Path to alternate config file"
 complete pre-commit -n "__fish_seen_subcommand_from $commands" -s h -l help -d "Show help message and exit"
 
 # autoupdate

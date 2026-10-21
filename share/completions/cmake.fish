@@ -3,8 +3,9 @@
 # cmake --help
 # cmake --build ?
 # cmake --install ?
+# cmake --workflow
 
-set -l subcommands "--build" "--install" "--open" "-E"
+set -l subcommands "--build" "--install" "--open" "--workflow" "-E"
 
 function __fish_cmake_has_any_subcommand -V subcommands
     set -l first (commandline -xpc)[2]
@@ -34,6 +35,13 @@ for g in json.load(sys.stdin)['generators']:
     end
 end
 
+function __fish_cmake_preset_types
+    for type in configure build test package
+        printf '%s\t%s\n' $type "List available $type presets"
+    end
+    printf '%s\t%s\n' all "List available presets of every type"
+end
+
 function __fish_cmake_help_keywords
     for kind in command diagnostic module policy property variable
         # Attach `kind` as a description.
@@ -50,6 +58,10 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s S -rF -d "Explicit
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s B -rF -d "Explicitly specify a build directory"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s G -rf -a "(__fish_cmake_generators)" -d "Specify a build system generator"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s T -rf -d "Specify toolset name if supported by generator"
+
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l preset -rf -d "Specify a configure preset"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l presets-file -rF -d "Specify the path to a presets file"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l list-presets -f -a "(__fish_cmake_preset_types)" -d "List available presets"
 
 # No way to retrieve the machine-readable format with the list of commands and parsing `cmake -E` output might be unreliable,
 # so leaving it without suggestions.
@@ -117,14 +129,15 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l help-variables -d 
 complete -c cmake -n "__fish_is_first_arg" -l build -rF -d "Build a CMake-generated project binary tree"
 complete -c cmake -n "__fish_is_first_arg" -l install -rF -d "Install a CMake-generated project binary tree"
 complete -c cmake -n "__fish_is_first_arg" -l open -rfa "(__fish_complete_directories)" -d "Open generated project in the associated application"
+complete -c cmake -n "__fish_is_first_arg" -l workflow -d "Run a workflow preset"
 
 # TODO: consider preset.
 # # TODO: consider -- ?
 complete -c cmake -n "__fish_cmake_has_subcommand build; and __fish_is_nth_token 1" -rfa "(__fish_complete_directories)"
 complete -c cmake -n "__fish_cmake_has_subcommand build; and not __fish_is_nth_token 1" -f
-complete -c cmake -n "__fish_cmake_has_subcommand build" -l presets -rf -d "Specify a build preset"
+complete -c cmake -n "__fish_cmake_has_subcommand build" -l preset -rf -d "Specify a build preset"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l presets-file -rF -d "Specify the path to a presets file"
-complete -c cmake -n "__fish_cmake_has_subcommand build" -l list-presets -F -d "List available presets"
+complete -c cmake -n "__fish_cmake_has_subcommand build" -l list-presets -d "List available presets"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -s j -l parallel -rf -d "Build in parallel using the given number of jobs"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -s t -l target -rf -d "Build <tgt> instead of default targets"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l config -rf -a "Release RelWithDebInfo MinRelSize Debug" -d "For multi-configuration tools, choose <cfg>"
@@ -143,3 +156,9 @@ complete -c cmake -n "__fish_cmake_has_subcommand install" -s v -l verbose -d "E
 
 complete -c cmake -n "__fish_cmake_has_subcommand open; and __fish_is_nth_token 1" -rfa "(__fish_complete_directories)"
 complete -c cmake -n "__fish_cmake_has_subcommand open; and not __fish_is_nth_token 1" -f
+
+complete -c cmake -n "__fish_cmake_has_subcommand workflow" -f
+complete -c cmake -n "__fish_cmake_has_subcommand workflow" -l preset -rf -d "Workflow preset to execute"
+complete -c cmake -n "__fish_cmake_has_subcommand workflow" -l presets-file -rF -d "Path to a presets file"
+complete -c cmake -n "__fish_cmake_has_subcommand workflow" -l list-presets -d "List available workflow presets"
+complete -c cmake -n "__fish_cmake_has_subcommand workflow" -l fresh -d "Configure a fresh build tree, removing any existing cache file"

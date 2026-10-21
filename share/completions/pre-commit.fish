@@ -1,4 +1,4 @@
-set -l commands autoupdate clean gc init-templatedir install install-hooks migrate-config run sample-config try-repo uninstall validate-config validate-manifest
+set -l commands autoupdate clean gc hazmat init-templatedir install install-hooks migrate-config run sample-config try-repo uninstall validate-config validate-manifest
 set -l commands_with_config autoupdate init-templatedir install install-hooks migrate-config run try-repo uninstall
 set -l hook_stages commit-msg post-checkout post-commit post-merge post-rewrite pre-commit pre-merge-commit pre-push pre-rebase prepare-commit-msg manual
 set -l hook_types commit-msg post-checkout post-commit post-merge post-rewrite pre-commit pre-merge-commit pre-push pre-rebase prepare-commit-msg
@@ -30,6 +30,14 @@ complete pre-commit -n __fish_use_subcommand -a clean -d "Clean out files"
 
 # gc
 complete pre-commit -n __fish_use_subcommand -a gc -d "Clean unused cached repos"
+
+# hazmat
+# Args after hazmat tool name belong are passed to the tool.
+# Only the tool names are completed, not their arguments, since they are rarely used interactively.
+complete pre-commit -n __fish_use_subcommand -a hazmat -d "Composable tools for rare use in hook `entry`"
+complete pre-commit -n "__fish_seen_subcommand_from hazmat; and __fish_is_nth_token 2" -a cd -d "cd to a subdir and run the command"
+complete pre-commit -n "__fish_seen_subcommand_from hazmat; and __fish_is_nth_token 2" -a ignore-exit-code -d "Run the command but ignore the exit code"
+complete pre-commit -n "__fish_seen_subcommand_from hazmat; and __fish_is_nth_token 2" -a n1 -d "Run the command once per filename"
 
 # help
 complete pre-commit -n __fish_use_subcommand -a help -d "Show help for a specific command"

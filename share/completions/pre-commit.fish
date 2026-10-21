@@ -65,6 +65,8 @@ complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l files -r -d
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l hook-stage -xa "$hook_stages" -d "The stage during which the hook is fired"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l is-squash-merge -d "Whether the merge was a squash merge"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l local-branch -d "Local branch ref used by `git push`"
+complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l pre-rebase-branch -xa "(__fish_git_branches)" -d "The branch being rebased"
+complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l pre-rebase-upstream -xa "(__fish_git_refs)" -d "The upstream from which the series was forked"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l prepare-commit-message-source -d "Source of the commit message"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l remote-branch -d "Remote branch ref used by `git push`"
 complete pre-commit -n "__fish_seen_subcommand_from run try-repo" -l remote-name -d "Remote name used by `git push`"

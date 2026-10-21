@@ -20,6 +20,10 @@ function __fish_cmake_has_subcommand --argument-names subcommand
     and string match -q -- "--$subcommand" $first
 end
 
+function __fish_cmake_configs
+    printf '%s\n' Debug Release RelWithDebInfo MinSizeRel
+end
+
 function __fish_cmake_generators
     # Rely on `-E capabilities` instead of `--help` for stability.
     # Only provide generators if we have a way to parse JSON.
@@ -158,14 +162,14 @@ complete -c cmake -n "__fish_cmake_has_subcommand build" -l presets-file -rF -d 
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l list-presets -d "List available presets"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -s j -l parallel -rf -d "Build in parallel using the given number of jobs"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -s t -l target -rf -d "Build <tgt> instead of default targets"
-complete -c cmake -n "__fish_cmake_has_subcommand build" -l config -rf -a "Release RelWithDebInfo MinRelSize Debug" -d "For multi-configuration tools, choose <cfg>"
+complete -c cmake -n "__fish_cmake_has_subcommand build" -l config -rf -a "(__fish_cmake_configs)" -d "For multi-configuration tools, choose <cfg>"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l clean-first -d "Build target 'clean' first, then build"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l resolve-package-references -rf -a "on only off" -d "Restore/resolve package references during build."
 complete -c cmake -n "__fish_cmake_has_subcommand build" -s v -l verbose -d "Enable verbose output, if supported"
 
 complete -c cmake -n "__fish_cmake_has_subcommand install; and __fish_is_nth_token 1" -rfa "(__fish_complete_directories)"
 complete -c cmake -n "__fish_cmake_has_subcommand install; and not __fish_is_nth_token 1" -f
-complete -c cmake -n "__fish_cmake_has_subcommand install" -l config -rf -a "Release RelWithDebInfo MinRelSize Debug" -d "For multi-configuration tools, choose <cfg>"
+complete -c cmake -n "__fish_cmake_has_subcommand install" -l config -rf -a "(__fish_cmake_configs)" -d "For multi-configuration tools, choose <cfg>"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l component -rf -d "Component-based install. Only install <comp>"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l default-directory-permissions -rf -d "Default install permission"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l prefix -rfa "(__fish_complete_directories)" -d "The installation prefix CMAKE_INSTALL_PREFIX"

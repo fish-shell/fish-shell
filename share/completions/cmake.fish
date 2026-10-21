@@ -1,10 +1,5 @@
 # Based on version 4.4.4.
 
-# cmake --help
-# cmake --build ?
-# cmake --install ?
-# cmake --workflow
-
 set -l subcommands --build --install --open --workflow -E
 
 function __fish_cmake_has_any_subcommand -V subcommands

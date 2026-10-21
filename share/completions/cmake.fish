@@ -160,9 +160,9 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l help-variable -rfa
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l help-variable-list -d "List variables with help available and exit"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l help-variables -d "Print cmake-variables manual and exit"
 
-complete -c cmake -n __fish_is_first_arg -l build -rF -d "Build a CMake-generated project binary tree"
-complete -c cmake -n __fish_is_first_arg -l install -rF -d "Install a CMake-generated project binary tree"
-complete -c cmake -n __fish_is_first_arg -l open -rfa "(__fish_complete_directories)" -d "Open generated project in the associated application"
+complete -c cmake -n __fish_is_first_arg -l build -d "Build a CMake-generated project binary tree"
+complete -c cmake -n __fish_is_first_arg -l install -d "Install a CMake-generated project binary tree"
+complete -c cmake -n __fish_is_first_arg -l open -d "Open generated project in the associated application"
 complete -c cmake -n __fish_is_first_arg -l workflow -d "Run a workflow preset"
 
 # Option suggestions after `--` are automatically ignored by fish.

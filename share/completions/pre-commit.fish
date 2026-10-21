@@ -1,3 +1,5 @@
+# Based on version 4.7.0.
+
 set -l commands autoupdate clean gc hazmat init-templatedir install install-hooks migrate-config run sample-config try-repo uninstall validate-config validate-manifest
 set -l commands_with_config autoupdate init-templatedir install install-hooks migrate-config run try-repo uninstall
 set -l hook_stages commit-msg post-checkout post-commit post-merge post-rewrite pre-commit pre-merge-commit pre-push pre-rebase prepare-commit-msg manual

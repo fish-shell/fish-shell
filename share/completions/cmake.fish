@@ -56,8 +56,13 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand; and __fish_is_nth_tok
 complete -c cmake -n "not __fish_cmake_has_any_subcommand; and not __fish_is_nth_token 1" -f
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s S -rF -d "Explicitly specify a source directory"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s B -rF -d "Explicitly specify a build directory"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s U -rf -d "Remove matching entries from CMake cache"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s G -rf -a "(__fish_cmake_generators)" -d "Specify a build system generator"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s T -rf -d "Specify toolset name if supported by generator"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s A -rf -d "Specify platform name if supported by generator"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l toolchain -rF -d "Specify toolchain file"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l install-prefix -rfa "(__fish_complete_directories)" -d "Specify install directory"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l project-file -rF -d "Specify an alternate project file name"
 
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l preset -rf -d "Specify a configure preset"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l presets-file -rF -d "Specify the path to a presets file"

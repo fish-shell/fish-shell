@@ -89,6 +89,8 @@ Command-specific tab-completions in ``fish`` are based on the notion of options 
 
 - GNU-style long options, like ``--colors``. GNU-style long options can be more than one character long, are preceded by two hyphens, and can't be grouped together. Option arguments may be specified after a ``=`` (``--quoting-style=shell``), or, if ``--require-parameter`` is given, in the following parameter (``--quoting-style shell``).
 
+A ``--`` argument stops suggesting option completions. But completions without an option still take effect (e.g. ``-a``, ``-f``, ``-F``).
+
 Multiple commands and paths can be given in one call to define the same completions for multiple commands.
 
 Multiple command switches and wrapped commands can also be given to define multiple completions in one call.

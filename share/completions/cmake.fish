@@ -35,6 +35,17 @@ for g in json.load(sys.stdin)['generators']:
     end
 end
 
+function __fish_cmake_warning_values
+    # Diagnostics are output as `CMD_NAME`, but accepted as `name`.
+    # E.g. `CMD_UNUSED_CLI` -> `unused-cli`.
+    for category in (cmake --help-diagnostic-list | string replace -r '^CMD_' '' | string lower | string replace -a _ -)
+        printf '%s\t%s\n' $category "Enable $category warnings"
+        printf '%s\t%s\n' no-$category "Suppress $category warnings"
+        printf '%s\t%s\n' error=$category "Make $category warnings errors"
+        printf '%s\t%s\n' no-error=$category "Make $category warnings not errors"
+    end
+end
+
 function __fish_cmake_preset_types
     for type in configure build test package
         printf '%s\t%s\n' $type "List available $type presets"
@@ -56,6 +67,7 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand; and __fish_is_nth_tok
 complete -c cmake -n "not __fish_cmake_has_any_subcommand; and not __fish_is_nth_token 1" -f
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s S -rF -d "Explicitly specify a source directory"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s B -rF -d "Explicitly specify a build directory"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s C -rF -d "Pre-load a script to populate the cache"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s U -rf -d "Remove matching entries from CMake cache"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s G -rf -a "(__fish_cmake_generators)" -d "Specify a build system generator"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s T -rf -d "Specify toolset name if supported by generator"
@@ -63,6 +75,7 @@ complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s A -rf -d "Specify 
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l toolchain -rF -d "Specify toolchain file"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l install-prefix -rfa "(__fish_complete_directories)" -d "Specify install directory"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l project-file -rF -d "Specify an alternate project file name"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s W -rfa "(__fish_cmake_warning_values)" -d "Configure warning category"
 
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l preset -rf -d "Specify a configure preset"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -l presets-file -rF -d "Specify the path to a presets file"

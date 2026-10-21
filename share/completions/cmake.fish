@@ -166,9 +166,10 @@ complete -c cmake -n "__fish_is_first_arg" -l install -rF -d "Install a CMake-ge
 complete -c cmake -n "__fish_is_first_arg" -l open -rfa "(__fish_complete_directories)" -d "Open generated project in the associated application"
 complete -c cmake -n "__fish_is_first_arg" -l workflow -d "Run a workflow preset"
 
-# TODO: consider -- ?
+# Option suggestions after `--` are automatically ignored by fish.
 complete -c cmake -n "__fish_cmake_has_subcommand build; and __fish_cmake_subcommand_dir_position" -rfa "(__fish_complete_directories)"
 complete -c cmake -n "__fish_cmake_has_subcommand build; and not __fish_cmake_subcommand_dir_position" -f
+complete -c cmake -n "__fish_cmake_has_subcommand build; and not __fish_cmake_subcommand_dir_position; and not contains -- -- (commandline -xpc)" -a -- -d "Pass remaining options to the native build tool"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l preset -rf -d "Specify a build preset"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l presets-file -rF -d "Specify the path to a presets file"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l list-presets -d "List available presets"

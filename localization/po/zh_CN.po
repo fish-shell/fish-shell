@@ -12530,6 +12530,9 @@ msgstr ""
 msgid "Components one or more pixel components"
 msgstr ""
 
+msgid "Composable tools for rare use in hook `entry`"
+msgstr ""
+
 msgid "Composite image"
 msgstr ""
 
@@ -41879,6 +41882,9 @@ msgstr ""
 msgid "Number of threads for -filter_complex"
 msgstr ""
 
+msgid "Number of threads to use"
+msgstr ""
+
 msgid "Number of threads to use for compression"
 msgstr ""
 
@@ -55871,6 +55877,12 @@ msgstr ""
 msgid "Run the check function in the PKGBUILD"
 msgstr ""
 
+msgid "Run the command but ignore the exit code"
+msgstr ""
+
+msgid "Run the command once per filename"
+msgstr ""
+
 msgid "Run the compiler in watch mode"
 msgstr ""
 
@@ -68516,6 +68528,9 @@ msgstr ""
 msgid "Stop after specified number of packets"
 msgstr ""
 
+msgid "Stop after the first failing hook"
+msgstr ""
+
 msgid "Stop all instances of the app, then start them again"
 msgstr ""
 
@@ -70433,6 +70448,9 @@ msgstr ""
 msgid "The base file name of the desktop entry for this application."
 msgstr ""
 
+msgid "The branch being rebased"
+msgstr ""
+
 msgid "The cache timeout in seconds for the data retrieved from the Arch Linux Mirror Status API"
 msgstr ""
 
@@ -70845,6 +70863,9 @@ msgid "The units of image resolution [type]"
 msgstr ""
 
 msgid "The untracked files handling mode"
+msgstr ""
+
+msgid "The upstream from which the series was forked"
 msgstr ""
 
 msgid "The user to run the command as"
@@ -78525,6 +78546,9 @@ msgid "cat-config: skip comments, empty lines and section headers"
 msgstr ""
 
 msgid "catch up with existing (paused) session NAME"
+msgstr ""
+
+msgid "cd to a subdir and run the command"
 msgstr ""
 
 msgid "change access time (atime)"

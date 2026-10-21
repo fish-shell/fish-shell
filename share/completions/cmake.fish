@@ -80,8 +80,8 @@ end
 
 complete -c cmake -n "not __fish_cmake_has_any_subcommand; and __fish_is_nth_token 1" -rfa "(__fish_complete_directories)"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand; and not __fish_is_nth_token 1" -f
-complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s S -rF -d "Explicitly specify a source directory"
-complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s B -rF -d "Explicitly specify a build directory"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s S -rfa "(__fish_complete_directories)" -d "Explicitly specify a source directory"
+complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s B -rfa "(__fish_complete_directories)" -d "Explicitly specify a build directory"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s C -rF -d "Pre-load a script to populate the cache"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s D -rfa "(__fish_cmake_cache_entries)" -d "Create or update a cmake cache entry"
 complete -c cmake -n "not __fish_cmake_has_any_subcommand" -s U -rf -d "Remove matching entries from CMake cache"

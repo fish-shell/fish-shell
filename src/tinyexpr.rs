@@ -150,7 +150,7 @@ enum Token {
     Close,
     Number(f64),
     Function(Function),
-    Infix(Operator),
+    Op(Operator),
 }
 
 struct State<'s> {
@@ -426,12 +426,12 @@ impl<'s> State<'s> {
             } else {
                 // Look for an operator or special character.
                 let tok = match next_char {
-                    '+' => Token::Infix(Operator::Add),
-                    '-' => Token::Infix(Operator::Sub),
-                    'x' | '*' => Token::Infix(Operator::Mul),
-                    '/' => Token::Infix(Operator::Div),
-                    '^' => Token::Infix(Operator::Pow),
-                    '%' => Token::Infix(Operator::Rem),
+                    '+' => Token::Op(Operator::Add),
+                    '-' => Token::Op(Operator::Sub),
+                    'x' | '*' => Token::Op(Operator::Mul),
+                    '/' => Token::Op(Operator::Div),
+                    '^' => Token::Op(Operator::Pow),
+                    '%' => Token::Op(Operator::Rem),
                     '(' => Token::Open,
                     ')' => Token::Close,
                     ',' => Token::Sep,
@@ -622,7 +622,7 @@ impl<'s> State<'s> {
                 f64::NAN
             }
 
-            Token::Error | Token::Sep | Token::Close | Token::Infix(_) => {
+            Token::Error | Token::Sep | Token::Close | Token::Op(_) => {
                 if self.no_specific_error() {
                     self.set_error(ErrorKind::UnexpectedToken, None);
                 }
@@ -635,7 +635,7 @@ impl<'s> State<'s> {
     /// \<power\>  = {("-" | "+")} \<base\>
     fn power(&mut self) -> f64 {
         let mut sign = 1.0;
-        while let Token::Infix(op) = self.current {
+        while let Token::Op(op) = self.current {
             if op == Operator::Sub {
                 sign = -sign;
                 self.next_token();
@@ -653,7 +653,7 @@ impl<'s> State<'s> {
     fn factor(&mut self) -> f64 {
         let mut ret = self.power();
 
-        if let Token::Infix(Operator::Pow) = self.current {
+        if let Token::Op(Operator::Pow) = self.current {
             self.next_token();
             ret = ret.powf(self.factor());
         }
@@ -664,8 +664,7 @@ impl<'s> State<'s> {
     /// \<term\>   = \<factor\> {("*" | "/" | "%") \<factor\>}
     fn term(&mut self) -> f64 {
         let mut ret = self.factor();
-        while let Token::Infix(op @ (Operator::Mul | Operator::Div | Operator::Rem)) = self.current
-        {
+        while let Token::Op(op @ (Operator::Mul | Operator::Div | Operator::Rem)) = self.current {
             let op_pos = self.pos - 1;
             self.next_token();
             let ret2 = self.factor();
@@ -683,7 +682,7 @@ impl<'s> State<'s> {
     /// \<expr\>   = \<term\> {("+" | "-") \<term\>}
     fn expr(&mut self) -> f64 {
         let mut ret = self.term();
-        while let Token::Infix(op @ (Operator::Add | Operator::Sub)) = self.current {
+        while let Token::Op(op @ (Operator::Add | Operator::Sub)) = self.current {
             self.next_token();
             ret = op.eval(ret, self.term());
         }

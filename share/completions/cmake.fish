@@ -4,7 +4,7 @@
 # cmake --build ?
 # cmake --install ?
 
-set -l subcommands "--build" "--install"
+set -l subcommands "--build" "--install" "--open"
 
 function __fish_cmake_has_any_subcommand -V subcommands
     set -l first (commandline -xpc)[2]
@@ -129,3 +129,6 @@ complete -c cmake -n "__fish_cmake_has_subcommand install" -l default-directory-
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l prefix -rfa "(__fish_complete_directories)" -d "The installation prefix CMAKE_INSTALL_PREFIX"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l strip -d "Performing install/strip"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -s v -l verbose -d "Enable verbose output"
+
+complete -c cmake -n "__fish_cmake_has_subcommand open; and __fish_is_nth_token 1" -rfa "(__fish_complete_directories)"
+complete -c cmake -n "__fish_cmake_has_subcommand open; and not __fish_is_nth_token 1" -f

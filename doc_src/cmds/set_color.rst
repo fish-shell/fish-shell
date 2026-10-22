@@ -20,8 +20,8 @@ A special keyword **normal** resets text formatting to terminal defaults, howeve
 
 Valid colors include:
 
-  - **black**, **red**, **green**, **yellow**, **blue**, **magenta**, **cyan**, **white**
-  - **brblack**, **brred**, **brgreen**, **bryellow**, **brblue**, **brmagenta**, **brcyan**, **brwhite**
+  - **black**, **red**, **green**, **brown**, **yellow**, **blue**, **magenta**, **purple**, **cyan**, **white**, **grey**
+  - **brblack**, **brred**, **brgreen**, **brbrown**, **bryellow**, **brblue**, **brmagenta**, **brpurple**, **brcyan**, **brwhite**, **brgrey**
 
 The *br*- (as in 'bright') forms are full-brightness variants of the 8 standard-brightness colors on many terminals. **brblack** has higher brightness than **black** - towards gray.
 

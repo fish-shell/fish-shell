@@ -37,6 +37,7 @@ pub mod random;
 pub mod read;
 pub mod realpath;
 pub mod r#return;
+pub mod sequence;
 pub mod set;
 pub mod set_color;
 pub mod source;

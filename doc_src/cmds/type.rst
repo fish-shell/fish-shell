@@ -30,7 +30,7 @@ The following options are available:
     Suppresses function lookup.
 
 **-t** or **--type**
-    Prints ``function``, ``builtin``, or ``file`` if *NAME* is a shell function, builtin, or disk file, respectively.
+    Prints ``function``, ``builtin``, ``implicit-cd`` or ``file`` if *NAME* is a shell function, builtin, implicit cd command or disk file, respectively.
 
 **-p** or **--path**
     Prints the path to *NAME* if *NAME* resolves to an executable file in :envvar:`PATH`, the path to the script containing the definition of the function *NAME* if *NAME* resolves to a function loaded from a file on disk (i.e. not interactively defined at the prompt), or nothing otherwise.

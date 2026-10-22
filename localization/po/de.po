@@ -104,6 +104,10 @@ msgid "%s is a function"
 msgstr "%s ist eine Funktion"
 
 #, c-format
+msgid "%s is an implicit cd command"
+msgstr ""
+
+#, c-format
 msgid "%s must be a positive integer"
 msgstr "%s muss eine positive Ganzzahl sein"
 

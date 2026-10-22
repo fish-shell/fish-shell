@@ -1,10 +1,11 @@
 use super::prelude::*;
 use crate::{
     builtins::Error,
+    env::Environment as _,
     err_fmt, err_str, function,
     highlight::highlight_and_colorize,
     parse_util::{apply_indents, compute_indents},
-    path::{path_get_path, path_get_paths},
+    path::{path_as_implicit_cd, path_get_path, path_get_paths},
 };
 use fish_widestring::bytes2wcstring;
 
@@ -182,6 +183,26 @@ pub fn r#type(parser: &mut Parser, streams: &mut IoStreams, argv: &mut [&wstr]) 
                 streams.out.appendln(&wgettext_fmt!("%s is a builtin", arg));
             } else if opts.get_type {
                 streams.out.append(L!("builtin\n"));
+            }
+            if !opts.all {
+                continue;
+            }
+        }
+
+        if !opts.force_path
+            && path_as_implicit_cd(arg, &parser.vars().get_pwd_slash(), parser.vars()).is_some()
+        {
+            found += 1;
+            res = true;
+            if opts.query {
+                return Ok(SUCCESS);
+            }
+            if !opts.get_type {
+                streams
+                    .out
+                    .appendln(&wgettext_fmt!("%s is an implicit cd command", arg));
+            } else if opts.get_type {
+                streams.out.append(L!("implicit-cd\n"));
             }
             if !opts.all {
                 continue;

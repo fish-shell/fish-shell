@@ -98,6 +98,10 @@ msgid "%s is a function"
 msgstr "%s 是函式"
 
 #, c-format
+msgid "%s is an implicit cd command"
+msgstr ""
+
+#, c-format
 msgid "%s must be a positive integer"
 msgstr "%s 必須是正整數"
 

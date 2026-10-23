@@ -119,11 +119,7 @@ impl Color {
     pub fn named_color_names() -> Vec<&'static wstr> {
         // We don't use all the NAMED_COLORS but we also need room for one more.
         let mut v = Vec::with_capacity(NAMED_COLORS.len());
-        v.extend(
-            NAMED_COLORS
-                .iter()
-                .filter_map(|&NamedColor { name, hidden, .. }| (!hidden).then_some(name)),
-        );
+        v.extend(NAMED_COLORS);
 
         // "normal" isn't really a color and does not have a color palette index or
         // RGB value. Therefore, it does not appear in the NAMED_COLORS table.
@@ -209,35 +205,33 @@ fn simple_icase_compare(s1: &wstr, s2: &wstr) -> Ordering {
 struct NamedColor {
     name: &'static wstr,
     idx: u8,
-    _rgb: [u8; 3],
-    hidden: bool,
 }
 
 #[rustfmt::skip]
 const NAMED_COLORS: &[NamedColor] = &[
     // Keep this sorted alphabetically
-    NamedColor {name: L!("black"), idx: 0, _rgb: [0x00, 0x00, 0x00], hidden: false},
-    NamedColor {name: L!("blue"), idx: 4, _rgb: [0x00, 0x00, 0x80], hidden: false},
-    NamedColor {name: L!("brblack"), idx: 8, _rgb: [0x80, 0x80, 0x80], hidden: false},
-    NamedColor {name: L!("brblue"), idx: 12, _rgb: [0x00, 0x00, 0xFF], hidden: false},
-    NamedColor {name: L!("brbrown"), idx: 11, _rgb: [0xFF, 0xFF, 0x00], hidden: false},
-    NamedColor {name: L!("brcyan"), idx: 14, _rgb: [0x00, 0xFF, 0xFF], hidden: false},
-    NamedColor {name: L!("brgreen"), idx: 10, _rgb: [0x00, 0xFF, 0x00], hidden: false},
-    NamedColor {name: L!("brgrey"), idx: 8, _rgb: [0x55, 0x55, 0x55], hidden: false},
-    NamedColor {name: L!("brmagenta"), idx: 13, _rgb: [0xFF, 0x00, 0xFF], hidden: false},
-    NamedColor {name: L!("brown"), idx: 3, _rgb: [0x72, 0x50, 0x00], hidden: false},
-    NamedColor {name: L!("brpurple"), idx: 13, _rgb: [0xFF, 0x00, 0xFF], hidden: false},
-    NamedColor {name: L!("brred"), idx: 9, _rgb: [0xFF, 0x00, 0x00], hidden: false},
-    NamedColor {name: L!("brwhite"), idx: 15, _rgb: [0xFF, 0xFF, 0xFF], hidden: false},
-    NamedColor {name: L!("bryellow"), idx: 11, _rgb: [0xFF, 0xFF, 0x00], hidden: false},
-    NamedColor {name: L!("cyan"), idx: 6, _rgb: [0x00, 0x80, 0x80], hidden: false},
-    NamedColor {name: L!("green"), idx: 2, _rgb: [0x00, 0x80, 0x00], hidden: false},
-    NamedColor {name: L!("grey"), idx: 7, _rgb: [0xE5, 0xE5, 0xE5], hidden: false},
-    NamedColor {name: L!("magenta"), idx: 5, _rgb: [0x80, 0x00, 0x80], hidden: false},
-    NamedColor {name: L!("purple"), idx: 5, _rgb: [0x80, 0x00, 0x80], hidden: false},
-    NamedColor {name: L!("red"), idx: 1, _rgb: [0x80, 0x00, 0x00], hidden: false},
-    NamedColor {name: L!("white"), idx: 7, _rgb: [0xC0, 0xC0, 0xC0], hidden: false},
-    NamedColor {name: L!("yellow"), idx: 3, _rgb: [0x80, 0x80, 0x00], hidden: false},
+    NamedColor {name: L!("black"), idx: 0},
+    NamedColor {name: L!("blue"), idx: 4},
+    NamedColor {name: L!("brblack"), idx: 8},
+    NamedColor {name: L!("brblue"), idx: 12},
+    NamedColor {name: L!("brbrown"), idx: 11},
+    NamedColor {name: L!("brcyan"), idx: 14},
+    NamedColor {name: L!("brgreen"), idx: 10},
+    NamedColor {name: L!("brgrey"), idx: 8},
+    NamedColor {name: L!("brmagenta"), idx: 13},
+    NamedColor {name: L!("brown"), idx: 3},
+    NamedColor {name: L!("brpurple"), idx: 13},
+    NamedColor {name: L!("brred"), idx: 9},
+    NamedColor {name: L!("brwhite"), idx: 15},
+    NamedColor {name: L!("bryellow"), idx: 11},
+    NamedColor {name: L!("cyan"), idx: 6},
+    NamedColor {name: L!("green"), idx: 2},
+    NamedColor {name: L!("grey"), idx: 7},
+    NamedColor {name: L!("magenta"), idx: 5},
+    NamedColor {name: L!("purple"), idx: 5},
+    NamedColor {name: L!("red"), idx: 1},
+    NamedColor {name: L!("white"), idx: 7},
+    NamedColor {name: L!("yellow"), idx: 3},
 ];
 
 assert_sorted_by_name!(NAMED_COLORS);

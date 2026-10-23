@@ -2747,10 +2747,7 @@ impl<'a> Reader<'a> {
         if !accumulated_chars.is_empty() {
             let (elt, _el) = self.active_edit_line();
             // Typing over a selection replaces it.
-            if elt == EditableLineTag::Commandline {
-                self.replace_selection();
-            }
-            self.insert_string(elt, accumulated_chars);
+            self.insert_replacing_selection(elt, accumulated_chars);
 
             // End paging upon inserting into the normal command line.
             if elt == EditableLineTag::Commandline {
@@ -2879,10 +2876,7 @@ impl<'a> Reader<'a> {
                     let (elt, _el) = self.active_edit_line();
                     if let Some(cs) = kevt.key.text_to_insert() {
                         // Typing over a selection replaces it.
-                        if elt == EditableLineTag::Commandline {
-                            self.replace_selection();
-                        }
-                        self.insert_string(elt, WString::from_iter(cs));
+                        self.insert_replacing_selection(elt, WString::from_iter(cs));
 
                         if elt == EditableLineTag::Commandline {
                             self.clear_pager();
@@ -3350,13 +3344,10 @@ impl<'a> Reader<'a> {
             }
             rl::Yank => {
                 // Yanking over a selection replaces it, like typing does.
-                if self.active_edit_line_tag() == EditableLineTag::Commandline {
-                    self.replace_selection();
-                }
                 let yank_str = kill_yank();
                 let yank_len = yank_str.len();
                 self.data
-                    .insert_string(self.active_edit_line_tag(), yank_str);
+                    .insert_replacing_selection(self.active_edit_line_tag(), yank_str);
                 self.rls_mut().yank_len = yank_len;
                 if yank_len != 0 && self.cursor_end_mode == CursorEndMode::Inclusive {
                     let (_elt, el) = self.active_edit_line();
@@ -4661,6 +4652,22 @@ impl ReaderData {
         };
         self.erase_substring(EditableLineTag::Commandline, selection);
         true
+    }
+
+    /// Insert `s` at the cursor, or in place of the command line's selection as a single
+    /// undo step.
+    fn insert_replacing_selection(&mut self, elt: EditableLineTag, s: WString) {
+        if elt != EditableLineTag::Commandline {
+            return self.insert_string(elt, s);
+        }
+        let selection = self.get_selection();
+        self.selection = None;
+        let Some(selection) = selection else {
+            return self.insert_string(elt, s);
+        };
+        self.replace_substring(elt, selection, s);
+        self.command_line_transient_edit = None;
+        self.suppress_autosuggestion = false;
     }
 
     fn selection_is_at_top(&self) -> bool {

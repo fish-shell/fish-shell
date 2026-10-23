@@ -6355,6 +6355,7 @@ fn command_ends_history_search(c: ReadlineCmd) -> bool {
             | rl::ClearScreenAndRepaint
             | rl::Repaint
             | rl::ForceRepaint
+            | rl::EndSelection
     )
 }
 

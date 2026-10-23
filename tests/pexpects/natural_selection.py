@@ -139,3 +139,17 @@ sendline("echo abc" + s_left + s_right + "X" + s_left + "Z" + dump_buf)
 expect_str("B:<echo abcZ>")
 expect_prompt()
 
+# ---- replacing a selection is one undo step ----
+undo, redo = "\x1f", "\x1b/"  # ctrl-_, alt-/
+sendline("echo abcd" + s_left + s_left + "X" + undo + dump_buf)
+expect_str("B:<echo abcd>")
+expect_prompt()
+sendline("echo abcd" + s_left + s_left + "X" + undo + redo + dump_buf)
+expect_str("B:<echo abX>")
+expect_prompt()
+sendline("echo abcd" + s_left + s_left + "%" + undo + dump_buf)
+expect_str("B:<echo abcd>")
+expect_prompt()
+sendline("echo abcd XX" + "\x1b\x7f" + s_left + s_left + "\x19" + undo + dump_buf)
+expect_str("B:<echo abcd >")
+expect_prompt()

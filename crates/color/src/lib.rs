@@ -119,11 +119,7 @@ impl Color {
     pub fn named_color_names() -> Vec<&'static wstr> {
         // We don't use all the NAMED_COLORS but we also need room for one more.
         let mut v = Vec::with_capacity(NAMED_COLORS.len());
-        v.extend(
-            NAMED_COLORS
-                .iter()
-                .map(|&NamedColor { name, .. }| name),
-        );
+        v.extend(NAMED_COLORS.iter().map(|&NamedColor { name, .. }| name));
 
         // "normal" isn't really a color and does not have a color palette index or
         // RGB value. Therefore, it does not appear in the NAMED_COLORS table.

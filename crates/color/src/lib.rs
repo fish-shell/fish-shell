@@ -117,8 +117,8 @@ impl Color {
 
     /// Returns the names of all named colors.
     pub fn named_color_names() -> Vec<&'static wstr> {
-        // We don't use all the NAMED_COLORS but we also need room for one more.
-        let mut v = Vec::with_capacity(NAMED_COLORS.len());
+        // We need room for one more.
+        let mut v = Vec::with_capacity(NAMED_COLORS.len() + 1);
         v.extend(NAMED_COLORS.iter().map(|&NamedColor { name, .. }| name));
 
         // "normal" isn't really a color and does not have a color palette index or

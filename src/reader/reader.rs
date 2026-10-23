@@ -4652,13 +4652,14 @@ impl ReaderData {
     }
 
     /// Erase the active selection, if any, returning whether it did, so typing or deleting
-    /// replaces it. `get_selection` treats an empty selection as none.
+    /// replaces it. An empty selection is cleared too, so its anchor doesn't outlive it.
     fn replace_selection(&mut self) -> bool {
-        let Some(selection) = self.get_selection() else {
+        let selection = self.get_selection();
+        self.selection = None;
+        let Some(selection) = selection else {
             return false;
         };
         self.erase_substring(EditableLineTag::Commandline, selection);
-        self.selection = None;
         true
     }
 

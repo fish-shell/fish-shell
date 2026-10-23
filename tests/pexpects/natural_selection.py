@@ -133,3 +133,9 @@ expect_prompt()
 sendline("echo abc def" + home + s_right + alt_f + "Z" + dump_buf)
 expect_str("B:<echoZ abc def>")
 expect_prompt()
+
+# ---- typing retires a collapsed selection, so the next shift+movement starts fresh ----
+sendline("echo abc" + s_left + s_right + "X" + s_left + "Z" + dump_buf)
+expect_str("B:<echo abcZ>")
+expect_prompt()
+

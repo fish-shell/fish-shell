@@ -117,3 +117,19 @@ expect_prompt()
 sendline("echo abcd XX" + "\x1b\x7f" + s_left + s_left + "\x19" + dump_buf)
 expect_str("B:<echo abcXX>")
 expect_prompt()
+
+# ---- word movement clears the selection too ----
+alt_left, alt_right = "\x1b[1;3D", "\x1b[1;3C"
+alt_b, alt_f = "\x1bb", "\x1bf"
+sendline("echo abc def" + s_left + alt_left + "Z" + dump_buf)
+expect_str("B:<echo abc Zdef>")
+expect_prompt()
+sendline("echo abc def" + s_left + alt_b + "Z" + dump_buf)
+expect_str("B:<echo abc Zdef>")
+expect_prompt()
+sendline("echo abc def" + home + s_right + alt_right + "Z" + dump_buf)
+expect_str("B:<echoZ abc def>")
+expect_prompt()
+sendline("echo abc def" + home + s_right + alt_f + "Z" + dump_buf)
+expect_str("B:<echoZ abc def>")
+expect_prompt()

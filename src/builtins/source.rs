@@ -71,16 +71,20 @@ pub fn source(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
 
     assert!(fd >= 0, "Should have a valid fd");
 
-    let sb = parser.push_block(Block::source_block(func_filename.clone()));
-    let _filename_push = parser
-        .current_filename
-        .scoped_replace(Some(func_filename.clone()));
-
     // Construct argv for the sourced file from our remaining args.
     // This is slightly subtle. If this is a bare `source` with no args then `argv + optind` already
     // points to the end of argv. Otherwise we want to skip the file name to get to the args if any.
     let remaining_args = &args[optind + if argc == optind { 0 } else { 1 }..];
-    let argv_list = remaining_args.iter().map(|&arg| arg.to_owned()).collect();
+    let argv_list: Vec<WString> = remaining_args.iter().map(|&arg| arg.to_owned()).collect();
+
+    let sb = parser.push_block(Block::source_block(
+        func_filename.clone(),
+        argv_list.clone(),
+    ));
+    let _filename_push = parser
+        .current_filename
+        .scoped_replace(Some(func_filename.clone()));
+
     parser.vars().set_argv(argv_list, parser.is_repainting());
 
     let retval = reader_read(parser, fd, streams.io_chain);

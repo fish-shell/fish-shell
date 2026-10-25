@@ -44,14 +44,19 @@ expect_prompt()
 sendline("echo hello\x13hello")
 expect_prompt("hellohello")
 
-# Confirm it is off for external commands
-sendline("stty -a | string match -q '*-ixon -ixoff*'; echo $status")
+# Confirm it is off for external commands.
+# Check each flag on its own: stty implementations differ in flag order and line wrapping.
+sendline(
+    "set flags (stty -a | string split -n ' '); contains -- -ixon $flags && contains -- -ixoff $flags; echo $status"
+)
 expect_prompt("0")
 
 # Turn flow control on
 sendline("stty ixon ixoff")
 expect_prompt()
-sendline("stty -a | string match -q '*ixon ixoff*'; echo $status")
+sendline(
+    "set flags (stty -a | string split -n ' '); contains -- ixon $flags && contains -- ixoff $flags; echo $status"
+)
 expect_prompt("0")
 
 sys.exit(0)

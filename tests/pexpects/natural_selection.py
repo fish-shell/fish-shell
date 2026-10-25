@@ -134,6 +134,19 @@ sendline("echo abc def" + home + s_right + alt_f + "Z" + dump_buf)
 expect_str("B:<echoZ abc def>")
 expect_prompt()
 
+# ---- vertical movement clears the selection too ----
+alt_enter, up, down = "\x1b\r", "\x1b[A", "\x1b[B"
+ctrl_p, ctrl_n = "\x10", "\x0e"
+two_lines = "echo a" + alt_enter + "echo bcd"
+for key in (up, ctrl_p):
+    sendline(two_lines + s_left + key + dump_sel)
+    expect_str("S:<>")
+    expect_prompt()
+for key in (down, ctrl_n):
+    sendline(two_lines + up + s_left + key + dump_sel)
+    expect_str("S:<>")
+    expect_prompt()
+
 # ---- typing retires a collapsed selection, so the next shift+movement starts fresh ----
 sendline("echo abc" + s_left + s_right + "X" + s_left + "Z" + dump_buf)
 expect_str("B:<echo abcZ>")

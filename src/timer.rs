@@ -14,7 +14,52 @@
 //! but it's still the best we can do because we don't know how long of a time might elapse between
 //! `TimerSnapshot` instances and need to avoid rollover.
 
+#[cfg(target_os = "haiku")]
+use haiku_rusage::{Usage, UsageWho, getrusage};
+#[cfg(not(target_os = "haiku"))]
 use nix::sys::resource::{Usage, UsageWho, getrusage};
+
+#[cfg(target_os = "haiku")]
+pub mod haiku_rusage {
+    use nix::errno::Errno;
+    use nix::sys::time::TimeVal;
+
+    pub struct Usage(libc::rusage);
+
+    impl Usage {
+        pub fn user_time(&self) -> TimeVal {
+            TimeVal::from(self.0.ru_utime)
+        }
+        pub fn system_time(&self) -> TimeVal {
+            TimeVal::from(self.0.ru_stime)
+        }
+        pub fn max_rss(&self) -> libc::c_long {
+            self.0.ru_maxrss
+        }
+        pub fn signals(&self) -> libc::c_long {
+            self.0.ru_nsignals
+        }
+    }
+
+    impl AsMut<libc::rusage> for Usage {
+        fn as_mut(&mut self) -> &mut libc::rusage {
+            &mut self.0
+        }
+    }
+
+    #[allow(non_camel_case_types)]
+    pub enum UsageWho {
+        RUSAGE_SELF = libc::RUSAGE_SELF as isize,
+        RUSAGE_CHILDREN = libc::RUSAGE_CHILDREN as isize,
+    }
+
+    pub fn getrusage(who: UsageWho) -> Result<Usage, Errno> {
+        // Haiku leaves the non-time fields unset, so start from zero.
+        let mut usage: libc::rusage = unsafe { std::mem::zeroed() };
+        Errno::result(unsafe { libc::getrusage(who as libc::c_int, &mut usage) })
+            .map(|_| Usage(usage))
+    }
+}
 use nix::sys::time::TimeVal;
 use std::fmt::Write as _;
 use std::io::Write as _;

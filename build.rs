@@ -79,11 +79,13 @@ fn detect_cfgs(target: &mut Target) {
             target_os().as_str() == "openbsd" && target.has_symbol("getexecpath")
         }),
         ("have_posix_spawn", &|target| {
-            if matches!(target_os().as_str(), "openbsd" | "android") {
+            if matches!(target_os().as_str(), "openbsd" | "android" | "haiku") {
                 // OpenBSD's posix_spawn returns status 127 instead of erroring with ENOEXEC when faced with a
                 // shebang-less script. Disable posix_spawn on OpenBSD.
                 //
                 // Android is broken for unclear reasons
+                //
+                // Haiku fails every spawn with ENOEXEC ("Unsupported format")
                 false
             } else {
                 target.has_header("spawn.h")

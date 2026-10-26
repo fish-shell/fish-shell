@@ -125,9 +125,11 @@ use fish_wcstringutil::{
     string_prefixes_string_maybe_case_insensitive,
 };
 use fish_widestring::{ELLIPSIS_CHAR, UTF8_BOM_WCHAR, bytes2wcstring};
-use libc::{
-    _POSIX_VDISABLE, SIGINT, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char,
-};
+#[cfg(not(target_os = "haiku"))]
+use libc::_POSIX_VDISABLE;
+use libc::{SIGINT, STDIN_FILENO, STDOUT_FILENO, VMIN, VQUIT, VSUSP, VTIME, c_char};
+#[cfg(target_os = "haiku")]
+const _POSIX_VDISABLE: libc::cc_t = 0xfe;
 use nix::{
     errno::Errno,
     fcntl,

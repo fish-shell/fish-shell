@@ -1124,7 +1124,7 @@ fn format_history_record(
             const MAX_TIMESTAMP_LENGTH: usize = 100;
             let mut timestamp_str = [0_u8; MAX_TIMESTAMP_LENGTH];
             if unsafe {
-                libc::strftime(
+                strftime(
                     timestamp_str.as_mut_ptr().cast(),
                     MAX_TIMESTAMP_LENGTH,
                     show_time_format.as_ptr(),
@@ -2568,4 +2568,16 @@ mod tests {
         assert_eq!(test_history_imported_from_corrupted.get_history(), expected);
         test_history_imported_from_corrupted.clear();
     }
+}
+
+#[cfg(not(target_os = "haiku"))]
+use libc::strftime;
+#[cfg(target_os = "haiku")]
+unsafe extern "C" {
+    fn strftime(
+        s: *mut libc::c_char,
+        max: libc::size_t,
+        format: *const libc::c_char,
+        tm: *const libc::tm,
+    ) -> libc::size_t;
 }

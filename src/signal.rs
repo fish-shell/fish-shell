@@ -388,6 +388,7 @@ const SIGNAL_TABLE : &[LookupEntry] = &[
     signal_entry!(SIGVTALRM, "Virtual timer expired"),
     signal_entry!(SIGPROF, "Profiling timer expired"),
     signal_entry!(SIGWINCH, "Window size change"),
+    #[cfg(not(target_os = "haiku"))]
     signal_entry!(SIGIO, "I/O on asynchronous file descriptor is possible"),
     signal_entry!(SIGSYS, "Bad system call"),
     signal_entry!(SIGIOT, "Abort (Alias for SIGABRT)"),

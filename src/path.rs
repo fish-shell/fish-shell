@@ -693,6 +693,10 @@ pub fn path_remoteness(path: &wstr) -> DirRemoteness {
                             DirRemoteness::Unknown
                         }
                     }
+                } else if #[cfg(target_os = "haiku")] {
+                    // Haiku has no statfs or MNT_LOCAL.
+                    let _ = narrow;
+                    DirRemoteness::Local
                 } else if #[cfg(target_os = "netbsd")] {
                     // NetBSD doesn't have statfs, but MNT_LOCAL works for statvfs.
                     use std::mem::MaybeUninit;

@@ -562,6 +562,8 @@ pub(crate) static FALLBACK_PATH: LazyLock<&[WString]> = LazyLock::new(|| {
         if #[cfg(target_os = "illumos")] {
             // See https://github.com/illumos/illumos-gate/blob/af641d205ecf080be0d900f89c4f3d2adb84f33f/usr/src/uts/common/sys/unistd.h#L50
             let cs_path: c_int = 65;
+        } else if #[cfg(target_os = "haiku")] {
+            let cs_path: c_int = 1;
         } else {
             let cs_path = libc::_CS_PATH;
         }

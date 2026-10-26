@@ -17,6 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
+#[cfg(target_os = "haiku")]
+use fish::timer::haiku_rusage::{UsageWho, getrusage};
 use fish::{
     ast,
     builtins::{
@@ -55,10 +57,9 @@ use fish::{
 use fish_common::{escape, save_term_foreground_process_group};
 use fish_widestring::{bytes2wcstring, osstr2wcstring, wcs2bytes};
 use libc::{STDERR_FILENO, STDIN_FILENO};
-use nix::{
-    sys::resource::{UsageWho, getrusage},
-    unistd::{AccessFlags, getpid},
-};
+#[cfg(not(target_os = "haiku"))]
+use nix::sys::resource::{UsageWho, getrusage};
+use nix::unistd::{AccessFlags, getpid};
 use std::{
     env,
     ffi::{OsStr, OsString},

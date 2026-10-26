@@ -121,11 +121,24 @@ unsafe fn read_locale() -> Option<Locale> {
     unsafe extern "C" {
         unsafe fn localeconv_l(loc: libc::locale_t) -> *const libc::lconv;
     }
+    #[cfg(target_os = "haiku")]
+    unsafe extern "C" {
+        unsafe fn newlocale(
+            mask: libc::c_int,
+            locale: *const libc::c_char,
+            base: libc::locale_t,
+        ) -> libc::locale_t;
+        unsafe fn freelocale(loc: libc::locale_t);
+    }
+    #[cfg(target_os = "haiku")]
+    const LC_NUMERIC_MASK: libc::c_int = 1 << (libc::LC_NUMERIC - 1);
+    #[cfg(not(target_os = "haiku"))]
+    use libc::{LC_NUMERIC_MASK, freelocale, newlocale};
 
     // We create a new locale (pass 0 locale_t base)
     // and pass no "locale", so everything else is taken from the environment.
     // This is fine because we're only using this for numbers.
-    let loc = unsafe { libc::newlocale(libc::LC_NUMERIC_MASK, c"".as_ptr(), 0 as libc::locale_t) };
+    let loc = unsafe { newlocale(LC_NUMERIC_MASK, c"".as_ptr(), 0 as libc::locale_t) };
     if loc.is_null() {
         return None;
     }
@@ -137,7 +150,7 @@ unsafe fn read_locale() -> Option<Locale> {
         Some(unsafe { lconv_to_locale(&*lconv) })
     };
 
-    unsafe { libc::freelocale(loc) };
+    unsafe { freelocale(loc) };
     result
 }
 

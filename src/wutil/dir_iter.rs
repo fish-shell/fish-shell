@@ -299,8 +299,8 @@ impl DirIter {
         );
 
         cfg_if!(
-            if #[cfg(target_os = "illumos")] {
-                // illumos doesn't have .d_type
+            if #[cfg(any(target_os = "illumos", target_os = "haiku"))] {
+                // illumos and Haiku don't have .d_type
                 // https://github.com/illumos/illumos-gate/blob/af641d205ecf080be0d900f89c4f3d2adb84f33f/usr/src/uts/common/sys/dirent.h#L44
                 let typ = None;
             } else {

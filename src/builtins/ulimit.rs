@@ -3,6 +3,7 @@ use std::{cmp::Ordering, sync::LazyLock};
 use fish_widestring::str2wcstring;
 use libc::{RLIM_INFINITY, c_uint, rlim_t};
 use nix::errno::Errno;
+#[cfg(not(target_os = "haiku"))]
 use nix::sys::resource::Resource as ResourceEnum;
 
 use crate::{builtins::Error, err_fmt, err_raw, err_str, wutil::perror_nix};
@@ -25,7 +26,7 @@ pub mod limits {
         pub const DATA: libc::c_int = libc::RLIMIT_DATA as _;
         pub const FSIZE: libc::c_int = libc::RLIMIT_FSIZE as _;
         cfg_if!(
-            if #[cfg(any(cygwin, target_os = "illumos"))] {
+            if #[cfg(any(cygwin, target_os = "illumos", target_os = "haiku"))] {
                 pub const MEMLOCK: libc::c_int = -1;
             } else {
                 pub const MEMLOCK: libc::c_int = libc::RLIMIT_MEMLOCK as _;
@@ -33,9 +34,16 @@ pub mod limits {
         );
         pub const NOFILE: libc::c_int = libc::RLIMIT_NOFILE as _;
         pub const STACK: libc::c_int = libc::RLIMIT_STACK as _;
-        pub const CPU: libc::c_int = libc::RLIMIT_CPU as _;
         cfg_if!(
-            if #[cfg(any(cygwin, target_os = "illumos"))] {
+            if #[cfg(target_os = "haiku")] {
+                // Haiku defines RLIMIT_CPU, but getrlimit rejects it with EINVAL.
+                pub const CPU: libc::c_int = -1;
+            } else {
+                pub const CPU: libc::c_int = libc::RLIMIT_CPU as _;
+            }
+        );
+        cfg_if!(
+            if #[cfg(any(cygwin, target_os = "illumos", target_os = "haiku"))] {
                 pub const NPROC: libc::c_int = -1;
             } else {
                 pub const NPROC: libc::c_int = libc::RLIMIT_NPROC as _;
@@ -68,6 +76,7 @@ pub mod limits {
         target_os = "freebsd",
         target_os = "netbsd",
         target_os = "dragonfly",
+        target_os = "haiku",
     ))]
     pub const AS: libc::c_int = libc::RLIMIT_AS as _;
     // TODO(MSRV >= 1.86): target_os = "cygwin" triggers a warning on Rust 1.85.
@@ -78,6 +87,7 @@ pub mod limits {
         target_os = "freebsd",
         target_os = "netbsd",
         target_os = "dragonfly",
+        target_os = "haiku",
     )))]
     pub const AS: libc::c_int = -1;
     define_on!(SBSIZE, RLIMIT_SBSIZE; "freebsd", "netbsd", "dragonfly");
@@ -88,6 +98,7 @@ pub mod limits {
     define_on!(NTHR, RLIMIT_NTHR; "netbsd");
 }
 
+#[cfg(not(target_os = "haiku"))]
 fn convert_resource(resource: c_uint) -> ResourceEnum {
     let resource: i32 = resource.try_into().unwrap();
 
@@ -96,12 +107,35 @@ fn convert_resource(resource: c_uint) -> ResourceEnum {
 }
 
 /// Calls getrlimit.
+#[cfg(not(target_os = "haiku"))]
 fn getrlimit(resource: c_uint) -> Option<(rlim_t, rlim_t)> {
     nix::sys::resource::getrlimit(convert_resource(resource))
         .map_err(|e| perror_nix("getrlimit", e))
         .ok()
 }
 
+/// Calls getrlimit.
+#[cfg(target_os = "haiku")]
+fn getrlimit(resource: c_uint) -> Option<(rlim_t, rlim_t)> {
+    let mut rl = libc::rlimit {
+        rlim_cur: 0,
+        rlim_max: 0,
+    };
+    if unsafe { libc::getrlimit(resource as libc::c_int, &mut rl) } == 0 {
+        Some((rl.rlim_cur, rl.rlim_max))
+    } else {
+        perror_nix("getrlimit", Errno::last());
+        None
+    }
+}
+
+#[cfg(target_os = "haiku")]
+fn setrlimit(resource: c_uint, rlim_cur: rlim_t, rlim_max: rlim_t) -> Result<(), Errno> {
+    let rl = libc::rlimit { rlim_cur, rlim_max };
+    Errno::result(unsafe { libc::setrlimit(resource as libc::c_int, &rl) }).map(drop)
+}
+
+#[cfg(not(target_os = "haiku"))]
 fn setrlimit(resource: c_uint, rlim_cur: rlim_t, rlim_max: rlim_t) -> Result<(), Errno> {
     nix::sys::resource::setrlimit(convert_resource(resource), rlim_cur, rlim_max)
 }

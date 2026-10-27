@@ -68,7 +68,7 @@ function alias --description 'Creates a function wrapping a command'
     end
 
     # The function definition in split in two lines to ensure that a '#' can be put in the body.
-    echo "function $name $wraps --description $cmd_string"\n"    $body \$argv"\n"end" | source
+    eval "function $name $wraps --description $cmd_string"\n"    $body \$argv"\n"end"
     if set -q _flag_save
         funcsave $name
     end

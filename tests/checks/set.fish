@@ -448,6 +448,42 @@ echo "$__fish_test_PATH" $__fish_test_PATH
 set -e __fish_test_PATH
 set -e __fish_test_path_not
 
+# Variables ending in "DIRS" are path variables by default, like those ending in "PATH"
+set -g __fish_test_DIRS 1 2 3
+echo "$__fish_test_DIRS" $__fish_test_DIRS
+# CHECK: 1:2:3 1 2 3
+
+set -q --path __fish_test_DIRS
+and echo __fish_test_DIRS is a pathvar
+or echo __fish_test_DIRS is not a pathvar
+# CHECK: __fish_test_DIRS is a pathvar
+
+set -g __fish_test_DIRS 1:2:3
+echo "$__fish_test_DIRS" $__fish_test_DIRS
+# CHECK: 1:2:3 1 2 3
+
+set -gx __fish_test_DIRS 1: 2: :3:
+env | grep '^__fish_test_DIRS='
+# CHECK: __fish_test_DIRS=1::2:::3:
+
+set -e __fish_test_DIRS
+
+# They are also split when inherited from the environment
+env __fish_test_DIRS=1:2:3 $FISH -c 'count $__fish_test_DIRS; set -q --path __fish_test_DIRS; and echo is a pathvar'
+# CHECK: 3
+# CHECK: is a pathvar
+
+# __fish_print_xdg_data_directories does not duplicate directories now that $XDG_DATA_DIRS is a list
+mkdir -p xdg/home xdg/a xdg/b
+begin
+    set -lx XDG_DATA_HOME $PWD/xdg/home
+    set -lx XDG_DATA_DIRS $PWD/xdg/a:$PWD/xdg/b
+    __fish_print_xdg_data_directories | string replace -- $PWD/ ''
+end
+# CHECK: xdg/home
+# CHECK: xdg/a
+# CHECK: xdg/b
+
 set -U --path __fish_test_path2 a:b
 echo "$__fish_test_path2" $__fish_test_path2
 # CHECK: a:b a b

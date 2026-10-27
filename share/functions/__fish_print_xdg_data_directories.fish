@@ -7,12 +7,10 @@ function __fish_print_xdg_data_directories --description 'Print XDG data directo
 
     set -f data_dirs $XDG_DATA_DIRS
     if test -z "$data_dirs"
-        set data_dirs /usr/local/share/:/usr/share/
+        set data_dirs /usr/local/share/ /usr/share/
     end
 
-    set data_dirs $data_home:$data_dirs
-
-    for path in (string split : $data_dirs)
+    for path in (string split : -- $data_home $data_dirs)
         if test -d $path
             echo $path
         end

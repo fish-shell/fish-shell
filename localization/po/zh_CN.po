@@ -78075,6 +78075,9 @@ msgstr ""
 msgid "add \"From: <current user>\" to patch"
 msgstr ""
 
+msgid "add -DHAVE_FOO fragments to cflags for each found module"
+msgstr ""
+
 msgid "add REUSE information to files"
 msgstr ""
 
@@ -78127,6 +78130,9 @@ msgid "additional space to put between lines"
 msgstr ""
 
 msgid "address to listen on (default: all interfaces)"
+msgstr ""
+
+msgid "adds a directory to the search path"
 msgstr ""
 
 msgid "adds a git remote to an app repo (-a APP)"
@@ -78235,6 +78241,9 @@ msgid "alphanumeric characters"
 msgstr ""
 
 msgid "also download the packages required to build the tests"
+msgstr ""
+
+msgid "also print query nodes in 'dot' format"
 msgstr ""
 
 msgid "also show hidden commands"
@@ -78424,6 +78433,12 @@ msgid "be extra quiet"
 msgstr ""
 
 msgid "be extra verbose"
+msgstr ""
+
+msgid "be less verbose about some errors"
+msgstr ""
+
+msgid "be more aggressive when computing dependency graph (for static linking)"
 msgstr ""
 
 msgid "be quiet"
@@ -78625,6 +78640,15 @@ msgid "check the status of a metadata deployment"
 msgstr ""
 
 msgid "check the status of a metadata retrieval"
+msgstr ""
+
+msgid "check whether or not a module exists"
+msgstr ""
+
+msgid "check whether or not an uninstalled module will be used"
+msgstr ""
+
+msgid "check whether or not pkgconf is compatible with a specified pkg-config version"
 msgstr ""
 
 msgid "cipher kind used for encryption an OpenSSH-format private key file"
@@ -79029,6 +79053,9 @@ msgstr ""
 msgid "default to parallel execution method"
 msgstr ""
 
+msgid "define variable 'varname' as 'value'"
+msgstr ""
+
 msgid "delay interval for lines sent, ports scanned"
 msgstr ""
 
@@ -79239,6 +79266,9 @@ msgstr ""
 msgid "disables creation and writing to john.log file"
 msgstr ""
 
+msgid "disables path relocation support"
+msgstr ""
+
 msgid "disables timeouts, given implicitly with --debug"
 msgstr ""
 
@@ -79407,6 +79437,9 @@ msgstr ""
 msgid "do not ask the user to confirm the list of port… [See Man Page]"
 msgstr ""
 
+msgid "do not cache already seen packages when walking the dependency graph"
+msgstr ""
+
 msgid "do not clone everything, but include this branch's changesets and their ancestors"
 msgstr ""
 
@@ -79432,6 +79465,9 @@ msgid "do not display revision or any of its ancestors"
 msgstr ""
 
 msgid "do not do interactive display; implies -q"
+msgstr ""
+
+msgid "do not filter 'internal' cflags from output"
 msgstr ""
 
 msgid "do not ignore Git submodules"
@@ -79468,6 +79504,9 @@ msgid "do not modify working directory during strip"
 msgstr ""
 
 msgid "do not output any log messages"
+msgstr ""
+
+msgid "do not override the prefix variable under any circumstances"
 msgstr ""
 
 msgid "do not pass files through decoders"
@@ -79525,6 +79564,9 @@ msgid "do not update the xterm title bar."
 msgstr ""
 
 msgid "do not update to target"
+msgstr ""
+
+msgid "do not use 'provides' rules to resolve dependencies"
 msgstr ""
 
 msgid "do not use CPU acceleration"
@@ -79711,6 +79753,9 @@ msgid "dump the memory usage stats"
 msgstr ""
 
 msgid "dump unhandled promise rejections"
+msgstr ""
+
+msgid "dumps details concerning selected personality"
 msgstr ""
 
 msgid "duration of the scratch org (in days) (default:7, min:1, max:30)"
@@ -79932,6 +79977,9 @@ msgstr ""
 msgid "enforce strict mode"
 msgstr ""
 
+msgid "ensure all errors are printed"
+msgstr ""
+
 msgid "environment for every instruction"
 msgstr ""
 
@@ -80029,6 +80077,9 @@ msgid "explain what is being done by atool"
 msgstr ""
 
 msgid "explain why packages or modules are needed"
+msgstr ""
+
+msgid "explicitly be silent about errors"
 msgstr ""
 
 msgid "explicitly define the argument as the mount source"
@@ -80167,6 +80218,9 @@ msgid "filter format string"
 msgstr ""
 
 msgid "filter metadata known by the CLI"
+msgstr ""
+
+msgid "filter output fragments to the specified types"
 msgstr ""
 
 msgid "filter: for each file, select the entire buffer and execute the given keys"
@@ -80652,6 +80706,9 @@ msgstr ""
 msgid "if -A is specified, detach other clients attached to the session"
 msgstr ""
 
+msgid "ignore 'conflicts' rules in modules"
+msgstr ""
+
 msgid "ignore ICMP unreachable in UDP"
 msgstr ""
 
@@ -80925,6 +80982,12 @@ msgstr ""
 msgid "just show total keyspace that would be produced"
 msgstr ""
 
+msgid "keep -I/usr/include entries in cflags output"
+msgstr ""
+
+msgid "keep -L/usr/lib entries in libs output"
+msgstr ""
+
 msgid "keep folded patch files"
 msgstr ""
 
@@ -81082,6 +81145,12 @@ msgid "list all jails"
 msgstr ""
 
 msgid "list all key bindings"
+msgstr ""
+
+msgid "list all known package names"
+msgstr ""
+
+msgid "list all known packages"
 msgstr ""
 
 msgid "list all non-compliant files"
@@ -81432,6 +81501,9 @@ msgstr ""
 msgid "loglevel of client"
 msgstr ""
 
+msgid "look only for package entries in PKG_CONFIG_PATH"
+msgstr ""
+
 msgid "loop invariant code motion"
 msgstr ""
 
@@ -81660,6 +81732,9 @@ msgstr ""
 msgid "max. number of word pairs generated"
 msgstr ""
 
+msgid "maximum allowed depth for dependency graph (-1 for unlimited)"
+msgstr ""
+
 msgid "maximum number of concurrent network requests"
 msgstr ""
 
@@ -81805,6 +81880,9 @@ msgid "never overwrite existing files"
 msgstr ""
 
 msgid "never use bibtex"
+msgstr ""
+
+msgid "never use uninstalled modules when satisfying dependencies"
 msgstr ""
 
 msgid "new buffer name"
@@ -82047,6 +82125,9 @@ msgstr ""
 msgid "optimization filter"
 msgstr ""
 
+msgid "optimize a static dependency graph as if it were a normal dependency graph"
+msgstr ""
+
 msgid "optimize closures"
 msgstr ""
 
@@ -82168,6 +82249,9 @@ msgid "override source registry of asdf systems"
 msgstr ""
 
 msgid "override the api version used for api requests made by this command"
+msgstr ""
+
+msgid "override the prefix variable with one that is guessed based on the location of the .pc file"
 msgstr ""
 
 msgid "overwrite any local changes"
@@ -82437,6 +82521,12 @@ msgstr ""
 msgid "print all devices"
 msgstr ""
 
+msgid "print all errors on stdout instead of stderr"
+msgstr ""
+
+msgid "print all known variables in module to stdout"
+msgstr ""
+
 msgid "print all revisions that match"
 msgstr ""
 
@@ -82491,6 +82581,9 @@ msgstr ""
 msgid "print debugging information"
 msgstr ""
 
+msgid "print dependency graph solution in a simple format"
+msgstr ""
+
 msgid "print detailed info about command NAME"
 msgstr ""
 
@@ -82507,6 +82600,9 @@ msgid "print discard capabilities"
 msgstr ""
 
 msgid "print document after generating postscript"
+msgstr ""
+
+msgid "print entire dependency graph in graphviz 'dot' format"
 msgstr ""
 
 msgid "print first line of patch header"
@@ -82563,6 +82659,9 @@ msgstr ""
 msgid "print ninja version"
 msgstr ""
 
+msgid "print non-fatal warnings and debugging messages"
+msgstr ""
+
 msgid "print nothing but task outputs and build failures"
 msgstr ""
 
@@ -82570,6 +82669,9 @@ msgid "print only filenames and revisions that match"
 msgstr ""
 
 msgid "print opcode bytes"
+msgstr ""
+
+msgid "print output as shell-compatible environmental variables"
 msgstr ""
 
 msgid "print output to file with formatted name"
@@ -82581,7 +82683,13 @@ msgstr ""
 msgid "print patches not in series"
 msgstr ""
 
+msgid "print pkgconf version and license to stdout"
+msgstr ""
+
 msgid "print project help information"
+msgstr ""
+
+msgid "print provided dependencies to stdout"
 msgstr ""
 
 msgid "print public key of a OpenSSH key file in a format specified by the -m option"
@@ -82591,6 +82699,33 @@ msgid "print reasons for falling back to the classic V8 backend"
 msgstr ""
 
 msgid "print replies literally"
+msgstr ""
+
+msgid "print required CFLAGS to stdout"
+msgstr ""
+
+msgid "print required LDPATH linker flags to stdout"
+msgstr ""
+
+msgid "print required LIBNAME linker flags to stdout"
+msgstr ""
+
+msgid "print required dependency frameworks for static linking to stdout"
+msgstr ""
+
+msgid "print required dependency frameworks to stdout"
+msgstr ""
+
+msgid "print required include-dir CFLAGS to stdout"
+msgstr ""
+
+msgid "print required linker flags to stdout"
+msgstr ""
+
+msgid "print required non-include-dir CFLAGS to stdout"
+msgstr ""
+
+msgid "print required other linker flags to stdout"
 msgstr ""
 
 msgid "print shared libraries used"
@@ -82608,6 +82743,9 @@ msgstr ""
 msgid "print sizes in human readable format (e.g., 1K 234M 2G)"
 msgstr ""
 
+msgid "print specified variable entry to stdout"
+msgstr ""
+
 msgid "print stack trace when throwing exceptions"
 msgstr ""
 
@@ -82615,6 +82753,9 @@ msgid "print statistics for hydrogen"
 msgstr ""
 
 msgid "print status of a session"
+msgstr ""
+
+msgid "print supported pkg-config version to stdout"
 msgstr ""
 
 msgid "print the Obj-C segment"
@@ -82665,6 +82806,9 @@ msgstr ""
 msgid "print the information in terse form"
 msgstr ""
 
+msgid "print the link ABIs (e.g. c, c++) the module must be linked against"
+msgstr ""
+
 msgid "print the load commands"
 msgstr ""
 
@@ -82692,6 +82836,18 @@ msgstr ""
 msgid "print the relocation entries"
 msgstr ""
 
+msgid "print the specified module's license file location to stdout if known"
+msgstr ""
+
+msgid "print the specified module's license to stdout if known"
+msgstr ""
+
+msgid "print the specified module's source code location to stdout if known"
+msgstr ""
+
+msgid "print the specified module's version to stdout"
+msgstr ""
+
 msgid "print the version"
 msgstr ""
 
@@ -82702,6 +82858,9 @@ msgid "print this help and exit"
 msgstr ""
 
 msgid "print to stdout"
+msgstr ""
+
+msgid "print translatable fragments in MSVC syntax"
 msgstr ""
 
 msgid "print usage"
@@ -83131,6 +83290,15 @@ msgid "require MODULE while building"
 msgstr ""
 
 msgid "require a clean shutdown of the event loop: mocha will not call process.exit"
+msgstr ""
+
+msgid "require a maximum version of a module"
+msgstr ""
+
+msgid "require a specific version of a module"
+msgstr ""
+
+msgid "require an exact version of a module"
 msgstr ""
 
 msgid "require clean working directory"
@@ -83739,6 +83907,12 @@ msgstr ""
 msgid "sets bootnum inactive"
 msgstr ""
 
+msgid "sets the name of the variable that pkgconf considers to be the package prefix"
+msgstr ""
+
+msgid "sets the personality to 'triplet' or a file named 'filename'"
+msgstr ""
+
 msgid "shelve with the specified commit date"
 msgstr ""
 
@@ -83994,6 +84168,9 @@ msgstr ""
 msgid "show the bubblebabble digest of specified key file"
 msgstr ""
 
+msgid "show the exact filenames for any matching .pc files"
+msgstr ""
+
 msgid "show the full source code for the symbol"
 msgstr ""
 
@@ -84079,6 +84256,9 @@ msgid "silence ssh-keygen"
 msgstr ""
 
 msgid "silently ignore nonexistent files"
+msgstr ""
+
+msgid "simulate walking the calculated dependency graph"
 msgstr ""
 
 msgid "simulation mode - no filesystem changes are made"
@@ -84849,6 +85029,9 @@ msgstr ""
 msgid "use a mutex to ensure only one yarn instance is executing"
 msgstr ""
 
+msgid "use a simplified dependency graph (usually default)"
+msgstr ""
+
 msgid "use a sparse index to be more closely aligned with your sparse-checkout definition"
 msgstr ""
 
@@ -84949,6 +85132,9 @@ msgid "use network only if dependencies are not available in local cache"
 msgstr ""
 
 msgid "use new asdf"
+msgstr ""
+
+msgid "use newlines for whitespace between fragments"
 msgstr ""
 
 msgid "use non-optimizing sparkplug compiler"
@@ -85086,6 +85272,9 @@ msgstr ""
 msgid "validate given config file and test it against given command"
 msgstr ""
 
+msgid "validate specific .pc files for correctness"
+msgstr ""
+
 msgid "verbose [use twice to be more verbose]"
 msgstr ""
 
@@ -85147,6 +85336,9 @@ msgid "viewer is for ps"
 msgstr ""
 
 msgid "visit FILE using find-file"
+msgstr ""
+
+msgid "visualize printed CFLAGS/LIBS fragments as a tree"
 msgstr ""
 
 msgid "wait for async suite definition"
@@ -85264,6 +85456,9 @@ msgid "work with Apex tests"
 msgstr ""
 
 msgid "write a .license file to files with unrecognised comment styles"
+msgstr ""
+
+msgid "write an audit log to a specified file"
 msgstr ""
 
 msgid "write even more to the logfiles"

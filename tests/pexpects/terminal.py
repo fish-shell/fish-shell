@@ -45,13 +45,13 @@ sendline("echo hello\x13hello")
 expect_prompt("hellohello")
 
 # Confirm it is off for external commands
-sendline("stty -a | string match -q '*-ixon -ixoff*'; echo $status")
+sendline("stty -a | string match '*-ixon*' | string match -q '*-ixoff*'; echo $status")
 expect_prompt("0")
 
 # Turn flow control on
 sendline("stty ixon ixoff")
 expect_prompt()
-sendline("stty -a | string match -q '*ixon ixoff*'; echo $status")
+sendline("stty -a | string match '*ixon*' | string match -q '*ixoff*'; echo $status")
 expect_prompt("0")
 
 sys.exit(0)

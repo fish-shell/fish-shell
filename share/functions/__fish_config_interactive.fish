@@ -148,12 +148,19 @@ function __fish_config_interactive -d "Initializations that should be performed 
         function __fish_update_cwd_osc --description 'Notify terminals when $PWD might have changed' \
             --on-variable=PWD --on-event=fish_prompt
             set -l host $hostname
-            # if set -l konsole_version (string match -r -- '^Konsole (\d+)\..*' (status terminal))[2]
-            #     # To-do: use a Konsole version where KF6_DEP_VERSION is >= 6.12
-            #     and $konsole_version -lt ???
-            # end
+
             # TODO(term-workaround)
-            if set -q KONSOLE_VERSION
+            if set -l konsole_version (
+                    string match -r -- '^Konsole (\d+)\.(\d+).*' (status terminal)
+                    or { set -q KONSOLE_VERSION && printf %s\n Konsole 22 03 }
+                )
+                and {
+                    test $konsole_version[2] -lt 26
+                    or {
+                        test $konsole_version[2] -eq 26 &&
+                            test $konsole_version[3] -lt 08
+                    }
+                }
                 set host ''
             end
             if [ -n "$MSYSTEM" ] && string match -rq -- '^(Konsole|WezTerm) ' (status terminal)

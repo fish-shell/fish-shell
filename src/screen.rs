@@ -738,7 +738,12 @@ impl Screen {
         self.actual.cursor.x == 0
             && self.actual.cursor.y + 1 != self.actual.visible_prompt_lines
             && self.actual.cursor.y + 1 == self.actual.line_count()
-            && self.actual.line(self.actual.cursor.y - 1).is_soft_wrapped
+            && self
+                .actual
+                .cursor
+                .y
+                .checked_sub(1)
+                .is_some_and(|prev_y| self.actual.line(prev_y).is_soft_wrapped)
             && !is_dumb()
     }
 

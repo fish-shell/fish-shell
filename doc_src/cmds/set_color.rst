@@ -20,10 +20,10 @@ A special keyword **normal** resets text formatting to terminal defaults, howeve
 
 Valid colors include:
 
-  - **black**, **red**, **green**, **yellow**, **blue**, **magenta**, **cyan**, **white**
-  - **brblack**, **brred**, **brgreen**, **bryellow**, **brblue**, **brmagenta**, **brcyan**, **brwhite**
+  - **black**, **red**, **green**, **yellow** (**brown**), **blue**, **magenta** (**purple**), **cyan**, **white** (**grey**)
+  - **brblack** (**brgrey**), **brred**, **brgreen**, **bryellow** (**brbrown**), **brblue**, **brmagenta** (**brpurple**), **brcyan**, **brwhite**
 
-The *br*- (as in 'bright') forms are full-brightness variants of the 8 standard-brightness colors on many terminals. **brblack** has higher brightness than **black** - towards gray.
+The *br*- (as in 'bright') forms are full-brightness variants of the 8 standard-brightness colors on many terminals. **brblack** has higher brightness than **black** - towards gray. Colors in parentheses are aliases.
 
 An RGB value with three or six hex digits, such as A0FF33 or f2f can be used.
 A three digit value is equivalent to specifying each digit twice; e.g., ``set_color 2BC`` is the same as ``set_color 22BBCC``.

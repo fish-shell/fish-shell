@@ -8,7 +8,7 @@ use crate::flog::{flog, flogf};
 use crate::prelude::*;
 use crate::wutil::{normalize_path, path_normalize_for_cd, waccess, wdirname, wstat};
 use cfg_if::cfg_if;
-use fish_widestring::{HOME_DIRECTORY, wcs2osstring, wcs2zstring};
+use fish_widestring::{HOME_DIRECTORY, osstr2wcstring, wcs2osstring, wcs2zstring};
 use nix::errno::Errno;
 use nix::unistd::{AccessFlags, access};
 use std::ffi::OsStr;
@@ -737,6 +737,15 @@ static CACHE_DIRECTORY: LazyLock<BaseDirectory> =
     LazyLock::new(|| make_base_directory(L!("XDG_CACHE_HOME"), L!("/.cache/fish")));
 
 static CONFIG_DIRECTORY: LazyLock<BaseDirectory> = LazyLock::new(|| {
+    if let Some(config_dir) = std::env::var_os("FISH_CONFIG_DIR") {
+        return BaseDirectory {
+            path: osstr2wcstring(config_dir),
+            created: false,
+            remoteness: DirRemoteness::Unknown,
+            used_xdg: false,
+            err: None,
+        };
+    }
     let config_dir = make_base_directory(L!("XDG_CONFIG_HOME"), L!("/.config/fish"));
     if config_dir.created {
         let mut path = PathBuf::from(wcs2osstring(&config_dir.path));

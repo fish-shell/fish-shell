@@ -188,19 +188,6 @@ function __fish_zfs_complete_property_values -a name
     end
 end
 
-# Generate a list of possible values from the man page.
-# NB: This includes "hints" like "size" or "opts" which may be useful or unwanted. *shrug*
-if type -q man && type -q col
-    function __fish_zfs_property_options
-        set -l property (string escape --style=regex -- $argv[1])
-        set -l values (man zfs | col -b | string replace -rf -- '^\s*'$property'=(.*\|.*)' '$1' | string split ' | ')
-        printf '%s\n' $property=$values
-    end
-else
-    function __fish_zfs_property_options
-    end
-end
-
 function __fish_zfs_list_permissions -V OS
     echo -e "allow\tAlso needs the permission to be allowed"
     echo -e "clone\tAlso needs the 'create' and 'mount' permissions in the origin filesystem"

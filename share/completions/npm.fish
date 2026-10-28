@@ -29,14 +29,6 @@ function __fish_npm_using_command
     return 1
 end
 
-function __fish_npm_needs_option
-    switch (commandline -ct)
-        case "-*"
-            return 0
-    end
-    return 1
-end
-
 # list available npm scripts and their partial content
 function __fish_parse_npm_run_completions
     while read -l name

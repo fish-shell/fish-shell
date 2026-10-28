@@ -1,13 +1,3 @@
-function __fish_installer_has_pkg
-    contains -- -pkg (commandline -xpc)
-    or contains -- -package (commandline -xpc)
-end
-
-function __fish_installer_has_target
-    contains -- -target (commandline -xpc)
-    or contains -- -tgt (commandline -xpc)
-end
-
 function __fish_installer_volumes
     set -l volumes / /Volumes/*
     printf '%s\n' $volumes

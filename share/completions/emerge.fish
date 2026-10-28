@@ -1,17 +1,3 @@
-#function __fish_emerge_print_all_pkgs_with_version_compare -d 'Print completions for all packages including the version compare if that is already typed'
-#    set -l version_comparator (commandline -t | string match -r '^[\'"]*[<>]\?=\?' |
-#                               sed -r 's/^[\'"]*(.*)/\1/g')
-#    set -l sedstring
-#
-#    if set -q $version_comparator
-#        set sedstring 's/^(.*)/\1\tPackage/g'
-#    else
-#        set sedstring 's/^(.*)/'$version_comparator'\1\tPackage/g'
-#    end
-#
-#    __fish_emerge_print_all_pkgs | sed -r $sedstring
-#end
-
 function __fish_emerge_print_sets
     for s in '@'(emerge --list-sets)
         switch $s

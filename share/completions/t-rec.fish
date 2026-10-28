@@ -23,7 +23,7 @@ complete -c t-rec -s d -l decor -d "Decorate animation" -xa "shadow none"
 complete -c t-rec -s b -l bg -d "Background color when decors are used" -xa "white black transparent"
 complete -c t-rec -s n -l natural -d "Natural typing, disables idle detection and sampling optimization"
 complete -c t-rec -s l -l ls -d "List windows available for recording by their id"
-complete -c t-rec -s w -l win-id -d "Id of window to capture" -xa "(__t_rec_window_list)"
+complete -c t-rec -s w -l win-id -d "Id of window to capture" -xa "(__fish_t_rec_window_list)"
 complete -c t-rec -s e -l end-pause -d "Pause time at end of animation" -xa "(__fish_t_rec_time_unit)" -r
 complete -c t-rec -s s -l start-pause -d "Pause time at start of animation" -xa "(__fish_t_rec_time_unit)" -r
 complete -c t-rec -s o -l output -d "Output file (without extension); defaults to t-rec" -r

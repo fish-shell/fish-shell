@@ -50,11 +50,6 @@ function __fish_pmset_g_has_subarg
     return 1
 end
 
-function __fish_pmset_schedule_needs_type
-    __fish_pmset_action_is schedule
-    and not __fish_pmset_schedule_has_type
-end
-
 function __fish_pmset_schedule_has_type
     set -l toks (commandline -xpc)
     set -l saw_sched false
@@ -69,11 +64,6 @@ function __fish_pmset_schedule_has_type
         end
     end
     return 1
-end
-
-function __fish_pmset_repeat_needs_type
-    __fish_pmset_action_is repeat
-    and not __fish_pmset_repeat_has_type
 end
 
 function __fish_pmset_repeat_has_type

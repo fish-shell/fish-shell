@@ -5872,7 +5872,7 @@ fn history_pager_search(
     // We can still push fish further upward in case the first entry is multiline,
     // but that can't really be helped.
     // (subtract 2 for the search line and the prompt)
-    let page_size = cmp::max(termsize_last().height() / 2 - 2, 12);
+    let page_size = cmp::max((termsize_last().height() / 2).saturating_sub(2), 12);
     let mut completions = Vec::with_capacity(page_size);
     let new_search = |search_type| {
         HistorySearch::new_with(

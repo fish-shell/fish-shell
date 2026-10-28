@@ -314,6 +314,10 @@ const BUILTIN_DATAS: &[BuiltinData] = &[
         func: r#return::r#return,
     },
     BuiltinData {
+        name: L!("sequence"),
+        func: sequence::sequence,
+    },
+    BuiltinData {
         name: L!("set"),
         func: set::set,
     },

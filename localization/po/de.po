@@ -8082,6 +8082,12 @@ msgstr ""
 msgid "Approx max SIZE of bags combining dir objects"
 msgstr ""
 
+msgid "Arbitrary text printed at the end of the list"
+msgstr ""
+
+msgid "Arbitrary text printed at the start of the list"
+msgstr ""
+
 msgid "Architecture-dependent install directory"
 msgstr "Architekturabhängiges Installationsverzeichnis"
 
@@ -13986,6 +13992,12 @@ msgstr ""
 msgid "Create a new network location with the specified name."
 msgstr ""
 
+msgid "Create a new note in the given notebook directory"
+msgstr ""
+
+msgid "Create a new notebook in the given directory"
+msgstr ""
+
 msgid "Create a new orphan branch"
 msgstr ""
 
@@ -14725,6 +14737,9 @@ msgid "Custom path to Zed.app or the zed binary"
 msgstr ""
 
 msgid "Custom template directory"
+msgstr ""
+
+msgid "Custom template used to render the note"
 msgstr ""
 
 msgid "Custom username mapping"
@@ -20382,6 +20397,9 @@ msgstr ""
 msgid "Do not configure any interfaces"
 msgstr ""
 
+msgid "Do not confirm before editing many notes at the same time"
+msgstr ""
+
 msgid "Do not consider changes made to a given path"
 msgstr ""
 
@@ -21159,6 +21177,9 @@ msgstr ""
 msgid "Do not print remote URL"
 msgstr ""
 
+msgid "Do not print statistics nor progress"
+msgstr ""
+
 msgid "Do not print status messages"
 msgstr ""
 
@@ -21169,6 +21190,15 @@ msgid "Do not print the banner on startup"
 msgstr ""
 
 msgid "Do not print the column headers"
+msgstr ""
+
+msgid "Do not print the tags number of notes found"
+msgstr ""
+
+msgid "Do not print the total number of notes found"
+msgstr ""
+
+msgid "Do not print the total number of tags found"
 msgstr ""
 
 msgid "Do not print warning and do not delay start"
@@ -22195,6 +22225,9 @@ msgid "Don't activate the application"
 msgstr ""
 
 msgid "Don't actually add the file(s)"
+msgstr ""
+
+msgid "Don't actually create the note. Instead, prints its content on stdout and the generated path on stderr"
 msgstr ""
 
 msgid "Don't actually remove anything, just show what would be done"
@@ -24481,6 +24514,9 @@ msgid "Edit network configuration files"
 msgstr ""
 
 msgid "Edit notes for a given object"
+msgstr ""
+
+msgid "Edit notes matching the given criteria"
 msgstr ""
 
 msgid "Edit patches before sending"
@@ -27420,6 +27456,9 @@ msgstr ""
 msgid "Extra full format"
 msgstr "Zusätzliches Vollformat"
 
+msgid "Extra variables passed to the templates"
+msgstr ""
+
 msgid "Extract BOM files from a flat package into /tmp and return filenames"
 msgstr ""
 
@@ -28299,6 +28338,60 @@ msgstr ""
 msgid "Find memory used"
 msgstr ""
 
+msgid "Find notes created after the given date"
+msgstr ""
+
+msgid "Find notes created before the given date"
+msgstr ""
+
+msgid "Find notes created on the given date"
+msgstr ""
+
+msgid "Find notes mentioning the title of the given ones"
+msgstr ""
+
+msgid "Find notes modified after the given date"
+msgstr ""
+
+msgid "Find notes modified before the given date"
+msgstr ""
+
+msgid "Find notes modified on the given date"
+msgstr ""
+
+msgid "Find notes tagged with the given tags"
+msgstr ""
+
+msgid "Find notes which are linked by the given ones"
+msgstr ""
+
+msgid "Find notes which are linking to the given ones"
+msgstr ""
+
+msgid "Find notes which are not linked by any other note"
+msgstr ""
+
+msgid "Find notes which are not linked by the given ones"
+msgstr ""
+
+msgid "Find notes which are not linking to the given notes"
+msgstr ""
+
+msgid "Find notes which have no tags"
+msgstr ""
+
+msgid "Find notes which might be related to the given ones"
+msgstr ""
+
+msgid "Find notes whose title is mentioned in the given ones"
+msgstr ""
+
+msgid "Find notes with at least one broken internal link"
+msgstr ""
+
+msgid "Find notes with at least one missing backlink"
+msgstr ""
+
 msgid "Find package providing a feature or file"
 msgstr ""
 
@@ -28654,6 +28747,9 @@ msgid "Follow command-line symlinks only"
 msgstr ""
 
 msgid "Follow given symlinks with -R"
+msgstr ""
+
+msgid "Follow links recursively"
 msgstr ""
 
 msgid "Follow links to separate debug info files"
@@ -29068,6 +29164,9 @@ msgid "Force import"
 msgstr ""
 
 msgid "Force incremental backup"
+msgstr ""
+
+msgid "Force indexing all the notes"
 msgstr ""
 
 msgid "Force input to be treated as HTML"
@@ -29680,6 +29779,9 @@ msgid "Format of the exported data"
 msgstr ""
 
 msgid "Format of the file results"
+msgstr ""
+
+msgid "Format of the graph"
 msgstr ""
 
 msgid "Format of the imported data"
@@ -32868,6 +32970,9 @@ msgstr ""
 msgid "Ignore nonexistent files"
 msgstr ""
 
+msgid "Ignore notes matching the given path, including its descendants"
+msgstr ""
+
 msgid "Ignore offsets, find all references to an extent"
 msgstr ""
 
@@ -33859,6 +33964,9 @@ msgid "Index a collection of packages"
 msgstr ""
 
 msgid "Index from 1 instead of 0"
+msgstr ""
+
+msgid "Index the notes to be searchable"
 msgstr ""
 
 msgid "Index throttle value"
@@ -35772,6 +35880,9 @@ msgstr ""
 msgid "Limit the number of matches"
 msgstr ""
 
+msgid "Limit the number of notes found"
+msgstr ""
+
 msgid "Limit the number of packets used for storing captured packets in memory"
 msgstr ""
 
@@ -36720,6 +36831,12 @@ msgstr ""
 msgid "List configs"
 msgstr ""
 
+msgid "List configuration objects. Listable objects are: aliases, filters and extras"
+msgstr ""
+
+msgid "List configuration parameters"
+msgstr ""
+
 msgid "List configuration settings"
 msgstr ""
 
@@ -37291,6 +37408,9 @@ msgid "List non-private secrets"
 msgstr ""
 
 msgid "List notes for given object"
+msgstr ""
+
+msgid "List notes matching the given criteria"
 msgstr ""
 
 msgid "List nvme subsystems"
@@ -39675,6 +39795,9 @@ msgstr ""
 msgid "Manage templates"
 msgstr ""
 
+msgid "Manage the note tags"
+msgstr ""
+
 msgid "Manage the npm configuration files"
 msgstr ""
 
@@ -40151,6 +40274,9 @@ msgstr ""
 
 msgid "Maximum display length"
 msgstr "Maximale Anzeigelänge"
+
+msgid "Maximum distance between two linked notes"
+msgstr ""
 
 msgid "Maximum distortion for (sub)image match [value]"
 msgstr ""
@@ -41103,6 +41229,9 @@ msgstr ""
 msgid "Name of the bin target to run"
 msgstr ""
 
+msgid "Name of the config group this note belongs to. Takes precedence over the config of the directory"
+msgstr ""
+
 msgid "Name of the configuration file to update instead of ~/"
 msgstr ""
 
@@ -41281,6 +41410,9 @@ msgid "Never prompt for password"
 msgstr ""
 
 msgid "Never prompt for removal"
+msgstr ""
+
+msgid "Never prompt or ask for confirmation."
 msgstr ""
 
 msgid "Never remove files from working tree in checkout"
@@ -43201,6 +43333,12 @@ msgid "Options to use when calling GPG"
 msgstr ""
 
 msgid "Order the network services in the order specified"
+msgstr ""
+
+msgid "Order the notes by the given criterion"
+msgstr ""
+
+msgid "Order the tags by the given criterion"
 msgstr ""
 
 msgid "Orders the package listing by install time"
@@ -46344,6 +46482,12 @@ msgstr ""
 msgid "Pretty output"
 msgstr ""
 
+msgid "Pretty print the list using a custom template or one of the predefined formats"
+msgstr ""
+
+msgid "Pretty print the list using a custom template or predefined formats: short, full, json"
+msgstr ""
+
 msgid "Pretty-print JSON"
 msgstr ""
 
@@ -47196,6 +47340,9 @@ msgstr ""
 msgid "Print detailed information about the image"
 msgstr ""
 
+msgid "Print detailed information about the indexing process"
+msgstr ""
+
 msgid "Print detailed traceback on unhandled exceptions"
 msgstr ""
 
@@ -47853,6 +48000,12 @@ msgstr ""
 msgid "Print non-printable characters as is"
 msgstr ""
 
+msgid "Print notes delimited by ASCII NUL characters. This is useful when used in conjunction with 'xargs -0'"
+msgstr ""
+
+msgid "Print notes delimited by the given separator"
+msgstr ""
+
 msgid "Print null byte as separator between filenames"
 msgstr ""
 
@@ -48375,6 +48528,15 @@ msgstr ""
 msgid "Print tag contents"
 msgstr ""
 
+msgid "Print tags delimited by ASCII NUL characters. This is useful when used in conjunction with 'xargs -0'"
+msgstr ""
+
+msgid "Print tags delimited by ASCII NUL characters. Useful with xargs -0"
+msgstr ""
+
+msgid "Print tags delimited by the given separator"
+msgstr ""
+
 msgid "Print tally"
 msgstr "Zähler ausgeben"
 
@@ -48640,6 +48802,9 @@ msgid "Print the parsed form of the magic file"
 msgstr ""
 
 msgid "Print the path of a port"
+msgstr ""
+
+msgid "Print the path of the created note instead of editing it"
 msgstr ""
 
 msgid "Print the path to the current machine directory"
@@ -49567,6 +49732,9 @@ msgid "Produce a file containing LLVM bitcode"
 msgstr ""
 
 msgid "Produce a frozen state on FILE at end"
+msgstr ""
+
+msgid "Produce a graph of the notes matching the given criteria"
 msgstr ""
 
 msgid "Produce a list of all dependencies"
@@ -50776,6 +50944,9 @@ msgid "Read configuration from specified cache file"
 msgstr ""
 
 msgid "Read configuration from stdin as a plist"
+msgstr ""
+
+msgid "Read contents from standard input"
 msgstr ""
 
 msgid "Read custom RC file"
@@ -55341,6 +55512,9 @@ msgstr ""
 msgid "Run as if Tig was started in this directory"
 msgstr ""
 
+msgid "Run as if zk was started in <PATH> instead of the current working directory."
+msgstr ""
+
 msgid "Run as inetd service"
 msgstr ""
 
@@ -57553,6 +57727,9 @@ msgid "Select monitor mode"
 msgstr ""
 
 msgid "Select non-matching lines"
+msgstr ""
+
+msgid "Select notes interactively with fzf"
 msgstr ""
 
 msgid "Select one patch"
@@ -60010,6 +60187,9 @@ msgid "Set the connection timeout in seconds (default=10)"
 msgstr ""
 
 msgid "Set the crtc"
+msgstr ""
+
+msgid "Set the current date"
 msgstr ""
 
 msgid "Set the current date (mm:dd:yy)"
@@ -64945,6 +65125,9 @@ msgid "Skip given number of commits"
 msgstr ""
 
 msgid "Skip hooks when generating the image"
+msgstr ""
+
+msgid "Skip id generation and use provided value"
 msgstr ""
 
 msgid "Skip if pkg already (un)installed"
@@ -70095,6 +70278,9 @@ msgstr ""
 msgid "Terminates the logkeys daemon"
 msgstr ""
 
+msgid "Terms to search for in the notes"
+msgstr ""
+
 msgid "Terraform variable file name"
 msgstr ""
 
@@ -70342,6 +70528,9 @@ msgid "Text content to embed"
 msgstr ""
 
 msgid "Text editor for writing check-in comments"
+msgstr ""
+
+msgid "Text matching strategy among: fts, re, exact"
 msgstr ""
 
 msgid "Text to use in the introduction"
@@ -71136,6 +71325,9 @@ msgstr ""
 msgid "Title of the asciicast"
 msgstr ""
 
+msgid "Title of the new note"
+msgstr ""
+
 msgid "Title of track"
 msgstr ""
 
@@ -71902,6 +72094,9 @@ msgid "Turn off logging"
 msgstr ""
 
 msgid "Turn off match highlighting"
+msgstr ""
+
+msgid "Turn off notebook auto-discovery and set manually the notebook where commands are run."
 msgstr ""
 
 msgid "Turn off rename detection"

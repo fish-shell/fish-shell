@@ -120,6 +120,8 @@ To store configuration write it to a file called ``~/.config/fish/config.fish``.
 
 These files are read on the startup of every shell, whether interactive and/or if they're login shells. Use ``status --is-interactive`` and ``status --is-login`` to do things only in interactive/login shells, respectively.
 
+The configuration directory can also be overridden with the `FISH_CONFIG_DIR` environment variable.
+
 This is the short version; for a full explanation, like for sysadmins or integration for developers of other software, see :ref:`Configuration files <configuration>`.
 
 If you want to see what you changed over fish's defaults, see :doc:`fish_delta <cmds/fish_delta>`.

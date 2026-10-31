@@ -158,6 +158,9 @@ __fish_apt_subcommand remove -x -d 'Remove packages'
 # Edit sources
 __fish_apt_subcommand edit-sources -d 'Edit sources list'
 
+# Modernize sources
+__fish_apt_subcommand modernize-sources -d 'Modernize .list files to .sources files'
+
 # Update
 __fish_apt_subcommand update -x -d 'Update package list'
 

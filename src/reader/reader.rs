@@ -704,6 +704,8 @@ pub struct ReaderData {
     queued_repaint: bool,
     /// The history.
     history: Arc<History>,
+    /// Lazily created file cache for opt-in searches across sessions.
+    shared_history: Option<Arc<History>>,
     /// The history search.
     history_search: ReaderHistorySearch,
     /// In-pager history search.
@@ -1075,6 +1077,7 @@ pub fn reader_change_history(history_id: HistoryId) {
 
     data.history.save();
     data.history = History::new(history_id);
+    data.shared_history = None;
     commandline_state_snapshot().history = Some(data.history.clone());
 }
 
@@ -1405,6 +1408,7 @@ impl ReaderData {
             input_data,
             queued_repaint: false,
             history,
+            shared_history: None,
             history_search: Default::default(),
             history_pager: None,
             cursor_selection_mode: CursorSelectionMode::Exclusive,
@@ -3431,13 +3435,21 @@ impl<'a> Reader<'a> {
                 let was_active_before = self.history_search.active();
 
                 if self.history_search.is_at_present() && mode != self.history_search.mode() {
+                    let history = if !self.command_line.text().is_empty() {
+                        self.shared_history_for_search().map_or_else(
+                            || self.history.clone(),
+                            |cache| cache.shared_search_snapshot(&self.history),
+                        )
+                    } else {
+                        self.history.clone()
+                    };
                     let el = &self.data.command_line;
                     if matches!(mode, SearchMode::Token | SearchMode::LastToken) {
                         // Searching by token.
                         let (token_range, _) = get_token_extent(el.text(), el.position());
                         self.data.history_search.reset_to_mode(
                             el.text()[token_range.clone()].to_owned(),
-                            self.history.clone(),
+                            history,
                             mode,
                             token_range.start,
                         );
@@ -3445,7 +3457,7 @@ impl<'a> Reader<'a> {
                         // Searching by line.
                         self.data.history_search.reset_to_mode(
                             el.text().to_owned(),
-                            self.history.clone(),
+                            history,
                             mode,
                             0,
                         );
@@ -3545,7 +3557,7 @@ impl<'a> Reader<'a> {
                         return;
                     }
                     self.history.remove(if is_history_search {
-                        self.history_search.current_result()
+                        self.history_search.current_history_item()
                     } else {
                         &self.autosuggestion.text
                     });
@@ -5322,6 +5334,7 @@ fn get_autosuggestion_performer(
     command_line: WString,
     cursor_pos: usize,
     history: Arc<History>,
+    shared_history: Option<Arc<History>>,
 ) -> impl FnOnce() -> AutosuggestionResult + use<> {
     let generation_count = read_generation_count();
     let vars = parser.vars().snapshot();
@@ -5330,6 +5343,14 @@ fn get_autosuggestion_performer(
         assert_is_background_thread();
         let nothing = AutosuggestionResult::default();
         let ctx = &mut get_bg_context(&vars, generation_count);
+        if ctx.check_cancel() {
+            return nothing;
+        }
+        // File I/O and locking belong on the background thread, before constructing the
+        // search. Keep its indices stable if another request refreshes the cache.
+        let history = shared_history
+            .map(|cache| cache.shared_search_snapshot(&history))
+            .unwrap_or(history);
         if ctx.check_cancel() {
             return nothing;
         }
@@ -5532,6 +5553,16 @@ enum AutosuggestionPortion {
 }
 
 impl<'a> Reader<'a> {
+    fn shared_history_for_search(&mut self) -> Option<Arc<History>> {
+        if !check_bool_var(self.parser.vars(), L!("fish_history_search_shared"), false) {
+            return None;
+        }
+        if self.shared_history.is_none() {
+            self.data.shared_history = Some(self.history.shared_view());
+        }
+        self.shared_history.clone()
+    }
+
     fn can_autosuggest(&self) -> bool {
         // We autosuggest if suppress_autosuggestion is not set, if we're not doing a history search,
         // and our command line contains a non-whitespace character.
@@ -5616,11 +5647,15 @@ impl<'a> Reader<'a> {
         // Clear the autosuggestion and kick it off in the background.
         flog!(reader_render, "Autosuggesting");
         self.data.autosuggestion.clear();
+        let command_line = el.text().to_owned();
+        let cursor_pos = el.position();
+        let shared_history = self.shared_history_for_search();
         let performer = get_autosuggestion_performer(
             self.parser,
-            el.text().to_owned(),
-            el.position(),
+            command_line,
+            cursor_pos,
             self.history.clone(),
+            shared_history,
         );
         self.debouncers.autosuggestions.perform(performer);
     }

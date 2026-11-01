@@ -677,6 +677,14 @@ The command history is stored in the file ``~/.local/share/fish/fish_history`` (
 ``fish_history`` environment variable to change the name of the history session (resulting in a
 ``<session>_history`` file); both before starting the shell and while the shell is running.
 
+To include commands saved by other running fish sessions in searches and autosuggestions, opt in with::
+
+  set -g fish_history_search_shared 1
+
+With this setting, starting a history search on a non-empty command line reads the latest history file. This applies to line, prefix, and token searches. Autosuggestions also use the latest history file. Pressing up or down starting from an empty command line continues to recall only the session's history, without incorporating other sessions' new commands. The history pager and the :doc:`history <cmds/history>` command keep their usual session view.
+
+The setting is off by default. Set it to 0 or erase it to restore session-only searches. Only commands saved to the same history file are shared; private and leading-space commands remain local. Deleting a shared search result removes its complete history entry, including when searching by token. An ongoing search keeps its view until a new search starts, and an already displayed autosuggestion is not refreshed until another suggestion is requested.
+
 See the :doc:`history <cmds/history>` command for other manipulations.
 
 Examples:

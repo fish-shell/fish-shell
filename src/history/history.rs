@@ -1264,7 +1264,8 @@ impl History {
     pub fn shared_search_snapshot(&self, session: &History) -> Arc<Self> {
         let session = session.imp();
         let mut snapshot = HistoryImpl::new(session.name.clone(), session.custom_directory.clone());
-        let resolved = session.new_items.len() - usize::from(session.has_pending_item);
+        let resolved = session.new_items.len()
+            - usize::from(session.has_pending_item && !session.new_items.is_empty());
         snapshot.new_items = session.new_items[..resolved]
             .iter()
             .enumerate()
@@ -1637,6 +1638,24 @@ pub struct HistorySearch {
 }
 
 impl HistorySearch {
+    pub fn is_shared_view(&self) -> bool {
+        self.history.imp().shared_view
+    }
+
+    /// A shared search is frozen, so a persisted deletion must also update its snapshot.
+    pub fn remove_from_shared_view(&mut self, text: &wstr) -> bool {
+        if !self.is_shared_view() {
+            return false;
+        }
+        self.history.remove_from_shared_view(text);
+        // Removing all occurrences can move more than one index, including indices in
+        // front of our current item. Restart against the filtered, frozen snapshot.
+        self.current_index = 0;
+        self.current_item = None;
+        self.deduper.clear();
+        true
+    }
+
     #[cfg(test)]
     fn new(hist: Arc<History>, s: WString) -> Self {
         Self::new_with(hist, s, SearchType::Contains, SearchFlags::default(), 0)
@@ -2426,6 +2445,23 @@ mod tests {
         session.save();
         let snapshot = session.shared_view().shared_search_snapshot(&session);
         assert!(history_contains(&snapshot, L!("echo private session")));
+
+        // A pending item may be removed before it is resolved (for example by a clear).
+        let empty = History::new_with_directory(
+            HistoryId::Memory(super::MemoryHistoryId::PrivateMode),
+            None,
+        );
+        let timestamps = empty.imp().timestamps_as_of_now();
+        empty.add(
+            HistoryItem::new(
+                L!("pending").to_owned(),
+                timestamps,
+                PersistenceMode::Memory,
+            ),
+            true,
+        );
+        empty.remove(L!("pending"));
+        assert_eq!(empty.shared_view().shared_search_snapshot(&empty).size(), 0);
     }
 
     /// Run explicitly in release mode to measure refreshes without command execution or search.

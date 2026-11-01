@@ -26,11 +26,21 @@ struct SearchMatch {
     pub text: WString,
     /// The offset of the current search string in this match.
     offset: usize,
+    /// For shared token searches, the complete command to delete if this token is selected.
+    history_item: Option<WString>,
 }
 
 impl SearchMatch {
     fn new(text: WString, offset: usize) -> Self {
-        Self { text, offset }
+        Self {
+            text,
+            offset,
+            history_item: None,
+        }
+    }
+
+    fn history_item(&self) -> &wstr {
+        self.history_item.as_deref().unwrap_or(&self.text)
     }
 }
 
@@ -116,6 +126,10 @@ impl ReaderHistorySearch {
         &self.matches[self.match_index].text
     }
 
+    pub fn current_history_item(&self) -> &wstr {
+        self.matches[self.match_index].history_item()
+    }
+
     /// Return the string we are searching for.
     pub fn search_string(&self) -> &wstr {
         self.search().original_term()
@@ -151,9 +165,20 @@ impl ReaderHistorySearch {
 
     pub fn handle_deletion(&mut self) {
         assert!(!self.is_at_present());
-        self.matches.remove(self.match_index);
-        self.match_index -= 1;
-        self.search_mut().prepare_to_search_after_deletion();
+        let deleted = self.current_history_item().to_owned();
+        if self.search_mut().remove_from_shared_view(&deleted) {
+            let before = self.matches[..self.match_index]
+                .iter()
+                .filter(|m| m.history_item() != deleted)
+                .count();
+            // A single command can contribute several token matches. Discard them all.
+            self.matches.retain(|m| m.history_item() != deleted);
+            self.match_index = before - 1;
+        } else {
+            self.matches.remove(self.match_index);
+            self.match_index -= 1;
+            self.search_mut().prepare_to_search_after_deletion();
+        }
         self.move_backwards();
     }
 
@@ -228,6 +253,7 @@ impl ReaderHistorySearch {
             let offset = find(text, needle).unwrap();
             self.add_if_new(SearchMatch::new(text.to_owned(), offset));
         } else if matches!(self.mode, SearchMode::Token | SearchMode::LastToken) {
+            let history_item = self.search().is_shared_view().then(|| text.to_owned());
             let mut tok = Tokenizer::new(
                 text,
                 TokFlags {
@@ -243,7 +269,9 @@ impl ReaderHistorySearch {
                 }
                 let text = tok.text_of(&token);
                 if let Some(offset) = find(text, needle) {
-                    local_tokens.push(SearchMatch::new(text.to_owned(), offset));
+                    let mut matched = SearchMatch::new(text.to_owned(), offset);
+                    matched.history_item.clone_from(&history_item);
+                    local_tokens.push(matched);
                 }
             }
 

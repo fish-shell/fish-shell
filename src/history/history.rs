@@ -36,7 +36,7 @@ use crate::{
     prelude::*,
     threads::{ThreadPool, assert_is_background_thread},
     wildcard::wildcard_match,
-    wutil::{FileId, file_id_for_file, wrealpath, wstat},
+    wutil::{FileId, file_id_for_file, file_id_for_path, wrealpath, wstat},
 };
 use fish_common::{UnescapeStringStyle, unescape_string};
 use fish_wcstringutil::{subsequence_in_string, trim_in_place};
@@ -333,7 +333,11 @@ struct HistoryImpl {
     /// Deleted item contents, and the scope of the deletion.
     deleted_items: HashMap<WString, DeletionScope>,
     /// The history file contents.
-    file_contents: Option<HistoryFile>,
+    file_contents: Option<Arc<HistoryFile>>,
+    /// A file-only view for shared searches. It never applies the session timestamp cutoff.
+    shared_view: bool,
+    /// Cache the resolved path so unchanged refreshes need only one stat.
+    shared_history_path: Option<WString>,
     /// The file ID of the history file.
     history_file_id: Option<FileId>,
     /// The boundary timestamp distinguishes old items from new items. Items whose timestamps are <=
@@ -451,7 +455,9 @@ impl HistoryImpl {
             return file_contents;
         }
         let Ok(Some(history_path)) = self.history_file_path() else {
-            return self.file_contents.insert(HistoryFile::create_empty());
+            return self
+                .file_contents
+                .insert(Arc::new(HistoryFile::create_empty()));
         };
 
         let _profiler = TimeProfiler::new("load_old");
@@ -459,7 +465,8 @@ impl HistoryImpl {
             Ok((file_id, history_file)) => {
                 self.history_file_id = Some(file_id);
                 let _profiler = TimeProfiler::new("populate_from_file_contents");
-                let file_contents = history_file.decode(Some(self.boundary_timestamp));
+                let file_contents =
+                    history_file.decode((!self.shared_view).then_some(self.boundary_timestamp));
                 flogf!(
                     history,
                     "Loaded %u old items",
@@ -472,7 +479,54 @@ impl HistoryImpl {
                 HistoryFile::create_empty()
             }
         };
-        self.file_contents.insert(file_contents)
+        self.file_contents.insert(Arc::new(file_contents))
+    }
+
+    /// Refresh a file-only view. Session histories deliberately never call this.
+    fn refresh_shared(&mut self) {
+        assert!(self.shared_view);
+        if self.shared_history_path.is_none() {
+            self.shared_history_path = self.history_file_path().ok().flatten();
+        }
+        let Some(path) = self.shared_history_path.as_ref() else {
+            return;
+        };
+        let observed = match file_id_for_path(path) {
+            Ok(id) => id,
+            Err(err) => {
+                if err.kind() == std::io::ErrorKind::NotFound {
+                    self.file_contents = Some(Arc::new(HistoryFile::create_empty()));
+                    self.history_file_id = None;
+                }
+                return;
+            }
+        };
+        if self.file_contents.is_some() && self.history_file_id.as_ref() == Some(&observed) {
+            return;
+        }
+        // Recheck identity and size under the same lock used by history writers. A vacuum
+        // can replace the file between stat and open. Do not publish a failed refresh.
+        let loaded = lock_and_load(path, |file, id| {
+            if id.size == 0 {
+                Ok(None)
+            } else {
+                RawHistoryFile::create(file, id).map(Some)
+            }
+        });
+        if let Ok((id, contents)) = loaded {
+            let appended = self
+                .history_file_id
+                .as_ref()
+                .is_some_and(|old| old.dev_inode == id.dev_inode && old.size < id.size);
+            match contents {
+                Some(contents) if appended && self.file_contents.is_some() => {
+                    Arc::make_mut(self.file_contents.as_mut().unwrap()).extend(contents);
+                }
+                Some(contents) => self.file_contents = Some(Arc::new(contents.decode(None))),
+                None => self.file_contents = Some(Arc::new(HistoryFile::create_empty())),
+            }
+            self.history_file_id = Some(id);
+        }
     }
 
     /// Deletes duplicates in new_items.
@@ -784,6 +838,8 @@ impl HistoryImpl {
             disable_automatic_save_counter: 0,
             deleted_items: HashMap::new(),
             file_contents: None,
+            shared_view: false,
+            shared_history_path: None,
             history_file_id: None,
             boundary_timestamp: SystemTime::now(),
             countdown_to_vacuum: None,
@@ -1191,6 +1247,55 @@ fn should_import_bash_history_line(line: &wstr) -> bool {
 pub struct History(Mutex<HistoryImpl>);
 
 impl History {
+    /// Create an unregistered, file-only cache for searches across sessions.
+    pub fn shared_view(&self) -> Arc<Self> {
+        let imp = self.imp();
+        let mut view = HistoryImpl::new(imp.name.clone(), imp.custom_directory.clone());
+        view.shared_view = true;
+        Arc::new(Self(Mutex::new(view)))
+    }
+
+    pub fn refresh_shared(&self) {
+        self.imp().refresh_shared();
+    }
+
+    /// Freeze a shared search's file and retain this session's unsaved and private items.
+    /// Searches must keep stable indices while another background request refreshes the cache.
+    pub fn shared_search_snapshot(&self, session: &History) -> Arc<Self> {
+        let session = session.imp();
+        let mut snapshot = HistoryImpl::new(session.name.clone(), session.custom_directory.clone());
+        let resolved = session.new_items.len() - usize::from(session.has_pending_item);
+        snapshot.new_items = session.new_items[..resolved]
+            .iter()
+            .enumerate()
+            .filter(|(index, item)| {
+                session.name.is_empty()
+                    || *index >= session.first_unwritten_new_item_index
+                    || !item.should_write_to_disk()
+            })
+            .map(|(_, item)| item.clone())
+            .collect();
+        snapshot.first_unwritten_new_item_index = snapshot.new_items.len();
+        drop(session);
+        let mut imp = self.imp();
+        assert!(imp.shared_view);
+        imp.refresh_shared();
+        snapshot.shared_view = true;
+        snapshot.file_contents.clone_from(&imp.file_contents);
+        Arc::new(Self(Mutex::new(snapshot)))
+    }
+
+    /// Remove from a frozen search without writing its session overlay to disk.
+    pub fn remove_from_shared_view(&self, text: &wstr) {
+        let mut imp = self.imp();
+        assert!(imp.shared_view);
+        imp.new_items.retain(|item| item.str() != text);
+        imp.first_unwritten_new_item_index = imp.new_items.len();
+        if let Some(file) = imp.file_contents.as_mut() {
+            Arc::make_mut(file).remove(text);
+        }
+    }
+
     fn imp(&self) -> MutexGuard<'_, HistoryImpl> {
         self.0.lock().unwrap()
     }
@@ -1803,7 +1908,8 @@ mod tests {
     use std::{
         collections::VecDeque,
         ffi::OsString,
-        io::BufReader,
+        fs::File,
+        io::{BufReader, Write as _},
         sync::Arc,
         time::{Duration, SystemTime, UNIX_EPOCH},
     };
@@ -2173,6 +2279,188 @@ mod tests {
                 self.next_unique_id += 1;
             }
         }
+    }
+
+    #[test]
+    fn test_shared_history_refresh() {
+        let test = Test::new(L!("shared_refresh"));
+        let writer = test.create_history();
+        writer.imp().countdown_to_vacuum = Some(usize::MAX);
+        writer.add_commandline(L!("echo before startup").to_owned());
+        let session = test.create_history();
+        let cache = session.shared_view();
+        cache.refresh_shared();
+        let initial = cache.imp().file_contents.clone().unwrap();
+        cache.refresh_shared();
+        assert!(Arc::ptr_eq(
+            &initial,
+            cache.imp().file_contents.as_ref().unwrap()
+        ));
+
+        // No sleeps: a timestamp beyond the session boundary makes isolation deterministic.
+        writer.add(
+            HistoryItem::new(
+                L!("echo external").to_owned(),
+                Timestamps {
+                    first_added: SystemTime::now() + Duration::from_secs(10),
+                    last_added: SystemTime::now() + Duration::from_secs(10),
+                },
+                PersistenceMode::Disk,
+            ),
+            false,
+        );
+        assert!(!history_contains(&session, L!("echo external")));
+        let snapshot = cache.shared_search_snapshot(&session);
+        assert!(history_contains(&snapshot, L!("echo external")));
+        assert_eq!(initial.offsets().len(), 1);
+        assert_eq!(
+            cache.imp().file_contents.as_ref().unwrap().offsets().len(),
+            2
+        );
+
+        writer.add_commandline(L!("echo later").to_owned());
+        cache.refresh_shared();
+        // A background refresh must not shift the indices of an active search.
+        assert_eq!(
+            snapshot.item_at_index(1).unwrap().str(),
+            L!("echo external")
+        );
+        assert!(!history_contains(&snapshot, L!("echo later")));
+        assert!(history_contains(
+            &cache.shared_search_snapshot(&session),
+            L!("echo later")
+        ));
+
+        // A deletion vacuums to a new inode; both views must discard the removed item.
+        let old_inode = cache.imp().history_file_id.as_ref().unwrap().dev_inode;
+        writer.remove(L!("echo external"));
+        writer.save();
+        cache.refresh_shared();
+        assert_ne!(
+            old_inode,
+            cache.imp().history_file_id.as_ref().unwrap().dev_inode
+        );
+        assert!(!history_contains(
+            &cache.shared_search_snapshot(&session),
+            L!("echo external")
+        ));
+        snapshot.remove_from_shared_view(L!("echo external"));
+        assert!(!history_contains(&snapshot, L!("echo external")));
+    }
+
+    #[test]
+    fn test_shared_history_partial_append_and_replacement() {
+        use std::fs::{self, OpenOptions};
+        let test = Test::new(L!("shared_partial"));
+        let session = test.create_history();
+        let cache = session.shared_view();
+        cache.refresh_shared(); // File does not exist yet.
+        let path = test._temp_dir.path().join("shared_partial_history");
+        fs::write(&path, b"- cmd: first\n  when: 1\n- cm").unwrap();
+        cache.refresh_shared();
+        assert_eq!(cache.size(), 1);
+        OpenOptions::new()
+            .append(true)
+            .open(&path)
+            .unwrap()
+            .write_all(b"d: second\n  when: 2\n")
+            .unwrap();
+        cache.refresh_shared();
+        assert_eq!(cache.size(), 2);
+        assert_eq!(cache.item_at_index(1).unwrap().str(), L!("second"));
+        // Truncation, same-size modification, empty file, and removal.
+        fs::write(&path, b"- cmd: third\n  when: 3\n").unwrap();
+        cache.refresh_shared();
+        assert_eq!(cache.size(), 1);
+        fs::write(&path, b"- cmd: other\n  when: 3\n").unwrap();
+        cache.refresh_shared();
+        assert_eq!(cache.item_at_index(1).unwrap().str(), L!("other"));
+        fs::write(&path, b"").unwrap();
+        cache.refresh_shared();
+        assert_eq!(cache.size(), 0);
+        fs::remove_file(&path).unwrap();
+        cache.refresh_shared();
+        assert_eq!(cache.size(), 0);
+    }
+
+    #[test]
+    fn test_shared_history_session_overlay_and_dedup() {
+        let test = Test::new(L!("shared_overlay"));
+        let session = test.create_history();
+        session.imp().countdown_to_vacuum = Some(usize::MAX);
+        session.add_commandline(L!("echo duplicate").to_owned());
+        session.add_commandline(L!("echo between").to_owned());
+        session.add_commandline(L!("echo duplicate").to_owned());
+        session.imp().disable_automatic_saving();
+        session.add_commandline(L!("echo unsaved").to_owned());
+        let timestamps = session.imp().timestamps_as_of_now();
+        session.add(
+            HistoryItem::new(
+                L!("echo private").to_owned(),
+                timestamps,
+                PersistenceMode::Memory,
+            ),
+            false,
+        );
+        let cache = session.shared_view();
+        let snapshot = cache.shared_search_snapshot(&session);
+        assert!(history_contains(&snapshot, L!("echo unsaved")));
+        assert!(history_contains(&snapshot, L!("echo private")));
+        let mut search = HistorySearch::new_with_type(
+            snapshot,
+            L!("echo duplicate").to_owned(),
+            SearchType::Prefix,
+        );
+        assert!(search.go_to_next_match(SearchDirection::Backward));
+        assert!(!search.go_to_next_match(SearchDirection::Backward));
+        session.imp().enable_automatic_saving();
+    }
+
+    #[test]
+    fn test_shared_history_memory_session() {
+        let session = History::new_with_directory(
+            HistoryId::Memory(super::MemoryHistoryId::PrivateMode),
+            None,
+        );
+        session.add_commandline(L!("echo private session").to_owned());
+        session.save();
+        let snapshot = session.shared_view().shared_search_snapshot(&session);
+        assert!(history_contains(&snapshot, L!("echo private session")));
+    }
+
+    /// Run explicitly in release mode to measure refreshes without command execution or search.
+    #[test]
+    #[ignore]
+    fn benchmark_shared_history_refresh() {
+        use std::{fs::OpenOptions, time::Instant};
+        let test = Test::new(L!("shared_benchmark"));
+        let path = test._temp_dir.path().join("shared_benchmark_history");
+        let mut file = File::create(&path).unwrap();
+        for i in 0..15_000 {
+            writeln!(file, "- cmd: echo history entry {i}\n  when: 1").unwrap();
+        }
+        let cache = test.create_history().shared_view();
+        cache.refresh_shared();
+        let start = Instant::now();
+        for _ in 0..10_000 {
+            cache.refresh_shared();
+        }
+        eprintln!(
+            "15k entries, unchanged refresh: {:?}",
+            start.elapsed() / 10_000
+        );
+        let mut total = Duration::ZERO;
+        let mut file = OpenOptions::new().append(true).open(&path).unwrap();
+        for batch in 0..100 {
+            for item in 0..3 {
+                writeln!(file, "- cmd: echo appended {batch} {item}\n  when: 2").unwrap();
+            }
+            let start = Instant::now();
+            cache.refresh_shared();
+            total += start.elapsed();
+        }
+        eprintln!("15k entries, three appended entries: {:?}", total / 100);
+        assert_eq!(cache.size(), 15_300);
     }
 
     #[test]

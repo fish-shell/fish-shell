@@ -15,6 +15,7 @@ use nix::errno::Errno;
 use nix::sys::mman::{MapFlags, ProtFlags};
 use std::num::NonZeroUsize;
 use std::ptr::NonNull;
+use std::sync::Arc;
 use std::{
     fs::File,
     io::Read as _,
@@ -175,21 +176,46 @@ impl RawHistoryFile {
     pub fn decode(self, cutoff: Option<SystemTime>) -> HistoryFile {
         let offsets = self.offsets(cutoff).collect();
         HistoryFile {
-            contents: Some(self),
+            contents: Some(Arc::new(self)),
             offsets,
         }
     }
 }
 
 /// A combination of a history file and its offsets.
+#[derive(Clone)]
 pub struct HistoryFile {
     // Contents of the file. May be None if there was no file.
-    contents: Option<RawHistoryFile>,
+    contents: Option<Arc<RawHistoryFile>>,
     // Offsets of items within the file. Always empty if contents is None.
     offsets: Vec<usize>,
 }
 
 impl HistoryFile {
+    /// Forget matching entries in a frozen shared search after a persisted deletion.
+    pub fn remove(&mut self, text: &fish_widestring::wstr) {
+        let contents = &self.contents;
+        self.offsets.retain(|&offset| {
+            contents
+                .as_ref()
+                .and_then(|c| c.decode_item(offset))
+                .is_none_or(|item| item.str() != text)
+        });
+    }
+
+    /// Replace an append-only file's mapping, scanning only its final item and new bytes.
+    /// Rescanning the final item also handles an append that completes a partial write.
+    /// This must only be used for views decoded without a timestamp cutoff.
+    pub fn extend(&mut self, contents: RawHistoryFile) {
+        let cursor = self.offsets.pop().unwrap_or(0);
+        self.offsets.extend(HistoryFileOffsetIter {
+            contents: &contents,
+            cursor,
+            cutoff: None,
+        });
+        self.contents = Some(Arc::new(contents));
+    }
+
     /// Create an empty history file.
     pub fn create_empty() -> Self {
         Self {

@@ -465,6 +465,40 @@ begin
     # CHECKERR: argparse: --long: option requires an argument
 end
 
+# Unknown long options must behave the same with known option specs.
+begin
+    argparse -U required f/foo -- --arg val
+    set -l
+    # CHECK: argv
+    # CHECK: argv_opts '--arg' 'val'
+end
+
+begin
+    argparse -iU required f/foo -- --arg val
+    set -l
+    # CHECK: argv '--arg' 'val'
+    # CHECK: argv_opts
+end
+
+begin
+    argparse -U required f/foo -- --arg=val
+    set -l
+    # CHECK: argv
+    # CHECK: argv_opts --arg=val
+end
+
+begin
+    argparse -U required f/foo -- --arg=
+    set -l
+    # CHECK: argv
+    # CHECK: argv_opts --arg=
+end
+
+begin
+    argparse -U required f/foo -- --arg
+    # CHECKERR: argparse: --arg: option requires an argument
+end
+
 begin
     argparse -U none -i b= -- -abv=val in --long between -u
     set -l

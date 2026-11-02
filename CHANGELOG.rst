@@ -26,6 +26,8 @@ Scripting improvements
 - Command substitutions are now allowed in command position, for example ``$(echo echo) hello world`` (:issue:`12829`).`
 - Variables whose name ends in ``_DIRS``, such as ``XDG_DATA_DIRS``, are now :ref:`path variables <variables-path>` by default, like variables ending in ``PATH`` (:issue:`12778`).
 
+- ``argparse --unknown-arguments required`` now correctly consumes values of unknown long options when known option specifications are provided (:issue:`13077`).
+
 Regression fixes:
 -----------------
 - (From 4.0.0) Short options are no longer offered as completions if an old-style completion matches (like `-foo`).

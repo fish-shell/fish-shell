@@ -8115,6 +8115,15 @@ msgstr ""
 msgid "Area, Disk, Map, or Memory resource limit [type value]"
 msgstr ""
 
+msgid "Argon2id iteration count"
+msgstr ""
+
+msgid "Argon2id memory cost in bytes"
+msgstr ""
+
+msgid "Argon2id parallelism/lane count"
+msgstr ""
+
 msgid "Argument to get the package ID specifier for"
 msgstr ""
 
@@ -21597,6 +21606,9 @@ msgstr ""
 msgid "Do not split stderr and stdout in test logs"
 msgstr ""
 
+msgid "Do not start a pager"
+msgstr ""
+
 msgid "Do not start applications after compilation"
 msgstr ""
 
@@ -26217,6 +26229,9 @@ msgstr ""
 msgid "Enroll a PKCS#11 security token or smartcard"
 msgstr ""
 
+msgid "Enroll a TPM2 device using its public key"
+msgstr ""
+
 msgid "Enroll a TPM2 security chip"
 msgstr ""
 
@@ -26224,6 +26239,12 @@ msgid "Enroll a regular password"
 msgstr ""
 
 msgid "Enroll an auto-generated recovery key"
+msgstr ""
+
+msgid "Enroll signed TPM2 PCR policy against PEM public key"
+msgstr ""
+
+msgid "Enroll signed TPM2 PCR policy for specified PCRs"
 msgstr ""
 
 msgid "Ensure accounts have different leaf names"
@@ -34749,6 +34770,9 @@ msgstr ""
 msgid "Interactively create or update `package.json`"
 msgstr ""
 
+msgid "Interactively enroll a credential"
+msgstr ""
+
 msgid "Interactively select hunks"
 msgstr ""
 
@@ -36664,6 +36688,9 @@ msgid "List bugs in rss format"
 msgstr ""
 
 msgid "List but don't install the outdated packages"
+msgstr ""
+
+msgid "List candidate block devices to operate on"
 msgstr ""
 
 msgid "List capabilities this package provides"
@@ -40960,6 +40987,9 @@ msgid "Munge symlinks to make them safe & unusable"
 msgstr ""
 
 msgid "Mute an account"
+msgstr ""
+
+msgid "Mute the console while the first-boot wizard runs"
 msgstr ""
 
 msgid "MySQL database name (default: sbtest)"
@@ -53880,6 +53910,9 @@ msgstr ""
 msgid "Require authentication for localhost logins"
 msgstr ""
 
+msgid "Require entering a PIN when unlocking the volume"
+msgstr ""
+
 msgid "Require exact match"
 msgstr ""
 
@@ -61422,6 +61455,9 @@ msgstr ""
 msgid "Show a brief summary of commands and usage"
 msgstr ""
 
+msgid "Show a colour bar in first-boot mode"
+msgstr ""
+
 msgid "Show a detailed coverage report on the CLI"
 msgstr ""
 
@@ -65031,6 +65067,9 @@ msgstr ""
 msgid "Skip the current commit and continue with the rest of the sequence"
 msgstr ""
 
+msgid "Skip the first-boot wizard if a listed slot type exists"
+msgstr ""
+
 msgid "Skip the given initial samples for each input {#|mm:ss.ss}"
 msgstr ""
 
@@ -65889,6 +65928,9 @@ msgstr ""
 msgid "Specify C# $version_number.3 as language version"
 msgstr ""
 
+msgid "Specify COSE algorithm for FIDO2 credential"
+msgstr ""
+
 msgid "Specify CPU features to add/subtract"
 msgstr ""
 
@@ -66687,6 +66729,9 @@ msgstr ""
 msgid "Specify generic attribute value"
 msgstr ""
 
+msgid "Specify handle of key to use for sealing"
+msgstr ""
+
 msgid "Specify hash algorithm for objects"
 msgstr ""
 
@@ -67014,6 +67059,9 @@ msgstr ""
 msgid "Specify pattern explicitly"
 msgstr ""
 
+msgid "Specify pcrlock policy to lock against"
+msgstr ""
+
 msgid "Specify player name"
 msgstr ""
 
@@ -67027,6 +67075,9 @@ msgid "Specify policy"
 msgstr ""
 
 msgid "Specify policy constraint"
+msgstr ""
+
+msgid "Specify policy reference for the signed TPM2 PCR policy"
 msgstr ""
 
 msgid "Specify policy string"
@@ -68733,6 +68784,9 @@ msgstr ""
 msgid "Storage vol information"
 msgstr ""
 
+msgid "Store FIDO2 parameters in the LUKS2 header"
+msgstr ""
+
 msgid "Store NT security information"
 msgstr ""
 
@@ -69808,6 +69862,9 @@ msgid "Tape length"
 msgstr ""
 
 msgid "Tarball destination directory"
+msgstr ""
+
+msgid "Target Argon2id benchmark time in seconds"
 msgstr ""
 
 msgid "Target PSNR (in dB; typically: 42)"
@@ -71721,6 +71778,9 @@ msgstr ""
 msgid "Try harder to resolve trivial cases"
 msgstr ""
 
+msgid "Try headless unlock mechanisms in turn"
+msgstr ""
+
 msgid "Try mid-side coding for each frame"
 msgstr ""
 
@@ -72493,6 +72553,18 @@ msgid "Unlock password"
 msgstr ""
 
 msgid "Unlock the specified keychain"
+msgstr ""
+
+msgid "Unlock the volume with a FIDO2 device"
+msgstr ""
+
+msgid "Unlock the volume with a TPM2 device"
+msgstr ""
+
+msgid "Unlock the volume with a key file"
+msgstr ""
+
+msgid "Unlock the volume with an empty password"
 msgstr ""
 
 msgid "Unlock working copy paths or URLs"
@@ -74955,6 +75027,9 @@ msgstr ""
 msgid "Use rule set from config file"
 msgstr ""
 
+msgid "Use salt from a file instead of generating one"
+msgstr ""
+
 msgid "Use same format as native assembler when possible"
 msgstr ""
 
@@ -75835,6 +75910,9 @@ msgid "Validate all spices"
 msgstr ""
 
 msgid "Validate packed Git archive files"
+msgstr ""
+
+msgid "Validate public key enrollment with JSON signature file"
 msgstr ""
 
 msgid "Validate scm connection string"

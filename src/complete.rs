@@ -36,7 +36,7 @@ use fish_wcstringutil::{
 use fish_widestring::{WExt as _, charptr2wcstring};
 use std::{
     cmp::Ordering,
-    collections::{BTreeMap, BTreeSet, HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     mem,
     ops::{Deref, DerefMut},
     sync::{
@@ -588,7 +588,8 @@ struct CompletionEntryKey {
 /// completion lock without copying everything. `make_mut()` is used during mtuations.
 type CompletionEntryMap = BTreeMap<CompletionEntryKey, Arc<CompletionEntry>>;
 static COMPLETION_MAP: Mutex<CompletionEntryMap> = Mutex::new(BTreeMap::new());
-static COMPLETION_TOMBSTONES: Mutex<BTreeSet<WString>> = Mutex::new(BTreeSet::new());
+static COMPLETION_TOMBSTONES: LazyLock<Mutex<HashSet<WString>>> =
+    LazyLock::new(|| Mutex::new(HashSet::new()));
 
 /// Completion "wrapper" support. The map goes from wrapping-command to wrapped-command-list.
 type WrapperMap = HashMap<WString, Vec<WString>>;

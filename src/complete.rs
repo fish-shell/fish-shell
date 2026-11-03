@@ -1216,7 +1216,7 @@ impl<'ctx, 'parser> Completer<'ctx, 'parser> {
 
         // Then discard anything that is not a possible completion and put the result into a
         // hashtable with the completion as key and the description as value.
-        let mut lookup = BTreeMap::new();
+        let mut lookup = HashMap::with_capacity(list.len());
         // A typical entry is the command name, followed by a tab, followed by a description.
         for elstr in &mut list {
             // Skip cases without a tab, or without a description

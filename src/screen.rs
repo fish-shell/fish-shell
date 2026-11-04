@@ -30,11 +30,12 @@ use fish_wcstringutil::{fish_wcwidth_visible, string_prefixes_string};
 use fish_widestring::{ELLIPSIS_CHAR, wcs2bytes};
 use libc::{STDERR_FILENO, STDOUT_FILENO};
 use nix::sys::termios;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::LinkedList;
 use std::io::Write as _;
 use std::num::NonZeroU16;
 use std::ops::Range;
+use std::rc::Rc;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicU32;
 use std::time::SystemTime;
@@ -209,6 +210,8 @@ impl ScreenData {
     }
 }
 
+pub(crate) type TtyTimestamps = (Option<SystemTime>, Option<SystemTime>);
+
 /// The class representing the current and desired screen contents.
 pub struct Screen {
     /// Whether the last-drawn autosuggestion (if any) is truncated, or hidden entirely.
@@ -242,9 +245,10 @@ pub struct Screen {
     /// is used when resizing the window larger: if the cursor jumps to the line above, we need to
     /// remember to clear the subsequent lines.
     actual_lines_before_reset: usize,
-    /// Modification times to check if any output has occurred other than from fish's
-    /// main loop, in which case we need to redraw.
-    mtime_stdout_stderr: (Option<SystemTime>, Option<SystemTime>),
+    /// Modification times to detect output from outside fish's main loop.
+    /// Shared with the reader slot so tty callbacks can save timestamps while
+    /// the reader data is borrowed.
+    pub(crate) mtime_stdout_stderr: Rc<Cell<TtyTimestamps>>,
 }
 
 impl Default for Screen {
@@ -728,7 +732,7 @@ impl Screen {
     /// Stat stdout and stderr and save result as the current timestamp.
     /// This is used to avoid reacting to changes that we ourselves made to the screen.
     pub fn save_status(&mut self) {
-        self.mtime_stdout_stderr = mtime_stdout_stderr();
+        self.mtime_stdout_stderr.set(mtime_stdout_stderr());
     }
 
     /// Return whether we believe the cursor is wrapped onto the last line, and that line is
@@ -839,7 +843,7 @@ impl Screen {
             return;
         }
 
-        if self.mtime_stdout_stderr != mtime_stdout_stderr() {
+        if self.mtime_stdout_stderr.get() != mtime_stdout_stderr() {
             // Ok, someone has been messing with our screen. We will want to repaint. However, we do not
             // know where the cursor is. It is our best bet that we are still on the same line, so we
             // move to the beginning of the line, reset the modeled screen contents, and then set the

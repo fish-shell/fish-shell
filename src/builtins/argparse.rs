@@ -963,10 +963,9 @@ fn argparse_parse_flags<'args>(
                         } else {
                             w.remaining_text
                         };
-                        // The arguments was of form --<long-flag>=<value>, so extract out <value>
-                        if let Some(i) = rest.find_char('=') {
-                            w.woptarg = Some(&rest[i + 1..]);
-                        }
+                        // wgetopt may store part of the unknown flag name in woptarg.
+                        // Only text following '=' is an actual argument.
+                        w.woptarg = rest.find_char('=').map(|i| &rest[i + 1..]);
                         // Ensure w.remaining_text is not misinterpreted as the value of the flag,
                         // or as remaining short options
                         w.remaining_text = L!("");

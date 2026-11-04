@@ -2256,7 +2256,6 @@ mod tests {
         test_init();
         let parser = &mut Parser::new(EnvStack::new(), CancelBehavior::Clear);
         let mut reader = fake_scoped_reader(parser);
-        let parser = &mut *reader.parser;
 
         printf!("Testing Ctrl-C cancellation. If this hangs, that's a bug!\n");
 
@@ -2268,16 +2267,18 @@ mod tests {
 
         // Here the command substitution is an infinite loop. echo never even gets its argument, so when
         // we cancel we expect no output.
-        test_1_cancellation(parser, L!("echo (while true ; echo blah ; end)"));
+        reader.with_reentry(|parser| {
+            test_1_cancellation(parser, L!("echo (while true ; echo blah ; end)"));
 
-        // Nasty infinite loop that doesn't actually execute anything.
-        test_1_cancellation(
-            parser,
-            L!("echo (while true ; end) (while true ; end) (while true ; end)"),
-        );
-        test_1_cancellation(parser, L!("while true ; end"));
-        test_1_cancellation(parser, L!("while true ; echo nothing > /dev/null; end"));
-        test_1_cancellation(parser, L!("for i in (while true ; end) ; end"));
+            // Nasty infinite loop that doesn't actually execute anything.
+            test_1_cancellation(
+                parser,
+                L!("echo (while true ; end) (while true ; end) (while true ; end)"),
+            );
+            test_1_cancellation(parser, L!("while true ; end"));
+            test_1_cancellation(parser, L!("while true ; echo nothing > /dev/null; end"));
+            test_1_cancellation(parser, L!("for i in (while true ; end) ; end"));
+        });
 
         signal_reset_handlers();
 

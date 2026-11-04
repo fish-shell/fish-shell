@@ -32,7 +32,7 @@ The following options are available:
     Causes the specified functions to be erased. This also means that it is prevented from autoloading in the current session. Use :doc:`funcsave <funcsave>` to remove the saved copy.
 
 **-D** or **--details**
-    Reports the path name where the specified function is defined or could be autoloaded, ``stdin`` if the function was defined interactively or on the command line or by reading standard input, **-** if the function was created via :doc:`source <source>`, and ``n/a`` if the function isn't available. (Functions created via :doc:`alias <alias>` will return **-**, because ``alias`` uses ``source`` internally. Copied functions will return where the function was copied.) If the **--verbose** option is also specified then five lines are written:
+    Reports the path name where the specified function is defined or could be autoloaded, ``stdin`` if the function was defined interactively or on the command line or by reading standard input, **-** if the function was created via :doc:`source <source>`, and ``n/a`` if the function isn't available. (Copied functions will return where the function was copied.) If the **--verbose** option is also specified then five lines are written:
 
     - the path name as already described,
     - some unspecified text. Exists for backwards compatibility

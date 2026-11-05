@@ -32,7 +32,7 @@ use std::{
 
 use crate::{
     prelude::*,
-    wutil::{Error as wcstodError, wcstod::wcstod_underscores},
+    wutil::{self, wcstod::wcstod_underscores},
 };
 use fish_common::assert_sorted_by_name;
 
@@ -54,6 +54,18 @@ impl Debug for Function {
         };
 
         write!(f, "Function::{variant}(_)")
+    }
+}
+
+impl PartialEq for Function {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Constant(l0), Self::Constant(r0)) => l0 == r0,
+            (Self::Fn1(l0), Self::Fn1(r0)) => std::ptr::fn_addr_eq(*l0, *r0),
+            (Self::Fn2(l0), Self::Fn2(r0)) => std::ptr::fn_addr_eq(*l0, *r0),
+            (Self::FnN(l0), Self::FnN(r0)) => std::ptr::fn_addr_eq(*l0, *r0),
+            _ => false,
+        }
     }
 }
 
@@ -141,23 +153,23 @@ impl Operator {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum Token {
-    Error,
+    Error(Error),
     End,
     Sep,
     Open,
     Close,
     Number(f64),
     Function(Function),
-    Infix(Operator),
+    Op(Operator),
 }
 
 struct State<'s> {
     start: &'s wstr,
     pos: usize,
-    current: Token,
-    error: Option<Error>,
+    token: Token,
+    token_start: usize,
 }
 
 fn bitwise_op(a: f64, b: f64, f: fn(u64, u64) -> u64) -> f64 {
@@ -323,21 +335,18 @@ impl<'s> State<'s> {
         let mut state = Self {
             start: input,
             pos: 0,
-            current: Token::End,
-            error: None,
+            token: Token::End,
+            token_start: 0,
         };
         state.next_token();
         state
     }
 
-    pub fn error(&self) -> Result<(), Error> {
-        if let Token::End = self.current {
-            Ok(())
-        } else if let Some(error) = self.error {
-            Err(error)
+    pub fn eval(&mut self) -> Result<f64, Error> {
+        let val = self.expr()?;
+        if self.token == Token::End {
+            Ok(val)
         } else {
-            // If we're not at the end but there's no error, then that means we have a
-            // superfluous token that we have no idea what to do with.
             Err(Error {
                 kind: ErrorKind::TooManyArgs,
                 position: self.pos,
@@ -346,65 +355,72 @@ impl<'s> State<'s> {
         }
     }
 
-    pub fn eval(&mut self) -> f64 {
-        self.expr()
-    }
-
-    fn set_error(&mut self, kind: ErrorKind, pos_len: Option<(usize, usize)>) {
-        self.current = Token::Error;
+    fn build_error(&self, kind: ErrorKind, pos_len: Option<(usize, usize)>) -> Error {
         let (position, len) = pos_len.unwrap_or((self.pos, 0));
-        self.error = Some(Error {
+        Error {
             kind,
             position,
             len,
-        });
+        }
     }
 
-    fn no_specific_error(&self) -> bool {
-        !matches!(self.current, Token::Error)
-            || matches!(
-                self.error,
-                Some(Error {
-                    kind: ErrorKind::Unknown,
-                    ..
-                })
-            )
+    fn build_error_token(&self, kind: ErrorKind, pos_len: Option<(usize, usize)>) -> Token {
+        Token::Error(self.build_error(kind, pos_len))
     }
 
-    /// Tries to get the next token from the input. If the input does not contain enough data for
-    /// another token, `None` is returned. Otherwise, the number of consumed characters is returned
-    /// along with either the token, or `None` in case of ignored (whitespace) input.
-    fn get_token(&mut self) -> Option<(usize, Option<Token>)> {
-        debug_assert!(!matches!(self.current, Token::Error));
+    fn set_error(&mut self, kind: ErrorKind, pos_len: Option<(usize, usize)>) -> Error {
+        let error = self.build_error(kind, pos_len);
+        self.token = Token::Error(error);
+        error
+    }
 
-        let next = &self.start.as_char_slice().get(self.pos..)?;
+    fn specific_error(&self) -> Option<Error> {
+        let Token::Error(error) = self.token else {
+            return None;
+        };
+        if error.kind == ErrorKind::Unknown {
+            None
+        } else {
+            Some(error)
+        }
+    }
+
+    /// Get the next token from the input.
+    /// Leading whitespaces must have been pre-filtered.
+    fn get_token(&mut self) -> (usize, Token) {
+        debug_assert!(!matches!(self.token, Token::Error(_)));
+
+        let next = &self.start.as_char_slice().get(self.pos..).unwrap_or(&[]);
+        if next.is_empty() {
+            return (0, Token::End);
+        }
+        let next_char = next[0];
 
         // Try reading a number.
-        if matches!(next.first(), Some('0'..='9') | Some('.')) {
+        if matches!(next_char, '0'..='9' | '.') {
             let mut consumed = 0;
-            match wcstod_underscores(*next, &mut consumed) {
-                Ok(num) => Some((consumed, Some(Token::Number(num)))),
-                Err(wcstodError::InvalidChar) => {
-                    self.set_error(ErrorKind::Unknown, Some((self.pos + consumed, 1)));
-                    Some((consumed, Some(Token::Error)))
+            let token = match wcstod_underscores(*next, &mut consumed) {
+                Ok(num) => Token::Number(num),
+                Err(wutil::Error::InvalidChar) => {
+                    self.build_error_token(ErrorKind::Unknown, Some((self.pos + consumed, 1)))
                 }
-                Err(wcstodError::Overflow) => {
-                    self.set_error(ErrorKind::NumberTooLarge, Some((self.pos, consumed)));
-                    Some((consumed, Some(Token::Error)))
+                Err(wutil::Error::Overflow) => {
+                    self.build_error_token(ErrorKind::NumberTooLarge, Some((self.pos, consumed)))
                 }
-                Err(wcstodError::Empty) => {
+                Err(wutil::Error::Empty) => {
                     // We have a matches! above, this can't be?
                     unreachable!()
                 }
-            }
+            };
+            (consumed, token)
         } else {
             // Look for a function call.
             // But not when it's an "x" followed by whitespace
             // - that's the alternative multiplication operator.
             // We look for alphabetic here even tho all our function names are ASCII,
             // in order to give a nicer error.
-            if next.first()?.is_alphabetic()
-                && !(*next.first()? == 'x' && next.len() > 1 && next[1].is_whitespace())
+            if next_char.is_alphabetic()
+                && !(next_char == 'x' && next.len() > 1 && next[1].is_whitespace())
             {
                 let ident_len = next
                     .iter()
@@ -412,53 +428,52 @@ impl<'s> State<'s> {
                     .unwrap_or(next.len());
 
                 let ident = &next[..ident_len];
-                if let Some(var) = find_builtin(wstr::from_char_slice(ident)) {
-                    return Some((ident_len, Some(Token::Function(var))));
-                } else if self.no_specific_error() {
-                    // Our error is more specific, so it takes precedence.
-                    self.set_error(ErrorKind::UnknownFunction, Some((self.pos, ident_len)));
-                }
+                let token = if let Some(var) = find_builtin(wstr::from_char_slice(ident)) {
+                    Token::Function(var)
+                } else {
+                    self.build_error_token(ErrorKind::UnknownFunction, Some((self.pos, ident_len)))
+                };
 
-                Some((ident_len, Some(Token::Error)))
+                (ident_len, token)
             } else {
                 // Look for an operator or special character.
-                let tok = match next.first()? {
-                    '+' => Token::Infix(Operator::Add),
-                    '-' => Token::Infix(Operator::Sub),
-                    'x' | '*' => Token::Infix(Operator::Mul),
-                    '/' => Token::Infix(Operator::Div),
-                    '^' => Token::Infix(Operator::Pow),
-                    '%' => Token::Infix(Operator::Rem),
+                let tok = match next_char {
+                    '+' => Token::Op(Operator::Add),
+                    '-' => Token::Op(Operator::Sub),
+                    'x' | '*' => Token::Op(Operator::Mul),
+                    '/' => Token::Op(Operator::Div),
+                    '^' => Token::Op(Operator::Pow),
+                    '%' => Token::Op(Operator::Rem),
                     '(' => Token::Open,
                     ')' => Token::Close,
                     ',' => Token::Sep,
-                    ' ' | '\t' | '\n' | '\r' => return Some((1, None)),
+                    ' ' | '\t' | '\n' | '\r' => unreachable!(),
                     '=' | '>' | '<' | '&' | '|' | '!' => {
-                        self.set_error(ErrorKind::LogicalOperator, None);
-                        Token::Error
+                        self.build_error_token(ErrorKind::LogicalOperator, None)
                     }
-                    _ => {
-                        self.set_error(ErrorKind::MissingOperator, None);
-                        Token::Error
-                    }
+                    _ => self.build_error_token(ErrorKind::MissingOperator, None),
                 };
 
-                Some((1, Some(tok)))
+                (1, tok)
             }
         }
     }
 
     fn next_token(&mut self) {
-        self.current = loop {
-            let Some((consumed, token)) = self.get_token() else {
-                break Token::End;
-            };
+        // Consume whitespaces before next token
+        let first_char_pos = self
+            .start
+            .as_char_slice()
+            .iter()
+            .skip(self.pos)
+            .take_while(|c| [' ', '\t', '\n', '\r'].contains(*c))
+            .count();
+        self.pos += first_char_pos;
 
-            self.pos += consumed;
-            if let Some(token) = token {
-                break token;
-            }
-        };
+        let (consumed, token) = self.get_token();
+        self.token = token;
+        self.token_start = self.pos;
+        self.pos += consumed;
     }
 
     /// ```text
@@ -468,142 +483,120 @@ impl<'s> State<'s> {
     ///            <function-X> "(" <expr> {"," <expr>} ")" |
     ///            "(" <list> ")"
     /// ```
-    fn base(&mut self) -> f64 {
-        match self.current {
+    fn base(&mut self) -> Result<f64, Error> {
+        match self.token {
             Token::Number(n) => {
                 let after_first = self.pos;
 
                 self.next_token();
-                if let Token::Number(_) | Token::Function(_) = self.current {
-                    // Two numbers after each other:
-                    // math '5 2'
-                    // math '3 pi'
-                    // (of course 3 pi could also be interpreted as 3 x pi)
+                match self.token {
+                    Token::Error(err) => Err(err),
+                    Token::Number(_) | Token::Function(_) => {
+                        // Two numbers after each other:
+                        // math '5 2'
+                        // math '3 pi'
+                        // (of course 3 pi could also be interpreted as 3 x pi)
 
-                    // The error should be given *between*
-                    // the last two tokens.
-                    let num_whitespace = self.start[after_first..]
-                        .chars()
-                        .take_while(|&c| " \t\n\r".contains(c))
-                        .count();
-
-                    self.set_error(
-                        ErrorKind::MissingOperator,
-                        Some((after_first, num_whitespace)),
-                    );
+                        // The error should be given *between*
+                        // the last two tokens.
+                        Err(self.set_error(
+                            ErrorKind::MissingOperator,
+                            Some((after_first, self.token_start - after_first)),
+                        ))
+                    }
+                    _ => Ok(n),
                 }
-
-                n
             }
             Token::Function(f) => {
                 self.next_token();
-                let have_open = matches!(self.current, Token::Open);
-                if have_open {
+                let have_open = (self.token == Token::Open).then(|| {
+                    let pos = self.token_start;
                     // If we *have* an opening parenthesis,
                     // we need to consume it and
                     // expect a closing one.
                     self.next_token();
-                }
+                    pos
+                });
 
+                // Handle arity 0 separately since, unlike other functions, they don't bind
+                // with the remaining parameters ("ncr pi, 1" is equivalent to "ncr(pi(),1)",
+                // not "ncr(pi(,1))")
                 if f.arity() == Some(0) {
-                    if have_open {
-                        if let Token::Close = self.current {
+                    if let Some(open_pos) = have_open {
+                        if self.token == Token::Close {
                             self.next_token();
-                        } else if self.no_specific_error() {
-                            self.set_error(ErrorKind::MissingClosingParen, None);
+                        } else if self.specific_error().is_none() {
+                            return Err(
+                                self.set_error(ErrorKind::MissingClosingParen, Some((open_pos, 0)))
+                            );
                         }
                     }
 
                     return match f {
-                        Function::Constant(n) => n,
+                        Function::Constant(n) => Ok(n),
                         _ => unreachable!("unhandled function type with arity 0"),
                     };
                 }
 
+                // Special case for `)` in `()` since this is a valid parameter list while `expr()`
+                // in the loop below would return an `UnexpectedToken` error instead.
+                // For the function format without paren, the existing code already works because
+                // `expr()` already returns `TooFewArgs` when there is no further input
+                if have_open.is_some() && self.token == Token::Close {
+                    return Err(self.set_error(ErrorKind::TooFewArgs, None));
+                }
+
                 let mut parameters = vec![];
-                let mut i = 0;
-                let mut first_err = None;
-                for j in 0.. {
-                    if f.arity() == Some(j) {
-                        first_err = Some(self.pos - 1);
-                    }
-                    parameters.push(self.expr());
-                    if !matches!(self.current, Token::Sep) {
+                loop {
+                    parameters.push(self.expr()?);
+                    if self.token != Token::Sep {
                         break;
                     }
+                    if f.arity().is_some_and(|l| l == parameters.len()) {
+                        return Err(
+                            self.set_error(ErrorKind::TooManyArgs, Some((self.token_start, 0)))
+                        );
+                    }
                     self.next_token();
-                    i += 1;
                 }
 
-                if f.arity().is_none() || f.arity() == Some(i + 1) {
-                    if !have_open {
-                        return f.call(&parameters);
-                    }
-                    if let Token::Close = self.current {
-                        // We have an opening and a closing paren, consume the closing one and done.
-                        self.next_token();
-                        return f.call(&parameters);
-                    }
-                    if !matches!(self.current, Token::Error) {
-                        // If we had the right number of arguments, we're missing a closing paren.
-                        self.set_error(ErrorKind::MissingClosingParen, None);
-                    }
-                }
-
-                if !matches!(self.current, Token::Error)
-                    || matches!(
-                        self.error,
-                        Some(Error {
-                            kind: ErrorKind::UnexpectedToken,
-                            ..
-                        })
-                    )
-                {
-                    // Otherwise we complain about the number of arguments *first*,
-                    // a closing parenthesis should be more obvious.
-                    //
-                    // Vararg functions need at least one argument.
-                    let err = if f.arity().map_or(i == 0, |arity| i < arity) {
-                        ErrorKind::TooFewArgs
+                if let Some(open_pos) = have_open {
+                    if self.token != Token::Close {
+                        return Err(
+                            self.set_error(ErrorKind::MissingClosingParen, Some((open_pos, 0)))
+                        );
                     } else {
-                        ErrorKind::TooManyArgs
-                    };
-
-                    let mut err_pos_len = None;
-                    if let Some(first_err) = first_err {
-                        let mut len = self.pos - first_err;
-                        if !matches!(self.current, Token::Close) {
-                            // TODO: Rationalize where we put the cursor exactly.
-                            // If we have a closing paren it's on it, if we don't it's before the number.
-                            len += 1;
-                        }
-                        if let Token::End = self.current {
-                            // Don't place a caret after the end of string
-                            len -= 1;
-                        }
-                        err_pos_len = Some((first_err, len));
+                        self.next_token();
                     }
-
-                    self.set_error(err, err_pos_len);
                 }
 
-                f64::NAN
+                if let Token::Error(error) = self.token {
+                    Err(error)
+                } else if f.arity().is_some_and(|l| l != parameters.len()) {
+                    // `TooManyArgs` is already handled in the loop
+                    Err(self.set_error(ErrorKind::TooFewArgs, None))
+                } else {
+                    Ok(f.call(&parameters))
+                }
             }
             Token::Open => {
+                let open_pos = self.token_start;
                 self.next_token();
-                let ret = self.expr();
-                if let Token::Close = self.current {
+                let ret = self.expr()?;
+                if self.token == Token::Close {
                     self.next_token();
-                    return ret;
+                    return Ok(ret);
                 }
 
-                if !matches!(self.current, Token::Error | Token::End) && self.error.is_none() {
-                    self.set_error(ErrorKind::TooManyArgs, None);
-                } else if self.no_specific_error() {
-                    self.set_error(ErrorKind::MissingClosingParen, None);
-                }
+                let error = if !matches!(self.token, Token::End | Token::Error(_)) {
+                    self.set_error(ErrorKind::TooManyArgs, Some((self.token_start, 0)))
+                } else if let Some(error) = self.specific_error() {
+                    error
+                } else {
+                    self.set_error(ErrorKind::MissingClosingParen, Some((open_pos, 0)))
+                };
 
-                f64::NAN
+                Err(error)
             }
             Token::End => {
                 // The expression ended before we expected it.
@@ -611,25 +604,27 @@ impl<'s> State<'s> {
                 // This means we have too few things.
                 // Instead of introducing another error, just call it
                 // "too few args".
-                self.set_error(ErrorKind::TooFewArgs, None);
-
-                f64::NAN
+                Err(self.set_error(ErrorKind::TooFewArgs, None))
             }
 
-            Token::Error | Token::Sep | Token::Close | Token::Infix(_) => {
-                if self.no_specific_error() {
-                    self.set_error(ErrorKind::UnexpectedToken, None);
-                }
-
-                f64::NAN
-            }
+            Token::Sep
+            | Token::Close
+            | Token::Op(_)
+            | Token::Error(Error {
+                kind: ErrorKind::Unknown,
+                ..
+            }) => Err(self.set_error(
+                ErrorKind::UnexpectedToken,
+                Some((self.token_start, self.pos - self.token_start)),
+            )),
+            Token::Error(err) => Err(err),
         }
     }
 
     /// \<power\>  = {("-" | "+")} \<base\>
-    fn power(&mut self) -> f64 {
+    fn power(&mut self) -> Result<f64, Error> {
         let mut sign = 1.0;
-        while let Token::Infix(op) = self.current {
+        while let Token::Op(op) = self.token {
             if op == Operator::Sub {
                 sign = -sign;
                 self.next_token();
@@ -640,58 +635,53 @@ impl<'s> State<'s> {
             }
         }
 
-        sign * self.base()
+        Ok(sign * self.base()?)
     }
 
     /// \<factor\> = \<power\> {"^" \<power\>}
-    fn factor(&mut self) -> f64 {
-        let mut ret = self.power();
+    fn factor(&mut self) -> Result<f64, Error> {
+        let mut ret = self.power()?;
 
-        if let Token::Infix(Operator::Pow) = self.current {
+        if let Token::Op(Operator::Pow) = self.token {
             self.next_token();
-            ret = ret.powf(self.factor());
+            ret = ret.powf(self.factor()?);
         }
 
-        ret
+        Ok(ret)
     }
 
     /// \<term\>   = \<factor\> {("*" | "/" | "%") \<factor\>}
-    fn term(&mut self) -> f64 {
-        let mut ret = self.factor();
-        while let Token::Infix(op @ (Operator::Mul | Operator::Div | Operator::Rem)) = self.current
-        {
-            let op_pos = self.pos - 1;
+    fn term(&mut self) -> Result<f64, Error> {
+        let mut ret = self.factor()?;
+        while let Token::Op(op @ (Operator::Mul | Operator::Div | Operator::Rem)) = self.token {
+            let op_pos = self.token_start;
             self.next_token();
-            let ret2 = self.factor();
+            let ret2 = self.factor()?;
             if ret2 == 0.0 && [Operator::Div, Operator::Rem].contains(&op) {
                 // Division by zero (also for modulo)
                 // Error position is the "/" or "%" sign for now
-                self.set_error(ErrorKind::DivByZero, Some((op_pos, 1)));
+                let err = self.set_error(ErrorKind::DivByZero, Some((op_pos, 1)));
+                return Err(err);
             }
             ret = op.eval(ret, ret2);
         }
 
-        ret
+        Ok(ret)
     }
 
     /// \<expr\>   = \<term\> {("+" | "-") \<term\>}
-    fn expr(&mut self) -> f64 {
-        let mut ret = self.term();
-        while let Token::Infix(op @ (Operator::Add | Operator::Sub)) = self.current {
+    fn expr(&mut self) -> Result<f64, Error> {
+        let mut ret = self.term()?;
+        while let Token::Op(op @ (Operator::Add | Operator::Sub)) = self.token {
             self.next_token();
-            ret = op.eval(ret, self.term());
+            ret = op.eval(ret, self.term()?);
         }
 
-        ret
+        Ok(ret)
     }
 }
 
 pub fn te_interp(expression: &wstr) -> Result<f64, Error> {
     let mut s = State::new(expression);
-    let ret = s.eval();
-
-    match s.error() {
-        Ok(()) => Ok(ret),
-        Err(e) => Err(e),
-    }
+    s.eval()
 }

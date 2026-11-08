@@ -301,6 +301,8 @@ pub(crate) fn set_desc(name: &wstr, desc: WString, parser: &mut Parser) {
 /// Creates a new function using the same definition as the specified function. Returns true if copy
 /// is successful.
 pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
+    let definition_file = parser.current_filename();
+    let copy_definition_lineno = parser.lineno();
     let mut funcset = FUNCTION_SET.lock().unwrap();
     let Some(props) = funcset.get_props(name) else {
         // No such function.
@@ -309,8 +311,8 @@ pub fn copy(name: &wstr, new_name: WString, parser: &Parser) -> bool {
     // Copy the function's props.
     let mut new_props = props.as_ref().clone();
     new_props.is_autoload.store(false);
-    new_props.definition_file = parser.current_filename();
-    new_props.copy_definition_lineno = parser.lineno();
+    new_props.definition_file = definition_file;
+    new_props.copy_definition_lineno = copy_definition_lineno;
 
     // Note this will NOT overwrite an existing function with the new name.
     // TODO: rationalize if this behavior is desired.

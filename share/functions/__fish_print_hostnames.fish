@@ -63,33 +63,12 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
         end
 
         function _recursive --no-scope-shadowing
-            set -l paths
-            for config in $argv
-                if test -r "$config" -a -f "$config"
-                    set paths $paths (
-                    # Keep only Include lines and remove Include syntax
-                    string replace -rfi '^\s*Include\s+' '' <$config \
-                    # Normalize whitespace
-                    | string trim | string replace -r -a '\s+' ' ')
-                end
-            end
-
             set -l new_paths
-            for path in $paths
-                # while ssh_config is using brackets to resolve env, they should be removed
-                # example
-                # in ssh_config: ${SOME_PATH}
-                # in fish:       $SOME_PATH
-                set path (string replace -r '\${([^}]+)}' '$1' $path)
-                set -l expanded_path
+            for path in (__fish_print_hostnames_ssh_config_args include $argv)
                 # Scope "relative" paths in accordance to ssh path resolution
-                if string match -qrv '^[~/]' $path
-                    set path $relative_path/$path
-                end
-                # Use `eval` to expand paths (eg ~/.ssh/../test/* to /home/<user>/test/file1 /home/<user>/test/file2),
-                # and `set` will prevent "No matches for wildcard" messages
-                eval set expanded_path $path
-                for path in $expanded_path
+                set path (__fish_print_hostnames_ssh_path $path $relative_path)
+                or continue
+                for path in (__fish_print_hostnames_ssh_glob $path)
                     # Skip unusable paths.
                     test -r "$path" -a -f "$path"
                     or continue
@@ -148,4 +127,122 @@ function __fish_print_hostnames_from_hosts -d "Extract hostnames from hosts file
     string replace -irf -- '^\s*?(?!(?:0\.|127\.|ff0|fe0|255\.255\.255\.255|::1))\S+\s*(.*?)\s*$' '$1' $argv |
         # Split results on whitespace to handle multiple aliases for one IP.
         string split ' '
+end
+
+function __fish_print_hostnames_ssh_config_args -a keyword -d "Print the arguments of ssh_config lines with a keyword"
+    # One per line, from the files after the keyword, a regex matched
+    # case-insensitively. Since OpenSSH 8.7, ssh splits a line's arguments
+    # with argv_split(): on unquoted spaces and tabs, with '...' and "..."
+    # quoting, also within an argument, \ escaping a quote, a backslash or,
+    # unquoted, a space, and an argument starting with an unquoted # starting a
+    # comment. ssh rejects a line with an unterminated quote.
+    set -l lines
+    for file in $argv[2..]
+        test -r "$file" -a -f "$file"
+        and set -a lines (string replace -rfi -- '^\s*(?:'$keyword')(?:\s*=\s*|\s+)(.*?)\s*$' '$1' <$file)
+    end
+
+    for line in $lines
+        # Most lines quote and escape nothing.
+        if not string match -qr -- '["\'\\\\]' $line
+            string replace -r -- '(?:^|\s)#.*' '' $line | string match -ar -- '[^ \t]+'
+            continue
+        end
+
+        set -l chars (string split -- '' $line)
+        set -l args
+        set -l arg ''
+        set -l in_arg 0
+        set -l quote ''
+        set -l i 0
+        while test $i -lt (count $chars)
+            set i (math $i + 1)
+            set -l c $chars[$i]
+            if test $in_arg = 0
+                contains -- $c ' ' \t
+                and continue
+                test $c = '#'
+                and break
+                set in_arg 1
+            end
+            set -l next ''
+            test $i -lt (count $chars)
+            and set next $chars[(math $i + 1)]
+            if test $c = '\\'; and begin
+                    contains -- $next \" \' \\
+                    or test -z "$quote" -a "$next" = ' '
+                end
+                set arg "$arg$next"
+                set i (math $i + 1)
+            else if test -z "$quote"; and contains -- $c ' ' \t
+                set -a args $arg
+                set arg ''
+                set in_arg 0
+            else if test -z "$quote"; and contains -- $c \" \'
+                set quote $c
+            else if test $c = "$quote"
+                set quote ''
+            else
+                set arg "$arg$c"
+            end
+        end
+        test -z "$quote"
+        or continue
+        test $in_arg = 1
+        and set -a args $arg
+        set -q args[1]
+        and printf '%s\n' $args
+    end
+end
+
+function __fish_print_hostnames_ssh_path -a path relative_dir -d "Expand an ssh_config path"
+    # ${NAME} becomes the environment variable, and ssh ignores a path with an
+    # unset one. With relative_dir, a relative path is in it. ~ and ~/ become
+    # $HOME; ~user is left as is.
+    set -l expanded ''
+    for piece in (string match -ar -- '\$\{[^}]*\}|\$|[^$]+' $path)
+        if set -l name (string match -rg -- '^\$\{(.*)\}$' $piece)
+            string match -qr -- '^\w+$' $name
+            and set -qx $name
+            or return 1
+            set piece "$$name"
+        end
+        set expanded "$expanded$piece"
+    end
+    if test -n "$relative_dir"; and string match -qrv -- '^[~/]' $expanded
+        set expanded $relative_dir/$expanded
+    end
+    if string match -qr -- '^~(/|$)' $expanded
+        set expanded "$HOME"(string sub -s 2 -- $expanded)
+    end
+    printf '%s\n' $expanded
+end
+
+function __fish_print_hostnames_ssh_glob -a pattern -d "Print the paths matching an ssh_config glob"
+    # glob(3)'s * and ?, matched one path component at a time with a regex,
+    # without eval. Like glob(3), a leading . is matched only explicitly.
+    string match -q -- '/*' $pattern
+    or return
+    set -l paths ''
+    for part in (string split -n -- / $pattern)
+        set -l next
+        for dir in $paths
+            if string match -qr -- '[*?]' $part
+                set -l regex '^'(string escape --style=regex -- $part |
+                    string replace -a '\\*' '.*' | string replace -a '\\?' .)'$'
+                set -l entries $dir/*
+                string match -q -- '.*' $part
+                and set -a entries $dir/.*
+                for entry in $entries
+                    string match -qr -- $regex (path basename -- $entry)
+                    and set -a next $entry
+                end
+            else
+                set -a next $dir/$part
+            end
+        end
+        set paths $next
+    end
+    set -q paths[1]
+    and printf '%s\n' $paths
 end

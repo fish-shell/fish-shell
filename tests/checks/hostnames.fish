@@ -27,3 +27,41 @@ path is tab_ran
 or echo not run
 # CHECK: not run
 functions -e ssh
+
+# Include, read and expanded like ssh does, without eval.
+mkdir -p ~/.ssh/conf.d ~/.ssh/extra.d ~/'.ssh/with space'
+echo 'Host inc_quoted_a' >~/.ssh/conf.d/a.conf
+echo 'Host inc_quoted_b' >~/.ssh/conf.d/b.conf
+echo 'Host inc_hidden' >~/.ssh/conf.d/.hidden.conf
+echo 'Host inc_multi_a' >~/.ssh/multi-a
+echo 'Host inc_multi_b' >~/.ssh/multi-b
+echo 'Host inc_equals' >~/.ssh/equals
+echo 'Host inc_qmark' >~/.ssh/extra.d/x-1.conf
+echo 'Host inc_single' >~/'.ssh/with space/single'
+echo 'Host inc_escaped' >~/'.ssh/with space/escaped'
+echo 'Host inc_env' >~/.ssh/env
+echo 'Host inc_unset_env' >~/.ssh/unset-env
+set -gx __fish_test_ssh_dir ~/.ssh
+set -e __fish_test_unset
+printf '%s\n' \
+    'Include "conf.d/*.conf"' \
+    'Include multi-a ~/.ssh/multi-b # a comment' \
+    'Include=equals' \
+    'Include extra.d/x-?.conf' \
+    "Include 'with space/single' with\\ space/escaped" \
+    'Include ${__fish_test_ssh_dir}/env ${__fish_test_unset}/unset-env' \
+    'Include (touch include_ran) $(touch include_ran)' \
+    'Include "unterminated' >~/.ssh/config
+__fish_print_hostnames | string match 'inc_*' | sort
+# CHECK: inc_env
+# CHECK: inc_equals
+# CHECK: inc_escaped
+# CHECK: inc_multi_a
+# CHECK: inc_multi_b
+# CHECK: inc_qmark
+# CHECK: inc_quoted_a
+# CHECK: inc_quoted_b
+# CHECK: inc_single
+path is include_ran
+or echo not run
+# CHECK: not run

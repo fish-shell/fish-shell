@@ -85,18 +85,13 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
     end
     set -l ssh_configs /etc/ssh/ssh_config (_ssh_include /etc/ssh/ssh_config) $ssh_config (_ssh_include $ssh_config)
 
-    for file in $ssh_configs
-        if test -r $file
-            # Don't read from $file twice. We could use `while read` instead, but that is extremely
-            # slow.
-            read -alz -d \n contents <$file
-
-            # Print hosts from system wide ssh configuration file
-            # Multiple names for a single host can be given separated by spaces, so just split it explicitly (#6698).
-            string replace -rfi '^\s*Host\s+(\S.*?)\s*$' '$1' -- $contents | string split " " | string match -rv '[\*\?]'
-            # Also extract known_host paths.
-            set known_hosts $known_hosts (string replace -rfi '.*KnownHostsFile\s*' '' -- $contents | string split " ")
-        end
+    # Print the hosts of Host lines, which can name several (#6698), but not
+    # the patterns: with a wildcard, negated, or with a space, which matches no
+    # host name.
+    __fish_print_hostnames_ssh_config_args host $ssh_configs | string match -rv -- '[*?\s]|^!|^$'
+    # Also extract known_host paths.
+    for file in (__fish_print_hostnames_ssh_config_args '(?:global|user)knownhostsfile' $ssh_configs)
+        set -a known_hosts (__fish_print_hostnames_ssh_path $file)
     end
 
     # Read all files and operate on their combined content

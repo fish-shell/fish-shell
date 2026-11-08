@@ -65,3 +65,23 @@ __fish_print_hostnames | string match 'inc_*' | sort
 path is include_ran
 or echo not run
 # CHECK: not run
+
+# Host and KnownHostsFile, read like ssh does.
+echo 'kh_custom ssh-ed25519 AAAA' >~/'.ssh/known hosts'
+echo 'kh_env ssh-ed25519 AAAA' >~/.ssh/known_hosts_env
+printf '%s\n' \
+    'Host host_plain host_* !host_negated host_two # host_comment' \
+    'Host="host_quoted" \'host_single\' mid"dl"e "#host_not_a_comment" "with space"' \
+    'Host "host_unterminated' \
+    '# UserKnownHostsFile ~/.ssh/commented' \
+    'UserKnownHostsFile "~/.ssh/known hosts"' \
+    'GlobalKnownHostsFile=${__fish_test_ssh_dir}/known_hosts_env' >~/.ssh/config
+__fish_print_hostnames | string match -r '^(?:host_|mid|#host|kh_|with).*' | sort
+# CHECK: #host_not_a_comment
+# CHECK: host_plain
+# CHECK: host_quoted
+# CHECK: host_single
+# CHECK: host_two
+# CHECK: kh_custom
+# CHECK: kh_env
+# CHECK: middle

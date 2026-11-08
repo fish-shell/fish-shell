@@ -32,8 +32,12 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
 
     # Inherit settings and parameters from `ssh` aliases, if any
     if functions -q ssh
-        # Get alias and commandline options.
-        set -l ssh_func_tokens (functions ssh | string match '*command ssh *' | string split ' ')
+        # Get alias and commandline options, expanded without running command
+        # substitutions, which eval would run on every <Tab>.
+        set -l ssh_func_tokens
+        for line in (functions ssh | string match '*command ssh *')
+            set -a ssh_func_tokens (commandline --input $line -x)
+        end
         set -l ssh_command $ssh_func_tokens (commandline -cpx)
         # Extract ssh config path from last -F short option.
         if contains -- -F $ssh_command
@@ -42,7 +46,7 @@ function __fish_print_hostnames -d "Print a list of known hostnames"
                 if contains -- -F $token
                     set ssh_config_path_is_next 0
                 else if test $ssh_config_path_is_next -eq 0
-                    set ssh_config (eval "echo $token")
+                    set ssh_config $token
                     set ssh_config_path_is_next 1
                 end
             end

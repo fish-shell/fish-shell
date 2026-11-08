@@ -12,3 +12,18 @@ __fish_print_hostnames_from_hosts \
     '192.0.2.1 example.test alias.test'
 # CHECK: example.test
 # CHECK: alias.test
+
+# The ssh config of an ssh wrapper function's -F, expanded like the command line.
+echo 'Host from_wrapper_config' >~/wrapper_config
+function ssh
+    command ssh -F ~/wrapper_config $argv
+end
+complete -C 'ssh ' | string match -q 'from_wrapper_config*'
+and echo found
+# CHECK: found
+# A command substitution after -F is not run on <Tab>.
+complete -C 'ssh -F (touch tab_ran) ' >/dev/null
+path is tab_ran
+or echo not run
+# CHECK: not run
+functions -e ssh

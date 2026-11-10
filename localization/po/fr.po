@@ -78228,6 +78228,9 @@ msgstr ""
 msgid "abort the ongoing merge"
 msgstr ""
 
+msgid "accept arguments in traditional format"
+msgstr ""
+
 msgid "account to use"
 msgstr ""
 
@@ -79712,6 +79715,9 @@ msgstr ""
 
 msgid "do not update to target"
 msgstr "Ne pas mettre à jour vers la cible"
+
+msgid "do not use * to mark line suppression"
+msgstr ""
 
 msgid "do not use CPU acceleration"
 msgstr ""
@@ -82038,8 +82044,17 @@ msgstr ""
 msgid "number of bits in the key"
 msgstr ""
 
+msgid "number of bytes per output line"
+msgstr ""
+
 msgid "number of concurrent processes to use in parallel mode"
 msgstr "Nombre de processus concurrents à utiliser en exécution en parallèle"
+
+msgid "number of input bytes to limit to"
+msgstr ""
+
+msgid "number of input bytes to skip"
+msgstr ""
 
 msgid "number of jobs to run in parallel [default derived from CPUs]"
 msgstr ""
@@ -83679,7 +83694,34 @@ msgstr "Sélectionner selon le groupe de processus (^ pour une négation)"
 msgid "select by user (^ - negates)"
 msgstr "Sélectionner par utilisateur (^ pour une négation)"
 
+msgid "select decimal 2-byte units"
+msgstr ""
+
+msgid "select decimal ints"
+msgstr ""
+
+msgid "select decimal longs"
+msgstr ""
+
+msgid "select floats"
+msgstr ""
+
+msgid "select hexadecimal 2-byte units"
+msgstr ""
+
 msgid "select if exists"
+msgstr ""
+
+msgid "select named characters, ignoring high-order bit"
+msgstr ""
+
+msgid "select octal 2-byte units"
+msgstr ""
+
+msgid "select octal bytes"
+msgstr ""
+
+msgid "select printable characters or backslash escapes"
 msgstr ""
 
 msgid "select the card"
@@ -83692,6 +83734,9 @@ msgid "select the previously selected pane"
 msgstr ""
 
 msgid "select the previously selected window"
+msgstr ""
+
+msgid "select unsigned decimal 2-byte units"
 msgstr ""
 
 msgid "send SIGTSTP signal to client (tty stop)"
@@ -84094,6 +84139,9 @@ msgid "show normal and closed branch heads"
 msgstr ""
 
 msgid "show normal and closed branches"
+msgstr ""
+
+msgid "show only NUL terminated strings of at least this many printable characters"
 msgstr ""
 
 msgid "show only added files"
@@ -84577,6 +84625,9 @@ msgid "suppress diagnostics about file/dir-creation failure"
 msgstr ""
 
 msgid "suppress sourcing of configuration files"
+msgstr ""
+
+msgid "swap input bytes according the specified order"
 msgstr ""
 
 msgid "swap the channels"

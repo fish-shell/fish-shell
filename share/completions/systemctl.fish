@@ -95,7 +95,7 @@ complete -f -c systemctl -l after -d 'Show units ordered before specified unit' 
 complete -f -c systemctl -l before -d 'Show units ordered after specified unit' -n "__fish_seen_subcommand_from list-dependencies"
 complete -f -c systemctl -s l -l full -d 'Do not ellipsize anything'
 complete -f -c systemctl -l show-types -d 'Show the type of the socket'
-complete -f -c systemctl -l job-mode -d 'How to deal with queued jobs' -xa 'fail replace replace-irreversibly isolate ignore-dependencies ignore-requirements flush'
+complete -f -c systemctl -l job-mode -d 'How to deal with queued jobs' -xa 'fail lenient replace replace-irreversibly isolate ignore-dependencies ignore-requirements flush triggering restart-dependencies'
 complete -f -c systemctl -s i -l ignore-inhibitors -d 'Ignore inhibitor locks on shutdown or sleep'
 complete -f -c systemctl -s q -l quiet -d 'Suppress output to STDOUT'
 complete -f -c systemctl -l no-block -d 'Do not wait for the requested operation to finish'

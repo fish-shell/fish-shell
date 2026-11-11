@@ -244,12 +244,17 @@ math 'log 16'
 math 'log(16'
 # CHECKERR: math: Error: Missing closing parenthesis
 # CHECKERR: {{^}}'log(16'
-# CHECKERR: {{^}}       ^
+# CHECKERR: {{^}}    ^
 
-math '(2'
+math 'pi('
 # CHECKERR: math: Error: Missing closing parenthesis
-# CHECKERR: {{^}}'(2'
+# CHECKERR: {{^}}'pi('
 # CHECKERR: {{^}}   ^
+
+math '6 / ( 2 * (3 + 2) - 5  '
+# CHECKERR: math: Error: Missing closing parenthesis
+# CHECKERR: {{^}}'6 / ( 2 * (3 + 2) - 5  '
+# CHECKERR: {{^}}     ^
 
 math --base=16 255 / 15
 # CHECK: 0x11
@@ -297,12 +302,12 @@ math sin cos 2 x pi
 math pow sin 3, 5
 # CHECKERR: math: Error: Too many arguments
 # CHECKERR: {{^}}'pow sin 3, 5'
-# CHECKERR: {{^}}            ^
+# CHECKERR: {{^}}          ^
 
 math pow sin 3, 5 + 2
 # CHECKERR: math: Error: Too many arguments
 # CHECKERR: {{^}}'pow sin 3, 5 + 2'
-# CHECKERR: {{^}}            ^~~~^
+# CHECKERR: {{^}}          ^
 
 math sin pow 3, 5
 # CHECK: {{-0\.890009|-0.890\d*}}
@@ -338,7 +343,7 @@ math min 2, 3, 4, 5, -10, 1
 math 'min 5, 4, 3, ncr 2, 1, 5'
 # CHECKERR: math: Error: Too many arguments
 # CHECKERR: {{^}}'min 5, 4, 3, ncr 2, 1, 5'
-# CHECKERR: {{^}}                        ^
+# CHECKERR: {{^}}                      ^
 math 'min 5, 4, 3, ncr(2, 1), 5'
 # CHECK: 2
 math 'min 5, 4, 3, 5, ncr 2, 1'
@@ -438,3 +443,13 @@ math -s 6 --scale-mode=ceiling "2 / 3 - 1"
 
 math -s 6 --scale-mode=random "2 / 3 - 1"
 # CHECKERR: math: random: invalid mode
+
+math 'min(1, *)'
+# CHECKERR: math: Error: Unexpected token
+# CHECKERR: {{^}}'min(1, *)'
+# CHECKERR: {{^}}        ^
+
+math '(1 (2))'
+# CHECKERR: math: Error: Too many arguments
+# CHECKERR: {{^}}'(1 (2))'
+# CHECKERR: {{^}}    ^

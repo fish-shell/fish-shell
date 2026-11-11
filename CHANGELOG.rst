@@ -8,6 +8,7 @@ Deprecations and removed features
   This change also prevents modifications to ``$fish_function_path`` in an earlier pipeline element from invalidating later calls to autoloaded functions (:issue:`12996`).
 - ``functions --query`` now returns 0 if any of the named functions exist, matching ``type -q``, ``command -q`` and ``builtin -q``. Previously it returned the number of names that did not exist (:issue:`9855`).
 - For functions that have been copied with ``functions --copy``, ``functions`` and ``type`` no longer show the filename of the original function, only the filename where ``functions --copy`` was called.
+- Functions created by ``alias`` are now reported as defined in ``alias.fish`` instead of "via ``source``", and ``functions --details`` prints that path instead of ``-`` (:issue:`12480`).
 
 Interactive improvements
 ------------------------

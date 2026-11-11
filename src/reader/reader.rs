@@ -2750,7 +2750,8 @@ impl<'a> Reader<'a> {
 
         if !accumulated_chars.is_empty() {
             let (elt, _el) = self.active_edit_line();
-            self.insert_string(elt, accumulated_chars);
+            // Typing over a selection replaces it.
+            self.insert_replacing_selection(elt, accumulated_chars);
 
             // End paging upon inserting into the normal command line.
             if elt == EditableLineTag::Commandline {
@@ -2878,7 +2879,8 @@ impl<'a> Reader<'a> {
                     // Regular character.
                     let (elt, _el) = self.active_edit_line();
                     if let Some(cs) = kevt.key.text_to_insert() {
-                        self.insert_string(elt, WString::from_iter(cs));
+                        // Typing over a selection replaces it.
+                        self.insert_replacing_selection(elt, WString::from_iter(cs));
 
                         if elt == EditableLineTag::Commandline {
                             self.clear_pager();
@@ -3345,10 +3347,11 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::Yank => {
+                // Yanking over a selection replaces it, like typing does.
                 let yank_str = kill_yank();
                 let yank_len = yank_str.len();
                 self.data
-                    .insert_string(self.active_edit_line_tag(), yank_str);
+                    .insert_replacing_selection(self.active_edit_line_tag(), yank_str);
                 self.rls_mut().yank_len = yank_len;
                 if yank_len != 0 && self.cursor_end_mode == CursorEndMode::Inclusive {
                     let (_elt, el) = self.active_edit_line();
@@ -3374,7 +3377,12 @@ impl<'a> Reader<'a> {
                 }
             }
             rl::BackwardDeleteChar => {
-                self.delete_char(true);
+                // Backspace over a selection removes it.
+                let consumed = self.active_edit_line_tag() == EditableLineTag::Commandline
+                    && self.replace_selection();
+                if !consumed {
+                    self.delete_char(true);
+                }
             }
             rl::Exit => {
                 // This is by definition a successful exit, override the status
@@ -3383,16 +3391,19 @@ impl<'a> Reader<'a> {
                 check_exit_loop_maybe_warning(Some(self));
             }
             rl::DeleteOrExit | rl::DeleteChar => {
-                // Remove the current character in the character buffer and on the screen using
-                // syntax highlighting, etc.
-                let (_elt, el) = self.active_edit_line();
-                if el.position() < el.len() {
-                    self.delete_char(false);
-                } else if c == rl::DeleteOrExit && el.is_empty() {
-                    // This is by definition a successful exit, override the status
-                    self.parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
-                    self.exit_loop_requested = true;
-                    check_exit_loop_maybe_warning(Some(self));
+                // Delete the selection if there is one, otherwise the character under the cursor.
+                let consumed = self.active_edit_line_tag() == EditableLineTag::Commandline
+                    && self.replace_selection();
+                if !consumed {
+                    let (_elt, el) = self.active_edit_line();
+                    if el.position() < el.len() {
+                        self.delete_char(false);
+                    } else if c == rl::DeleteOrExit && el.is_empty() {
+                        // This is by definition a successful exit, override the status
+                        self.parser.set_last_statuses(Statuses::just(STATUS_CMD_OK));
+                        self.exit_loop_requested = true;
+                        check_exit_loop_maybe_warning(Some(self));
+                    }
                 }
             }
             rl::Execute => {
@@ -4163,6 +4174,23 @@ impl<'a> Reader<'a> {
                     };
                 self.selection = Some(selection);
             }
+            rl::BeginSelectionIfNone => {
+                // Begin a selection only if none is active, leaving an existing one's anchor
+                // intact, so shift+movement can start a selection and then extend it.
+                if self.selection.is_none() {
+                    let pos = self.command_line.position();
+                    self.selection = Some(SelectionData {
+                        begin: pos,
+                        start: pos,
+                        stop: pos
+                            + if self.cursor_selection_mode == CursorSelectionMode::Inclusive {
+                                1
+                            } else {
+                                0
+                            },
+                    });
+                }
+            }
             rl::EndSelection => {
                 self.selection = None;
             }
@@ -4183,6 +4211,13 @@ impl<'a> Reader<'a> {
                 }
                 if self.is_at_end() {
                     self.update_buff_pos(self.active_edit_line_tag(), None);
+                }
+            }
+            rl::DeleteSelection => {
+                // Erase the selection without touching the kill ring, so scripts (like
+                // __fish_paste) can replace the selection the same way typing does.
+                if self.active_edit_line_tag() == EditableLineTag::Commandline {
+                    self.replace_selection();
                 }
             }
             rl::InsertLineOver => {
@@ -4562,6 +4597,9 @@ impl<'a> Reader<'a> {
         // Delete any autosuggestion.
         self.autosuggestion.clear();
 
+        // Don't carry a selection over to the next command line.
+        self.selection = None;
+
         self.add_to_history();
         self.rls_mut().finished = true;
         self.command_line.pending_position = Some(self.command_line.position());
@@ -4619,6 +4657,34 @@ impl ReaderData {
             return None;
         }
         Some(start..end)
+    }
+
+    /// Erase the active selection, if any, returning whether it did, so typing or deleting
+    /// replaces it. An empty selection is cleared too, so its anchor doesn't outlive it.
+    fn replace_selection(&mut self) -> bool {
+        let selection = self.get_selection();
+        self.selection = None;
+        let Some(selection) = selection else {
+            return false;
+        };
+        self.erase_substring(EditableLineTag::Commandline, selection);
+        true
+    }
+
+    /// Insert `s` at the cursor, or in place of the command line's selection as a single
+    /// undo step.
+    fn insert_replacing_selection(&mut self, elt: EditableLineTag, s: WString) {
+        if elt != EditableLineTag::Commandline {
+            return self.insert_string(elt, s);
+        }
+        let selection = self.get_selection();
+        self.selection = None;
+        let Some(selection) = selection else {
+            return self.insert_string(elt, s);
+        };
+        self.replace_substring(elt, selection, s);
+        self.command_line_transient_edit = None;
+        self.suppress_autosuggestion = false;
     }
 
     fn selection_is_at_top(&self) -> bool {
@@ -6329,6 +6395,7 @@ fn command_ends_history_search(c: ReadlineCmd) -> bool {
             | rl::ClearScreenAndRepaint
             | rl::Repaint
             | rl::ForceRepaint
+            | rl::EndSelection
     )
 }
 

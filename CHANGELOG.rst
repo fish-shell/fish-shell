@@ -24,6 +24,8 @@ Scripting improvements
 - ``command``, ``builtin``, ``exec`` and ``time`` now accept a ``--`` separator between the keyword and the command name, so for example ``command -- -q`` runs a command literally called ``-q`` (:issue:`9941`).
 - Command substitutions are now allowed in command position, for example ``$(echo echo) hello world`` (:issue:`12829`).`
 
+- ``argparse --unknown-arguments required`` now correctly consumes values of unknown long options when known option specifications are provided (:issue:`13077`).
+
 Regression fixes:
 -----------------
 - (From 4.0.0) Short options are no longer offered as completions if an old-style completion matches (like `-foo`).

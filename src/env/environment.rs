@@ -732,6 +732,14 @@ pub fn env_init(paths: Option<&ConfigPaths>, no_config: bool) {
         && paths_are_same_file(&incoming_pwd, L!("."))
     {
         vars.set_one(L!("PWD"), global_exported_mode, incoming_pwd);
+    } else if let Some(home) = vars
+        .get_unless_empty(L!("HOME"))
+        .map(|home| home.as_string())
+        .filter(|home| home.starts_with('/') && paths_are_same_file(home, L!(".")))
+    {
+        // Login shells may start without PWD. Preserve a symlinked HOME so the
+        // initial working directory is the same as after `cd` with no arguments.
+        vars.set_one(L!("PWD"), global_exported_mode, home);
     } else {
         vars.set_pwd_from_getcwd();
     }

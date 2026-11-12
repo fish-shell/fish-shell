@@ -1,0 +1,1 @@
+rex completion fish | source

@@ -51,6 +51,7 @@ cmds/fish_is_root_user
 cmds/fish_key_reader
 cmds/fish_mode_prompt
 cmds/fish_opt
+cmds/fish_pijul_prompt
 cmds/fish_prompt
 cmds/fish_right_prompt
 cmds/fish_should_add_to_history

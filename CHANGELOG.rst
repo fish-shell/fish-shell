@@ -18,6 +18,7 @@ Interactive improvements
 - In :envvar:`fish_color_valid_path`, the ``--reset`` option can be given to completely override :envvar:`fish_color_param` rather than merging (:issue:`13042`).
 - When setting :envvar:`fish_complete_path`, fish no longer forgets completions that ship with fish and that fish happened to load earlier (:issue:`13049`).
 - ``funced`` no longer saves a function copied interactively with ``functions --copy`` to the file of the original function (:issue:`12305`).
+- Add :doc:`fish_pijul_prompt <cmds/fish_pijul_prompt>` for `Pijul <https://pijul.org>`__ remote status (requires jq as well).
 
 Scripting improvements
 ----------------------

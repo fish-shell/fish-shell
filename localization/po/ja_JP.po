@@ -3105,6 +3105,9 @@ msgstr ""
 msgid "Prompt function for Git"
 msgstr "Git 用のプロンプト関数"
 
+msgid "Prompt function for Pijul"
+msgstr ""
+
 msgid "Prompt function for svn"
 msgstr "svn 用のプロンプト関数"
 

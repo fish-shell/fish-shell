@@ -71,7 +71,7 @@ function(FISH_TRY_CREATE_DIRS)
         else()
             set(abs_dir "\$ENV{DESTDIR}${dir}")
         endif()
-        install(SCRIPT CODE "
+        install(CODE "
             EXECUTE_PROCESS(COMMAND mkdir -p ${abs_dir} OUTPUT_QUIET ERROR_QUIET)
             execute_process(COMMAND chmod 755 ${abs_dir} OUTPUT_QUIET ERROR_QUIET)
         ")

@@ -429,11 +429,6 @@ impl AutoloadFileCache {
     }
 
     fn locate_asset(&self, cmd: &wstr, asset_dir: AssetDir) -> Option<AutoloadableFileInfo> {
-        // HACK: In cargo tests, this used to never load functions
-        // It will hang for reasons unrelated to this.
-        if cfg!(test) {
-            return None;
-        }
         let narrow = wcs2bytes(cmd);
         let cmdstr = std::str::from_utf8(&narrow).ok()?;
         let path = match asset_dir {

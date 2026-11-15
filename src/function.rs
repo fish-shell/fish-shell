@@ -18,7 +18,6 @@ use crate::{
     wutil::dir_iter::DirIter,
 };
 use fish_common::{FilenameRef, assert_sync, escape};
-use fish_widestring::wcs2bytes;
 use std::{
     collections::{HashMap, HashSet},
     num::NonZeroU32,
@@ -240,14 +239,7 @@ pub fn exists_no_autoload(cmd: &wstr) -> bool {
     if funcset.funcs.contains_key(cmd) || (!tombstoned && funcset.autoloader.can_autoload(cmd)) {
         return true;
     }
-
-    let narrow = wcs2bytes(cmd);
-    if let Ok(cmdstr) = std::str::from_utf8(&narrow) {
-        let cmd = "functions/".to_owned() + cmdstr + ".fish";
-        crate::autoload::has_asset(&cmd)
-    } else {
-        false
-    }
+    false
 }
 
 /// Remove the function with the specified name.

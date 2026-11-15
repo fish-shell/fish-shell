@@ -1324,6 +1324,10 @@ msgstr "適切なジョブはありません"
 msgid "There are still jobs active:"
 msgstr "まだアクティブなジョブがあります:"
 
+#, c-format
+msgid "This file appears to target %s, not fish. Try running it with %s instead."
+msgstr ""
+
 msgid "This is a login shell"
 msgstr "これはログインシェルです"
 

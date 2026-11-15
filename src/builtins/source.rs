@@ -1,12 +1,56 @@
 use super::prelude::*;
 use crate::{
     builtins::Error, err_fmt, err_raw, err_str, fds::wopen_cloexec, nix::isatty, parser::Block,
-    reader::reader_read,
+    reader::reader_read, wutil::fstat,
 };
 use fish_common::{FilenameRef, escape};
 use fish_widestring::str2wcstring;
-use nix::{fcntl::OFlag, sys::stat::Mode};
-use std::os::fd::AsRawFd as _;
+use nix::{fcntl::OFlag, sys::stat::Mode, sys::uio::pread};
+use std::os::fd::{AsRawFd as _, BorrowedFd, RawFd};
+
+/// Inspect the shebang of a seekable file for an interpreter that is known to be a shell other
+/// than fish. This is only a heuristic, used to improve the error message when a file fails to
+/// parse; it must not cause files that would otherwise parse to be rejected.
+fn foreign_shell_from_shebang(fd: RawFd) -> Option<&'static str> {
+    // Only read regular files. Pipes and terminals are not seekable, and pread() would either
+    // fail or consume data that reader_read() still needs.
+    let md = fstat(fd).ok()?;
+    if !md.is_file() {
+        return None;
+    }
+
+    let mut buf = [0_u8; 512];
+    let amt = pread(unsafe { BorrowedFd::borrow_raw(fd) }, &mut buf, 0).ok()?;
+    let contents = &buf[..amt];
+
+    // The shebang is the first line, starting with "#!".
+    let line = contents.split(|&b| b == b'\n').next()?;
+    let line = line.strip_suffix(b"\r").unwrap_or(line);
+    let rest = line.strip_prefix(b"#!")?;
+    let text = std::str::from_utf8(rest).ok()?.trim();
+
+    // Parse the interpreter path, unwrapping `env` invocations such as
+    // `#!/usr/bin/env bash` or `#!/usr/bin/env -S bash -e`.
+    let mut words = text.split_whitespace();
+    let mut interp = words.next()?;
+    if interp.rsplit('/').next() == Some("env") {
+        interp = words.find(|word| !word.starts_with('-') && !word.contains('='))?;
+    }
+    let name = interp.rsplit('/').next()?;
+
+    match name {
+        "bash" => Some("bash"),
+        "sh" => Some("sh"),
+        "zsh" => Some("zsh"),
+        "dash" => Some("dash"),
+        "ksh" => Some("ksh"),
+        "mksh" => Some("mksh"),
+        "ash" => Some("ash"),
+        "csh" => Some("csh"),
+        "tcsh" => Some("tcsh"),
+        _ => None,
+    }
+}
 
 /// The  source builtin, sometimes called `.`. Evaluates the contents of a file in the current
 /// context.
@@ -30,6 +74,7 @@ pub fn source(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
     // The fd that we read from, either from opened_fd or stdin.
     let fd;
     let func_filename;
+    let foreign_shell;
     let optind = opts.optind;
 
     if argc == optind || args[optind] == "-" {
@@ -47,6 +92,8 @@ pub fn source(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         }
         func_filename = FilenameRef::new(L!("-").to_owned());
         fd = streams.stdin_fd();
+        // stdin may be a pipe or terminal, which is not necessarily seekable.
+        foreign_shell = None;
     } else {
         match wopen_cloexec(args[optind], OFlag::O_RDONLY, Mode::empty()) {
             Ok(file) => {
@@ -65,6 +112,7 @@ pub fn source(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         }
 
         fd = opened_file.as_raw_fd();
+        foreign_shell = foreign_shell_from_shebang(fd);
 
         func_filename = FilenameRef::new(args[optind].to_owned());
     }
@@ -91,12 +139,19 @@ pub fn source(parser: &mut Parser, streams: &mut IoStreams, args: &mut [&wstr]) 
         Ok(_) => BuiltinResult::from_dynamic(parser.last_status()),
         Err(err) => {
             let esc = escape(&func_filename);
-            err_fmt!(
+            let mut error = err_fmt!(
                 "Error while reading file '%s'",
                 if esc == "-" { L!("<stdin>") } else { &esc }
             )
-            .cmd(cmd)
-            .finish(streams);
+            .cmd(cmd);
+            if let Some(shell) = foreign_shell {
+                error = error.append_to_msg('\n').append_to_msg(&wgettext_fmt!(
+                    "This file appears to target %s, not fish. Try running it with %s instead.",
+                    shell,
+                    shell
+                ));
+            }
+            error.finish(streams);
             Err(err)
         }
     }

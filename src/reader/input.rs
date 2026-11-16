@@ -25,10 +25,12 @@ impl<'a> InputEventQueuer for Reader<'a> {
 
     fn prepare_to_select(&mut self) {
         // Fire any pending events and reap stray processes, including printing exit status messages.
-        event::fire_delayed(self.parser);
-        if job_reap(self.parser, true, None) {
-            reader_schedule_prompt_repaint();
-        }
+        self.with_reentry(|parser| {
+            event::fire_delayed(parser);
+            if job_reap(parser, true, None) {
+                reader_schedule_prompt_repaint();
+            }
+        });
     }
 
     fn select_interrupted(&mut self) {
@@ -37,11 +39,12 @@ impl<'a> InputEventQueuer for Reader<'a> {
         signal_clear_cancel();
 
         // Fire any pending events and reap stray processes, including printing exit status messages.
-        let parser = &mut *self.parser;
-        event::fire_delayed(parser);
-        if job_reap(parser, true, None) {
-            reader_schedule_prompt_repaint();
-        }
+        self.with_reentry(|parser| {
+            event::fire_delayed(parser);
+            if job_reap(parser, true, None) {
+                reader_schedule_prompt_repaint();
+            }
+        });
 
         // Tell the reader an event occurred.
         if reader_reading_interrupted(self) != 0 {
@@ -52,7 +55,7 @@ impl<'a> InputEventQueuer for Reader<'a> {
     }
 
     fn uvar_change_notified(&mut self) {
-        self.parser.sync_uvars_and_fire(true /* always */);
+        self.with_reentry(|parser| parser.sync_uvars_and_fire(true /* always */));
     }
 
     fn ioport_notified(&mut self) {

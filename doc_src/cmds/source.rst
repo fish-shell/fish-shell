@@ -20,7 +20,7 @@ fish will search the working directory to resolve relative paths but will not se
 
 If no file is specified and a file or pipeline is connected to standard input, or if the file name ``-`` is used, ``source`` will read from standard input. If no file is specified and there is no redirected file or pipeline on standard input, an error will be printed.
 
-The exit status of ``source`` is the exit status of the last job to execute. If something goes wrong while opening or reading the file, ``source`` exits with a non-zero status.
+The exit status of ``source`` is the exit status of the last job to execute. If something goes wrong while opening or reading the file, ``source`` exits with a non-zero status. If the file has a shebang that names another shell and cannot be parsed as fish, the error includes a hint to run it with that shell.
 
 Some other shells only support the **.** alias (a single period).
 The use of **.** is deprecated in favour of ``source``, and **.** will be removed in a future version of fish.

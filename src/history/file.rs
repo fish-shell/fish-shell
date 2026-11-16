@@ -37,8 +37,17 @@ struct MmapRegion {
 }
 
 impl MmapRegion {
-    /// Map a region `[0, len)` from a locked file.
-    pub fn map_file(file: &File, len: NonZeroUsize) -> nix::Result<Self> {
+    /// Map a region `[0, len)` from a file.
+    ///
+    /// # Safety
+    ///
+    /// For the lifetime of the mapped region, no external processes may
+    /// 1) truncate the file's inode below `len`
+    ///    - truncation makes accesses fault with SIGBUS
+    /// 2) modify bytes in `[0, len)`
+    ///    - in-place writes mutate memory behind `&[u8]` given by `Deref`
+    ///      which breaks the Rust contract (i.e. UB)
+    pub unsafe fn map_file(file: &File, len: NonZeroUsize) -> nix::Result<Self> {
         let ptr = unsafe {
             nix::sys::mman::mmap(
                 None,
@@ -129,7 +138,9 @@ impl RawHistoryFile {
             Ok(region)
         };
         let region = if should_mmap() {
-            match MmapRegion::map_file(history_file, len) {
+            // SAFETY: history files are append-only + vacuumed via rename() so
+            //         inode for `[0, len)` remains clean
+            match unsafe { MmapRegion::map_file(history_file, len) } {
                 Ok(region) => region,
                 Err(err) => {
                     if err == Errno::ENODEV {

@@ -26,16 +26,16 @@ use crate::{
 use fish_common::{Timepoint, escape, timef};
 use fish_widestring::ToWString;
 use libc::{
-    _SC_CLK_TCK, EXIT_SUCCESS, SIG_IGN, SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGINT, SIGPIPE, SIGQUIT,
-    SIGSEGV, SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED, WEXITSTATUS, WIFCONTINUED, WIFEXITED,
-    WIFSIGNALED, WIFSTOPPED, WNOHANG, WSTOPSIG, WTERMSIG, WUNTRACED,
+    EXIT_SUCCESS, SIG_IGN, SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGINT, SIGPIPE, SIGQUIT, SIGSEGV,
+    SIGSYS, SIGTTOU, STDOUT_FILENO, WCONTINUED, WEXITSTATUS, WIFCONTINUED, WIFEXITED, WIFSIGNALED,
+    WIFSTOPPED, WNOHANG, WSTOPSIG, WTERMSIG, WUNTRACED,
 };
 use nix::{
     sys::{
         signal::{SaFlags, SigAction, SigHandler, SigSet, Signal, kill, killpg},
         wait::{WaitPidFlag, WaitStatus, waitpid},
     },
-    unistd::{Pid as NullablePid, getpgrp},
+    unistd::{Pid as NullablePid, SysconfVar, getpgrp, sysconf},
 };
 use std::{
     cell::{Cell, Ref, RefCell, RefMut},
@@ -101,11 +101,12 @@ pub type ClockTicks = u64;
 /// Return clock ticks in seconds, or 0 on failure.
 /// This uses sysconf(_SC_CLK_TCK) to convert to seconds.
 pub fn clock_ticks_to_seconds(ticks: ClockTicks) -> f64 {
-    let clock_ticks_per_sec = unsafe { libc::sysconf(_SC_CLK_TCK) };
-    if clock_ticks_per_sec > 0 {
-        return ticks as f64 / clock_ticks_per_sec as f64;
+    match sysconf(SysconfVar::CLK_TCK) {
+        Ok(Some(clock_ticks_per_sec)) if clock_ticks_per_sec > 0 => {
+            ticks as f64 / clock_ticks_per_sec as f64
+        }
+        _ => 0.0,
     }
-    0.0
 }
 
 pub type JobGroupRef = Arc<JobGroup>;

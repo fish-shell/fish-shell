@@ -327,7 +327,7 @@ impl std::io::Read for BorrowedFdFile {
 mod tests {
     use super::{BorrowedFdFile, FIRST_HIGH_FD, make_autoclose_pipes};
     use crate::tests::prelude::*;
-    use libc::{F_GETFD, FD_CLOEXEC};
+    use libc::FD_CLOEXEC;
     use std::os::fd::{AsRawFd as _, FromRawFd as _};
 
     #[test]
@@ -344,10 +344,8 @@ mod tests {
         }
         for pipe in pipes {
             for fd in [&pipe.read, &pipe.write] {
-                let fd = fd.as_raw_fd();
-                assert!(fd >= FIRST_HIGH_FD);
-                let flags = unsafe { libc::fcntl(fd, F_GETFD, 0) };
-                assert!(flags >= 0);
+                assert!(fd.as_raw_fd() >= FIRST_HIGH_FD);
+                let flags = nix::fcntl::fcntl(fd, nix::fcntl::FcntlArg::F_GETFD).unwrap();
                 assert_ne!(flags & FD_CLOEXEC, 0);
             }
         }

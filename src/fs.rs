@@ -8,7 +8,7 @@ use crate::{
 use fish_tempfile::random_filename;
 use fish_widestring::{osstr2wcstring, wcs2bytes, wcs2osstring};
 use libc::{LOCK_EX, LOCK_SH, c_int};
-use nix::{fcntl::OFlag, sys::stat::Mode};
+use nix::{errno::Errno, fcntl::OFlag, sys::stat::Mode};
 use std::{
     ffi::OsString,
     fs::{File, OpenOptions},
@@ -172,18 +172,15 @@ impl LockedFile {
 /// since there `libc::fcntl(fd, libc::F_FULLFSYNC)` is used internally.
 /// This weakens our guarantees on macOS.
 pub fn fsync(file: &File) -> std::io::Result<()> {
-    let fd = file.as_raw_fd();
     loop {
-        match unsafe { libc::fsync(fd) } {
-            0 => return Ok(()),
-            -1 => {
-                let os_error = std::io::Error::last_os_error();
-                if os_error.kind() != std::io::ErrorKind::Interrupted {
-                    flogf!(synced_file_access, "fsync failed: %s", os_error);
-                    return Err(os_error);
-                }
+        match nix::unistd::fsync(file) {
+            Ok(()) => return Ok(()),
+            Err(Errno::EINTR) => {}
+            Err(err) => {
+                let os_error = std::io::Error::from(err);
+                flogf!(synced_file_access, "fsync failed: %s", os_error);
+                return Err(os_error);
             }
-            _ => panic!("fsync should only ever return 0 or -1"),
         }
     }
 }

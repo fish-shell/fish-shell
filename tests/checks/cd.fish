@@ -126,6 +126,34 @@ set -l real_getcwd (pwd -P)
 env HOME=$base/linkhome $fish -c 'echo PWD is $PWD'
 #CHECK: PWD is {{.*}}/linkhome
 
+# Without a usable inherited PWD, prefer HOME when it names the current directory.
+env -u PWD HOME=$base/linkhome $fish --no-config -c 'echo $PWD; prompt_pwd; cd; prompt_pwd'
+#CHECK: {{.*}}/linkhome
+#CHECK: ~
+#CHECK: ~
+for incoming_pwd in '' /path/to/nowhere .
+    env HOME=$base/linkhome PWD=$incoming_pwd $fish --no-config -c prompt_pwd
+end
+#CHECK: ~
+#CHECK: ~
+#CHECK: ~
+
+# A valid inherited PWD still takes precedence over HOME.
+env HOME=$base/linkhome PWD=$real_getcwd $fish --no-config -c 'echo $PWD' | read output_pwd
+test "$output_pwd" = "$real_getcwd"
+echo $status
+#CHECK: 0
+
+# HOME must be absolute and must refer to the current directory.
+env -u PWD HOME=. $fish --no-config -c 'echo $PWD' | read output_pwd
+test "$output_pwd" = "$real_getcwd"
+echo $status
+#CHECK: 0
+env -u PWD HOME=$base $fish --no-config -c 'echo $PWD' | read output_pwd
+test "$output_pwd" = "$real_getcwd"
+echo $status
+#CHECK: 0
+
 # Do not inherit a virtual PWD that fails to resolve to getcwd (#5647)
 env HOME=$base/linkhome PWD=/tmp $fish -c 'echo $PWD' | read output_pwd
 test (realpath $output_pwd) = $real_getcwd

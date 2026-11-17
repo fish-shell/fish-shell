@@ -68,7 +68,7 @@ These options modify how variables operate:
 
 **--unpath**
      Causes variable to no longer be treated as a :ref:`path variable <variables-path>`.
-     Note: variables ending in "PATH" are automatically path variables.
+     Note: variables ending in "PATH" or "DIRS" are automatically path variables.
 
 Further options:
 

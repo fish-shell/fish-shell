@@ -322,22 +322,13 @@ where
         // only be updated once every 10 milliseconds.
         #[cfg(any(target_os = "linux", target_os = "android"))]
         {
-            use libc::timespec;
-            let mut time = timespec::default();
-            if unsafe { libc::clock_gettime(libc::CLOCK_REALTIME, &mut time) } == 0 {
-                let times = [
-                    #[allow(clippy::field_reassign_with_default)]
-                    {
-                        let mut t: timespec = Default::default();
-                        t.tv_nsec = libc::UTIME_OMIT; // don't change atime
-                        t
-                    },
-                    time,
-                ];
-                unsafe {
-                    // This accesses both times[0] and times[1]. Check `utimensat(2)` for details.
-                    libc::futimens(new_file.as_raw_fd(), &times[0]);
-                }
+            use nix::{
+                sys::{stat::futimens, time::TimeSpec},
+                time::{ClockId, clock_gettime},
+            };
+            if let Ok(now) = clock_gettime(ClockId::CLOCK_REALTIME) {
+                // Don't change atime.
+                _ = futimens(new_file, &TimeSpec::UTIME_OMIT, &now);
             }
         }
     }

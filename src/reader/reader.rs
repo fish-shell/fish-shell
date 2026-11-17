@@ -1041,7 +1041,7 @@ pub fn reader_init(will_restore_foreground_pgroup: bool) {
 
     // Set up our fixed terminal modes once,
     // so we don't get flow control just because we inherited it.
-    if is_interactive_session() && getpgrp().as_raw() == unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
+    if is_interactive_session() && tcgetpgrp(STDIN_FD) == Ok(getpgrp()) {
         term_donate(/*quiet=*/ true);
     }
 }
@@ -1058,7 +1058,7 @@ pub fn reader_deinit(restore_foreground_pgroup: bool) {
 /// It's important we do this before restore_foreground_process_group,
 /// otherwise we won't think we own the terminal.
 pub fn restore_term_mode() {
-    if !is_interactive_session() || getpgrp().as_raw() != unsafe { libc::tcgetpgrp(STDIN_FILENO) } {
+    if !is_interactive_session() || tcgetpgrp(STDIN_FD) != Ok(getpgrp()) {
         return;
     }
     if let Some(modes) = get_terminal_mode_on_startup() {

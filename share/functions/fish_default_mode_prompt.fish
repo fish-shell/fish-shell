@@ -6,23 +6,23 @@ function fish_default_mode_prompt --description "Display vi prompt mode"
     switch $fish_bind_mode
         case default
             set_color --bold red
-            echo '[N]'
+            printf '[N]'
         case insert
             set_color --bold green
-            echo '[I]'
+            printf '[I]'
         case replace_one
             set_color --bold green
-            echo '[R]'
+            printf '[R]'
         case replace
             set_color --bold cyan
-            echo '[R]'
+            printf '[R]'
         case visual
             set_color --bold magenta
-            echo '[V]'
+            printf '[V]'
         case operator f F t T
             set_color --bold cyan
-            echo '[N]'
+            printf '[N]'
     end
     set_color --reset
-    echo -n ' '
+    printf ' '
 end

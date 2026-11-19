@@ -18,8 +18,8 @@ use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
 use crate::prelude::*;
 use crate::terminal::SgrTerminalCommand::EnterDimMode;
 use crate::terminal::TerminalCommand::{
-    self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
-    CursorUp, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
+    self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorPosition,
+    CursorRight, CursorUp, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
 };
 use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
 use crate::termsize::Termsize;
@@ -1080,7 +1080,20 @@ impl Screen {
         if prompt_changed || prompt_last_line_should_wrap {
             let mut start;
             if prompt_changed {
-                self.r#move(0, 0);
+                let absolute_y = self.viewport_y.filter(|_| {
+                    vars.get_unless_empty(L!("TERM_PROGRAM"))
+                        .is_some_and(|term| term.as_list()[0] == "Apple_Terminal")
+                });
+                if let Some(row) = absolute_y {
+                    // Apple Terminal can leave stale prompt text when relative motion follows an
+                    // alternate-screen restore and a right prompt touches the bottom-right cell.
+                    // Re-address the known prompt origin before repainting.
+                    self.write_command(CursorPosition { row, column: 0 });
+                    self.actual.cursor = Cursor { x: 0, y: 0 };
+                    self.soft_wrap_location = None;
+                } else {
+                    self.r#move(0, 0);
+                }
                 let prompt_first_visible_line =
                     left_prompt_layout.line_starts.len() - self.desired.visible_prompt_lines;
                 start = left_prompt_layout.line_starts[prompt_first_visible_line];

@@ -79,6 +79,11 @@ pub(crate) enum TerminalCommand<'a> {
     CursorLeft,
     CursorRight,
     CursorMove(CardinalDirection, usize),
+    /// Absolute position in the viewport, using zero-based coordinates.
+    CursorPosition {
+        row: usize,
+        column: usize,
+    },
 
     // Commands related to querying (used mainly for backwards-incompatible features).
     QueryPrimaryDeviceAttribute,
@@ -108,12 +113,16 @@ pub(crate) enum TerminalCommand<'a> {
     Osc133PromptStart,
     Osc133PromptEnd,
     Osc133CommandStart(&'a wstr),
-    Osc133CommandFinished { exit_status: libc::c_int },
+    Osc133CommandFinished {
+        exit_status: libc::c_int,
+    },
 
     // Other terminal features
     QueryCursorPosition,
     QueryBackgroundColor,
-    ScrollContentUp { lines: usize },
+    ScrollContentUp {
+        lines: usize,
+    },
 
     DecsetShowCursor,
     DecsetFocusReporting,
@@ -301,6 +310,10 @@ impl Outputter {
             CursorLeft => write(self, b"\x08"),
             CursorRight => write(self, b"\x1b[C"),
             CursorMove(direction, steps) => cursor_move(self, direction, steps),
+            CursorPosition { row, column } => {
+                write_to_output!(self, "\x1b[{};{}H", row + 1, column + 1);
+                true
+            }
             QueryPrimaryDeviceAttribute => write(self, b"\x1b[0c"),
             QueryXtversion => write(self, b"\x1b[>0q"),
             QueryXtgettcap(cap) => query_xtgettcap(self, cap),

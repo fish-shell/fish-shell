@@ -2787,8 +2787,10 @@ impl<'a> Reader<'a> {
         // Perhaps update the termsize. This is cheap if it has not changed.
         reader_update_termsize(self.parser);
 
-        // Repaint as needed.
-        self.color_suggest_repaint_now();
+        if !self.is_blocked_querying() {
+            // Repaint as needed.
+            self.color_suggest_repaint_now();
+        }
 
         if self
             .rls()

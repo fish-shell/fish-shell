@@ -1,7 +1,7 @@
 use crate::common::init_special_chars_once;
 use crate::complete::complete_invalidate_path;
-use crate::env::{DEFAULT_READ_BYTE_LIMIT, READ_BYTE_LIMIT};
-use crate::env::{EnvMode, EnvStack, Environment as _, setenv_lock, unsetenv_lock};
+use crate::env::{DEFAULT_READ_BYTE_LIMIT, Environment, READ_BYTE_LIMIT};
+use crate::env::{EnvMode, EnvStack, setenv_lock, unsetenv_lock};
 use crate::flog::flog;
 use crate::function;
 use crate::input::{update_wait_on_escape_ms, update_wait_on_sequence_key_ms};
@@ -356,6 +356,12 @@ fn run_inits(vars: &EnvStack) {
     handle_fish_trace(vars);
 }
 
+// TODO(term-workaround)
+pub(crate) fn is_macos_terminal_app(vars: &dyn Environment) -> bool {
+    vars.get_unless_empty(L!("TERM_PROGRAM"))
+        .is_some_and(|term| term.as_list()[0] == "Apple_Terminal")
+}
+
 /// Updates our idea of whether we support term256 and term24bit (see issue #10222).
 fn update_fish_color_support(vars: &EnvStack) {
     // Detect or infer term256 support. If fish_term256 is set, we respect it. Otherwise, infer it
@@ -416,11 +422,7 @@ fn update_fish_color_support(vars: &EnvStack) {
             ct
         );
     } else {
-        supports_24bit = !is_xterm_16color && {
-            // TODO(term-workaround)
-            vars.get_unless_empty(L!("TERM_PROGRAM"))
-                .is_none_or(|term| term.as_list()[0] != "Apple_Terminal")
-        };
+        supports_24bit = !is_xterm_16color && !is_macos_terminal_app(vars);
         flog!(
             term_support,
             "True-color support",

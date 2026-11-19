@@ -10,6 +10,7 @@
 use crate::common::{get_omitted_newline_str, has_working_tty_timestamps, shell_modes};
 use crate::editable_line::line_at_cursor;
 use crate::env::Environment;
+use crate::env_dispatch::is_macos_terminal_app;
 use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
@@ -18,8 +19,8 @@ use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
 use crate::prelude::*;
 use crate::terminal::SgrTerminalCommand::EnterDimMode;
 use crate::terminal::TerminalCommand::{
-    self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
-    CursorUp, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
+    self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorMoveTo,
+    CursorRight, CursorUp, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
 };
 use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
 use crate::termsize::Termsize;
@@ -1080,7 +1081,16 @@ impl Screen {
         if prompt_changed || prompt_last_line_should_wrap {
             let mut start;
             if prompt_changed {
-                self.r#move(0, 0);
+                if let Some(viewport_y) = self.viewport_y.filter(|_| is_macos_terminal_app(vars)) {
+                    self.write_command(CursorMoveTo {
+                        row: viewport_y,
+                        column: 0,
+                    });
+                    self.actual.cursor = Cursor { x: 0, y: 0 };
+                    self.soft_wrap_location = None;
+                } else {
+                    self.r#move(0, 0);
+                }
                 let prompt_first_visible_line =
                     left_prompt_layout.line_starts.len() - self.desired.visible_prompt_lines;
                 start = left_prompt_layout.line_starts[prompt_first_visible_line];

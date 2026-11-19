@@ -75,6 +75,7 @@ fn detect_cfgs(target: &mut Target) {
         ("have_localeconv_l", &|target| {
             target.has_symbol("localeconv_l")
         }),
+        // TODO(MSRV>=1.101) Remove this.
         ("have_getexecpath", &|target| {
             target_os().as_str() == "openbsd" && target.has_symbol("getexecpath")
         }),

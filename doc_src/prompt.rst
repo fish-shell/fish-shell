@@ -210,7 +210,7 @@ We have now built a simple but working and usable prompt, but of course more can
 - fish offers more helper functions:
    - ``prompt_login`` to describe the user/hostname/container or ``prompt_hostname`` to describe just the host
    - ``fish_is_root_user`` to help with changing the symbol for root.
-   - ``fish_vcs_prompt`` to show version control information (or ``fish_git_prompt`` / ``fish_hg_prompt`` / ``fish_svn_prompt`` to limit it to specific systems)
+   - ``fish_vcs_prompt`` to show version control information (or ``fish_jj_prompt`` / ``fish_git_prompt`` / ``fish_hg_prompt`` / ``fish_svn_prompt`` to limit it to specific systems)
 - You can add a right prompt by changing :doc:`fish_right_prompt <cmds/fish_right_prompt>` or a vi mode prompt by changing :doc:`fish_mode_prompt <cmds/fish_mode_prompt>`.
 - Some prompts have interesting or advanced features
    - Add the time when the prompt was printed

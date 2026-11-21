@@ -1,8 +1,9 @@
 use anstyle::{AnsiColor, Style};
-use anyhow::{Context, Result, bail};
+use anyhow::{Context as _, Result, bail};
 use clap::Args;
 use std::{
-    io::{ErrorKind, Write},
+    fmt::Write as _,
+    io::{ErrorKind, Write as _},
     path::PathBuf,
     process::{Command, Stdio},
 };
@@ -63,7 +64,7 @@ pub fn format(args: FormatArgs) -> Result<()> {
                 if e.kind() == ErrorKind::NotFound {
                     println!(
                         "{YELLOW}warning: Did not find git, will proceed without checking for unstaged changes.{YELLOW:#}"
-                    )
+                    );
                 } else {
                     bail!("Failed to run git status:\n{e}");
                 }
@@ -111,7 +112,7 @@ fn format_fish(args: &FormatArgs) -> Result<()> {
                 .map(|dir_name| workspace_root.join(dir_name)),
             "fish",
         )?);
-    };
+    }
     if fish_paths.is_empty() {
         return Ok(());
     }
@@ -146,7 +147,7 @@ fn format_fluent(args: &FormatArgs) -> Result<()> {
     if !errors.is_empty() {
         let mut error_message = String::from("Found these errors:\n");
         for e in errors {
-            error_message.push_str(&format!("{e}\n"));
+            _ = writeln!(error_message, "{e}");
         }
         bail!("{error_message}");
     }
@@ -163,7 +164,7 @@ fn format_python(args: &FormatArgs) -> Result<()> {
 
     if args.all {
         python_files.push(fish_build_helper::workspace_root().to_owned());
-    };
+    }
     if python_files.is_empty() {
         return Ok(());
     }

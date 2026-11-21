@@ -1,11 +1,14 @@
+#![allow(clippy::print_stdout)]
+#![allow(clippy::print_stderr)]
+
 use std::{
     ffi::OsStr,
-    io::Write,
+    io::Write as _,
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context as _, Result, bail};
 use walkdir::WalkDir;
 
 pub mod fluent;

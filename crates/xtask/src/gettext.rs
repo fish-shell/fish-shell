@@ -1,4 +1,4 @@
-use crate::{CARGO, CommandExt, files_with_extension};
+use crate::{CARGO, CommandExt as _, files_with_extension};
 use anyhow::{Context as _, Result, bail};
 use clap::{Args, Subcommand};
 use fish_build_helper::po_dir;

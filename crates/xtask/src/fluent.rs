@@ -1,12 +1,13 @@
 use crate::files_with_extension;
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context as _, Result, anyhow, bail};
 use clap::{Args, Subcommand};
 use fish_build_helper::{default_ftl_file, ftl_dir};
 use fluent_ftl_tools::{
-    HasEntries,
+    HasEntries as _,
     annotate::{
-        Annotation, MessageAnnotationRead, MessageAnnotationWrite, add_annotation_to_messages,
-        get_message_ids_with_different_value, modify_messages, remove_annotation_from_messages,
+        Annotation, MessageAnnotationRead as _, MessageAnnotationWrite as _,
+        add_annotation_to_messages, get_message_ids_with_different_value, modify_messages,
+        remove_annotation_from_messages,
     },
     consistency::{check_all_resource_files, remove_inconsistent_translations},
     delete_message_from_paths, filter_resource_messages,
@@ -23,7 +24,8 @@ use fluent_syntax::{
 };
 use std::{
     collections::{HashMap, HashSet},
-    io::{Read, Write},
+    fmt::Write as _,
+    io::{Read as _, Write as _},
     path::{Path, PathBuf},
     process::{Command, Stdio},
 };
@@ -220,7 +222,7 @@ fn format(mut files: Vec<PathBuf>) -> Result<()> {
     if !errors.is_empty() {
         let mut error_message = String::from("Found these errors:\n");
         for e in errors {
-            error_message.push_str(&format!("{e}\n"));
+            _ = writeln!(error_message, "{e}");
         }
         bail!("{error_message}");
     }

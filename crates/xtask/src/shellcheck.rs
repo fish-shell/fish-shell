@@ -1,16 +1,16 @@
-use anyhow::{Context, Result};
+use anyhow::{Context as _, Result};
 use fish_build_helper::workspace_root;
 use ignore::Walk;
 use pcre2::bytes::Regex;
 use std::{
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead as _, BufReader},
     path::{Path, PathBuf},
     process::Command,
     sync::LazyLock,
 };
 
-use crate::CommandExt;
+use crate::CommandExt as _;
 
 pub fn shellcheck() -> Result<()> {
     Command::new("shellcheck")

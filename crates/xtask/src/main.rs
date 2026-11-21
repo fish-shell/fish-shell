@@ -1,10 +1,10 @@
-use anyhow::{Context, Result};
-use clap::{CommandFactory, Parser, Subcommand};
+use anyhow::{Context as _, Result};
+use clap::{CommandFactory as _, Parser, Subcommand};
 use clap_complete::CompleteEnv;
 use fish_build_helper::as_os_strs;
 use std::{path::PathBuf, process::Command};
 use xtask::{
-    CommandExt, cargo, fluent::FluentCommandArgs, format::FormatArgs, gettext::GettextArgs,
+    CommandExt as _, cargo, fluent::FluentCommandArgs, format::FormatArgs, gettext::GettextArgs,
     shellcheck::shellcheck,
 };
 

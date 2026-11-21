@@ -19,3 +19,6 @@ fluent-syntax.workspace = true
 ignore.workspace = true
 pcre2.workspace = true
 walkdir.workspace = true
+
+[lints]
+workspace = true

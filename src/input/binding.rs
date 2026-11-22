@@ -287,6 +287,7 @@ define_readline_cmds! {
     ("transpose-words", TransposeWords),
     ("undo", Undo),
     ("up-line", UpLine),
+    ("up-or-search", UpOrSearch),
     ("upcase-selection", UpcaseSelection),
     ("upcase-word", UpcaseWord),
     ("yank", Yank),

@@ -9,6 +9,9 @@ function __fish_paste
         return
     end
 
+    # Pasting over a selection replaces it, like typing does, as one undo step.
+    commandline -f begin-undo-group delete-selection
+
     # If the current token has an unmatched single-quote,
     # escape all single-quotes (and backslashes) in the paste,
     # in order to turn it into a single literal token.
@@ -52,4 +55,5 @@ function __fish_paste
             end
         ) -- $data
     end
+    commandline -f end-undo-group
 end

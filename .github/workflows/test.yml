@@ -56,7 +56,10 @@ jobs:
           sudo -u fish-user -s env CI=1 ninja fish_run_tests
 
   ubuntu:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, ubuntu-latest-arm64]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1, build_tools/update-dependencies.sh
     - uses: ./.github/actions/rust-toolchain@oldest-supported

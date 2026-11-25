@@ -144,7 +144,7 @@ use nix::{
 };
 use std::{
     borrow::Cow,
-    cell::{LazyCell, UnsafeCell},
+    cell::{LazyCell, OnceCell, UnsafeCell},
     cmp,
     ffi::CStr,
     io::BufReader,
@@ -2610,14 +2610,16 @@ impl<'a> Reader<'a> {
         // Start out as initially dirty.
         self.force_exec_prompt_and_repaint = true;
 
-        self.query(RecurrentQuery {
-            cursor_position: Some(CursorPositionQuery::new(
-                CursorPositionQueryReason::NewPrompt,
-            )),
-            background_color: Some(BackgroundColorQuery::default()),
-        });
-
+        let queried = OnceCell::new();
         while !check_exit_loop_maybe_warning(Some(self)) {
+            if queried.set(()).is_ok() {
+                self.query(RecurrentQuery {
+                    cursor_position: Some(CursorPositionQuery::new(
+                        CursorPositionQueryReason::NewPrompt,
+                    )),
+                    background_color: Some(BackgroundColorQuery::default()),
+                });
+            }
             // Enable tty protocols while we read input.
             tty.enable_tty_protocols();
             if self.handle_char_event(None).is_break() || self.rls().finished {

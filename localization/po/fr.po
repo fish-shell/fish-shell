@@ -5115,6 +5115,9 @@ msgstr ""
 msgid "AXFR prints only one soa record"
 msgstr "AXFR n’affiche qu’un enregistrement SOA"
 
+msgid "Abort Metal kernel build after X seconds of runtime"
+msgstr ""
+
 msgid "Abort a multipart upload"
 msgstr ""
 
@@ -9129,7 +9132,7 @@ msgstr "Conserver la version originale"
 msgid "Backend configuration"
 msgstr ""
 
-msgid "Backend devices to use"
+msgid "Backend devices to use, separated with commas"
 msgstr ""
 
 msgid "Backend output file format"
@@ -17430,6 +17433,9 @@ msgstr ""
 msgid "Disable optimizations that use the small data section"
 msgstr ""
 
+msgid "Disable ordering candidates by password length"
+msgstr ""
+
 msgid "Disable output buffering"
 msgstr ""
 
@@ -24939,6 +24945,12 @@ msgstr ""
 msgid "Enable JIT compiler debugging/tracing"
 msgstr ""
 
+msgid "Enable JSON format for all output"
+msgstr ""
+
+msgid "Enable JSON format for benchmark output"
+msgstr ""
+
 msgid "Enable JSON format for status output"
 msgstr ""
 
@@ -25030,9 +25042,6 @@ msgid "Enable a non-zero exit status"
 msgstr ""
 
 msgid "Enable a specific processor sleep state"
-msgstr ""
-
-msgid "Enable a specific workload profile"
 msgstr ""
 
 msgid "Enable access to a service or service plan"
@@ -26091,6 +26100,9 @@ msgstr "Activer un service existant"
 msgid "Enables classic markov-chains, no per-position"
 msgstr ""
 
+msgid "Enables color output for cracked hashes"
+msgstr ""
+
 msgid "Enables colored text"
 msgstr ""
 
@@ -26275,6 +26287,9 @@ msgid "Encrypt for specified user id, but hide the keyid of the key"
 msgstr "Chiffrer pour l’identifiant utilisateur spécifié, mais dissimuler l’identifiant de la clé"
 
 msgid "Encrypt master security password"
+msgstr ""
+
+msgid "Encrypt recovered plains with an RSA public key"
 msgstr ""
 
 msgid "Encrypt server password"
@@ -27383,6 +27398,9 @@ msgstr "Ne pas arrondir les nombres"
 
 msgid "Expand the device to use all available space"
 msgstr "Étendre le périphérique pour en utiliser tout l’espace disponible"
+
+msgid "Expected number of lines on stdin, for the ETA"
+msgstr ""
 
 msgid "Expire current cache"
 msgstr ""
@@ -28966,6 +28984,9 @@ msgid "Force IPv4 tracerouting"
 msgstr ""
 
 msgid "Force IPv6 tracerouting"
+msgstr ""
+
+msgid "Force JSON format in outfile format"
 msgstr ""
 
 msgid "Force Jest to exit after all tests have completed running"
@@ -32037,6 +32058,12 @@ msgstr ""
 msgid "Hash object as if it were at the given path"
 msgstr ""
 
+msgid "Hash recipe for hash-mode 4000"
+msgstr ""
+
+msgid "Hash stdin into a running brain, needs --brain-session"
+msgstr ""
+
 msgid "Hash to use for signatures"
 msgstr ""
 
@@ -33981,6 +34008,9 @@ msgstr ""
 msgid "Increase/Set verbosity level"
 msgstr ""
 
+msgid "Increment from right-to-left"
+msgstr ""
+
 msgid "Increment page number by two"
 msgstr "Incrémenter le numéro de page de deux"
 
@@ -35352,7 +35382,7 @@ msgstr ""
 msgid "Keychain to which cert is added"
 msgstr ""
 
-msgid "Keyfiles to use"
+msgid "Keyfiles to use, separated with commas"
 msgstr ""
 
 msgid "Keyslot priority: ignore, normal, prefer"
@@ -38679,6 +38709,9 @@ msgstr ""
 msgid "Load file with CPAN configuration data"
 msgstr ""
 
+msgid "Load hashes written in John's $dynamic_X$ format"
+msgstr ""
+
 msgid "Load helper default settings"
 msgstr ""
 
@@ -38703,7 +38736,7 @@ msgstr ""
 msgid "Load keys for all imported pools"
 msgstr ""
 
-msgid "Load only message pairs from hccapx matching X"
+msgid "Load only EAPOL message pairs matching X"
 msgstr ""
 
 msgid "Load only the specified repositories"
@@ -38973,7 +39006,7 @@ msgstr ""
 msgid "Lock working tree after creation"
 msgstr ""
 
-msgid "Locks to CPU devices"
+msgid "Locks to CPU devices, separated with commas"
 msgstr ""
 
 msgid "Log API events to the log file"
@@ -40579,6 +40612,9 @@ msgid "Minimize context of patch bundle [DEFAULT]"
 msgstr ""
 
 msgid "Minimize the specified window"
+msgstr ""
+
+msgid "Minimum amount of founds to avoid being bypassed"
 msgstr ""
 
 msgid "Minimum confidence of a problem to print it"
@@ -43119,7 +43155,7 @@ msgstr "Ouvrir l’interface Web"
 msgid "Open xpdf in full-screen mode"
 msgstr ""
 
-msgid "OpenCL device-types to use"
+msgid "OpenCL device-types to use, separated with commas"
 msgstr ""
 
 msgid "Opened filehandles are UTF-8"
@@ -43696,6 +43732,9 @@ msgid "Output frequencies and latencies without rounding off values"
 msgstr ""
 
 msgid "Output git-sizer version"
+msgstr ""
+
+msgid "Output hashes identically to the input hash"
 msgstr ""
 
 msgid "Output help for a hook"
@@ -55524,6 +55563,9 @@ msgstr ""
 msgid "Run benchmark of selected hash-modes"
 msgstr ""
 
+msgid "Run benchmark of selected hash-modes, pure kernels"
+msgstr ""
+
 msgid "Run benchmarks in a local package or module"
 msgstr ""
 
@@ -57381,6 +57423,9 @@ msgstr ""
 msgid "Seconds between sending each packet"
 msgstr ""
 
+msgid "Seconds delay between checking bypass threshold"
+msgstr ""
+
 msgid "Seconds delay between snapshots [value]"
 msgstr "Spécifier le délai en secondes entre les captures"
 
@@ -58789,6 +58834,12 @@ msgid "Set base address for executable image"
 msgstr ""
 
 msgid "Set baudrate"
+msgstr ""
+
+msgid "Set benchmark max hash-mode (requires -b)"
+msgstr ""
+
+msgid "Set benchmark min hash-mode (requires -b)"
 msgstr ""
 
 msgid "Set best option to False"
@@ -61167,9 +61218,6 @@ msgstr ""
 msgid "Sets seconds between status screen updates"
 msgstr ""
 
-msgid "Sets size in MB to cache from the wordfile"
-msgstr ""
-
 msgid "Sets the Ethernet protocol type"
 msgstr ""
 
@@ -61248,6 +61296,18 @@ msgstr ""
 msgid "Sets the end-of-line convention to use"
 msgstr ""
 
+msgid "Sets the generic parameter 1 for a Bridge"
+msgstr ""
+
+msgid "Sets the generic parameter 2 for a Bridge"
+msgstr ""
+
+msgid "Sets the generic parameter 3 for a Bridge"
+msgstr ""
+
+msgid "Sets the generic parameter 4 for a Bridge"
+msgstr ""
+
 msgid "Sets the initial destination port"
 msgstr ""
 
@@ -61291,6 +61351,9 @@ msgid "Sets the password for opening encrypted PDF files"
 msgstr "Paramétrer le mot de passe pour l’ouverture des fichiers PDF chiffrés"
 
 msgid "Sets the picture's color [0..255]: 133"
+msgstr ""
+
+msgid "Sets the real device that runs the virtual instances"
 msgstr ""
 
 msgid "Sets the specified environment variables for all services within the domain"
@@ -62685,9 +62748,6 @@ msgstr "Afficher les informations"
 msgid "Show info about current sources"
 msgstr ""
 
-msgid "Show info about detected backend API devices"
-msgstr ""
-
 msgid "Show info about last valid measurement"
 msgstr ""
 
@@ -63756,6 +63816,9 @@ msgstr ""
 msgid "Show system-installed extensions"
 msgstr ""
 
+msgid "Show system/environment/backend API info"
+msgstr ""
+
 msgid "Show tag names"
 msgstr ""
 
@@ -64206,6 +64269,9 @@ msgstr ""
 msgid "Show total byte counter"
 msgstr ""
 
+msgid "Show total candidate count (base*mod) and quit"
+msgstr ""
+
 msgid "Show total statistics only"
 msgstr ""
 
@@ -64372,6 +64438,15 @@ msgid "Show what you're currently tracking in Phrequent"
 msgstr ""
 
 msgid "Show whatis information"
+msgstr ""
+
+msgid "Show where each launch's time goes, per device"
+msgstr ""
+
+msgid "Show where the run's wall clock went, by stage"
+msgstr ""
+
+msgid "Show where this attack reaches candidate X and quit"
 msgstr ""
 
 msgid "Show which commits will be selected"
@@ -65620,6 +65695,9 @@ msgid "Space-separated search options"
 msgstr ""
 
 msgid "Spatial noise shaping (integer 0…100; default: 50)"
+msgstr ""
+
+msgid "Spawn X virtual instances on a real device"
 msgstr ""
 
 msgid "Specific commit to use when installing from git"
@@ -67564,6 +67642,9 @@ msgid "Specify the desktop name"
 msgstr ""
 
 msgid "Specify the directory from which templates will be used"
+msgstr ""
+
+msgid "Specify the directory hashcat caches everything in"
 msgstr ""
 
 msgid "Specify the display width for the output from the search command"
@@ -69962,6 +70043,9 @@ msgstr "Prendre le complément des dépôts (dans l’ordre donné)"
 
 msgid "Take intersection of all repositories"
 msgstr "Utiliser l’intersection de tous les dépôts"
+
+msgid "Take only the position from the restore file"
+msgstr ""
 
 msgid "Take snapshot"
 msgstr ""
@@ -75450,6 +75534,9 @@ msgstr ""
 msgid "Use the -i flag for rpm when installing a .rpm"
 msgstr ""
 
+msgid "Use the -r files as one list instead of chaining them"
+msgstr ""
+
 msgid "Use the ABS tree"
 msgstr ""
 
@@ -75973,6 +76060,18 @@ msgid "User-defined charset ?3"
 msgstr ""
 
 msgid "User-defined charset ?4"
+msgstr ""
+
+msgid "User-defined charset ?5"
+msgstr ""
+
+msgid "User-defined charset ?6"
+msgstr ""
+
+msgid "User-defined charset ?7"
+msgstr ""
+
+msgid "User-defined charset ?8"
 msgstr ""
 
 msgid "User-friendly system name"

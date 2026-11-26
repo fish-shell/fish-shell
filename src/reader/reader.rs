@@ -1820,6 +1820,10 @@ impl<'a> Reader<'a> {
     /// Generate a new layout data from the current state of the world, and paint with it.
     /// If `mcolors` has a value, then apply it; otherwise extend existing colors.
     fn layout_and_repaint(&mut self, reason: &wstr) {
+        if self.is_blocked_querying() {
+            self.force_exec_prompt_and_repaint = true;
+            return;
+        }
         self.rendered_layout = self.make_layout_data();
         self.paint_layout(reason, false);
     }

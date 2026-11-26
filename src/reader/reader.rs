@@ -7182,6 +7182,14 @@ impl<'a> Reader<'a> {
                 prefix.push(ELLIPSIS_CHAR);
 
                 let truncated = &full[full.len() - PREFIX_MAX_LEN..];
+
+                // Extracts '/' in case truncated ends with it (when it is a directory)
+                // to prevent a false empty last_component
+                let (truncated, is_dir) = if use_prefix && truncated.ends_with('/') {
+                    (&truncated[..truncated.len() - 1], true)
+                } else {
+                    (truncated, false)
+                };
                 let (i, last_component) = truncated.split('/').enumerate().last().unwrap();
                 if i == 0 {
                     // No path separators were found in the common prefix, so we can't collapse
@@ -7191,6 +7199,10 @@ impl<'a> Reader<'a> {
                     // Discard any parent directories and include whats left
                     prefix.push('/');
                     prefix.push_utfstr(last_component);
+                }
+                if is_dir {
+                    // Restores the '/' for directories
+                    prefix.push('/');
                 }
             }
             Cow::Owned(prefix)

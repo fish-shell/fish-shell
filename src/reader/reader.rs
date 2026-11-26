@@ -702,6 +702,8 @@ pub struct ReaderData {
     /// This is made public so that InputEventQueuer can be implemented on us.
     pub input_data: InputData,
     queued_repaint: bool,
+    /// A size-change event must run before another repaint.
+    resize_pending: bool,
     /// The history.
     history: Arc<History>,
     /// The history search.
@@ -1145,14 +1147,25 @@ pub fn reader_schedule_prompt_repaint() {
 pub fn reader_update_termsize(parser: &mut Parser) {
     let last = termsize_last();
     let new = termsize_update(parser);
-    if new.height() == last.height() {
+    if new == last {
         return;
     }
     let Some(data) = current_data() else {
         return;
     };
     let mut data = Reader { parser, data };
-    data.enqueue_event(CharEvent::Implicit(ImplicitEvent::NewWindowHeight));
+    // Resizing can move the prompt, even if only the width changes. Do not use
+    // its old absolute position while the terminal and screen layout change.
+    data.screen
+        .set_position_in_viewport("window size change", None);
+    let resize_pending = std::mem::replace(&mut data.resize_pending, true);
+    // A reply to an earlier query is no longer a position in this layout.
+    if let Some(TerminalQuery::Recurrent(query)) = data.blocking_query_mut() {
+        query.cursor_position = None;
+    }
+    if !resize_pending {
+        data.enqueue_event(CharEvent::Implicit(ImplicitEvent::NewWindowSize));
+    }
 }
 
 pub fn reader_execute_readline_cmd(parser: &mut Parser, ch: CharEvent) {
@@ -1404,6 +1417,7 @@ impl ReaderData {
             screen: Screen::default(),
             input_data,
             queued_repaint: false,
+            resize_pending: false,
             history,
             history_search: Default::default(),
             history_pager: None,
@@ -1820,7 +1834,7 @@ impl<'a> Reader<'a> {
     /// Generate a new layout data from the current state of the world, and paint with it.
     /// If `mcolors` has a value, then apply it; otherwise extend existing colors.
     fn layout_and_repaint(&mut self, reason: &wstr) {
-        if self.is_blocked_querying() {
+        if self.is_blocked_querying() || self.resize_in_progress() {
             self.force_exec_prompt_and_repaint = true;
             return;
         }
@@ -2770,8 +2784,24 @@ impl<'a> Reader<'a> {
         event_needing_handling
     }
 
+    fn resize_in_progress(&self) -> bool {
+        if self.resize_pending {
+            return true;
+        }
+        let Some(TerminalQuery::Recurrent(query)) = &self.input_data.blocking_query else {
+            return false;
+        };
+        query
+            .cursor_position
+            .as_ref()
+            .is_some_and(|query| query.reason == CursorPositionQueryReason::WindowSizeChange)
+    }
+
     // A helper that kicks off syntax highlighting, autosuggestion computing, and repaints.
     fn color_suggest_repaint_now(&mut self) {
+        if self.resize_in_progress() {
+            return;
+        }
         if self.conf.inputfd == STDIN_FILENO {
             self.update_autosuggestion();
             self.super_highlight_me_plenty();
@@ -2920,11 +2950,12 @@ impl<'a> Reader<'a> {
                             ..Default::default()
                         });
                     }
-                    NewWindowHeight => {
-                        flog!(reader, "Handling window height change");
+                    NewWindowSize => {
+                        self.resize_pending = false;
+                        flog!(reader, "Handling window size change");
                         self.query(RecurrentQuery {
                             cursor_position: Some(CursorPositionQuery::new(
-                                CursorPositionQueryReason::WindowHeightChange,
+                                CursorPositionQueryReason::WindowSizeChange,
                             )),
                             ..Default::default()
                         });
@@ -2932,6 +2963,10 @@ impl<'a> Reader<'a> {
                 }
             }
             CharEvent::QueryResult(query_result) => {
+                if matches!(query_result, QueryResultEvent::Interrupted) {
+                    // Interrupting a query also discards queued size-change events.
+                    self.resize_pending = false;
+                }
                 let query = self.blocking_query_mut();
                 use QueryResponse::*;
                 use QueryResultEvent::*;
@@ -2968,13 +3003,11 @@ impl<'a> Reader<'a> {
                             let reason = cursor_pos_query.reason;
                             let whence = match reason {
                                 NewPrompt => "cursor position query on new prompt",
-                                WindowHeightChange => {
-                                    "cursor position query on window height change"
-                                }
+                                WindowSizeChange => "cursor position query on window size change",
                             };
                             let y = cursor_pos.map(|cursor_pos| match reason {
                                 NewPrompt => cursor_pos.y,
-                                WindowHeightChange => {
+                                WindowSizeChange => {
                                     self.screen.command_line_y_given_cursor_y(cursor_pos.y)
                                 }
                             });
@@ -3031,6 +3064,19 @@ impl<'a> Reader<'a> {
     }
 
     fn handle_readline_command(&mut self, c: ReadlineCmd) {
+        if self.resize_in_progress()
+            && matches!(
+                c,
+                ReadlineCmd::Repaint
+                    | ReadlineCmd::ForceRepaint
+                    | ReadlineCmd::RepaintMode
+                    | ReadlineCmd::ClearScreenAndRepaint
+            )
+        {
+            self.input_data
+                .queue_char(CharEvent::from_readline(c, vec![]));
+            return;
+        }
         #[allow(non_camel_case_types)]
         type rl = ReadlineCmd;
         match c {

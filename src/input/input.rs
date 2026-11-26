@@ -60,8 +60,8 @@ pub enum ImplicitEvent {
     MouseLeft(ViewportPosition),
     /// Terminal color theme change (light/dark mode).
     NewColorTheme,
-    /// Window height changed.
-    NewWindowHeight,
+    /// Window size changed.
+    NewWindowSize,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -413,7 +413,7 @@ pub struct BackgroundColorQuery {
 #[derive(Clone, Debug, PartialEq)]
 pub enum CursorPositionQueryReason {
     NewPrompt,
-    WindowHeightChange,
+    WindowSizeChange,
 }
 
 #[derive(Clone, Debug, PartialEq)]

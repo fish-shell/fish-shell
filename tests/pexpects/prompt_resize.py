@@ -16,6 +16,11 @@ function __fish_winch_handler --on-signal WINCH
         commandline -f repaint >/dev/null 2>/dev/null
     end
 end
+function resize_observed --on-signal WINCH
+    if test "$COLUMNS" = 40
+        printf '\e]0;resize-observed\a'
+    end
+end
 function fish_prompt
     printf '{header}\n> '
 end
@@ -126,6 +131,8 @@ sp = spawn_prompt()
 sp.spawn.setwinsize(30, 20)
 sp.expect_str('\x1b[6n')
 sp.spawn.setwinsize(30, 40)
+# Wait until the second resize has reached Fish before interrupting its query.
+sp.expect_str('\x1b]0;resize-observed\x07')
 sp.send(control('c'))
 sp.send('X')
 sp.expect_str('X')

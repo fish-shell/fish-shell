@@ -2,7 +2,7 @@
 import os
 import signal
 
-from pexpect_helper import SpawnedProc
+from pexpect_helper import SpawnedProc, control
 
 
 config = r'''
@@ -33,6 +33,35 @@ sp.expect_str('HANDLED\r\n')
 assert 'PENDING_REPAINT' not in sp.spawn.before, repr(sp.spawn.before)
 
 sp.send_cursor_position_report(y=10, x=1)
+sp.send_primary_device_attribute()
+sp.expect_str('HEADER\r\n> ')
+sp.spawn.close()
+
+# Regression test: a resize during prompt execution defers the repaint. Keep
+# that request pending until the resize query completes.
+config = r'''
+set -g fish_autosuggestion_enabled 0
+function fish_prompt
+    if set -q shrink
+        set -e shrink
+        stty cols 100
+    end
+    printf 'HEADER\n> '
+end
+function __fish_winch_handler --on-signal WINCH
+    commandline -f repaint
+end
+bind ctrl-g 'set -g shrink 1; commandline -f repaint'
+'''
+sp = SpawnedProc(env=env, args=['--no-config', '-C', config], dimensions=(30, 120))
+sp.expect_str('\x1b[6n')
+sp.send_cursor_position_report(y=20, x=1)
+sp.send_primary_device_attribute()
+sp.expect_str('HEADER\r\n> ')
+
+sp.send(control('g'))
+sp.expect_str('\x1b[6n')
+sp.send_cursor_position_report(y=21, x=3)
 sp.send_primary_device_attribute()
 sp.expect_str('HEADER\r\n> ')
 sp.spawn.close()

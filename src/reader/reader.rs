@@ -2807,9 +2807,10 @@ impl<'a> Reader<'a> {
             self.super_highlight_me_plenty();
         }
         if self.is_repaint_needed(None) {
+            // Clear this before painting so a deferred repaint can set it again.
+            self.force_exec_prompt_and_repaint = false;
             self.layout_and_repaint(L!("toplevel"));
         }
-        self.force_exec_prompt_and_repaint = false;
     }
 
     fn handle_char_event(&mut self, injected_event: Option<CharEvent>) -> ControlFlow<()> {
@@ -3231,8 +3232,8 @@ impl<'a> Reader<'a> {
                 }
                 self.exec_prompt(true, false);
                 self.screen.reset_line(/*repaint_prompt=*/ true);
-                self.layout_and_repaint(L!("readline"));
                 self.force_exec_prompt_and_repaint = false;
+                self.layout_and_repaint(L!("readline"));
                 self.parser.libdata_mut().is_repaint = false;
             }
             rl::Complete | rl::CompleteAndSearch => {
@@ -4451,8 +4452,8 @@ impl<'a> Reader<'a> {
 
         self.exec_prompt(true, false);
         self.screen.reset_line(/*repaint_prompt=*/ true);
-        self.layout_and_repaint(L!("readline"));
         self.force_exec_prompt_and_repaint = false;
+        self.layout_and_repaint(L!("readline"));
         self.parser.libdata_mut().is_repaint = false;
     }
 

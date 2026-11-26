@@ -20,7 +20,8 @@ use crate::prelude::*;
 use crate::terminal::SgrTerminalCommand::EnterDimMode;
 use crate::terminal::TerminalCommand::{
     self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorMoveTo,
-    CursorRight, CursorUp, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
+    CursorRight, CursorUp, DecrstAutoWrap, DecsetAutoWrap, Osc133PromptEnd, Osc133PromptStart,
+    ScrollContentUp,
 };
 use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
 use crate::termsize::{Termsize, termsize_last};
@@ -1423,6 +1424,12 @@ impl Screen {
 
             // Output any rprompt if this is the first line.
             if is_prompt_line && right_prompt_width > 0 {
+                if self.is_macos_terminal {
+                    // A resize can make the saved width stale before this output is rendered.
+                    // Do not let the right prompt wrap and move the command line down a row.
+                    self.write_command(DecrstAutoWrap);
+                }
+
                 // Move the cursor to the beginning of the line first to be independent of the width.
                 // This helps prevent staircase effects if fish and the terminal disagree.
                 self.r#move(0, i);
@@ -1443,6 +1450,9 @@ impl Screen {
                 self.r#move(x - right_prompt_width, y);
                 self.write_str(L!("\r"));
                 self.actual.cursor.x = 0;
+                if self.is_macos_terminal {
+                    self.write_command(DecsetAutoWrap);
+                }
             }
         }
 

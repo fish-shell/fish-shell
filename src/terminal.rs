@@ -123,6 +123,8 @@ pub(crate) enum TerminalCommand<'a> {
     DecrstBracketedPaste,
     DecsetColorThemeReporting,
     DecrstColorThemeReporting,
+    DecsetAutoWrap,
+    DecrstAutoWrap,
 }
 
 #[derive(Debug, Clone)]
@@ -336,6 +338,8 @@ impl Outputter {
             DecrstBracketedPaste => write(self, b"\x1b[?2004l"),
             DecsetColorThemeReporting => write(self, b"\x1b[?2031h"),
             DecrstColorThemeReporting => write(self, b"\x1b[?2031l"),
+            DecsetAutoWrap => write(self, b"\x1b[?7h"),
+            DecrstAutoWrap => write(self, b"\x1b[?7l"),
         }
     }
 

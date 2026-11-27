@@ -78747,6 +78747,9 @@ msgstr ""
 msgid "clear space cache (repair only)"
 msgstr ""
 
+msgid "clear the cache completely (except configuration)"
+msgstr ""
+
 msgid "clear the log"
 msgstr ""
 
@@ -79179,6 +79182,9 @@ msgstr ""
 msgid "delete characters in SET1, do not translate"
 msgstr ""
 
+msgid "delete not recently used files and recalculate size counters"
+msgstr ""
+
 msgid "delete ports that are build-only dependencies a… [See Man Page]"
 msgstr ""
 
@@ -79594,6 +79600,9 @@ msgid "do not pass files through decoders"
 msgstr ""
 
 msgid "do not perform actions, just print output"
+msgstr ""
+
+msgid "do not perform any write operations"
 msgstr ""
 
 msgid "do not perform range checking"
@@ -80230,6 +80239,9 @@ msgid "extract files into dir"
 msgstr ""
 
 msgid "extract files to pipe, no messages"
+msgstr ""
+
+msgid "extract result file at PATH to the current directory"
 msgstr ""
 
 msgid "extract the channels in order"
@@ -82209,6 +82221,12 @@ msgstr ""
 msgid "open with workspace"
 msgstr ""
 
+msgid "operate on cache directory PATH instead of the default"
+msgstr ""
+
+msgid "operate on configuration file PATH instead of the default"
+msgstr ""
+
 msgid "operate on patch repository"
 msgstr ""
 
@@ -82710,6 +82728,9 @@ msgstr ""
 msgid "print help message and ant help"
 msgstr ""
 
+msgid "print help text"
+msgstr ""
+
 msgid "print html docs path"
 msgstr ""
 
@@ -82821,6 +82842,9 @@ msgstr ""
 msgid "print required other linker flags to stdout"
 msgstr ""
 
+msgid "print result/manifest file at PATH"
+msgstr ""
+
 msgid "print shared libraries used"
 msgstr ""
 
@@ -82842,7 +82866,16 @@ msgstr ""
 msgid "print stack trace when throwing exceptions"
 msgstr ""
 
+msgid "print statistics counters from the stats log"
+msgstr ""
+
 msgid "print statistics for hydrogen"
+msgstr ""
+
+msgid "print stats counters in machine-parsable format"
+msgstr ""
+
+msgid "print stats log counters in machine-parsable format"
 msgstr ""
 
 msgid "print status of a session"
@@ -82858,6 +82891,9 @@ msgid "print the SSHFP fingerprint resource record named hostname"
 msgstr ""
 
 msgid "print the archive header"
+msgstr ""
+
+msgid "print the checksum (128 bit XXH3) of the file at PATH"
 msgstr ""
 
 msgid "print the command that would be executed"
@@ -82891,6 +82927,9 @@ msgid "print the fat headers"
 msgstr ""
 
 msgid "print the given revision"
+msgstr ""
+
+msgid "print the hash (160 bit BLAKE3) of the file at PATH"
 msgstr ""
 
 msgid "print the indirect symbol table"
@@ -82941,6 +82980,9 @@ msgstr ""
 msgid "print the specified module's version to stdout"
 msgstr ""
 
+msgid "print the value of configuration key KEY"
+msgstr ""
+
 msgid "print the version"
 msgstr ""
 
@@ -82968,6 +83010,9 @@ msgstr ""
 msgid "print version"
 msgstr ""
 
+msgid "print version and copyright information"
+msgstr ""
+
 msgid "print version and exit"
 msgstr ""
 
@@ -82975,6 +83020,9 @@ msgid "print version number"
 msgstr ""
 
 msgid "print version of this program"
+msgstr ""
+
+msgid "print version only"
 msgstr ""
 
 msgid "printable characters"
@@ -83160,6 +83208,12 @@ msgstr ""
 msgid "rebase these revisions"
 msgstr ""
 
+msgid "recompress the cache to level LEVEL"
+msgstr ""
+
+msgid "recompress to level LEVEL"
+msgstr ""
+
 msgid "record a copy that has already occurred"
 msgstr ""
 
@@ -83251,6 +83305,12 @@ msgid "remove being used, unsafe or not-for-removal modules"
 msgstr ""
 
 msgid "remove duplicate values from BootOrder"
+msgstr ""
+
+msgid "remove files created in namespace NAMESPACE"
+msgstr ""
+
+msgid "remove files used less recently than AGE"
 msgstr ""
 
 msgid "remove from environment before starting a new process"
@@ -83901,6 +83961,9 @@ msgstr ""
 msgid "set config vars for the Salesforce CLI"
 msgstr ""
 
+msgid "set configuration option KEY to value VALUE"
+msgstr ""
+
 msgid "set connection timeout to N seconds"
 msgstr ""
 
@@ -83914,6 +83977,12 @@ msgid "set default values for config variables"
 msgstr ""
 
 msgid "set log level 0-5. 0 - none 5 - chatty"
+msgstr ""
+
+msgid "set maximum number of files in cache to NUM"
+msgstr ""
+
+msgid "set maximum size of cache to SIZE"
 msgstr ""
 
 msgid "set name of directory for output files"
@@ -84096,6 +84165,9 @@ msgstr ""
 msgid "show changesets within the given named branch"
 msgstr ""
 
+msgid "show compression statistics"
+msgstr ""
+
 msgid "show copied files"
 msgstr ""
 
@@ -84103,6 +84175,9 @@ msgid "show core plugins"
 msgstr ""
 
 msgid "show cracked passwords"
+msgstr ""
+
+msgid "show current configuration options"
 msgstr ""
 
 msgid "show debug log"
@@ -84286,6 +84361,9 @@ msgid "show status of all files"
 msgstr ""
 
 msgid "show stdin contents"
+msgstr ""
+
+msgid "show summary of configuration and statistics counters"
 msgstr ""
 
 msgid "show tags"
@@ -84543,6 +84621,9 @@ msgstr ""
 msgid "specify filename to exec after connect"
 msgstr ""
 
+msgid "specify format for --print-log-stats and --print-stats"
+msgstr ""
+
 msgid "specify hg command to run on the remote side"
 msgstr ""
 
@@ -84580,6 +84661,12 @@ msgid "specify ssh command to use"
 msgstr ""
 
 msgid "specify the key identity when signing a public key"
+msgstr ""
+
+msgid "specify the maximum size for --trim-dir"
+msgstr ""
+
+msgid "specify the method for --trim-dir"
 msgstr ""
 
 msgid "specify the reporter to use"
@@ -84661,6 +84748,9 @@ msgid "stop daily backups"
 msgstr ""
 
 msgid "stop interrupted graft"
+msgstr ""
+
+msgid "stop running storage helper(s), if any"
 msgstr ""
 
 msgid "stop session"
@@ -84970,6 +85060,9 @@ msgid "trigger profiler ticks based on counting instead of timing"
 msgstr ""
 
 msgid "trim below cursor"
+msgstr ""
+
+msgid "trim directory PATH to --trim-max-size"
 msgstr ""
 
 msgid "try finding plaintext collisions"
@@ -85365,6 +85458,9 @@ msgstr ""
 msgid "use uncompressed transfer (fast over LAN)"
 msgstr ""
 
+msgid "use up to THREADS threads for threaded operations"
+msgstr ""
+
 msgid "use value for given property like -D<property>=<value>"
 msgstr ""
 
@@ -85615,6 +85711,9 @@ msgid "year of copyright statement"
 msgstr ""
 
 msgid "zIconBeep percentage"
+msgstr ""
+
+msgid "zero statistics counters"
 msgstr ""
 
 msgid "zero-I/O mode [used for scanning]"

@@ -1,4 +1,4 @@
-# Based on version 4.4.4.
+# Based on version 4.5.1.
 
 set -l subcommands --build --install --open --workflow -E
 
@@ -57,10 +57,14 @@ function __fish_cmake_warning_values
 end
 
 function __fish_cmake_preset_types
+    # `-defined` suffix also lists unavailable presets.
     for type in configure build test package workflow
         printf '%s\t%s\n' $type "List available $type presets"
+        printf '%s\t%s\n' $type-defined "List all defined $type presets"
     end
     printf '%s\t%s\n' all "List available presets of every type"
+    printf '%s\t%s\n' all-defined "List all defined presets of every type"
+    printf '%s\t%s\n' defined "Alias for configure-defined"
 end
 
 function __fish_cmake_help_keywords

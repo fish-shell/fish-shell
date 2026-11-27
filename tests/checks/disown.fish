@@ -21,3 +21,14 @@ disown
 # CHECKERR: disown: job 1 ('sleep 1 &') was stopped and has been signalled to continue.
 echo $status
 # CHECK: 0
+
+# Regression test for #13113: autoloading disown must define disown instead of
+# overwriting wait, and it must expand job specifications.
+functions -q disown
+echo $status
+# CHECK: 0
+
+sleep 1 &
+disown %1
+echo $status
+# CHECK: 0

@@ -1,5 +1,5 @@
 # localization: tier1
-function wait
+function disown
     set -l args (__fish_expand_pid_args $argv)
-    and builtin wait $args
+    and builtin disown $args
 end

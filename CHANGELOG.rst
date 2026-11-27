@@ -27,6 +27,7 @@ Scripting improvements
 - Variables whose name ends in ``_DIRS``, such as ``XDG_DATA_DIRS``, are now :ref:`path variables <variables-path>` by default, like variables ending in ``PATH`` (:issue:`12778`).
 
 - ``argparse --unknown-arguments required`` now correctly consumes values of unknown long options when known option specifications are provided (:issue:`13077`).
+- ``disown`` now expands :ref:`job specifications <syntax-job-control>` like ``%1``, and autoloading it no longer defines or overwrites the ``wait`` function (:issue:`13113`).
 
 Regression fixes:
 -----------------

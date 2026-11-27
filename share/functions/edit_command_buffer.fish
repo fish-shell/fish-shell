@@ -81,12 +81,13 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     end
 
     $editor
+    set -l editor_status "$status"
 
     set -l raw_lines (command cat $f)
     set -l unindented_lines (string join -- \n $raw_lines | fish_indent --only-unindent)
 
     # Here we're checking the exit status of the editor.
-    if test $status -eq 0 -a -s $f
+    if test "$editor_status" -eq 0 -a -s $f
         # Set the command to the output of the edited command and move the cursor to the
         # end of the edited command.
         commandline -r -- $unindented_lines
@@ -114,4 +115,5 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     # We've probably opened something that messed with the screen.
     # A repaint seems in order.
     commandline -f repaint
+    return "$editor_status"
 end

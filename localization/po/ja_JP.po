@@ -26400,6 +26400,9 @@ msgstr ""
 msgid "Equivalent to --value --property"
 msgstr ""
 
+msgid "Equivalent to --value --property=NAME"
+msgstr ""
+
 msgid "Equivalent to --word-diff=color plus --word-diff-regex=<regex>"
 msgstr ""
 
@@ -55026,6 +55029,9 @@ msgstr ""
 msgid "Revert file changes in patch"
 msgstr ""
 
+msgid "Revert the interface specific NTP servers"
+msgstr ""
+
 msgid "Revert to an older installation of composer"
 msgstr ""
 
@@ -60208,6 +60214,9 @@ msgid "Set the input character set"
 msgstr ""
 
 msgid "Set the interactive prompt (implies -i)"
+msgstr ""
+
+msgid "Set the interface specific NTP servers"
 msgstr ""
 
 msgid "Set the interval between saves of the push cache (in seconds)"

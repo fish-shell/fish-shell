@@ -170,7 +170,7 @@ complete -c cmake -n "__fish_cmake_has_subcommand build; and not __fish_cmake_su
 complete -c cmake -n "__fish_cmake_has_subcommand build; and not __fish_cmake_subcommand_dir_position; and not contains -- -- (commandline -xpc)" -a -- -d "Pass remaining options to the native build tool"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l preset -rf -d "Specify a build preset"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l presets-file -rF -d "Specify the path to a presets file"
-complete -c cmake -n "__fish_cmake_has_subcommand build" -l list-presets -d "List available presets"
+complete -c cmake -n "__fish_cmake_has_subcommand build" -l list-presets -fa "defined\t'List all defined build presets'" -d "List available presets"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -s j -l parallel -rf -d "Build in parallel using the given number of jobs"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -s t -l target -rf -d "Build <tgt> instead of default targets"
 complete -c cmake -n "__fish_cmake_has_subcommand build" -l config -rfa "(__fish_cmake_configs)" -d "For multi-configuration tools, choose <cfg>"
@@ -195,5 +195,5 @@ complete -c cmake -n "__fish_cmake_has_subcommand open; and not __fish_cmake_sub
 complete -c cmake -n "__fish_cmake_has_subcommand workflow" -f
 complete -c cmake -n "__fish_cmake_has_subcommand workflow" -l preset -rf -d "Workflow preset to execute"
 complete -c cmake -n "__fish_cmake_has_subcommand workflow" -l presets-file -rF -d "Path to a presets file"
-complete -c cmake -n "__fish_cmake_has_subcommand workflow" -l list-presets -d "List available workflow presets"
+complete -c cmake -n "__fish_cmake_has_subcommand workflow" -l list-presets -fa "defined\t'List all defined workflow presets'" -d "List available workflow presets"
 complete -c cmake -n "__fish_cmake_has_subcommand workflow" -l fresh -d "Configure a fresh build tree, removing any existing cache file"

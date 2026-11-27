@@ -38619,6 +38619,9 @@ msgstr ""
 msgid "Load LIB using require"
 msgstr ""
 
+msgid "Load NVIDIA driver, use it on demand"
+msgstr ""
+
 msgid "Load PLUGIN"
 msgstr ""
 
@@ -48613,6 +48616,9 @@ msgid "Print the contents of the package cache"
 msgstr ""
 
 msgid "Print the current layout settings and exit"
+msgstr ""
+
+msgid "Print the currently active profile"
 msgstr ""
 
 msgid "Print the data of each packet in hex (including link level header)"
@@ -69633,10 +69639,16 @@ msgstr "Changer de profil"
 msgid "Switch to post-copy after timeout"
 msgstr ""
 
+msgid "Switch to the NVIDIA GPU"
+msgstr ""
+
 msgid "Switch to the given network profile"
 msgstr ""
 
 msgid "Switch to the input method"
+msgstr ""
+
+msgid "Switch to the integrated GPU"
 msgstr ""
 
 msgid "Switches bundler's defaults into deployment mode."

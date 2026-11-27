@@ -30,5 +30,8 @@ max_line_length = unset
 [{COMMIT_EDITMSG,git-revise-todo,*.jjdescription}]
 max_line_length = 72
 
+[COMMIT_EDITMSG]
+trim_trailing_whitespace = false
+
 [*.{toml,yml}]
 indent_size = 2

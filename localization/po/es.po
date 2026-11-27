@@ -9558,10 +9558,16 @@ msgstr ""
 msgid "Bugs for downgrade packages"
 msgstr ""
 
+msgid "Build <tgt> instead of default targets"
+msgstr ""
+
 msgid "Build Node.js without SSL support"
 msgstr ""
 
 msgid "Build a .NET project"
+msgstr ""
+
+msgid "Build a CMake-generated project binary tree"
 msgstr ""
 
 msgid "Build a Debian package"
@@ -9696,6 +9702,9 @@ msgstr ""
 msgid "Build in parallel"
 msgstr ""
 
+msgid "Build in parallel using the given number of jobs"
+msgstr ""
+
 msgid "Build index if unavailable"
 msgstr ""
 
@@ -9763,6 +9772,9 @@ msgid "Build source without install"
 msgstr ""
 
 msgid "Build tag"
+msgstr ""
+
+msgid "Build target 'clean' first, then build"
 msgstr ""
 
 msgid "Build the MkDocs documentation"
@@ -9934,6 +9946,9 @@ msgid "CIFS (Windows) service to mount as home area"
 msgstr ""
 
 msgid "CIFS (Windows) user name"
+msgstr ""
+
+msgid "CMake command mode"
 msgstr ""
 
 msgid "CPU cap"
@@ -12510,6 +12525,9 @@ msgstr ""
 msgid "Component used with provided command"
 msgstr ""
 
+msgid "Component-based install. Only install <comp>"
+msgstr ""
+
 msgid "Components one or more pixel components"
 msgstr ""
 
@@ -12759,6 +12777,9 @@ msgstr ""
 msgid "Configure a build directory"
 msgstr ""
 
+msgid "Configure a fresh build tree, removing any existing cache file"
+msgstr ""
+
 msgid "Configure a set (and order) of columns being shown in the call summary"
 msgstr ""
 
@@ -12820,6 +12841,9 @@ msgid "Configure the specified backend"
 msgstr ""
 
 msgid "Configure unpacked package(s)"
+msgstr ""
+
+msgid "Configure warning category"
 msgstr ""
 
 msgid "Configures Forward Error Correction"
@@ -14424,6 +14448,9 @@ msgstr ""
 msgid "Create or update BOSH environment"
 msgstr ""
 
+msgid "Create or update a cmake cache entry"
+msgstr ""
+
 msgid "Create or update a libphutil library"
 msgstr ""
 
@@ -15145,6 +15172,9 @@ msgid "Default branch name to view on server"
 msgstr ""
 
 msgid "Default host"
+msgstr ""
+
+msgid "Default install permission"
 msgstr ""
 
 msgid "Default language for OS installs (ISO language code, e.g. en)"
@@ -20469,6 +20499,9 @@ msgstr ""
 msgid "Do not delete extraneous source rpms"
 msgstr ""
 
+msgid "Do not delete the try_compile build tree"
+msgstr ""
+
 msgid "Do not delete torrents after adding"
 msgstr ""
 
@@ -24162,6 +24195,9 @@ msgstr ""
 msgid "Dump hardware database"
 msgstr ""
 
+msgid "Dump information about this system"
+msgstr ""
+
 msgid "Dump information on which options are loaded"
 msgstr ""
 
@@ -25854,6 +25890,9 @@ msgstr ""
 msgid "Enable verbose output to stderr"
 msgstr ""
 
+msgid "Enable verbose output, if supported"
+msgstr ""
+
 msgid "Enable viewcode extension"
 msgstr ""
 
@@ -27264,6 +27303,12 @@ msgstr ""
 msgid "Explicitly set the mime-type"
 msgstr ""
 
+msgid "Explicitly specify a build directory"
+msgstr ""
+
+msgid "Explicitly specify a source directory"
+msgstr ""
+
 msgid "Explicitly specify the unique identifier embedded in the signature"
 msgstr ""
 
@@ -28314,6 +28359,9 @@ msgstr ""
 msgid "Find potential storage pool sources"
 msgstr ""
 
+msgid "Find problems with variable usage in system files"
+msgstr ""
+
 msgid "Find raw tag"
 msgstr ""
 
@@ -28747,6 +28795,9 @@ msgid "For every URL write output to local file by default"
 msgstr ""
 
 msgid "For matches in PATH dirs that start with a dot, print './programname'"
+msgstr ""
+
+msgid "For multi-configuration tools, choose <cfg>"
 msgstr ""
 
 msgid "For nagios-last-backup-age: maximum age"
@@ -30520,6 +30571,9 @@ msgid "Generate gnuplot files of residual distribution"
 msgstr ""
 
 msgid "Generate graphviz graphs"
+msgstr ""
+
+msgid "Generate graphviz of dependencies"
 msgstr ""
 
 msgid "Generate http://www.dita-op.org's Eclipse configuration to allow editing"
@@ -32562,6 +32616,9 @@ msgstr ""
 msgid "Ignore CD/DVD repositories"
 msgstr ""
 
+msgid "Ignore COMPILE_WARNING_AS_ERROR property and variable"
+msgstr ""
+
 msgid "Ignore CRC errors"
 msgstr ""
 
@@ -32572,6 +32629,9 @@ msgid "Ignore EMERGE_DEFAULT_OPTS"
 msgstr ""
 
 msgid "Ignore GPG check failures and continue"
+msgstr ""
+
+msgid "Ignore LINK_WARNING_AS_ERROR property and variable"
 msgstr ""
 
 msgid "Ignore ML compatibility warnings"
@@ -34233,6 +34293,9 @@ msgstr ""
 msgid "Install Rosetta 2 (Apple silicon only)"
 msgstr ""
 
+msgid "Install a CMake-generated project binary tree"
+msgstr ""
+
 msgid "Install a Copr repository"
 msgstr ""
 
@@ -35409,6 +35472,9 @@ msgstr ""
 msgid "Left-column  Output only the left column of common lines."
 msgstr ""
 
+msgid "Legacy pkg-config like mode. Do not use"
+msgstr ""
+
 msgid "Length of the generated password"
 msgstr ""
 
@@ -35623,6 +35689,12 @@ msgid "Limit analyzed versions"
 msgstr ""
 
 msgid "Limit bandwidth (Examples: 200K, 3m and 1G)"
+msgstr ""
+
+msgid "Limit cmake debug-find to the comma-separated list of packages"
+msgstr ""
+
+msgid "Limit cmake debug-find to the comma-separated list of result variables"
 msgstr ""
 
 msgid "Limit commits from given author"
@@ -36135,6 +36207,12 @@ msgstr ""
 msgid "List all built-in definitions"
 msgstr ""
 
+msgid "List all cached variables"
+msgstr ""
+
+msgid "List all cached variables with help"
+msgstr ""
+
 msgid "List all children of a schema"
 msgstr ""
 
@@ -36594,6 +36672,9 @@ msgstr ""
 msgid "List available playlists"
 msgstr ""
 
+msgid "List available presets"
+msgstr ""
+
 msgid "List available profiles"
 msgstr ""
 
@@ -36628,6 +36709,9 @@ msgid "List available upgrades"
 msgstr ""
 
 msgid "List available usage quotas"
+msgstr ""
+
+msgid "List available workflow presets"
 msgstr ""
 
 msgid "List backup generations for client"
@@ -36700,6 +36784,9 @@ msgid "List collections"
 msgstr ""
 
 msgid "List commands of installed plugins"
+msgstr ""
+
+msgid "List commands with help available and exit"
 msgstr ""
 
 msgid "List commits in chronological order"
@@ -36832,6 +36919,9 @@ msgid "List devices in bootloader"
 msgstr ""
 
 msgid "List devices with available brightness controls"
+msgstr ""
+
+msgid "List diagnostics with help available and exit"
 msgstr ""
 
 msgid "List direct network traffic policies"
@@ -37056,6 +37146,9 @@ msgstr ""
 msgid "List groups"
 msgstr ""
 
+msgid "List help manuals available and exit"
+msgstr ""
+
 msgid "List helpers added to the permanent service"
 msgstr ""
 
@@ -37251,6 +37344,9 @@ msgstr ""
 msgid "List modules"
 msgstr ""
 
+msgid "List modules with help available and exit"
+msgstr ""
+
 msgid "List most recent snapshots and backups"
 msgstr ""
 
@@ -37282,6 +37378,12 @@ msgid "List networks with autostart enabled"
 msgstr ""
 
 msgid "List node(s)"
+msgstr ""
+
+msgid "List non-advanced cached variables"
+msgstr ""
+
+msgid "List non-advanced cached variables with help"
 msgstr ""
 
 msgid "List non-ephemeral secrets"
@@ -37662,6 +37764,9 @@ msgstr ""
 msgid "List platform packages only"
 msgstr ""
 
+msgid "List policies with help available and exit"
+msgstr ""
+
 msgid "List pools"
 msgstr ""
 
@@ -37699,6 +37804,9 @@ msgid "List projects"
 msgstr ""
 
 msgid "List properties for the given object type"
+msgstr ""
+
+msgid "List properties with help available and exit"
 msgstr ""
 
 msgid "List protocols added"
@@ -38176,6 +38284,9 @@ msgid "List valid media options for a hardware port or device"
 msgstr ""
 
 msgid "List variables"
+msgstr ""
+
+msgid "List variables with help available and exit"
 msgstr ""
 
 msgid "List various types of content"
@@ -42843,6 +42954,9 @@ msgstr ""
 msgid "Open folder read-only"
 msgstr ""
 
+msgid "Open generated project in the associated application"
+msgstr ""
+
 msgid "Open horizontally split windows for each file"
 msgstr ""
 
@@ -43423,6 +43537,9 @@ msgid "Output csv format"
 msgstr ""
 
 msgid "Output current account details"
+msgstr ""
+
+msgid "Output data for profiling CMake scripts"
 msgstr ""
 
 msgid "Output declared modules in a machine-readable format"
@@ -44745,6 +44862,9 @@ msgstr ""
 msgid "Pass parameters as JSON to create a staging environment variable group"
 msgstr ""
 
+msgid "Pass remaining options to the native build tool"
+msgstr ""
+
 msgid "Pass the first connected socket using sendmsg(2) to stdout and exit"
 msgstr ""
 
@@ -44947,6 +45067,9 @@ msgid "Path to a directory project files"
 msgstr ""
 
 msgid "Path to a directory with project files"
+msgstr ""
+
+msgid "Path to a presets file"
 msgstr ""
 
 msgid "Path to a secondary lease file"
@@ -45591,6 +45714,9 @@ msgstr ""
 msgid "Perform validation of test results where possible (default: off)"
 msgstr ""
 
+msgid "Performing install/strip"
+msgstr ""
+
 msgid "Performs a compilation in two passes: preprocessing and compiling"
 msgstr ""
 
@@ -45981,6 +46107,9 @@ msgstr ""
 msgid "Pre-authorize rights only"
 msgstr ""
 
+msgid "Pre-load a script to populate the cache"
+msgstr ""
+
 msgid "Pre-load specified modules"
 msgstr ""
 
@@ -46162,6 +46291,9 @@ msgid "Prepend file to input"
 msgstr ""
 
 msgid "Prepend given path to all filenames"
+msgstr ""
+
+msgid "Prepend log messages with context, if given"
 msgstr ""
 
 msgid "Prepend prefix to each pathname in the archive"
@@ -46542,6 +46674,9 @@ msgstr ""
 msgid "Print AuxOut"
 msgstr ""
 
+msgid "Print CMake config directory for user-wide FileAPI queries"
+msgstr ""
+
 msgid "Print CSV headers"
 msgstr ""
 
@@ -46857,6 +46992,9 @@ msgstr ""
 msgid "Print all group ids"
 msgstr ""
 
+msgid "Print all help manuals and exit"
+msgstr ""
+
 msgid "Print all information"
 msgstr ""
 
@@ -47017,6 +47155,24 @@ msgid "Print checksums stored in checksum items"
 msgstr ""
 
 msgid "Print child qgroup id"
+msgstr ""
+
+msgid "Print cmake-commands manual and exit"
+msgstr ""
+
+msgid "Print cmake-diagnostics manual and exit"
+msgstr ""
+
+msgid "Print cmake-modules manual and exit"
+msgstr ""
+
+msgid "Print cmake-policies manual and exit"
+msgstr ""
+
+msgid "Print cmake-properties manual and exit"
+msgstr ""
+
+msgid "Print cmake-variables manual and exit"
 msgstr ""
 
 msgid "Print color"
@@ -47431,6 +47587,27 @@ msgid "Print help explaining the command line options"
 msgstr ""
 
 msgid "Print help for `zig`"
+msgstr ""
+
+msgid "Print help for one command and exit"
+msgstr ""
+
+msgid "Print help for one diagnostic and exit"
+msgstr ""
+
+msgid "Print help for one keyword and exit"
+msgstr ""
+
+msgid "Print help for one module and exit"
+msgstr ""
+
+msgid "Print help for one policy and exit"
+msgstr ""
+
+msgid "Print help for one property and exit"
+msgstr ""
+
+msgid "Print help for one variable and exit"
 msgstr ""
 
 msgid "Print help info and exit"
@@ -47875,6 +48052,9 @@ msgid "Print number of words"
 msgstr ""
 
 msgid "Print offline CPUs only"
+msgstr ""
+
+msgid "Print one help manual and exit"
 msgstr ""
 
 msgid "Print online CPUs only"
@@ -49527,6 +49707,9 @@ msgstr ""
 msgid "Process remote refs"
 msgstr ""
 
+msgid "Process script mode"
+msgstr ""
+
 msgid "Process subdirectories before the directory itself"
 msgstr ""
 
@@ -50212,6 +50395,18 @@ msgid "Put all updated files into place at end"
 msgstr ""
 
 msgid "Put center groups first in the file"
+msgstr ""
+
+msgid "Put cmake find in a debug mode"
+msgstr ""
+
+msgid "Put cmake in a debug mode"
+msgstr ""
+
+msgid "Put cmake in trace mode"
+msgstr ""
+
+msgid "Put cmake in trace mode with variable expansion"
 msgstr ""
 
 msgid "Put doc for each module on its own page"
@@ -51567,6 +51762,9 @@ msgstr ""
 msgid "Redirect stdout to file"
 msgstr ""
 
+msgid "Redirect trace output to a file instead of stderr"
+msgstr ""
+
 msgid "Redirect xsp4 PID output in stdout to file"
 msgstr ""
 
@@ -52645,6 +52843,9 @@ msgid "Remove machine images"
 msgstr ""
 
 msgid "Remove managed save of a domain"
+msgstr ""
+
+msgid "Remove matching entries from CMake cache"
 msgstr ""
 
 msgid "Remove matching variables"
@@ -54435,6 +54636,9 @@ msgstr ""
 msgid "Restore working tree files"
 msgstr ""
 
+msgid "Restore/resolve package references during build"
+msgstr ""
+
 msgid "Restores a record kept with -B"
 msgstr ""
 
@@ -55282,6 +55486,9 @@ msgid "Run a suite of HTML Selenese tests"
 msgstr ""
 
 msgid "Run a task without nesting the project's JVM inside Leiningen's."
+msgstr ""
+
+msgid "Run a workflow preset"
 msgstr ""
 
 msgid "Run action specified by --timeout-* if live migration exceeds timeout"
@@ -57412,6 +57619,9 @@ msgid "Select an option profile"
 msgstr ""
 
 msgid "Select an output format"
+msgstr ""
+
+msgid "Select an output path for the profiling data"
 msgstr ""
 
 msgid "Select an workspace"
@@ -60336,6 +60546,9 @@ msgstr ""
 msgid "Set the output filename"
 msgstr ""
 
+msgid "Set the output format of the trace"
+msgstr ""
+
 msgid "Set the output printing format"
 msgstr ""
 
@@ -60604,6 +60817,9 @@ msgid "Set the verbose level of output"
 msgstr ""
 
 msgid "Set the verbosity level"
+msgstr ""
+
+msgid "Set the verbosity of messages from CMake files"
 msgstr ""
 
 msgid "Set the viminfo file location"
@@ -61549,6 +61765,12 @@ msgid "Show all available formats"
 msgstr ""
 
 msgid "Show all branches"
+msgstr ""
+
+msgid "Show all cached variables matching regex"
+msgstr ""
+
+msgid "Show all cached variables matching regex with help"
 msgstr ""
 
 msgid "Show all commands, or usage for a command"
@@ -62854,6 +63076,12 @@ msgid "Show nmcli version"
 msgstr ""
 
 msgid "Show nodeenv's version number and exit"
+msgstr ""
+
+msgid "Show non-advanced cached variables matching regex"
+msgstr ""
+
+msgid "Show non-advanced cached variables matching regex with help"
 msgstr ""
 
 msgid "Show non-operational devices"
@@ -66048,6 +66276,12 @@ msgstr ""
 msgid "Specify a build location"
 msgstr ""
 
+msgid "Specify a build preset"
+msgstr ""
+
+msgid "Specify a build system generator"
+msgstr ""
+
 msgid "Specify a carbon-copy (CC) recipient"
 msgstr ""
 
@@ -66061,6 +66295,9 @@ msgid "Specify a config file"
 msgstr ""
 
 msgid "Specify a configuration file"
+msgstr ""
+
+msgid "Specify a configure preset"
 msgstr ""
 
 msgid "Specify a criterion to stop writing the capture file"
@@ -66334,6 +66571,9 @@ msgid "Specify an alternate local PVL kit file location"
 msgstr ""
 
 msgid "Specify an alternate local parameterized proof kit file location"
+msgstr ""
+
+msgid "Specify an alternate project file name"
 msgstr ""
 
 msgid "Specify an alternate session data file"
@@ -66762,6 +67002,9 @@ msgstr ""
 msgid "Specify input size in bytes"
 msgstr ""
 
+msgid "Specify install directory"
+msgstr ""
+
 msgid "Specify installroot"
 msgstr ""
 
@@ -67012,6 +67255,9 @@ msgid "Specify path(s) to module library (default=None)"
 msgstr ""
 
 msgid "Specify pattern explicitly"
+msgstr ""
+
+msgid "Specify platform name if supported by generator"
 msgstr ""
 
 msgid "Specify player name"
@@ -67587,6 +67833,9 @@ msgstr ""
 msgid "Specify the path from which to start the search"
 msgstr ""
 
+msgid "Specify the path to a presets file"
+msgstr ""
+
 msgid "Specify the pathname of the file progfile containing an awk program"
 msgstr ""
 
@@ -67732,6 +67981,12 @@ msgid "Specify tmp-dir."
 msgstr ""
 
 msgid "Specify tongue string"
+msgstr ""
+
+msgid "Specify toolchain file"
+msgstr ""
+
+msgid "Specify toolset name if supported by generator"
 msgstr ""
 
 msgid "Specify trust model"
@@ -70557,6 +70812,9 @@ msgstr ""
 msgid "The installation is removable"
 msgstr ""
 
+msgid "The installation prefix CMAKE_INSTALL_PREFIX"
+msgstr ""
+
 msgid "The kinds of dependencies to display"
 msgstr ""
 
@@ -71356,6 +71614,9 @@ msgid "Trace internal shell commands (bash -x)"
 msgstr ""
 
 msgid "Trace only system calls accessing path"
+msgstr ""
+
+msgid "Trace only this CMake file/module"
 msgstr ""
 
 msgid "Trace operation cache"
@@ -76254,6 +76515,9 @@ msgstr ""
 msgid "View information about package/theme in the atom.io registry"
 msgstr ""
 
+msgid "View mode only"
+msgstr ""
+
 msgid "View package information"
 msgstr ""
 
@@ -77347,6 +77611,9 @@ msgid "Work with the system cache"
 msgstr ""
 
 msgid "Workaround for bug in more(1)"
+msgstr ""
+
+msgid "Workflow preset to execute"
 msgstr ""
 
 msgid "Working directory must match"

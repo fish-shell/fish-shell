@@ -57,7 +57,7 @@ function __fish_cmake_warning_values
 end
 
 function __fish_cmake_preset_types
-    for type in configure build test package
+    for type in configure build test package workflow
         printf '%s\t%s\n' $type "List available $type presets"
     end
     printf '%s\t%s\n' all "List available presets of every type"
@@ -179,6 +179,7 @@ complete -c cmake -n "__fish_cmake_has_subcommand install; and not __fish_cmake_
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l config -rfa "(__fish_cmake_configs)" -d "For multi-configuration tools, choose <cfg>"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l component -rf -d "Component-based install. Only install <comp>"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l default-directory-permissions -rf -d "Default install permission"
+complete -c cmake -n "__fish_cmake_has_subcommand install" -s j -l parallel -rf -d "Build in parallel using the given number of jobs"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l prefix -rfa "(__fish_complete_directories)" -d "The installation prefix CMAKE_INSTALL_PREFIX"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -l strip -d "Performing install/strip"
 complete -c cmake -n "__fish_cmake_has_subcommand install" -s v -l verbose -d "Enable verbose output"

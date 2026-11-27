@@ -8,12 +8,11 @@ function __fish_print_help --description "Print help for the specified fish func
     set -l item (__fish_canonicalize_builtin $argv[1])
 
     function __fish_print_help_man -V item -a man1
-        if not path is $man1
-            # Trigger the "documentation not be installed" message. Currently
-            # only when called from core.
+        set -l args -l $(path filter -- "$man1/$item.1" "$man1/$item.1.gz")[1]
+        if not set -q args[2]
+            # Builtins recognize status 2 as a missing manual page.
             return 2
         end
-        set -l args -l (path filter -- $man1/$item.1 $man1/$item.1.gz)[1]
         # Work around macOS/FreeBSD man not supporting -l yet (only mandoc really needs it).
         if not __fish_without_manpager man -l $args[2] &>/dev/null
             set -e args[1]

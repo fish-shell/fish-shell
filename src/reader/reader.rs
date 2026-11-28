@@ -35,10 +35,10 @@ use crate::{
     env::{EnvMode, EnvStack, Environment, Statuses},
     env_dispatch::{
         MIDNIGHT_COMMANDER_SID, handle_emoji_width, handle_fish_cursor_end_mode_change,
-        handle_fish_cursor_selection_mode_change,
+        handle_fish_cursor_selection_mode_change, is_macos_terminal_app,
     },
     event,
-    exec::exec_subshell,
+    exec::{exec_subshell, fork_count},
     expand::{self, ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_tilde},
     fd_readable_set::poll_fd_readable,
     fds::{make_fd_blocking, wopen_cloexec},
@@ -702,6 +702,8 @@ pub struct ReaderData {
     /// This is made public so that InputEventQueuer can be implemented on us.
     pub input_data: InputData,
     queued_repaint: bool,
+    /// A size-change event must run before another repaint.
+    resize_pending: bool,
     /// The history.
     history: Arc<History>,
     /// The history search.
@@ -1145,14 +1147,25 @@ pub fn reader_schedule_prompt_repaint() {
 pub fn reader_update_termsize(parser: &mut Parser) {
     let last = termsize_last();
     let new = termsize_update(parser);
-    if new.height() == last.height() {
+    if new == last {
         return;
     }
     let Some(data) = current_data() else {
         return;
     };
     let mut data = Reader { parser, data };
-    data.enqueue_event(CharEvent::Implicit(ImplicitEvent::NewWindowHeight));
+    // Resizing can move the prompt, even if only the width changes. Do not use
+    // its old absolute position while the terminal and screen layout change.
+    data.screen
+        .set_position_in_viewport("window size change", None);
+    let resize_pending = std::mem::replace(&mut data.resize_pending, true);
+    // A reply to an earlier query is no longer a position in this layout.
+    if let Some(TerminalQuery::Recurrent(query)) = data.blocking_query_mut() {
+        query.cursor_position = None;
+    }
+    if !resize_pending {
+        data.enqueue_event(CharEvent::Implicit(ImplicitEvent::NewWindowSize));
+    }
 }
 
 pub fn reader_execute_readline_cmd(parser: &mut Parser, ch: CharEvent) {
@@ -1404,6 +1417,7 @@ impl ReaderData {
             screen: Screen::default(),
             input_data,
             queued_repaint: false,
+            resize_pending: false,
             history,
             history_search: Default::default(),
             history_pager: None,
@@ -1820,6 +1834,10 @@ impl<'a> Reader<'a> {
     /// Generate a new layout data from the current state of the world, and paint with it.
     /// If `mcolors` has a value, then apply it; otherwise extend existing colors.
     fn layout_and_repaint(&mut self, reason: &wstr) {
+        if self.is_blocked_querying() || self.resize_in_progress() {
+            self.force_exec_prompt_and_repaint = true;
+            return;
+        }
         self.rendered_layout = self.make_layout_data();
         self.paint_layout(reason, false);
     }
@@ -2701,6 +2719,7 @@ impl<'a> Reader<'a> {
 
     /// Run a sequence of commands from an input binding.
     fn run_input_command_scripts(&mut self, cmd: &wstr) {
+        let fork_count_before = fork_count();
         self.eval_bind_cmd(cmd);
 
         // Restore tty to shell modes.
@@ -2710,6 +2729,36 @@ impl<'a> Reader<'a> {
         // tty alone, run the commands in shell mode, and then restore shell modes.
         set_shell_modes(STDIN_FILENO, "bind scripts");
         signal_safe_termsize_invalidate_tty();
+
+        // A program in a binding can scroll the terminal and return to the same
+        // position within the prompt. Refresh the absolute row used by Terminal.app
+        // before the reader paints again, while the old screen model is still intact.
+        if fork_count_before == fork_count()
+            || !is_macos_terminal_app(self.vars())
+            || !self.screen.has_position_in_viewport()
+            || self.rls().finished
+            || self.exit_loop_requested
+            || self.parser.libdata().exit_current_script
+            || !self.input_data.queue.iter().any(|event| {
+                matches!(event, CharEvent::Readline(event)
+                    if matches!(event.cmd, ReadlineCmd::Repaint | ReadlineCmd::ForceRepaint))
+            })
+        {
+            return;
+        }
+        reader_update_termsize(self.parser);
+        if self.is_blocked_querying() || self.resize_pending {
+            // Use the cursor position query already scheduled by the resize.
+            return;
+        }
+        self.screen
+            .set_position_in_viewport("external command in binding", None);
+        self.query(RecurrentQuery {
+            cursor_position: Some(CursorPositionQuery::new(
+                CursorPositionQueryReason::BindingRepaint,
+            )),
+            ..Default::default()
+        });
     }
 
     /// Read normal characters, inserting them into the command line.
@@ -2766,16 +2815,33 @@ impl<'a> Reader<'a> {
         event_needing_handling
     }
 
+    fn resize_in_progress(&self) -> bool {
+        if self.resize_pending {
+            return true;
+        }
+        let Some(TerminalQuery::Recurrent(query)) = &self.input_data.blocking_query else {
+            return false;
+        };
+        query
+            .cursor_position
+            .as_ref()
+            .is_some_and(|query| query.reason == CursorPositionQueryReason::WindowSizeChange)
+    }
+
     // A helper that kicks off syntax highlighting, autosuggestion computing, and repaints.
     fn color_suggest_repaint_now(&mut self) {
+        if self.resize_in_progress() {
+            return;
+        }
         if self.conf.inputfd == STDIN_FILENO {
             self.update_autosuggestion();
             self.super_highlight_me_plenty();
         }
         if self.is_repaint_needed(None) {
+            // Clear this before painting so a deferred repaint can set it again.
+            self.force_exec_prompt_and_repaint = false;
             self.layout_and_repaint(L!("toplevel"));
         }
-        self.force_exec_prompt_and_repaint = false;
     }
 
     fn handle_char_event(&mut self, injected_event: Option<CharEvent>) -> ControlFlow<()> {
@@ -2787,8 +2853,10 @@ impl<'a> Reader<'a> {
         // Perhaps update the termsize. This is cheap if it has not changed.
         reader_update_termsize(self.parser);
 
-        // Repaint as needed.
-        self.color_suggest_repaint_now();
+        if !self.is_blocked_querying() {
+            // Repaint as needed.
+            self.color_suggest_repaint_now();
+        }
 
         if self
             .rls()
@@ -2914,11 +2982,12 @@ impl<'a> Reader<'a> {
                             ..Default::default()
                         });
                     }
-                    NewWindowHeight => {
-                        flog!(reader, "Handling window height change");
+                    NewWindowSize => {
+                        self.resize_pending = false;
+                        flog!(reader, "Handling window size change");
                         self.query(RecurrentQuery {
                             cursor_position: Some(CursorPositionQuery::new(
-                                CursorPositionQueryReason::WindowHeightChange,
+                                CursorPositionQueryReason::WindowSizeChange,
                             )),
                             ..Default::default()
                         });
@@ -2926,6 +2995,11 @@ impl<'a> Reader<'a> {
                 }
             }
             CharEvent::QueryResult(query_result) => {
+                if matches!(query_result, QueryResultEvent::Interrupted) {
+                    // Interrupting a query also discards queued repaint and size-change events.
+                    self.queued_repaint = false;
+                    self.resize_pending = false;
+                }
                 let query = self.blocking_query_mut();
                 use QueryResponse::*;
                 use QueryResultEvent::*;
@@ -2962,13 +3036,12 @@ impl<'a> Reader<'a> {
                             let reason = cursor_pos_query.reason;
                             let whence = match reason {
                                 NewPrompt => "cursor position query on new prompt",
-                                WindowHeightChange => {
-                                    "cursor position query on window height change"
-                                }
+                                WindowSizeChange => "cursor position query on window size change",
+                                BindingRepaint => "cursor position query after binding",
                             };
                             let y = cursor_pos.map(|cursor_pos| match reason {
                                 NewPrompt => cursor_pos.y,
-                                WindowHeightChange => {
+                                WindowSizeChange | BindingRepaint => {
                                     self.screen.command_line_y_given_cursor_y(cursor_pos.y)
                                 }
                             });
@@ -3025,6 +3098,19 @@ impl<'a> Reader<'a> {
     }
 
     fn handle_readline_command(&mut self, c: ReadlineCmd) {
+        if self.resize_in_progress()
+            && matches!(
+                c,
+                ReadlineCmd::Repaint
+                    | ReadlineCmd::ForceRepaint
+                    | ReadlineCmd::RepaintMode
+                    | ReadlineCmd::ClearScreenAndRepaint
+            )
+        {
+            self.input_data
+                .queue_char(CharEvent::from_readline(c, vec![]));
+            return;
+        }
         #[allow(non_camel_case_types)]
         type rl = ReadlineCmd;
         match c {
@@ -3179,8 +3265,8 @@ impl<'a> Reader<'a> {
                 }
                 self.exec_prompt(true, false);
                 self.screen.reset_line(/*repaint_prompt=*/ true);
-                self.layout_and_repaint(L!("readline"));
                 self.force_exec_prompt_and_repaint = false;
+                self.layout_and_repaint(L!("readline"));
                 self.parser.libdata_mut().is_repaint = false;
             }
             rl::Complete | rl::CompleteAndSearch => {
@@ -4399,8 +4485,8 @@ impl<'a> Reader<'a> {
 
         self.exec_prompt(true, false);
         self.screen.reset_line(/*repaint_prompt=*/ true);
-        self.layout_and_repaint(L!("readline"));
         self.force_exec_prompt_and_repaint = false;
+        self.layout_and_repaint(L!("readline"));
         self.parser.libdata_mut().is_repaint = false;
     }
 

@@ -10,6 +10,7 @@
 use crate::common::{get_omitted_newline_str, has_working_tty_timestamps, shell_modes};
 use crate::editable_line::line_at_cursor;
 use crate::env::Environment;
+use crate::env_dispatch::is_macos_terminal_app;
 use crate::flog::{flog, flogf};
 use crate::global_safety::RelaxedAtomicBool;
 use crate::highlight::{HighlightColorResolver, HighlightRole, HighlightSpec};
@@ -18,11 +19,12 @@ use crate::pager::{PAGER_MIN_HEIGHT, PageRendering, Pager};
 use crate::prelude::*;
 use crate::terminal::SgrTerminalCommand::EnterDimMode;
 use crate::terminal::TerminalCommand::{
-    self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorRight,
-    CursorUp, Osc133PromptEnd, Osc133PromptStart, ScrollContentUp,
+    self, ClearToEndOfLine, ClearToEndOfScreen, CursorDown, CursorLeft, CursorMove, CursorMoveTo,
+    CursorRight, CursorUp, DecrstAutoWrap, DecsetAutoWrap, Osc133PromptEnd, Osc133PromptStart,
+    ScrollContentUp,
 };
 use crate::terminal::{BufferedOutputter, CardinalDirection, Outputter};
-use crate::termsize::Termsize;
+use crate::termsize::{Termsize, termsize_last};
 use crate::wutil::fstat;
 use fish_common::write_loop;
 use fish_fallback::{fish_wcswidth_canonicalizing, fish_wcwidth};
@@ -215,6 +217,12 @@ pub struct Screen {
     pub autosuggestion_is_truncated: bool,
     /// True if the last rendering was so large we could only display part of the command line.
     pub scrolled: bool,
+    /// Lines omitted above the visible portion of the last rendering.
+    scrolled_lines: usize,
+    /// Character widths on each logical input line before the cursor.
+    commandline_widths: Vec<Vec<usize>>,
+    /// Whether the last rendering was in macOS Terminal.app.
+    is_macos_terminal: bool,
 
     /// Receiver for our output.
     outp: &'static RefCell<Outputter>,
@@ -227,6 +235,8 @@ pub struct Screen {
     actual: ScreenData,
     /// A string containing the prompt which was last printed to the screen.
     actual_left_prompt: Option<WString>,
+    /// A prompt prefix left above the viewport until it can be redrawn in full.
+    clipped_prompt_prefix: Option<WString>,
     /// Last right prompt width.
     last_right_prompt_width: usize,
     /// If we support soft wrapping, we can output to this location without any cursor motion.
@@ -252,11 +262,15 @@ impl Default for Screen {
         Self {
             autosuggestion_is_truncated: Default::default(),
             scrolled: Default::default(),
+            scrolled_lines: Default::default(),
+            commandline_widths: Default::default(),
+            is_macos_terminal: false,
             outp: Outputter::stdoutput(),
             viewport_y: Default::default(),
             desired: Default::default(),
             actual: Default::default(),
             actual_left_prompt: Default::default(),
+            clipped_prompt_prefix: Default::default(),
             last_right_prompt_width: Default::default(),
             soft_wrap_location: Default::default(),
             need_clear_lines: Default::default(),
@@ -298,6 +312,17 @@ impl Screen {
     ) {
         let screen_width = curr_termsize.width();
         let screen_height = curr_termsize.height();
+        self.is_macos_terminal = is_macos_terminal_app(vars);
+        let left_prompt = if self.clipped_prompt_prefix.is_some() {
+            let layout = LAYOUT_CACHE_SHARED.lock().unwrap().calc_prompt_layout(
+                left_prompt,
+                None,
+                usize::MAX,
+            );
+            &left_prompt[*layout.line_starts.last().unwrap()..]
+        } else {
+            left_prompt
+        };
         static REPAINTS: AtomicU32 = AtomicU32::new(0);
         flogf!(
             screen,
@@ -482,6 +507,31 @@ impl Screen {
         }
         let pager_available_height = saturating_sub(curr_termsize.height_u16(), full_line_count);
 
+        self.commandline_widths.clear();
+        if self.is_macos_terminal && pager_search_field_position.is_none() {
+            let mut widths = vec![];
+            for i in layout.left_prompt_lines - 1..=scrolled_cursor.cursor.y {
+                let line = self.desired.line(i);
+                let limit = if i == scrolled_cursor.cursor.y {
+                    scrolled_cursor.cursor.x
+                } else {
+                    usize::MAX
+                };
+                let mut column = 0;
+                for ch in &line.text {
+                    let width = wcwidth_rendered_min_0(ch.character);
+                    if column + width > limit {
+                        break;
+                    }
+                    widths.push(width);
+                    column += width;
+                }
+                if !line.is_soft_wrapped || i == scrolled_cursor.cursor.y {
+                    self.commandline_widths.push(std::mem::take(&mut widths));
+                }
+            }
+        }
+
         // Now that we've output everything, set the cursor to the position that we saved in the loop
         // above.
         self.desired.cursor = match pager_search_field_position {
@@ -518,6 +568,11 @@ impl Screen {
         self.desired.append_lines(&page_rendering.screen_data);
 
         self.scrolled = scrolled_cursor.scroll_amount != 0;
+        self.scrolled_lines = if is_final_rendering {
+            0
+        } else {
+            scrolled_cursor.scroll_amount
+        };
         self.desired.visible_prompt_lines =
             layout
                 .left_prompt_lines
@@ -575,6 +630,10 @@ impl Screen {
         self.set_position_in_viewport("scrollback-push", Some(0));
     }
 
+    pub fn has_position_in_viewport(&self) -> bool {
+        self.viewport_y.is_some()
+    }
+
     pub fn set_position_in_viewport(&mut self, whence: &str, viewport_y: Option<usize>) {
         flogf!(
             reader,
@@ -606,14 +665,80 @@ impl Screen {
     }
 
     pub fn command_line_y_given_cursor_y(&mut self, viewport_cursor_y: usize) -> usize {
-        let prompt_y = viewport_cursor_y.checked_sub(self.actual.cursor.y);
+        // A larger window can restore lines that were previously above the viewport.
+        // Include those omitted lines when finding the full prompt's origin.
+        let cursor_y = self.actual.cursor.y + self.scrolled_lines;
+        let screen_width = termsize_last().width();
+        let prefix = self
+            .clipped_prompt_prefix
+            .as_ref()
+            .or(self.actual_left_prompt.as_ref());
+        if let Some(prompt) = prefix.filter(|_| self.is_macos_terminal) {
+            let mut cache = LAYOUT_CACHE_SHARED.lock().unwrap();
+            let layout = cache.calc_prompt_layout(prompt, None, usize::MAX);
+            let prefix_lines = layout.line_starts.len().saturating_sub(1);
+            let prefix_end = *layout.line_starts.last().unwrap();
+            let prefix = prompt[..prefix_end].to_owned();
+            let prefix_height: usize = layout.line_starts[..prefix_lines]
+                .iter()
+                .map(|&start| {
+                    reflowed_line_height(
+                        &prompt_run_widths(prompt, start, &mut cache),
+                        screen_width,
+                    )
+                })
+                .sum();
+            drop(cache);
+            let command_cursor_y = if self.actual.screen_width != Some(screen_width)
+                && !self.commandline_widths.is_empty()
+            {
+                self.commandline_widths
+                    .iter()
+                    .map(|widths| reflowed_line_height(widths, screen_width))
+                    .sum::<usize>()
+                    - 1
+            } else if self.clipped_prompt_prefix.is_some() {
+                cursor_y
+            } else {
+                cursor_y.saturating_sub(prefix_lines)
+            };
+            if let Some(prompt_y) = viewport_cursor_y.checked_sub(prefix_height + command_cursor_y)
+            {
+                self.clipped_prompt_prefix = None;
+                return prompt_y;
+            }
+            if prefix_lines != 0 {
+                if self.clipped_prompt_prefix.is_none() {
+                    // Leave the hidden prefix untouched, so terminal reflow can restore it.
+                    // From now on the screen model describes only the input portion.
+                    let visible_prefix_lines = self.actual.visible_prompt_lines.saturating_sub(1);
+                    self.actual
+                        .line_datas
+                        .drain(..visible_prefix_lines.min(self.actual.line_count()));
+                    self.actual.cursor.y =
+                        self.actual.cursor.y.saturating_sub(visible_prefix_lines);
+                    self.scrolled_lines = command_cursor_y.saturating_sub(self.actual.cursor.y);
+                    self.actual.visible_prompt_lines = self.actual.visible_prompt_lines.min(1);
+                    self.actual_left_prompt = self
+                        .actual_left_prompt
+                        .as_ref()
+                        .map(|prompt| prompt[prefix_end..].to_owned());
+                    self.actual_lines_before_reset = self
+                        .actual_lines_before_reset
+                        .saturating_sub(visible_prefix_lines);
+                }
+                self.clipped_prompt_prefix = Some(prefix);
+                return viewport_cursor_y.saturating_sub(command_cursor_y);
+            }
+        }
+        let prompt_y = viewport_cursor_y.checked_sub(cursor_y);
         prompt_y.unwrap_or_else(|| {
             flog!(
                 reader,
                 "Reported cursor line index",
                 viewport_cursor_y,
                 "is above fish's cursor",
-                self.actual.cursor.y
+                cursor_y
             );
             0
         })
@@ -666,6 +791,9 @@ impl Screen {
     /// If clear_to_eos is set,
     /// The screen width must be provided for the PROMPT_SP hack.
     pub fn reset_abandoning_line(&mut self, screen_width: Option<usize>) {
+        self.clipped_prompt_prefix = None;
+        self.commandline_widths.clear();
+        self.scrolled_lines = 0;
         self.actual.cursor.y = 0;
         self.actual.clear_lines();
         self.actual_left_prompt = None;
@@ -1080,7 +1208,16 @@ impl Screen {
         if prompt_changed || prompt_last_line_should_wrap {
             let mut start;
             if prompt_changed {
-                self.r#move(0, 0);
+                if let Some(viewport_y) = self.viewport_y.filter(|_| is_macos_terminal_app(vars)) {
+                    self.write_command(CursorMoveTo {
+                        row: viewport_y,
+                        column: 0,
+                    });
+                    self.actual.cursor = Cursor { x: 0, y: 0 };
+                    self.soft_wrap_location = None;
+                } else {
+                    self.r#move(0, 0);
+                }
                 let prompt_first_visible_line =
                     left_prompt_layout.line_starts.len() - self.desired.visible_prompt_lines;
                 start = left_prompt_layout.line_starts[prompt_first_visible_line];
@@ -1291,6 +1428,12 @@ impl Screen {
 
             // Output any rprompt if this is the first line.
             if is_prompt_line && right_prompt_width > 0 {
+                if self.is_macos_terminal {
+                    // A resize can make the saved width stale before this output is rendered.
+                    // Do not let the right prompt wrap and move the command line down a row.
+                    self.write_command(DecrstAutoWrap);
+                }
+
                 // Move the cursor to the beginning of the line first to be independent of the width.
                 // This helps prevent staircase effects if fish and the terminal disagree.
                 self.r#move(0, i);
@@ -1311,6 +1454,9 @@ impl Screen {
                 self.r#move(x - right_prompt_width, y);
                 self.write_str(L!("\r"));
                 self.actual.cursor.x = 0;
+                if self.is_macos_terminal {
+                    self.write_command(DecsetAutoWrap);
+                }
             }
         }
 
@@ -1700,6 +1846,47 @@ fn is_run_terminator(c: char) -> bool {
     matches!(c, '\0' | '\n' | '\r' | '\x0C')
 }
 
+fn prompt_run_widths(input: &wstr, start: usize, cache: &mut LayoutCache) -> Vec<usize> {
+    let mut widths = vec![];
+    let mut column = 0;
+    let mut idx = start;
+    while !is_run_terminator(input.char_at(idx)) {
+        let c = input.char_at(idx);
+        if c == '\x1B' {
+            idx += cache.escape_code_length(&input[idx..]).max(1);
+            continue;
+        }
+        if c == '\t' {
+            let next = next_tab_stop(column);
+            widths.extend(std::iter::repeat_n(1, next - column));
+            column = next;
+        } else if let Ok(width) = usize::try_from(fish_wcwidth_visible(c)) {
+            widths.push(width);
+            column += width;
+        } else {
+            column = column.saturating_sub(1);
+            if let Some(width) = widths.last_mut() {
+                *width = width.saturating_sub(1);
+            }
+        }
+        idx += 1;
+    }
+    widths
+}
+
+fn reflowed_line_height(widths: &[usize], screen_width: usize) -> usize {
+    let mut height = 1;
+    let mut column = 0;
+    for &width in widths {
+        if column + width > screen_width {
+            height += 1;
+            column = 0;
+        }
+        column += width;
+    }
+    height
+}
+
 /// Measure a run of characters in `input` starting at `start`.
 /// Stop when we reach a run terminator, and return its index in `out_end` (if not null).
 /// Note \0 is a run terminator so there will always be one.
@@ -2087,10 +2274,24 @@ mod tests {
     use crate::prelude::*;
     use crate::screen::{
         LayoutCache, PromptCacheEntry, PromptLayout, ScreenLayout, compute_layout,
+        prompt_run_widths, reflowed_line_height,
     };
     use crate::tests::prelude::*;
     use fish_wcstringutil::join_strings;
     use fish_widestring::ELLIPSIS_CHAR;
+
+    // Regression test: a wide character wraps before an odd-width right margin,
+    // while color escapes occupy no cells.
+    #[test]
+    #[serial]
+    fn test_prompt_reflow_height() {
+        test_init();
+        let mut cache = LayoutCache::new();
+        let widths = prompt_run_widths(L!("\x1b[34m漢字漢字\x1b[0m\n> "), 0, &mut cache);
+        assert_eq!(reflowed_line_height(&widths, 3), 4);
+        assert_eq!(reflowed_line_height(&widths, 4), 2);
+        assert_eq!(reflowed_line_height(&widths, 8), 1);
+    }
 
     #[test]
     #[serial]

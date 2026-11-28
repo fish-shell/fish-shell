@@ -79,6 +79,7 @@ pub(crate) enum TerminalCommand<'a> {
     CursorLeft,
     CursorRight,
     CursorMove(CardinalDirection, usize),
+    CursorMoveTo { row: usize, column: usize },
 
     // Commands related to querying (used mainly for backwards-incompatible features).
     QueryPrimaryDeviceAttribute,
@@ -122,6 +123,8 @@ pub(crate) enum TerminalCommand<'a> {
     DecrstBracketedPaste,
     DecsetColorThemeReporting,
     DecrstColorThemeReporting,
+    DecsetAutoWrap,
+    DecrstAutoWrap,
 }
 
 #[derive(Debug, Clone)]
@@ -141,6 +144,11 @@ fn cursor_move(out: &mut Outputter, direction: CardinalDirection, steps: usize) 
             CardinalDirection::Right => 'C',
         }
     );
+    true
+}
+
+fn cursor_move_to(out: &mut Outputter, row: usize, column: usize) -> bool {
+    write_to_output!(out, "\x1b[{};{}H", row + 1, column + 1);
     true
 }
 
@@ -301,6 +309,7 @@ impl Outputter {
             CursorLeft => write(self, b"\x08"),
             CursorRight => write(self, b"\x1b[C"),
             CursorMove(direction, steps) => cursor_move(self, direction, steps),
+            CursorMoveTo { row, column } => cursor_move_to(self, row, column),
             QueryPrimaryDeviceAttribute => write(self, b"\x1b[0c"),
             QueryXtversion => write(self, b"\x1b[>0q"),
             QueryXtgettcap(cap) => query_xtgettcap(self, cap),
@@ -329,6 +338,8 @@ impl Outputter {
             DecrstBracketedPaste => write(self, b"\x1b[?2004l"),
             DecsetColorThemeReporting => write(self, b"\x1b[?2031h"),
             DecrstColorThemeReporting => write(self, b"\x1b[?2031l"),
+            DecsetAutoWrap => write(self, b"\x1b[?7h"),
+            DecrstAutoWrap => write(self, b"\x1b[?7l"),
         }
     }
 

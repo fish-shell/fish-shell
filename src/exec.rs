@@ -312,6 +312,10 @@ pub fn exec_subshell_for_expand(
 /// Number of calls to fork() or posix_spawn().
 static FORK_COUNT: AtomicUsize = AtomicUsize::new(0);
 
+pub(crate) fn fork_count() -> usize {
+    FORK_COUNT.load(Ordering::Relaxed)
+}
+
 /// A launch_result_t indicates when a process failed to launch, and therefore the rest of the
 /// pipeline should be aborted. This includes failed redirections, fd exhaustion, fork() failures,
 /// etc.

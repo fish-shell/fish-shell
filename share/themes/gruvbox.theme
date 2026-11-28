@@ -1,0 +1,100 @@
+# name: Gruvbox
+# url: https://github.com/morhetz/gruvbox
+
+[light]
+# preferred_background: fbf1c7
+fish_color_normal 3c3836
+fish_color_autosuggestion a89984
+fish_color_cancel -r
+fish_color_command 79740e --bold
+fish_color_comment 928374 --italics
+fish_color_cwd 79740e --bold
+fish_color_cwd_root 9d0006
+fish_color_end af3a03
+fish_color_error 9d0006 --bold
+fish_color_escape 8f3f71
+fish_color_history_current --bold
+fish_color_host 076678
+fish_color_host_remote b57614
+fish_color_keyword 9d0006
+fish_color_operator af3a03
+fish_color_param 3c3836
+fish_color_quote 79740e
+fish_color_redirection b57614
+fish_color_search_match --background=d5c4a1
+fish_color_selection --background=bdae93
+fish_color_status 9d0006
+fish_color_user 427b58
+fish_color_valid_path --underline
+fish_pager_color_completion 3c3836
+fish_pager_color_description 7c6f64
+fish_pager_color_prefix 076678 --bold
+fish_pager_color_progress 3c3836 --background=d5c4a1
+fish_pager_color_selected_background --background=076678
+fish_pager_color_selected_completion d5c4a1 --bold
+fish_pager_color_selected_description d5c4a1
+fish_pager_color_selected_prefix d5c4a1 --bold --underline
+
+[dark]
+# preferred_background: 282828
+fish_color_normal ebdbb2
+fish_color_autosuggestion 7c6f64
+fish_color_cancel -r
+fish_color_command b8bb26 --bold
+fish_color_comment 928374 --italics
+fish_color_cwd b8bb26 --bold
+fish_color_cwd_root fb4934
+fish_color_end fe8019
+fish_color_error fb4934 --bold
+fish_color_escape d3869b
+fish_color_history_current --bold
+fish_color_host 83a598
+fish_color_host_remote fabd2f
+fish_color_keyword fb4934
+fish_color_operator fe8019
+fish_color_param ebdbb2
+fish_color_quote b8bb26
+fish_color_redirection fabd2f
+fish_color_search_match --background=504945
+fish_color_selection --background=665c54
+fish_color_status fb4934
+fish_color_user 8ec07c
+fish_color_valid_path --underline
+fish_pager_color_completion ebdbb2
+fish_pager_color_description a89984
+fish_pager_color_prefix 83a598 --bold
+fish_pager_color_progress ebdbb2 --background=504945
+fish_pager_color_selected_background --background=83a598
+fish_pager_color_selected_completion 504945 --bold
+fish_pager_color_selected_description 504945
+fish_pager_color_selected_prefix 504945 --bold --underline
+
+[unknown]
+fish_color_normal --reset
+fish_color_autosuggestion brblack
+fish_color_cancel -r
+fish_color_command brgreen --bold
+fish_color_comment brblack --italics
+fish_color_cwd brgreen --bold
+fish_color_cwd_root brred
+fish_color_end yellow
+fish_color_error brred --bold
+fish_color_escape brmagenta
+fish_color_history_current --bold
+fish_color_host brblue
+fish_color_host_remote bryellow
+fish_color_keyword brred
+fish_color_operator yellow
+fish_color_param --reset
+fish_color_quote brgreen
+fish_color_redirection bryellow
+fish_color_search_match --reverse
+fish_color_selection --reverse
+fish_color_status brred
+fish_color_user brcyan
+fish_color_valid_path --underline
+fish_pager_color_completion --reset
+fish_pager_color_description brblack
+fish_pager_color_prefix brblue --bold
+fish_pager_color_progress --reverse
+fish_pager_color_selected_background --reverse

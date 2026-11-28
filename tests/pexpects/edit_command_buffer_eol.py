@@ -15,10 +15,12 @@ set -g fish_autosuggestion_enabled 0
 set -e VISUAL
 set -gx EDITOR nvim
 fish_default_key_bindings
-set -gx TMPDIR "$(path resolve -- "$TMPDIR")"
+ln -s -- "$(path resolve -- "$TMPDIR")" editor-temp
+set -gx TMPDIR "$PWD/editor-temp"
 mkdir editor-work
 cd editor-work
 function nvim
+    set -a argv '+execute "file " . fnameescape(resolve(expand("%:p")))'
     set -a argv '+lua io.write("VIRTUALEDIT:", vim.fn.eval("&virtualedit"), "\n")'
     switch "$edit_mode"
         case end

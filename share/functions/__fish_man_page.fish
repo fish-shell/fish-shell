@@ -25,10 +25,10 @@ function __fish_man_page
     # See #7863.
     if set -q args[2]
         and not string match -q -- '*/*' $args[2]
-        and man "$maincmd-$args[2]" &>/dev/null
+        and MANPAGER=cat man "$maincmd-$args[2]" &>/dev/null
         man "$maincmd-$args[2]"
     else
-        if man "$maincmd" &>/dev/null
+        if MANPAGER=cat man "$maincmd" &>/dev/null
             man "$maincmd"
         else
             printf \a

@@ -45,8 +45,10 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
                 end
                 set cursor_from_editor (__fish_mktemp_relative fish-edit_command_buffer)
                 or return
-                set -a editor +$line "+norm! $col|" $f \
-                    '+au VimLeave * ++once call writefile([printf("%s %s %s", shellescape(bufname()), line("."), col("."))], "'$cursor_from_editor'")'
+                # Vim's column is a byte index, while Fish counts characters.
+                set -l cursor_report 'printf("%s %d %d", shellescape(bufname()), line("."), strchars(strpart(getline("."), 0, col(".") - 1)) + 1)'
+                set -a editor "+call cursor($line, byteidxcomp(getline($line), $col - 1) + 1)" $f \
+                    '+au VimLeave * ++once call writefile(['$cursor_report'], "'$cursor_from_editor'")'
             case emacs emacsclient gedit
                 set -a editor +$line:$col $f
             case kak

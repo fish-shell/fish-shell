@@ -45,8 +45,13 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
                 end
                 set cursor_from_editor (__fish_mktemp_relative fish-edit_command_buffer)
                 or return
+                # Map an insertion point to the preceding character in Vim.
+                if test $col -gt 1
+                    and test "$fish_bind_mode" = insert -o "$fish_key_bindings" = fish_default_key_bindings
+                    set col $(math $col - 1)
+                end
                 # Vim's column is a byte index, while Fish counts characters.
-                set -l cursor_report 'printf("%s %d %d", shellescape(bufname()), line("."), strchars(strpart(getline("."), 0, col(".") - 1)) + 1)'
+                set -l cursor_report 'printf("%s %d %d %s", shellescape(bufname()), line("."), strchars(strpart(getline("."), 0, col(".") - 1)) + 1, shellescape(mode()))'
                 set -a editor "+call cursor($line, byteidxcomp(getline($line), $col - 1) + 1)" $f \
                     '+au VimLeave * ++once call writefile(['$cursor_report'], "'$cursor_from_editor'")'
             case emacs emacsclient gedit
@@ -103,8 +108,13 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         eval set -l pos "$(command cat $cursor_from_editor)"
         if set -q pos[1] && test $pos[1] = $f
             set -l line $pos[2]
-            set -l indent (math (string length -- "$raw_lines[$line]") - (string length -- "$unindented_lines[$line]"))
+            set -l length "$(string length -- "$unindented_lines[$line]")"
+            set -l indent (math (string length -- "$raw_lines[$line]") - $length)
             set -l column (math $pos[3] - $indent)
+            if test "$pos[4]" = n
+                # Resume insertion after the character under the Normal-mode cursor.
+                set column "$(math "min($column + 1, $length + 1)")"
+            end
             if not commandline --line $line 2>/dev/null
                 commandline -f end-of-buffer
             else

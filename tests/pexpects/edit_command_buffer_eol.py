@@ -12,7 +12,9 @@ config = r"""
 set -g fish_greeting
 set -g fish_cursor_end_mode exclusive
 set -g fish_autosuggestion_enabled 0
-set -gx VISUAL nvim
+set -e VISUAL
+set -gx EDITOR nvim
+fish_default_key_bindings
 set -gx TMPDIR "$(path resolve -- "$TMPDIR")"
 mkdir editor-work
 cd editor-work
@@ -22,17 +24,19 @@ function nvim
         case end
             set -a argv '+normal! $'
         case insert
-            set -a argv '+inoremap <F2> <Cmd>qall!<CR>' '+call feedkeys("i\<F2>", "xt")'
+            set -a argv '+inoremap <F2> <Cmd>qall!<CR>' '+call feedkeys("a\<F2>", "xt")'
     end
     command nvim --headless -u NONE -i NONE -n $argv '+qall!'
 end
 function fish_prompt
     printf 'EDITOR> '
 end
-bind ctrl-g 'commandline -C 7'
+bind ctrl-b 'set -e edit_mode; fish_vi_key_bindings; commandline -C 8'
+bind ctrl-g 'commandline -C 9'
 bind ctrl-t 'printf "\nCURSOR:%s\n" "$(commandline -C)"'
+bind -M insert ctrl-t 'printf "\nCURSOR:%s\n" "$(commandline -C)"'
 bind ctrl-r 'set -g edit_mode end; commandline -C 4'
-bind ctrl-y 'set -g edit_mode insert; commandline -r "echo e"\u0301lan; commandline -C 7'
+bind ctrl-y 'set -g edit_mode insert; commandline -r "echo e"\u0301lan; commandline -C 8'
 """
 
 sp = SpawnedProc(args=["--no-config", "-C", config])
@@ -49,18 +53,22 @@ def edit_and_expect_cursor(offset):
     sp.expect_str(f"CURSOR:{offset}\r\n")
 
 
-# Neovim's cursor lands on the last character of the line.
-edit_and_expect_cursor(11)
+# Opening and quitting Neovim preserves the end position on a line with wide characters.
+edit_and_expect_cursor(12)
 
-# Keep the same character position after wide characters.
+# Preserve the default bindings' caret after wide characters.
 sp.send(control("g"))
-edit_and_expect_cursor(7)
+edit_and_expect_cursor(9)
 
-# Convert the byte column reported after Neovim's native $.
+# Neovim's native $ also becomes an insertion point after the last character.
 sp.send(control("r"))
-edit_and_expect_cursor(11)
+edit_and_expect_cursor(12)
 
 # In Insert mode, keep the same position after a composing character.
 sp.send(control("y"))
-edit_and_expect_cursor(7)
+edit_and_expect_cursor(8)
+
+# From Fish's vi Insert mode, preserve the caret through a Normal-mode edit.
+sp.send(control("b"))
+edit_and_expect_cursor(8)
 sp.spawn.close()

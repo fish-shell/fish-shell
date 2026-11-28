@@ -35,10 +35,10 @@ use crate::{
     env::{EnvMode, EnvStack, Environment, Statuses},
     env_dispatch::{
         MIDNIGHT_COMMANDER_SID, handle_emoji_width, handle_fish_cursor_end_mode_change,
-        handle_fish_cursor_selection_mode_change,
+        handle_fish_cursor_selection_mode_change, is_macos_terminal_app,
     },
     event,
-    exec::exec_subshell,
+    exec::{exec_subshell, fork_count},
     expand::{self, ExpandFlags, ExpandResultCode, expand_one, expand_string, expand_tilde},
     fd_readable_set::poll_fd_readable,
     fds::{make_fd_blocking, wopen_cloexec},
@@ -2719,6 +2719,7 @@ impl<'a> Reader<'a> {
 
     /// Run a sequence of commands from an input binding.
     fn run_input_command_scripts(&mut self, cmd: &wstr) {
+        let fork_count_before = fork_count();
         self.eval_bind_cmd(cmd);
 
         // Restore tty to shell modes.
@@ -2728,6 +2729,36 @@ impl<'a> Reader<'a> {
         // tty alone, run the commands in shell mode, and then restore shell modes.
         set_shell_modes(STDIN_FILENO, "bind scripts");
         signal_safe_termsize_invalidate_tty();
+
+        // A program in a binding can scroll the terminal and return to the same
+        // position within the prompt. Refresh the absolute row used by Terminal.app
+        // before the reader paints again, while the old screen model is still intact.
+        if fork_count_before == fork_count()
+            || !is_macos_terminal_app(self.vars())
+            || !self.screen.has_position_in_viewport()
+            || self.rls().finished
+            || self.exit_loop_requested
+            || self.parser.libdata().exit_current_script
+            || !self.input_data.queue.iter().any(|event| {
+                matches!(event, CharEvent::Readline(event)
+                    if matches!(event.cmd, ReadlineCmd::Repaint | ReadlineCmd::ForceRepaint))
+            })
+        {
+            return;
+        }
+        reader_update_termsize(self.parser);
+        if self.is_blocked_querying() || self.resize_pending {
+            // Use the cursor position query already scheduled by the resize.
+            return;
+        }
+        self.screen
+            .set_position_in_viewport("external command in binding", None);
+        self.query(RecurrentQuery {
+            cursor_position: Some(CursorPositionQuery::new(
+                CursorPositionQueryReason::BindingRepaint,
+            )),
+            ..Default::default()
+        });
     }
 
     /// Read normal characters, inserting them into the command line.
@@ -2965,7 +2996,8 @@ impl<'a> Reader<'a> {
             }
             CharEvent::QueryResult(query_result) => {
                 if matches!(query_result, QueryResultEvent::Interrupted) {
-                    // Interrupting a query also discards queued size-change events.
+                    // Interrupting a query also discards queued repaint and size-change events.
+                    self.queued_repaint = false;
                     self.resize_pending = false;
                 }
                 let query = self.blocking_query_mut();
@@ -3005,10 +3037,11 @@ impl<'a> Reader<'a> {
                             let whence = match reason {
                                 NewPrompt => "cursor position query on new prompt",
                                 WindowSizeChange => "cursor position query on window size change",
+                                BindingRepaint => "cursor position query after binding",
                             };
                             let y = cursor_pos.map(|cursor_pos| match reason {
                                 NewPrompt => cursor_pos.y,
-                                WindowSizeChange => {
+                                WindowSizeChange | BindingRepaint => {
                                     self.screen.command_line_y_given_cursor_y(cursor_pos.y)
                                 }
                             });

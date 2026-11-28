@@ -630,6 +630,10 @@ impl Screen {
         self.set_position_in_viewport("scrollback-push", Some(0));
     }
 
+    pub fn has_position_in_viewport(&self) -> bool {
+        self.viewport_y.is_some()
+    }
+
     pub fn set_position_in_viewport(&mut self, whence: &str, viewport_y: Option<usize>) {
         flogf!(
             reader,

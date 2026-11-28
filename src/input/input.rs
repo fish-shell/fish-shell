@@ -414,6 +414,7 @@ pub struct BackgroundColorQuery {
 pub enum CursorPositionQueryReason {
     NewPrompt,
     WindowSizeChange,
+    BindingRepaint,
 }
 
 #[derive(Clone, Debug, PartialEq)]

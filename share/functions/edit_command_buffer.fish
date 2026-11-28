@@ -104,6 +104,7 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
         echo (_ "Ignoring the output of your editor since its exit status was non-zero")
         echo (_ "or the file was empty")
     end
+    # Apply the editor's cursor report even when discarding its edits.
     if set -q cursor_from_editor[1]
         eval set -l pos "$(command cat $cursor_from_editor)"
         if set -q pos[1] && test $pos[1] = $f -o $pos[1] -ef $f
@@ -111,9 +112,17 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
             set -l length "$(string length -- "$unindented_lines[$line]")"
             set -l indent (math (string length -- "$raw_lines[$line]") - $length)
             set -l column (math $pos[3] - $indent)
-            if test "$pos[4]" = n
-                # Resume insertion after the character under the Normal-mode cursor.
-                set column "$(math "min($column + 1, $length + 1)")"
+            # Callers may use an exclusive cursor to prepare for entering
+            # Insert mode when the editor succeeds.
+            if test "$fish_bind_mode" = insert -o "$fish_key_bindings" = fish_default_key_bindings
+                or test "$editor_status" -eq 0 -a "$fish_cursor_end_mode" = exclusive
+                if test "$pos[4]" = n
+                    # Resume insertion after the character under the Normal-mode cursor.
+                    set column "$(math "min($column + 1, $length + 1)")"
+                end
+            else if test "$pos[4]" = i
+                # Match Escape when returning to a character cursor.
+                set column "$(math "max($column - 1, 1)")"
             end
             if not commandline --line $line 2>/dev/null
                 commandline -f end-of-buffer

@@ -27,6 +27,8 @@ function nvim
             set -a argv '+normal! $'
         case insert
             set -a argv '+inoremap <F2> <Cmd>qall!<CR>' '+call feedkeys("a\<F2>", "xt")'
+        case fail
+            set -a argv '+normal! h' '+cquit 7'
     end
     command nvim --headless -u NONE -i NONE -n $argv '+qall!'
 end
@@ -34,6 +36,8 @@ function fish_prompt
     printf 'EDITOR> '
 end
 bind ctrl-b 'set -e edit_mode; fish_vi_key_bindings; commandline -C 8'
+bind -M insert -m default ctrl-b 'commandline -C 8'
+bind ctrl-f 'set -g edit_mode fail'
 bind ctrl-g 'commandline -C 9'
 bind ctrl-t 'printf "\nCURSOR:%s\n" "$(commandline -C)"'
 bind -M insert ctrl-t 'printf "\nCURSOR:%s\n" "$(commandline -C)"'
@@ -72,5 +76,17 @@ edit_and_expect_cursor(8)
 
 # From Fish's vi Insert mode, preserve the caret through a Normal-mode edit.
 sp.send(control("b"))
+edit_and_expect_cursor(8)
+
+# In vi Normal mode, keep the cursor on the character reported by Neovim.
+sp.send(control("b"))
+edit_and_expect_cursor(8)
+
+# Apply the reported cursor position after a failed edit too.
+sp.send(control("f"))
+edit_and_expect_cursor(7)
+
+# Return to the character before the Insert-mode caret.
+sp.send(control("y"))
 edit_and_expect_cursor(8)
 sp.spawn.close()

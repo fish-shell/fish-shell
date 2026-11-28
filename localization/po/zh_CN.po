@@ -3123,6 +3123,9 @@ msgstr ""
 msgid "Prompt function for Git"
 msgstr "Git 的提示函数"
 
+msgid "Prompt function for Pijul"
+msgstr ""
+
 msgid "Prompt function for svn"
 msgstr "Svn 的提示函数"
 

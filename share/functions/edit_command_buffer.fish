@@ -127,5 +127,8 @@ function edit_command_buffer --description 'Edit the command buffer in an extern
     # We've probably opened something that messed with the screen.
     # A repaint seems in order.
     commandline -f repaint
+
+    # The editor may have changed the terminal's cursor shape.
+    functions -q fish_vi_cursor_handle; and fish_vi_cursor_handle
     return $editor_status
 end
